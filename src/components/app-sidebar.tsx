@@ -1,9 +1,21 @@
 import { Link, useLocation } from 'react-router-dom'
-import { 
-  Activity, BarChart3, Bell, Briefcase, ChevronRight, 
-  Clock, CloudCog, FileText, LayoutDashboard, LogOut, 
-  MessageSquare, Package, Settings, ShieldCheck, 
-  Users, User
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  Briefcase,
+  ChevronRight,
+  Clock,
+  CloudCog,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Package,
+  Settings,
+  ShieldCheck,
+  Users,
+  User,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -26,9 +38,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 const navData = [
   {
     title: 'SISTEMA',
-    items: [
-      { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-    ]
+    items: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
   },
   {
     title: 'OPERACIONAL',
@@ -39,7 +49,7 @@ const navData = [
       { title: 'Relatório de Rotina', url: '/operacional/relatorio', icon: FileText },
       { title: 'Performance', url: '/operacional/performance', icon: BarChart3 },
       { title: 'Comunicados', url: '/operacional/comunicados', icon: Bell },
-    ]
+    ],
   },
   {
     title: 'COMERCIAL',
@@ -48,7 +58,7 @@ const navData = [
       { title: 'Gestão de Vendas', url: '/comercial/vendas' },
       { title: 'Negociação', url: '/comercial/negociacao' },
       { title: 'Gestão Fiscal', url: '/comercial/fiscal' },
-    ]
+    ],
   },
   {
     title: 'FINANCEIRO',
@@ -57,15 +67,13 @@ const navData = [
     items: [
       { title: 'Central de Acessos', url: '/financeiro/acessos' },
       { title: 'Estoque', url: '/estoque', icon: Package },
-    ]
+    ],
   },
   {
     title: 'CONFIGURAÇÕES',
     icon: Settings,
-    items: [
-      { title: 'Parâmetros Gerais', url: '/configuracoes' },
-    ]
-  }
+    items: [{ title: 'Parâmetros Gerais', url: '/configuracoes' }],
+  },
 ]
 
 export function AppSidebar() {
@@ -80,24 +88,28 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
             <span className="text-xl font-bold text-secondary tracking-widest">NUVIA</span>
-            <span className="text-[10px] text-sidebar-foreground/70 tracking-[0.2em] uppercase">Odontologia</span>
+            <span className="text-[10px] text-sidebar-foreground/70 tracking-[0.2em] uppercase">
+              Odontologia
+            </span>
           </div>
         </Link>
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        {navData.map((group) => (
-          group.items.length === 1 && !group.icon ? (
+        {navData.map((group) => {
+          const SingleItemIcon = group.items[0]?.icon
+
+          return group.items.length === 1 && !group.icon ? (
             <SidebarGroup key={group.title} className="py-2">
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={location.pathname === group.items[0].url}
                     className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground font-semibold"
                   >
                     <Link to={group.items[0].url}>
-                      {group.items[0].icon && <group.items[0].icon />}
+                      {SingleItemIcon && <SingleItemIcon />}
                       <span>{group.items[0].title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -105,9 +117,16 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroup>
           ) : (
-            <Collapsible key={group.title} defaultOpen={group.defaultOpen} className="group/collapsible py-1">
+            <Collapsible
+              key={group.title}
+              defaultOpen={group.defaultOpen}
+              className="group/collapsible py-1"
+            >
               <SidebarGroup>
-                <SidebarGroupLabel asChild className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md">
+                <SidebarGroupLabel
+                  asChild
+                  className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
+                >
                   <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
                     <div className="flex items-center gap-2 font-bold tracking-wider text-xs">
                       {group.icon && <group.icon className="size-4 text-secondary" />}
@@ -119,27 +138,30 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">
                     <SidebarMenu>
-                      {group.items.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton 
-                            asChild 
-                            isActive={location.pathname === item.url}
-                            className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
-                          >
-                            <Link to={item.url}>
-                              {item.icon && <item.icon />}
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
+                      {group.items.map((item) => {
+                        const ItemIcon = item.icon
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={location.pathname === item.url}
+                              className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
+                            >
+                              <Link to={item.url}>
+                                {ItemIcon && <ItemIcon />}
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        )
+                      })}
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </CollapsibleContent>
               </SidebarGroup>
             </Collapsible>
           )
-        ))}
+        })}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
@@ -148,11 +170,17 @@ export function AppSidebar() {
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               <Avatar className="size-9 border border-sidebar-border">
                 <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1" />
-                <AvatarFallback className="bg-secondary text-secondary-foreground">LS</AvatarFallback>
+                <AvatarFallback className="bg-secondary text-secondary-foreground">
+                  LS
+                </AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-medium truncate text-sidebar-foreground">drleandro@nuvia.com</span>
-                <span className="text-xs text-sidebar-foreground/60 truncate">LEANDRO DE SOUZA</span>
+                <span className="text-sm font-medium truncate text-sidebar-foreground">
+                  drleandro@nuvia.com
+                </span>
+                <span className="text-xs text-sidebar-foreground/60 truncate">
+                  LEANDRO DE SOUZA
+                </span>
               </div>
             </div>
           </SidebarMenuItem>
