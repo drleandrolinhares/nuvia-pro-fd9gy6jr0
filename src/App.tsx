@@ -60,7 +60,6 @@ const AppRoutes = () => {
         <Route path="/comercial/fiscal" element={<Placeholder />} />
 
         {/* Financeiro Routes */}
-        <Route path="/financeiro/acessos" element={<Placeholder />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

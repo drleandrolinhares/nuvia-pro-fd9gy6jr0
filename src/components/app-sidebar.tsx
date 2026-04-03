@@ -75,10 +75,7 @@ const navData = [
     title: 'FINANCEIRO',
     icon: ShieldCheck,
     defaultOpen: true,
-    items: [
-      { title: 'Central de Acessos', url: '/financeiro/acessos' },
-      { title: 'Estoque', url: '/estoque', icon: Package },
-    ],
+    items: [{ title: 'Estoque', url: '/estoque', icon: Package }],
   },
   {
     title: 'CONFIGURAÇÕES',
