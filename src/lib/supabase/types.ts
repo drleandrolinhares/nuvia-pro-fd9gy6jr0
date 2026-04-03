@@ -106,17 +106,17 @@ export type Database = {
       }
       embalagens: {
         Row: {
-          criado_em: string | null
+          data_criacao: string | null
           id: string
           nome: string
         }
         Insert: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome: string
         }
         Update: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome?: string
         }
@@ -190,17 +190,17 @@ export type Database = {
       }
       especialidades: {
         Row: {
-          criado_em: string | null
+          data_criacao: string | null
           id: string
           nome: string
         }
         Insert: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome: string
         }
         Update: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome?: string
         }
@@ -315,6 +315,7 @@ export type Database = {
           numero_armario: string | null
           quantidade_estoque: number | null
           quantidade_minima: number | null
+          referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala: string | null
           sala_id: string | null
           validade: string | null
@@ -335,6 +336,7 @@ export type Database = {
           numero_armario?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
+          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null
@@ -355,6 +357,7 @@ export type Database = {
           numero_armario?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
+          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null
@@ -440,17 +443,17 @@ export type Database = {
       }
       salas: {
         Row: {
-          criado_em: string | null
+          data_criacao: string | null
           id: string
           nome: string
         }
         Insert: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome: string
         }
         Update: {
-          criado_em?: string | null
+          data_criacao?: string | null
           id?: string
           nome?: string
         }
@@ -551,7 +554,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      referencia_consumo_enum: 'qtd_comprada' | 'itens_embalagem'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -711,7 +714,7 @@ export const Constants = {
 // Table: embalagens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
-//   criado_em: timestamp with time zone (nullable, default: now())
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: entrada_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -730,7 +733,7 @@ export const Constants = {
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
-//   criado_em: timestamp with time zone (nullable, default: now())
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -770,6 +773,7 @@ export const Constants = {
 //   numero_armario: text (nullable)
 //   embalagem_id: uuid (nullable)
 //   sala_id: uuid (nullable)
+//   referencia_consumo: public.referencia_consumo_enum (nullable, default: 'qtd_comprada'::public.referencia_consumo_enum)
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -784,7 +788,7 @@ export const Constants = {
 // Table: salas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
-//   criado_em: timestamp with time zone (nullable, default: now())
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -1021,6 +1025,30 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_atualiza_estoque_entrada()
+//   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_entrada()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_ref text;
+//   BEGIN
+//     SELECT referencia_consumo INTO v_ref FROM public.produtos WHERE id = NEW.produto_id;
+//
+//     IF v_ref = 'itens_embalagem' THEN
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + COALESCE(NEW.quantidade_embalagem, 0)
+//       WHERE id = NEW.produto_id;
+//     ELSE
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + COALESCE(NEW.quantidade_comprada, 0)
+//       WHERE id = NEW.produto_id;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_atualiza_estoque_saida()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_saida()
 //    RETURNS trigger
@@ -1038,6 +1066,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: entrada_produtos
+//   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos
 //   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 

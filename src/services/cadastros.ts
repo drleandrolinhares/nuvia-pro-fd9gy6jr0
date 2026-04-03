@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase/client'
 export type CadastroItem = {
   id: string
   nome: string
-  criado_em?: string | null
+  data_criacao?: string | null
 }
 
 export type AllowedTables = 'especialidades' | 'embalagens' | 'salas'
@@ -15,7 +15,7 @@ export const checkIsAdmin = async () => {
 }
 
 export const getItems = async (table: AllowedTables) => {
-  const { data, error } = await supabase.from(table).select('id, nome, criado_em').order('nome')
+  const { data, error } = await supabase.from(table).select('id, nome, data_criacao').order('nome')
   if (error) throw error
   return data as CadastroItem[]
 }
@@ -24,7 +24,7 @@ export const createItem = async (table: AllowedTables, nome: string) => {
   const { data, error } = await supabase
     .from(table)
     .insert([{ nome }])
-    .select('id, nome, criado_em')
+    .select('id, nome, data_criacao')
     .single()
   if (error) throw error
   return data as CadastroItem
@@ -35,7 +35,7 @@ export const updateItem = async (table: AllowedTables, id: string, nome: string)
     .from(table)
     .update({ nome })
     .eq('id', id)
-    .select('id, nome, criado_em')
+    .select('id, nome, data_criacao')
     .single()
   if (error) throw error
   return data as CadastroItem

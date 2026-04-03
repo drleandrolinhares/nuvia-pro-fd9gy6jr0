@@ -70,7 +70,7 @@ const formSchema = z.object({
   itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
   valor_total: z.coerce.number().min(0, 'Obrigatório'),
 
-  referencia_consumo: z.enum(['quantidade_comprada', 'itens_embalagem']),
+  referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
 
   data_entrada: z.date({ required_error: 'Selecione a data' }),
   data_validade: z.string().optional(),
@@ -128,7 +128,7 @@ export function EntradaProdutoModal({
       quantidade_comprada: 1,
       itens_embalagem: 1,
       valor_total: 0,
-      referencia_consumo: 'quantidade_comprada',
+      referencia_consumo: 'qtd_comprada',
       data_entrada: new Date(),
       data_validade: '',
       numero_nfe: '',
@@ -212,7 +212,7 @@ export function EntradaProdutoModal({
           observacoes: '',
           observacoes_criticas: '',
           manter_campos: false,
-          referencia_consumo: 'quantidade_comprada',
+          referencia_consumo: 'qtd_comprada',
         })
         setSelectedProdutoId(null)
         setHistorico([])
@@ -250,7 +250,7 @@ export function EntradaProdutoModal({
       }
       if (
         produto.referencia_consumo === 'itens_embalagem' ||
-        produto.referencia_consumo === 'quantidade_comprada'
+        produto.referencia_consumo === 'qtd_comprada'
       ) {
         form.setValue('referencia_consumo', produto.referencia_consumo)
       }
@@ -264,7 +264,7 @@ export function EntradaProdutoModal({
       form.setValue('numero_armario', '')
       form.setValue('estoque_minimo', 0)
       form.setValue('data_validade', '')
-      form.setValue('referencia_consumo', 'quantidade_comprada')
+      form.setValue('referencia_consumo', 'qtd_comprada')
       setHistorico([])
     }
   }
@@ -611,7 +611,7 @@ export function EntradaProdutoModal({
                           <FormItem className="flex items-center space-x-2 space-y-0">
                             <FormControl>
                               <RadioGroupItem
-                                value="quantidade_comprada"
+                                value="qtd_comprada"
                                 className="text-fuchsia-600 border-slate-300"
                               />
                             </FormControl>
