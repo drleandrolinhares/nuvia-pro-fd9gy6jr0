@@ -9,6 +9,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      campos_personalizados: {
+        Row: {
+          data_criacao: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          tipo: string | null
+        }
+        Insert: {
+          data_criacao?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          tipo?: string | null
+        }
+        Update: {
+          data_criacao?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
       cargo_permissoes: {
         Row: {
           cargo_id: string
@@ -184,6 +208,39 @@ export type Database = {
             columns: ['produto_id']
             isOneToOne: false
             referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      especialidade_campos: {
+        Row: {
+          ativo: boolean | null
+          campo_id: string
+          especialidade_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          campo_id: string
+          especialidade_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          campo_id?: string
+          especialidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'especialidade_campos_campo_id_fkey'
+            columns: ['campo_id']
+            isOneToOne: false
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'especialidade_campos_especialidade_id_fkey'
+            columns: ['especialidade_id']
+            isOneToOne: false
+            referencedRelation: 'especialidades'
             referencedColumns: ['id']
           },
         ]
@@ -695,6 +752,12 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: campos_personalizados
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   descricao: text (nullable)
+//   tipo: text (nullable, default: 'text'::text)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: cargo_permissoes
 //   cargo_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -732,6 +795,10 @@ export const Constants = {
 //   data_validade: date (nullable)
 //   numero_nfe: text (nullable)
 //   observacoes_criticas: text (nullable)
+// Table: especialidade_campos
+//   especialidade_id: uuid (not null)
+//   campo_id: uuid (not null)
+//   ativo: boolean (nullable, default: true)
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -810,6 +877,9 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 
 // --- CONSTRAINTS ---
+// Table: campos_personalizados
+//   UNIQUE campos_personalizados_nome_key: UNIQUE (nome)
+//   PRIMARY KEY campos_personalizados_pkey: PRIMARY KEY (id)
 // Table: cargo_permissoes
 //   FOREIGN KEY cargo_permissoes_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE CASCADE
 //   FOREIGN KEY cargo_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
@@ -826,6 +896,10 @@ export const Constants = {
 //   FOREIGN KEY entrada_produtos_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY entrada_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY entrada_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+// Table: especialidade_campos
+//   FOREIGN KEY especialidade_campos_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
+//   FOREIGN KEY especialidade_campos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
+//   PRIMARY KEY especialidade_campos_pkey: PRIMARY KEY (especialidade_id, campo_id)
 // Table: especialidades
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
@@ -862,6 +936,11 @@ export const Constants = {
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: campos_personalizados
+//   Policy "campos_personalizados_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "campos_personalizados_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: cargo_permissoes
 //   Policy "cargo_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -896,6 +975,11 @@ export const Constants = {
 //   Policy "entrada_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: especialidade_campos
+//   Policy "especialidade_campos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "especialidade_campos_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: especialidades
 //   Policy "especialidades_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1074,6 +1158,8 @@ export const Constants = {
 //   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
+// Table: campos_personalizados
+//   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
 // Table: embalagens
 //   CREATE UNIQUE INDEX embalagens_nome_key ON public.embalagens USING btree (nome)
 // Table: especialidades

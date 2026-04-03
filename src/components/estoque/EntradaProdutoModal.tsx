@@ -55,6 +55,9 @@ import {
   fetchSalas,
   createProduto,
   updateProduto,
+  fetchEspecialidadeCampos,
+  fetchProdutoCamposValores,
+  upsertProdutoCamposValores,
 } from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
 import { supabase } from '@/lib/supabase/client'
@@ -84,6 +87,7 @@ const formSchema = z.object({
   observacoes_criticas: z.string().optional(),
 
   manter_campos: z.boolean().default(false),
+  campos_dinamicos: z.record(z.string()).optional(),
 })
 
 type EntradaFormValues = z.infer<typeof formSchema>
@@ -111,6 +115,7 @@ export function EntradaProdutoModal({
   const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
+  const [camposDinamicosConfig, setCamposDinamicosConfig] = useState<any[]>([])
 
   const [openProduto, setOpenProduto] = useState(false)
   const [selectedProdutoId, setSelectedProdutoId] = useState<string | null>(null)
@@ -138,8 +143,11 @@ export function EntradaProdutoModal({
       observacoes: '',
       observacoes_criticas: '',
       manter_campos: false,
+      campos_dinamicos: {},
     },
   })
+
+  const watchedEspecialidadeId = form.watch('especialidade_id')
 
   useEffect(() => {
     setLocalProdutos(produtos)
@@ -191,6 +199,16 @@ export function EntradaProdutoModal({
   }, [])
 
   useEffect(() => {
+    if (watchedEspecialidadeId) {
+      fetchEspecialidadeCampos(watchedEspecialidadeId).then((res) => {
+        if (res.data) setCamposDinamicosConfig(res.data)
+      })
+    } else {
+      setCamposDinamicosConfig([])
+    }
+  }, [watchedEspecialidadeId])
+
+  useEffect(() => {
     if (open) {
       if (!form.getValues('manter_campos')) {
         form.reset({
@@ -202,7 +220,7 @@ export function EntradaProdutoModal({
           quantidade_comprada: 1,
           itens_embalagem: 1,
           valor_total: 0,
-          referencia_consumo: 'quantidade_comprada',
+          referencia_consumo: 'qtd_comprada',
           data_entrada: new Date(),
           data_validade: '',
           numero_nfe: '',
@@ -212,7 +230,7 @@ export function EntradaProdutoModal({
           observacoes: '',
           observacoes_criticas: '',
           manter_campos: false,
-          referencia_consumo: 'qtd_comprada',
+          campos_dinamicos: {},
         })
         setSelectedProdutoId(null)
         setHistorico([])
@@ -254,6 +272,16 @@ export function EntradaProdutoModal({
       ) {
         form.setValue('referencia_consumo', produto.referencia_consumo)
       }
+
+      fetchProdutoCamposValores(produto.id).then((res) => {
+        if (res.data) {
+          const values: Record<string, string> = {}
+          res.data.forEach((item) => {
+            values[item.campo_id] = item.valor
+          })
+          form.setValue('campos_dinamicos', values)
+        }
+      })
     } else {
       setSelectedProdutoId(null)
       form.setValue('codigo_barras', '')
@@ -265,6 +293,7 @@ export function EntradaProdutoModal({
       form.setValue('estoque_minimo', 0)
       form.setValue('data_validade', '')
       form.setValue('referencia_consumo', 'qtd_comprada')
+      form.setValue('campos_dinamicos', {})
       setHistorico([])
     }
   }
@@ -351,6 +380,14 @@ export function EntradaProdutoModal({
       observacoes: obsFinal.length > 0 ? obsFinal.join('\n') : undefined,
       observacoes_criticas: values.observacoes_criticas || null,
     })
+
+    if (
+      !entradaError &&
+      values.campos_dinamicos &&
+      Object.keys(values.campos_dinamicos).length > 0
+    ) {
+      await upsertProdutoCamposValores(finalProdutoId, values.campos_dinamicos)
+    }
 
     setLoading(false)
 
@@ -518,6 +555,41 @@ export function EntradaProdutoModal({
                 )}
               />
             </div>
+
+            {camposDinamicosConfig.length > 0 && (
+              <div className="bg-fuchsia-50/50 p-5 rounded-xl border border-fuchsia-100 shadow-sm">
+                <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b border-fuchsia-200 pb-2">
+                  CAMPOS DA ESPECIALIDADE
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {camposDinamicosConfig.map((config) => (
+                    <FormField
+                      key={config.campo_id}
+                      control={form.control}
+                      name={`campos_dinamicos.${config.campo_id}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelClass}>
+                            {config.campos_personalizados?.nome}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type={
+                                config.campos_personalizados?.tipo === 'number' ? 'number' : 'text'
+                              }
+                              className={inputClass}
+                              {...field}
+                              value={field.value || ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b pb-2">

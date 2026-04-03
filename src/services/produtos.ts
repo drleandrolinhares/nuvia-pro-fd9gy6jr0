@@ -106,6 +106,51 @@ export const deleteProduto = async (id: string) => {
   return { data, error }
 }
 
+export const fetchEspecialidadeCampos = async (especialidade_id: string) => {
+  const { data, error } = await supabase
+    .from('especialidade_campos')
+    .select(`
+      campo_id,
+      campos_personalizados (
+        id,
+        nome,
+        tipo
+      )
+    `)
+    .eq('especialidade_id', especialidade_id)
+    .eq('ativo', true)
+
+  return { data: data as any[], error }
+}
+
+export const fetchProdutoCamposValores = async (produto_id: string) => {
+  const { data, error } = await supabase
+    .from('produto_campos_valores' as any)
+    .select('campo_id, valor')
+    .eq('produto_id', produto_id)
+
+  return { data: data as any[], error }
+}
+
+export const upsertProdutoCamposValores = async (
+  produto_id: string,
+  campos: Record<string, string>,
+) => {
+  const records = Object.entries(campos).map(([campo_id, valor]) => ({
+    produto_id,
+    campo_id,
+    valor,
+  }))
+
+  if (records.length === 0) return { data: null, error: null }
+
+  const { data, error } = await supabase
+    .from('produto_campos_valores' as any)
+    .upsert(records, { onConflict: 'produto_id, campo_id' })
+
+  return { data, error }
+}
+
 export const fetchProdutoMovimentacoes = async (produto_id: string) => {
   const [entradas, saidas] = await Promise.all([
     supabase
