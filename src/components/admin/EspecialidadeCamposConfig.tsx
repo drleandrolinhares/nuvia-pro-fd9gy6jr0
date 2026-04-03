@@ -147,15 +147,6 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
 
       await cadastrosService.salvarEspecialidadeCampos(selectedEspecialidade.id, toSave as any)
 
-      // Garantir a persistência do label_customizado mesmo que o service o ignore
-      const { supabase } = await import('@/lib/supabase/client')
-      for (const item of toSave) {
-        await supabase
-          .from('especialidade_campos')
-          .update({ label_customizado: item.label_customizado })
-          .match({ especialidade_id: item.especialidade_id, campo_id: item.campo_id })
-      }
-
       toast.success('Configurações salvas com sucesso!')
       setIsModalOpen(false)
     } catch (error: any) {
@@ -212,7 +203,7 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
         <DialogContent className="sm:max-w-[600px] bg-[#1a2a4a] border-[#d4af37]/30 text-white shadow-2xl">
           <DialogHeader className="pb-4 border-b border-[#d4af37]/20">
             <DialogTitle className="text-[#d4af37] font-bold tracking-wider text-xl uppercase">
-              DADOS DO IMPLANTE
+              DADOS DA ESPECIALIDADE
             </DialogTitle>
             <DialogDescription className="text-slate-300 mt-2">
               Selecione e ordene os campos que aparecerão para a especialidade{' '}
