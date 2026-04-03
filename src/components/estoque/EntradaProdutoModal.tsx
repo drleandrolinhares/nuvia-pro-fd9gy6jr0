@@ -2,26 +2,20 @@ import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   Check,
   ChevronsUpDown,
-  Plus,
   CalendarIcon,
   Loader2,
+  ScanBarcode,
+  Calculator,
   PackagePlus,
-  History,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -49,29 +43,42 @@ import {
 } from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
-import { Produto } from '@/services/produtos'
-import { fetchFornecedores, createFornecedor, Fornecedor } from '@/services/fornecedores'
+import { Produto, fetchEspecialidades, createProduto, updateProduto } from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
-import { CriarProdutoModal } from './CriarProdutoModal'
-import { supabase } from '@/lib/supabase/client'
 
-const entradaSchema = z.object({
-  produto_id: z.string().min(1, 'Selecione um produto'),
-  fornecedor_id: z.string().min(1, 'Selecione um fornecedor'),
-  quantidade_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
+const formSchema = z.object({
+  codigo_barras: z.string().optional(),
+  nome_material: z.string().min(1, 'Obrigatório'),
+  marca: z.string().optional(),
+  especialidade_id: z.string().optional(),
+  embalagem: z.string().optional(),
+
   quantidade_comprada: z.coerce.number().min(1, 'Deve ser maior que zero'),
-  unidade_consumo: z.string().min(1, 'Selecione a unidade'),
-  preco_unitario: z.coerce.number().min(0.01, 'Preço inválido'),
-  local_compra: z.string().optional(),
+  itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
+  preco_total: z.coerce.number().min(0, 'Obrigatório'),
+
+  referencia_consumo: z.enum(['quantidade_comprada', 'itens_embalagem']),
+
   data_entrada: z.date({ required_error: 'Selecione a data' }),
+  data_validade: z.string().optional(),
+  numero_nfe: z.string().optional(),
+
+  sala_armazenamento: z.string().optional(),
+  numero_armario: z.string().optional(),
+  estoque_minimo: z.coerce.number().min(0).optional(),
+
   observacoes: z.string().optional(),
+  observacoes_criticas: z.string().optional(),
+
+  manter_campos: z.boolean().default(false),
 })
 
-type EntradaFormValues = z.infer<typeof entradaSchema>
+type EntradaFormValues = z.infer<typeof formSchema>
 
 interface EntradaProdutoModalProps {
   open: boolean
@@ -80,6 +87,10 @@ interface EntradaProdutoModalProps {
   onSuccess: () => void
 }
 
+const labelClass = 'text-blue-950 font-bold text-[11px] uppercase tracking-wider'
+const inputClass =
+  'focus-visible:ring-fuchsia-500 focus-visible:border-fuchsia-500 border-slate-300 h-9'
+
 export function EntradaProdutoModal({
   open,
   onOpenChange,
@@ -87,243 +98,239 @@ export function EntradaProdutoModal({
   onSuccess,
 }: EntradaProdutoModalProps) {
   const [localProdutos, setLocalProdutos] = useState<Produto[]>([])
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [especialidades, setEspecialidades] = useState<{ id: string; nome: string }[]>([])
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
-  const [loadingHistorico, setLoadingHistorico] = useState(false)
 
   const [openProduto, setOpenProduto] = useState(false)
-  const [openFornecedor, setOpenFornecedor] = useState(false)
-  const [searchFornecedor, setSearchFornecedor] = useState('')
-  const [searchProduto, setSearchProduto] = useState('')
+  const [selectedProdutoId, setSelectedProdutoId] = useState<string | null>(null)
 
-  const [openCriarProduto, setOpenCriarProduto] = useState(false)
-  const [canManageEstoque, setCanManageEstoque] = useState(false)
+  const { toast } = useToast()
+
+  const form = useForm<EntradaFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      codigo_barras: '',
+      nome_material: '',
+      marca: '',
+      especialidade_id: '',
+      embalagem: '',
+      quantidade_comprada: 1,
+      itens_embalagem: 1,
+      preco_total: 0,
+      referencia_consumo: 'quantidade_comprada',
+      data_entrada: new Date(),
+      data_validade: '',
+      numero_nfe: '',
+      sala_armazenamento: '',
+      numero_armario: '',
+      estoque_minimo: 0,
+      observacoes: '',
+      observacoes_criticas: '',
+      manter_campos: false,
+    },
+  })
 
   useEffect(() => {
     setLocalProdutos(produtos)
   }, [produtos])
 
   useEffect(() => {
-    supabase.rpc('has_permission', { permission_name: 'Gerenciar Estoque' }).then(({ data }) => {
-      if (data) setCanManageEstoque(true)
+    fetchEspecialidades().then((res) => {
+      if (res.data) setEspecialidades(res.data)
     })
   }, [])
 
-  const { toast } = useToast()
-
-  const form = useForm<EntradaFormValues>({
-    resolver: zodResolver(entradaSchema),
-    defaultValues: {
-      produto_id: '',
-      fornecedor_id: '',
-      quantidade_embalagem: 1,
-      quantidade_comprada: 1,
-      unidade_consumo: '',
-      preco_unitario: 0,
-      local_compra: '',
-      data_entrada: new Date(),
-      observacoes: '',
-    },
-  })
-
   useEffect(() => {
     if (open) {
-      form.reset({
-        produto_id: '',
-        fornecedor_id: '',
-        quantidade_embalagem: 1,
-        quantidade_comprada: 1,
-        unidade_consumo: '',
-        preco_unitario: 0,
-        local_compra: '',
-        data_entrada: new Date(),
-        observacoes: '',
-      })
-      fetchFornecedores().then((res) => {
-        if (res.data) setFornecedores(res.data)
-      })
+      if (!form.getValues('manter_campos')) {
+        form.reset({
+          codigo_barras: '',
+          nome_material: '',
+          marca: '',
+          especialidade_id: '',
+          embalagem: '',
+          quantidade_comprada: 1,
+          itens_embalagem: 1,
+          preco_total: 0,
+          referencia_consumo: 'quantidade_comprada',
+          data_entrada: new Date(),
+          data_validade: '',
+          numero_nfe: '',
+          sala_armazenamento: '',
+          numero_armario: '',
+          estoque_minimo: 0,
+          observacoes: '',
+          observacoes_criticas: '',
+          manter_campos: false,
+        })
+        setSelectedProdutoId(null)
+        setHistorico([])
+      }
     }
   }, [open, form])
 
-  const selectedProdutoId = form.watch('produto_id')
-
   useEffect(() => {
     if (selectedProdutoId) {
-      setLoadingHistorico(true)
       fetchUltimasCompras(selectedProdutoId).then((res) => {
         if (res.data) setHistorico(res.data)
-        setLoadingHistorico(false)
       })
     } else {
       setHistorico([])
     }
   }, [selectedProdutoId])
 
-  const handleCreateFornecedor = async (nome: string) => {
-    if (!nome.trim()) return
-    const { data, error } = await createFornecedor(nome)
-    if (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível criar fornecedor',
-        variant: 'destructive',
-      })
-      return
-    }
-    if (data) {
-      setFornecedores((prev) => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)))
-      form.setValue('fornecedor_id', data.id)
-      setOpenFornecedor(false)
-      toast({ title: 'Sucesso', description: 'Fornecedor criado com sucesso' })
+  const handleProdutoSelect = (produto: Produto | null) => {
+    if (produto) {
+      setSelectedProdutoId(produto.id)
+      form.setValue('codigo_barras', produto.codigo_barras || '')
+      form.setValue('marca', produto.marca || '')
+      form.setValue('especialidade_id', produto.especialidade_id || '')
+      form.setValue('embalagem', produto.embalagem || '')
+      form.setValue('sala_armazenamento', produto.sala || '')
+      form.setValue('estoque_minimo', produto.quantidade_minima || 0)
+    } else {
+      setSelectedProdutoId(null)
+      form.setValue('codigo_barras', '')
+      form.setValue('marca', '')
+      form.setValue('especialidade_id', '')
+      form.setValue('embalagem', '')
+      form.setValue('sala_armazenamento', '')
+      form.setValue('estoque_minimo', 0)
+      setHistorico([])
     }
   }
 
-  const qtyComprada = form.watch('quantidade_comprada')
-  const precoUnitario = form.watch('preco_unitario')
+  const qtyComprada = form.watch('quantidade_comprada') || 1
+  const itensEmb = form.watch('itens_embalagem') || 1
+  const refConsumo = form.watch('referencia_consumo')
+  const precoTotal = form.watch('preco_total') || 0
 
-  const precoTotal = useMemo(() => {
-    return (Number(qtyComprada) || 0) * (Number(precoUnitario) || 0)
-  }, [qtyComprada, precoUnitario])
+  const totalAdicionado = refConsumo === 'itens_embalagem' ? qtyComprada * itensEmb : qtyComprada
+  const valorAtribuido = totalAdicionado > 0 ? precoTotal / totalAdicionado : 0
+  const estoqueAtual = selectedProdutoId
+    ? localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0
+    : 0
+  const estoquePosAdicao = estoqueAtual + totalAdicionado
+  const ultimaCompra = historico.length > 0 ? historico[0] : null
+
+  const salasDisponiveis = useMemo(() => {
+    const salas = new Set<string>()
+    localProdutos.forEach((p) => {
+      if (p.sala && p.sala.trim() !== '') salas.add(p.sala)
+    })
+    return Array.from(salas).sort()
+  }, [localProdutos])
 
   const onSubmit = async (values: EntradaFormValues) => {
     setLoading(true)
+    let finalProdutoId = selectedProdutoId
 
-    const obsFinal = values.local_compra
-      ? `Local de Compra: ${values.local_compra}\n${values.observacoes || ''}`
-      : values.observacoes
+    if (!finalProdutoId) {
+      const { data: novoProduto, error } = await createProduto({
+        nome: values.nome_material,
+        codigo_barras: values.codigo_barras,
+        marca: values.marca,
+        especialidade_id: values.especialidade_id || null,
+        embalagem: values.embalagem,
+        sala: values.sala_armazenamento,
+        quantidade_minima: values.estoque_minimo,
+        quantidade_estoque: 0,
+        custo_unitario: 0,
+        validade: values.data_validade || null,
+      })
 
-    const { error } = await registrarEntrada({
-      ...values,
-      preco_total: precoTotal,
+      if (error || !novoProduto) {
+        toast({ title: 'Erro', description: 'Erro ao criar produto.', variant: 'destructive' })
+        setLoading(false)
+        return
+      }
+      finalProdutoId = novoProduto.id
+      setLocalProdutos((prev) => [...prev, novoProduto])
+    } else {
+      await updateProduto(finalProdutoId, {
+        codigo_barras: values.codigo_barras,
+        marca: values.marca,
+        especialidade_id: values.especialidade_id || null,
+        embalagem: values.embalagem,
+        sala: values.sala_armazenamento,
+        quantidade_minima: values.estoque_minimo,
+        validade: values.data_validade || null,
+      })
+    }
+
+    const obsFinal = []
+    if (values.numero_nfe) obsFinal.push(`NFe: ${values.numero_nfe}`)
+    if (values.numero_armario) obsFinal.push(`Armário: ${values.numero_armario}`)
+    if (values.observacoes) obsFinal.push(values.observacoes)
+    if (values.observacoes_criticas) obsFinal.push(`CRÍTICO: ${values.observacoes_criticas}`)
+
+    const { error: entradaError } = await registrarEntrada({
+      produto_id: finalProdutoId,
+      fornecedor_id: null,
+      quantidade_embalagem: refConsumo === 'itens_embalagem' ? values.itens_embalagem : 1,
+      quantidade_comprada: values.quantidade_comprada,
+      unidade_consumo: values.embalagem || 'Unidade',
+      preco_unitario: valorAtribuido,
+      preco_total: values.preco_total,
       data_entrada: values.data_entrada.toISOString(),
-      observacoes: obsFinal,
+      observacoes: obsFinal.join('\n'),
     })
 
     setLoading(false)
 
-    if (error) {
-      toast({
-        title: 'Erro ao registrar entrada',
-        description: error.message,
-        variant: 'destructive',
-      })
+    if (entradaError) {
+      toast({ title: 'Erro', description: entradaError.message, variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Entrada registrada com sucesso!' })
+      toast({ title: 'Sucesso', description: 'Produto cadastrado e entrada registrada!' })
       onSuccess()
-      onOpenChange(false)
+
+      if (values.manter_campos) {
+        form.setValue('codigo_barras', '')
+        form.setValue('quantidade_comprada', 1)
+        form.setValue('itens_embalagem', 1)
+        form.setValue('preco_total', 0)
+        form.setValue('numero_nfe', '')
+        form.setValue('observacoes', '')
+        form.setValue('observacoes_criticas', '')
+        setSelectedProdutoId(null)
+        form.setValue('nome_material', '')
+        setHistorico([])
+      } else {
+        onOpenChange(false)
+      }
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-800">
-            <PackagePlus className="w-5 h-5 text-amber-500" />
-            Nova Entrada de Produto
+            <PackagePlus className="w-5 h-5 text-fuchsia-600" />
+            Entrada de Produtos
           </DialogTitle>
-          <DialogDescription>
-            Registre a entrada de materiais no estoque. O custo médio e o estoque serão atualizados
-            automaticamente.
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="produto_id"
+                name="codigo_barras"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col pt-2">
-                    <FormLabel>Produto *</FormLabel>
-                    <Popover open={openProduto} onOpenChange={setOpenProduto}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              'justify-between w-full',
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          >
-                            {field.value
-                              ? localProdutos.find((p) => p.id === field.value)?.nome
-                              : 'Selecione um produto'}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[300px] md:w-[400px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Buscar produto..."
-                            onValueChange={setSearchProduto}
-                          />
-                          <CommandList>
-                            <CommandEmpty>
-                              <div className="p-2 flex flex-col gap-2">
-                                <span className="text-sm text-slate-500 text-center py-2">
-                                  Nenhum produto encontrado.
-                                </span>
-                                {canManageEstoque && (
-                                  <Button
-                                    variant="secondary"
-                                    className="w-full justify-start text-sm"
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      setOpenProduto(false)
-                                      setOpenCriarProduto(true)
-                                    }}
-                                  >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Criar Novo Produto
-                                  </Button>
-                                )}
-                              </div>
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {localProdutos.map((produto) => (
-                                <CommandItem
-                                  key={produto.id}
-                                  value={produto.nome}
-                                  onSelect={() => {
-                                    form.setValue('produto_id', produto.id)
-                                    setOpenProduto(false)
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      'mr-2 h-4 w-4',
-                                      produto.id === field.value ? 'opacity-100' : 'opacity-0',
-                                    )}
-                                  />
-                                  {produto.nome}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                            {canManageEstoque && localProdutos.length > 0 && (
-                              <div className="p-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  className="w-full justify-start text-sm text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    setOpenProduto(false)
-                                    setOpenCriarProduto(true)
-                                  }}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Criar Novo Produto
-                                </Button>
-                              </div>
-                            )}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Código de Barras</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          className={cn(inputClass, 'pl-9')}
+                          placeholder="Scan ou digite..."
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -331,129 +338,64 @@ export function EntradaProdutoModal({
 
               <FormField
                 control={form.control}
-                name="fornecedor_id"
+                name="nome_material"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col pt-2">
-                    <FormLabel>Fornecedor *</FormLabel>
-                    <Popover open={openFornecedor} onOpenChange={setOpenFornecedor}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              'justify-between w-full',
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          >
-                            {field.value
-                              ? fornecedores.find((f) => f.id === field.value)?.nome
-                              : 'Selecione ou crie'}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[300px] md:w-[400px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Buscar fornecedor..."
-                            onValueChange={setSearchFornecedor}
-                          />
-                          <CommandList>
-                            <CommandEmpty>
-                              <div className="p-2">
-                                <Button
-                                  variant="secondary"
-                                  className="w-full justify-start text-sm"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    handleCreateFornecedor(searchFornecedor)
-                                  }}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Criar "{searchFornecedor}"
-                                </Button>
+                  <FormItem className="flex flex-col relative md:col-span-2">
+                    <FormLabel className={labelClass}>Nome do Material</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className={inputClass}
+                        placeholder="Digite o nome do material..."
+                        autoComplete="off"
+                        onChange={(e) => {
+                          field.onChange(e)
+                          setSelectedProdutoId(null)
+                          setOpenProduto(true)
+                        }}
+                        onFocus={() => setOpenProduto(true)}
+                        onBlur={() => setTimeout(() => setOpenProduto(false), 200)}
+                      />
+                    </FormControl>
+                    {openProduto &&
+                      localProdutos.filter((p) =>
+                        p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
+                      ).length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-md shadow-lg p-1">
+                          {localProdutos
+                            .filter((p) =>
+                              p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
+                            )
+                            .map((p) => (
+                              <div
+                                key={p.id}
+                                className="px-3 py-2 text-sm cursor-pointer hover:bg-fuchsia-50 hover:text-fuchsia-700 rounded transition-colors"
+                                onClick={() => {
+                                  field.onChange(p.nome)
+                                  handleProdutoSelect(p)
+                                  setOpenProduto(false)
+                                }}
+                              >
+                                {p.nome}
                               </div>
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {fornecedores.map((f) => (
-                                <CommandItem
-                                  key={f.id}
-                                  value={f.nome}
-                                  onSelect={() => {
-                                    form.setValue('fornecedor_id', f.id)
-                                    setOpenFornecedor(false)
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      'mr-2 h-4 w-4',
-                                      f.id === field.value ? 'opacity-100' : 'opacity-0',
-                                    )}
-                                  />
-                                  {f.nome}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                            ))}
+                        </div>
+                      )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {selectedProdutoId && (
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 animate-fade-in">
-                <div className="flex items-center gap-2 mb-3">
-                  <History className="w-4 h-4 text-slate-500" />
-                  <h4 className="text-sm font-semibold text-slate-700">Últimas Compras</h4>
-                </div>
-                {loadingHistorico ? (
-                  <div className="flex justify-center p-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-                  </div>
-                ) : historico.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic">
-                    Nenhum histórico para este produto.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {historico.map((h) => (
-                      <Card key={h.id} className="shadow-none border-slate-200 bg-white">
-                        <CardContent className="p-3 flex flex-col gap-1">
-                          <span
-                            className="text-xs font-bold text-slate-600 truncate"
-                            title={h.fornecedores?.nome || 'Desconhecido'}
-                          >
-                            {h.fornecedores?.nome || 'Desconhecido'}
-                          </span>
-                          <span className="text-sm font-bold text-slate-900">
-                            R${' '}
-                            {h.preco_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {format(parseISO(h.data_entrada), 'dd/MM/yyyy')}
-                          </span>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="quantidade_embalagem"
+                name="marca"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Itens p/ Embalagem *</FormLabel>
+                    <FormLabel className={labelClass}>Marca do Produto</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input className={inputClass} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -461,27 +403,38 @@ export function EntradaProdutoModal({
               />
               <FormField
                 control={form.control}
-                name="quantidade_comprada"
+                name="especialidade_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Qtd. Comprada *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="unidade_consumo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Und. Consumo *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className={labelClass}>Especialidade</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
+                        <SelectTrigger className={inputClass}>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {especialidades.map((esp) => (
+                          <SelectItem key={esp.id} value={esp.id}>
+                            {esp.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="embalagem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={labelClass}>Embalagem de Compra</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className={inputClass}>
+                          <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -499,47 +452,138 @@ export function EntradaProdutoModal({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="preco_unitario"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preço Unitário (R$) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormItem>
-                <FormLabel>Preço Total (R$)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    readOnly
-                    disabled
-                    value={precoTotal.toLocaleString('pt-BR', {
+            <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b pb-2">
+                INFORMAÇÕES DE COMPRA E EMBALAGEM
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <FormField
+                  control={form.control}
+                  name="quantidade_comprada"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Qtd Comprada</FormLabel>
+                      <FormControl>
+                        <Input type="number" className={inputClass} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="itens_embalagem"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Itens na Embalagem</FormLabel>
+                      <FormControl>
+                        <Input type="number" className={inputClass} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Valor Atribuído (Unitário)</span>
+                  <div className="h-9 px-3 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700">
+                    R${' '}
+                    {valorAtribuido.toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
-                    className="bg-slate-50 font-bold text-slate-700 disabled:opacity-100"
-                  />
-                </FormControl>
-              </FormItem>
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Estoque Atual</span>
+                  <div className="h-9 px-3 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700">
+                    {estoqueAtual}
+                  </div>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="preco_total"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Valor Total da Compra</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            className={cn(inputClass, 'pl-9')}
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Estoque Pós Adição</span>
+                  <div className="h-9 px-3 bg-fuchsia-50 border border-fuchsia-100 rounded-md flex items-center text-sm font-bold text-fuchsia-700">
+                    {estoquePosAdicao}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <FormField
+                  control={form.control}
+                  name="referencia_consumo"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel className={labelClass}>Referência de Consumo no Estoque</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem
+                                value="quantidade_comprada"
+                                className="text-fuchsia-600 border-slate-300"
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm">Qtd Comprada</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem
+                                value="itens_embalagem"
+                                className="text-fuchsia-600 border-slate-300"
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm">
+                              Itens na Embalagem
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="data_entrada"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col pt-2.5">
-                    <FormLabel>Data da Compra *</FormLabel>
+                  <FormItem className="flex flex-col">
+                    <FormLabel className={labelClass}>Data de Entrada</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            variant={'outline'}
+                            variant="outline"
                             className={cn(
+                              inputClass,
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-muted-foreground',
                             )}
@@ -547,7 +591,7 @@ export function EntradaProdutoModal({
                             {field.value ? (
                               format(field.value, 'dd/MM/yyyy', { locale: ptBR })
                             ) : (
-                              <span>Selecionar data</span>
+                              <span>Selecionar...</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -558,7 +602,6 @@ export function EntradaProdutoModal({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                           initialFocus
                         />
                       </PopoverContent>
@@ -567,17 +610,14 @@ export function EntradaProdutoModal({
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="local_compra"
+                name="data_validade"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local de Compra (Opcional)</FormLabel>
+                    <FormLabel className={labelClass}>Data de Validade (MM/AAAA)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Dental Cremer, Mercado Livre..." {...field} />
+                      <Input placeholder="MM/AAAA" className={inputClass} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -585,51 +625,203 @@ export function EntradaProdutoModal({
               />
               <FormField
                 control={form.control}
-                name="observacoes"
+                name="numero_nfe"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Observações (Opcional)</FormLabel>
+                    <FormLabel className={labelClass}>Número da NFe</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Detalhes adicionais..."
-                        className="resize-none"
-                        {...field}
+                      <Input className={inputClass} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="sala_armazenamento"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className={labelClass}>Sala de Armazenamento</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              'justify-between w-full font-normal',
+                              inputClass,
+                              !field.value && 'text-muted-foreground',
+                            )}
+                          >
+                            {field.value || 'Selecione ou digite...'}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Buscar sala..."
+                            onValueChange={(v) => {
+                              if (v) form.setValue('sala_armazenamento', v)
+                            }}
+                          />
+                          <CommandList>
+                            <CommandEmpty className="p-4 text-center text-sm text-slate-500">
+                              NENHUMA SALA CADASTRADA
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {salasDisponiveis.map((sala) => (
+                                <CommandItem
+                                  key={sala}
+                                  value={sala}
+                                  onSelect={() => form.setValue('sala_armazenamento', sala)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      'mr-2 h-4 w-4',
+                                      sala === field.value ? 'opacity-100' : 'opacity-0',
+                                    )}
+                                  />
+                                  {sala}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="numero_armario"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={labelClass}>Número do Armário</FormLabel>
+                    <FormControl>
+                      <Input className={inputClass} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="estoque_minimo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={labelClass}>Estoque Mínimo</FormLabel>
+                    <FormControl>
+                      <Input type="number" className={inputClass} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b pb-2">
+                HISTÓRICO E NOTAS
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Marca / Fornec. Última Compra</span>
+                  <div className="h-9 px-3 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700 truncate">
+                    {ultimaCompra?.fornecedores?.nome || '-'}
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Valor da Última Compra</span>
+                  <div className="h-9 px-3 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700">
+                    {ultimaCompra
+                      ? `R$ ${ultimaCompra.preco_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      : '-'}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <FormField
+                  control={form.control}
+                  name="observacoes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea className={cn(inputClass, 'resize-none h-20')} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="observacoes_criticas"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Observações Críticas</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          className={cn(
+                            inputClass,
+                            'resize-none h-20 bg-yellow-50 placeholder:text-yellow-700/40 text-yellow-900 border-yellow-300 focus-visible:ring-yellow-400 focus-visible:border-yellow-400',
+                          )}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t mt-6">
+              <FormField
+                control={form.control}
+                name="manter_campos"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-fuchsia-600"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormLabel className="text-xs font-bold text-slate-600 uppercase cursor-pointer tracking-wide">
+                      Manter preenchido (Cadastro Sequencial)
+                    </FormLabel>
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
-              >
-                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Salvar Entrada
-              </Button>
+              <div className="flex gap-3 w-full md:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="w-full md:w-32 border-slate-300"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full md:w-48 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold shadow-sm"
+                >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Cadastrar Produto
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
       </DialogContent>
-
-      <CriarProdutoModal
-        open={openCriarProduto}
-        onOpenChange={setOpenCriarProduto}
-        initialNome={searchProduto}
-        onSuccess={(novoProduto) => {
-          setLocalProdutos((prev) =>
-            [...prev, novoProduto].sort((a, b) => a.nome.localeCompare(b.nome)),
-          )
-          form.setValue('produto_id', novoProduto.id)
-        }}
-      />
     </Dialog>
   )
 }

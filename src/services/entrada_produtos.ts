@@ -29,7 +29,7 @@ export const fetchUltimasCompras = async (produto_id: string) => {
 
 export const registrarEntrada = async (dados: {
   produto_id: string
-  fornecedor_id: string
+  fornecedor_id?: string | null
   quantidade_embalagem: number
   quantidade_comprada: number
   unidade_consumo: string
@@ -53,7 +53,7 @@ export const registrarEntrada = async (dados: {
     .from('entrada_produtos')
     .insert({
       produto_id: dados.produto_id,
-      fornecedor_id: dados.fornecedor_id,
+      fornecedor_id: dados.fornecedor_id || null,
       quantidade_embalagem: dados.quantidade_embalagem,
       quantidade_comprada: dados.quantidade_comprada,
       unidade_consumo: dados.unidade_consumo,
@@ -70,7 +70,7 @@ export const registrarEntrada = async (dados: {
   // Insert history
   await supabase.from('historico_compras').insert({
     produto_id: dados.produto_id,
-    fornecedor_id: dados.fornecedor_id,
+    fornecedor_id: dados.fornecedor_id || null,
     preco_anterior: precoAnterior,
     data_compra: dados.data_entrada,
   })
