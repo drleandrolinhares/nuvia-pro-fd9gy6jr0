@@ -71,9 +71,8 @@ export default function CadastrosBasicos() {
 
       const mapOpcoes: Record<string, CadastroItem[]> = {}
       opcoesData?.forEach((o: any) => {
-        const key = o.especialidade_id
-          ? `${o.especialidade_id}_${o.campo_id}`
-          : `global_${o.campo_id}`
+        if (!o.especialidade_id) return // Garante isolamento: ignora opções globais órfãs
+        const key = `${o.especialidade_id}_${o.campo_id}`
         if (!mapOpcoes[key]) mapOpcoes[key] = []
         mapOpcoes[key].push({ id: o.id, nome: o.nome, data_criacao: o.data_criacao })
       })
@@ -88,18 +87,6 @@ export default function CadastrosBasicos() {
             especialidade_id: ec.especialidade_id,
             especialidade_nome: ec.especialidades?.nome || 'Especialidade',
             label: ec.label_customizado || ec.campos_personalizados?.nome || 'Campo',
-          })
-        }
-
-        const globalKey = `global_${ec.campo_id}`
-        if (mapOpcoes[globalKey]) {
-          if (!mapOpcoes[id]) mapOpcoes[id] = []
-          const existingIds = new Set(mapOpcoes[id].map((x) => x.id))
-          mapOpcoes[globalKey].forEach((go) => {
-            if (!existingIds.has(go.id)) {
-              mapOpcoes[id].push(go)
-              existingIds.add(go.id)
-            }
           })
         }
       })

@@ -50,6 +50,7 @@ export const getCampoOpcoes = async () => {
   const { data, error } = await supabase
     .from('campo_opcoes')
     .select('id, campo_id, especialidade_id, nome, data_criacao' as any)
+    .not('especialidade_id', 'is', null)
     .order('nome')
   if (error) throw error
   return data

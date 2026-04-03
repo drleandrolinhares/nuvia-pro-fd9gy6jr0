@@ -55,18 +55,21 @@ export type Database = {
         Row: {
           campo_id: string
           data_criacao: string | null
+          especialidade_id: string | null
           id: string
           nome: string
         }
         Insert: {
           campo_id: string
           data_criacao?: string | null
+          especialidade_id?: string | null
           id?: string
           nome: string
         }
         Update: {
           campo_id?: string
           data_criacao?: string | null
+          especialidade_id?: string | null
           id?: string
           nome?: string
         }
@@ -76,6 +79,13 @@ export type Database = {
             columns: ['campo_id']
             isOneToOne: false
             referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'campo_opcoes_especialidade_id_fkey'
+            columns: ['especialidade_id']
+            isOneToOne: false
+            referencedRelation: 'especialidades'
             referencedColumns: ['id']
           },
         ]
@@ -943,6 +953,7 @@ export const Constants = {
 //   campo_id: uuid (not null)
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+//   especialidade_id: uuid (nullable)
 // Table: campos_personalizados
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1098,6 +1109,7 @@ export const Constants = {
 //   PRIMARY KEY campo_configuracao_pkey: PRIMARY KEY (id)
 // Table: campo_opcoes
 //   FOREIGN KEY campo_opcoes_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
+//   FOREIGN KEY campo_opcoes_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
 //   PRIMARY KEY campo_opcoes_pkey: PRIMARY KEY (id)
 // Table: campos_personalizados
 //   UNIQUE campos_personalizados_nome_key: UNIQUE (nome)
