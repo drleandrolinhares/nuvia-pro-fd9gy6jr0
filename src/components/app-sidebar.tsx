@@ -15,6 +15,7 @@ import {
   Package,
   Settings,
   ShieldCheck,
+  Truck,
   Users,
   User,
 } from 'lucide-react'
@@ -86,6 +87,7 @@ const navData = [
       { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database },
       { title: 'Parâmetros Gerais', url: '/configuracoes' },
       { title: 'Colaboradores', url: '/colaboradores', icon: Users },
+      { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
     ],
   },
 ]

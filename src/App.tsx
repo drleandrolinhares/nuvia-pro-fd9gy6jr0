@@ -8,6 +8,7 @@ import Index from './pages/Index'
 import Estoque from './pages/Estoque'
 import Configuracoes from './pages/Configuracoes'
 import Colaboradores from './pages/Colaboradores'
+import Fornecedores from './pages/Fornecedores'
 import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
 import Placeholder from './pages/Placeholder'
@@ -42,6 +43,7 @@ const AppRoutes = () => {
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
+        <Route path="/fornecedores" element={<Fornecedores />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/admin/cadastros" element={<CadastrosBasicos />} />
 

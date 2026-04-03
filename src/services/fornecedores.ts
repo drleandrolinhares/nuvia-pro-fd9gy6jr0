@@ -9,6 +9,8 @@ export interface Fornecedor {
   endereco: string | null
   contato_principal: string | null
   observacoes: string | null
+  url: string | null
+  senha: string | null
   criado_em: string | null
 }
 

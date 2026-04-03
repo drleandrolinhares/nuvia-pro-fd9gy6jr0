@@ -377,29 +377,35 @@ export type Database = {
       fornecedores: {
         Row: {
           cnpj: string | null
+          contato_principal: string | null
           criado_em: string | null
           email: string | null
           endereco: string | null
           id: string
           nome: string
+          observacoes: string | null
           telefone: string | null
         }
         Insert: {
           cnpj?: string | null
+          contato_principal?: string | null
           criado_em?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
           nome: string
+          observacoes?: string | null
           telefone?: string | null
         }
         Update: {
           cnpj?: string | null
+          contato_principal?: string | null
           criado_em?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
           nome?: string
+          observacoes?: string | null
           telefone?: string | null
         }
         Relationships: []
@@ -1021,6 +1027,8 @@ export const Constants = {
 //   email: text (nullable)
 //   endereco: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   contato_principal: text (nullable)
+//   observacoes: text (nullable)
 // Table: historico_compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
