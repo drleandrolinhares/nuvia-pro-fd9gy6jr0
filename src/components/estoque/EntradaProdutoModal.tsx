@@ -56,6 +56,8 @@ import { useToast } from '@/hooks/use-toast'
 import { Produto } from '@/services/produtos'
 import { fetchFornecedores, createFornecedor, Fornecedor } from '@/services/fornecedores'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
+import { CriarProdutoModal } from './CriarProdutoModal'
+import { supabase } from '@/lib/supabase/client'
 
 const entradaSchema = z.object({
   produto_id: z.string().min(1, 'Selecione um produto'),
@@ -84,6 +86,7 @@ export function EntradaProdutoModal({
   produtos,
   onSuccess,
 }: EntradaProdutoModalProps) {
+  const [localProdutos, setLocalProdutos] = useState<Produto[]>([])
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
@@ -92,6 +95,20 @@ export function EntradaProdutoModal({
   const [openProduto, setOpenProduto] = useState(false)
   const [openFornecedor, setOpenFornecedor] = useState(false)
   const [searchFornecedor, setSearchFornecedor] = useState('')
+  const [searchProduto, setSearchProduto] = useState('')
+
+  const [openCriarProduto, setOpenCriarProduto] = useState(false)
+  const [canManageEstoque, setCanManageEstoque] = useState(false)
+
+  useEffect(() => {
+    setLocalProdutos(produtos)
+  }, [produtos])
+
+  useEffect(() => {
+    supabase.rpc('has_permission', { permission_name: 'Gerenciar Estoque' }).then(({ data }) => {
+      if (data) setCanManageEstoque(true)
+    })
+  }, [])
 
   const { toast } = useToast()
 
@@ -233,7 +250,7 @@ export function EntradaProdutoModal({
                             )}
                           >
                             {field.value
-                              ? produtos.find((p) => p.id === field.value)?.nome
+                              ? localProdutos.find((p) => p.id === field.value)?.nome
                               : 'Selecione um produto'}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
@@ -241,11 +258,34 @@ export function EntradaProdutoModal({
                       </PopoverTrigger>
                       <PopoverContent className="w-[300px] md:w-[400px] p-0">
                         <Command>
-                          <CommandInput placeholder="Buscar produto..." />
+                          <CommandInput
+                            placeholder="Buscar produto..."
+                            onValueChange={setSearchProduto}
+                          />
                           <CommandList>
-                            <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                            <CommandEmpty>
+                              <div className="p-2 flex flex-col gap-2">
+                                <span className="text-sm text-slate-500 text-center py-2">
+                                  Nenhum produto encontrado.
+                                </span>
+                                {canManageEstoque && (
+                                  <Button
+                                    variant="secondary"
+                                    className="w-full justify-start text-sm"
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      setOpenProduto(false)
+                                      setOpenCriarProduto(true)
+                                    }}
+                                  >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Criar Novo Produto
+                                  </Button>
+                                )}
+                              </div>
+                            </CommandEmpty>
                             <CommandGroup>
-                              {produtos.map((produto) => (
+                              {localProdutos.map((produto) => (
                                 <CommandItem
                                   key={produto.id}
                                   value={produto.nome}
@@ -264,6 +304,22 @@ export function EntradaProdutoModal({
                                 </CommandItem>
                               ))}
                             </CommandGroup>
+                            {canManageEstoque && localProdutos.length > 0 && (
+                              <div className="p-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  className="w-full justify-start text-sm text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    setOpenProduto(false)
+                                    setOpenCriarProduto(true)
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Criar Novo Produto
+                                </Button>
+                              </div>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
@@ -562,6 +618,18 @@ export function EntradaProdutoModal({
           </form>
         </Form>
       </DialogContent>
+
+      <CriarProdutoModal
+        open={openCriarProduto}
+        onOpenChange={setOpenCriarProduto}
+        initialNome={searchProduto}
+        onSuccess={(novoProduto) => {
+          setLocalProdutos((prev) =>
+            [...prev, novoProduto].sort((a, b) => a.nome.localeCompare(b.nome)),
+          )
+          form.setValue('produto_id', novoProduto.id)
+        }}
+      />
     </Dialog>
   )
 }

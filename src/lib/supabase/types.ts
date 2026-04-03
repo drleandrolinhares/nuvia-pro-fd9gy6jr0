@@ -821,13 +821,14 @@ export const Constants = {
 //     USING: true
 // Table: produtos
 //   Policy "produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: true
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: true
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text) OR has_permission('Editar Estoque'::text))
 //   Policy "produtos_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: true
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text) OR has_permission('Editar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text) OR has_permission('Editar Estoque'::text))
 // Table: saida_produtos
 //   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))

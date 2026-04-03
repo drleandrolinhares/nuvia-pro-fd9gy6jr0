@@ -40,6 +40,21 @@ export const fetchEspecialidades = async () => {
   return { data, error }
 }
 
+export const createProduto = async (produto: Partial<Produto>) => {
+  const { data, error } = await supabase
+    .from('produtos')
+    .insert([produto])
+    .select(`
+      *,
+      especialidades (
+        nome
+      )
+    `)
+    .single()
+
+  return { data, error }
+}
+
 export const updateProduto = async (id: string, updates: Partial<Produto>) => {
   const { data, error } = await supabase
     .from('produtos')
