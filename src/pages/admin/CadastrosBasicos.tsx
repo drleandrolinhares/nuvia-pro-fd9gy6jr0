@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CrudSection } from '@/components/admin/CrudSection'
+import { EspecialidadeCamposConfig } from '@/components/admin/EspecialidadeCamposConfig'
 import * as cadastrosService from '@/services/cadastros'
 import { CadastroItem, AllowedTables } from '@/services/cadastros'
 import { toast } from 'sonner'
@@ -149,6 +150,12 @@ export default function CadastrosBasicos() {
           >
             Salas de Armazenamento
           </TabsTrigger>
+          <TabsTrigger
+            value="campos_especialidade"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-6 py-2.5 rounded-lg font-medium transition-all"
+          >
+            Campos por Especialidade
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-2">
@@ -180,6 +187,10 @@ export default function CadastrosBasicos() {
               isLoading={isLoadingData}
               {...makeHandlers('salas', setSalas)}
             />
+          </TabsContent>
+
+          <TabsContent value="campos_especialidade" className="m-0 focus-visible:outline-none">
+            <EspecialidadeCamposConfig especialidades={especialidades} />
           </TabsContent>
         </div>
       </Tabs>
