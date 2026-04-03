@@ -33,3 +33,53 @@ export const fetchProdutos = async () => {
 
   return { data: data as Produto[] | null, error }
 }
+
+export const fetchEspecialidades = async () => {
+  const { data, error } = await supabase.from('especialidades').select('*').order('nome')
+
+  return { data, error }
+}
+
+export const updateProduto = async (id: string, updates: Partial<Produto>) => {
+  const { data, error } = await supabase
+    .from('produtos')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  return { data, error }
+}
+
+export const fetchProdutoMovimentacoes = async (produto_id: string) => {
+  const [entradas, saidas] = await Promise.all([
+    supabase
+      .from('entrada_produtos')
+      .select(`
+        data_entrada, 
+        quantidade_comprada, 
+        preco_total, 
+        fornecedores (nome)
+      `)
+      .eq('produto_id', produto_id)
+      .order('data_entrada', { ascending: false })
+      .limit(3),
+    supabase
+      .from('saida_produtos')
+      .select(`
+        data_saida, 
+        quantidade, 
+        tipo_saida, 
+        descricao
+      `)
+      .eq('produto_id', produto_id)
+      .order('data_saida', { ascending: false })
+      .limit(3),
+  ])
+
+  return {
+    entradas: entradas.data || [],
+    saidas: saidas.data || [],
+    error: entradas.error || saidas.error,
+  }
+}

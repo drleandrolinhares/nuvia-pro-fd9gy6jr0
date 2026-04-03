@@ -340,6 +340,7 @@ export type Database = {
           observacoes: string | null
           produto_id: string
           quantidade: number
+          quantidade_devolver: number | null
           tipo_saida: string | null
           usuario_id: string | null
         }
@@ -351,6 +352,7 @@ export type Database = {
           observacoes?: string | null
           produto_id: string
           quantidade: number
+          quantidade_devolver?: number | null
           tipo_saida?: string | null
           usuario_id?: string | null
         }
@@ -362,6 +364,7 @@ export type Database = {
           observacoes?: string | null
           produto_id?: string
           quantidade?: number
+          quantidade_devolver?: number | null
           tipo_saida?: string | null
           usuario_id?: string | null
         }
@@ -695,6 +698,7 @@ export const Constants = {
 //   data_saida: timestamp with time zone (nullable, default: now())
 //   observacoes: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   quantidade_devolver: integer (nullable)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -910,6 +914,25 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_atualiza_estoque_saida()
+//   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_saida()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     -- Quando uma nova saída é registrada, reduz a quantidade no estoque do produto
+//     UPDATE public.produtos
+//     SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - NEW.quantidade
+//     WHERE id = NEW.produto_id;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: saida_produtos
+//   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
 // Table: especialidades

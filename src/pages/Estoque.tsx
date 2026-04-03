@@ -30,7 +30,10 @@ import { fetchProdutos, Produto } from '@/services/produtos'
 import { useToast } from '@/hooks/use-toast'
 import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
 import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
+import { VisualizarProdutoModal } from '@/components/estoque/VisualizarProdutoModal'
+import { EditarProdutoModal } from '@/components/estoque/EditarProdutoModal'
 import { PackagePlus, PackageMinus } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Estoque() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -41,7 +44,23 @@ export default function Estoque() {
   const [loading, setLoading] = useState(true)
   const [modalEntradaOpen, setModalEntradaOpen] = useState(false)
   const [modalSaidaOpen, setModalSaidaOpen] = useState(false)
+  const [produtoVisualizar, setProdutoVisualizar] = useState<Produto | null>(null)
+  const [produtoEditar, setProdutoEditar] = useState<Produto | null>(null)
+  const [hasEditPermission, setHasEditPermission] = useState(false)
   const { toast } = useToast()
+
+  useEffect(() => {
+    const checkPermission = async () => {
+      const { data: gerenciar } = await supabase.rpc('has_permission', {
+        permission_name: 'Gerenciar Estoque',
+      })
+      const { data: editar } = await supabase.rpc('has_permission', {
+        permission_name: 'Editar Estoque',
+      })
+      setHasEditPermission(!!gerenciar || !!editar)
+    }
+    checkPermission()
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -385,19 +404,23 @@ export default function Estoque() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => setProdutoVisualizar(item)}
                             className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-200"
                           >
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">Visualizar</span>
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Editar</span>
-                          </Button>
+                          {hasEditPermission && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setProdutoEditar(item)}
+                              className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">Editar</span>
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -418,6 +441,17 @@ export default function Estoque() {
         open={modalSaidaOpen}
         onOpenChange={setModalSaidaOpen}
         produtos={produtos}
+        onSuccess={loadData}
+      />
+      <VisualizarProdutoModal
+        open={!!produtoVisualizar}
+        onOpenChange={(open) => !open && setProdutoVisualizar(null)}
+        produto={produtoVisualizar}
+      />
+      <EditarProdutoModal
+        open={!!produtoEditar}
+        onOpenChange={(open) => !open && setProdutoEditar(null)}
+        produto={produtoEditar}
         onSuccess={loadData}
       />
     </div>
