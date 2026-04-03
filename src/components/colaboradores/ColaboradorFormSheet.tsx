@@ -58,7 +58,9 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
           let em = { nome: '', telefone: '', parentesco: '' }
           try {
             if (det?.beneficiario_emergencia) em = JSON.parse(det.beneficiario_emergencia)
-          } catch {}
+          } catch {
+            /* ignore */
+          }
           reset({
             ...usuario,
             password: '',
