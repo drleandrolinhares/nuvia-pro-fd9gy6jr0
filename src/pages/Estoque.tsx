@@ -28,6 +28,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { useToast } from '@/hooks/use-toast'
+import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
+import { PackagePlus } from 'lucide-react'
 
 export default function Estoque() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -36,6 +38,7 @@ export default function Estoque() {
   const [showCriticalOnly, setShowCriticalOnly] = useState(false)
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
+  const [modalEntradaOpen, setModalEntradaOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -43,21 +46,22 @@ export default function Estoque() {
     return () => clearInterval(timer)
   }, [])
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      const { data, error } = await fetchProdutos()
-      if (error) {
-        toast({
-          title: 'Erro ao carregar estoque',
-          description: error.message,
-          variant: 'destructive',
-        })
-      } else if (data) {
-        setProdutos(data)
-      }
-      setLoading(false)
+  const loadData = async () => {
+    setLoading(true)
+    const { data, error } = await fetchProdutos()
+    if (error) {
+      toast({
+        title: 'Erro ao carregar estoque',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else if (data) {
+      setProdutos(data)
     }
+    setLoading(false)
+  }
+
+  useEffect(() => {
     loadData()
   }, [toast])
 
@@ -108,13 +112,22 @@ export default function Estoque() {
             Controle de Materiais e Insumos Financeiros
           </p>
         </div>
-        <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800">
-          <span className="text-sm font-medium capitalize">
-            {format(currentTime, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </span>
-          <span className="text-2xl font-bold font-mono tracking-wider">
-            {format(currentTime, 'HH:mm:ss')}
-          </span>
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <Button
+            onClick={() => setModalEntradaOpen(true)}
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold w-full md:w-auto"
+          >
+            <PackagePlus className="w-4 h-4 mr-2" />
+            Nova Entrada
+          </Button>
+          <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800 w-full md:w-auto">
+            <span className="text-sm font-medium capitalize">
+              {format(currentTime, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </span>
+            <span className="text-2xl font-bold font-mono tracking-wider">
+              {format(currentTime, 'HH:mm:ss')}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -383,6 +396,12 @@ export default function Estoque() {
           </Table>
         </div>
       </Card>
+      <EntradaProdutoModal
+        open={modalEntradaOpen}
+        onOpenChange={setModalEntradaOpen}
+        produtos={produtos}
+        onSuccess={loadData}
+      />
     </div>
   )
 }

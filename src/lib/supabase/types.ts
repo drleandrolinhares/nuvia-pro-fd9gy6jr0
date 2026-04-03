@@ -104,6 +104,63 @@ export type Database = {
           },
         ]
       }
+      entrada_produtos: {
+        Row: {
+          criado_em: string | null
+          data_entrada: string | null
+          fornecedor_id: string | null
+          id: string
+          observacoes: string | null
+          preco_total: number
+          preco_unitario: number
+          produto_id: string
+          quantidade_comprada: number
+          quantidade_embalagem: number | null
+          unidade_consumo: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          data_entrada?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          observacoes?: string | null
+          preco_total: number
+          preco_unitario: number
+          produto_id: string
+          quantidade_comprada: number
+          quantidade_embalagem?: number | null
+          unidade_consumo?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          data_entrada?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          observacoes?: string | null
+          preco_total?: number
+          preco_unitario?: number
+          produto_id?: string
+          quantidade_comprada?: number
+          quantidade_embalagem?: number | null
+          unidade_consumo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'entrada_produtos_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
+            isOneToOne: false
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'entrada_produtos_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       especialidades: {
         Row: {
           id: string
@@ -118,6 +175,78 @@ export type Database = {
           nome?: string
         }
         Relationships: []
+      }
+      fornecedores: {
+        Row: {
+          cnpj: string | null
+          criado_em: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          criado_em?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          criado_em?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      historico_compras: {
+        Row: {
+          criado_em: string | null
+          data_compra: string | null
+          fornecedor_id: string | null
+          id: string
+          preco_anterior: number
+          produto_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          data_compra?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          preco_anterior: number
+          produto_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          data_compra?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          preco_anterior?: number
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'historico_compras_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
+            isOneToOne: false
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'historico_compras_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
       }
       permissoes: {
         Row: {
@@ -198,6 +327,57 @@ export type Database = {
             columns: ['especialidade_id']
             isOneToOne: false
             referencedRelation: 'especialidades'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      saida_produtos: {
+        Row: {
+          criado_em: string | null
+          data_saida: string | null
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          produto_id: string
+          quantidade: number
+          tipo_saida: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          data_saida?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          produto_id: string
+          quantidade: number
+          tipo_saida?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          data_saida?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          produto_id?: string
+          quantidade?: number
+          tipo_saida?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'saida_produtos_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'saida_produtos_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
             referencedColumns: ['id']
           },
         ]
@@ -454,9 +634,36 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: entrada_produtos
+//   id: uuid (not null, default: gen_random_uuid())
+//   produto_id: uuid (not null)
+//   fornecedor_id: uuid (nullable)
+//   quantidade_embalagem: integer (nullable)
+//   quantidade_comprada: integer (not null)
+//   unidade_consumo: text (nullable)
+//   preco_unitario: numeric (not null)
+//   preco_total: numeric (not null)
+//   data_entrada: timestamp with time zone (nullable, default: now())
+//   observacoes: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
+// Table: fornecedores
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   cnpj: text (nullable)
+//   telefone: text (nullable)
+//   email: text (nullable)
+//   endereco: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: historico_compras
+//   id: uuid (not null, default: gen_random_uuid())
+//   produto_id: uuid (not null)
+//   fornecedor_id: uuid (nullable)
+//   preco_anterior: numeric (not null)
+//   data_compra: timestamp with time zone (nullable, default: now())
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -478,6 +685,16 @@ export const Constants = {
 //   quantidade_estoque: integer (nullable, default: 0)
 //   quantidade_minima: integer (nullable, default: 0)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: saida_produtos
+//   id: uuid (not null, default: gen_random_uuid())
+//   produto_id: uuid (not null)
+//   quantidade: integer (not null)
+//   tipo_saida: text (nullable)
+//   descricao: text (nullable)
+//   usuario_id: uuid (nullable)
+//   data_saida: timestamp with time zone (nullable, default: now())
+//   observacoes: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -506,15 +723,30 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: entrada_produtos
+//   FOREIGN KEY entrada_produtos_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
+//   PRIMARY KEY entrada_produtos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY entrada_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 // Table: especialidades
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
+// Table: fornecedores
+//   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
+// Table: historico_compras
+//   FOREIGN KEY historico_compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
+//   PRIMARY KEY historico_compras_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY historico_compras_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: produtos
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
 //   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
+// Table: saida_produtos
+//   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+//   CHECK saida_produtos_tipo_saida_check: CHECK ((tipo_saida = ANY (ARRAY['definitiva'::text, 'parcial'::text])))
+//   FOREIGN KEY saida_produtos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 // Table: usuario_permissoes
 //   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
@@ -545,9 +777,39 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: entrada_produtos
+//   Policy "entrada_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "entrada_produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "entrada_produtos_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "entrada_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: especialidades
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: fornecedores
+//   Policy "fornecedores_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "fornecedores_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "fornecedores_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "fornecedores_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: historico_compras
+//   Policy "historico_compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "historico_compras_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "historico_compras_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "historico_compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: permissoes
 //   Policy "permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -562,6 +824,16 @@ export const Constants = {
 //     USING: true
 //   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: saida_produtos
+//   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "saida_produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "saida_produtos_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "saida_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: usuario_permissoes
 //   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
