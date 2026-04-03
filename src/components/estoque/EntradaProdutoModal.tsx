@@ -57,6 +57,7 @@ import {
   updateProduto,
 } from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
+import { supabase } from '@/lib/supabase/client'
 
 const formSchema = z.object({
   codigo_barras: z.string().optional(),
@@ -154,6 +155,39 @@ export function EntradaProdutoModal({
     fetchSalas().then((res) => {
       if (res.data) setSalas(res.data)
     })
+
+    const especialidadesSub = supabase
+      .channel('especialidades-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'especialidades' }, () => {
+        fetchEspecialidades().then((res) => {
+          if (res.data) setEspecialidades(res.data)
+        })
+      })
+      .subscribe()
+
+    const embalagensSub = supabase
+      .channel('embalagens-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'embalagens' }, () => {
+        fetchEmbalagens().then((res) => {
+          if (res.data) setEmbalagens(res.data)
+        })
+      })
+      .subscribe()
+
+    const salasSub = supabase
+      .channel('salas-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'salas' }, () => {
+        fetchSalas().then((res) => {
+          if (res.data) setSalas(res.data)
+        })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(especialidadesSub)
+      supabase.removeChannel(embalagensSub)
+      supabase.removeChannel(salasSub)
+    }
   }, [])
 
   useEffect(() => {
@@ -672,7 +706,7 @@ export function EntradaProdutoModal({
                           >
                             {field.value
                               ? salas.find((s) => s.id === field.value)?.nome
-                              : 'Selecione a sala...'}
+                              : 'Selecione...'}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>

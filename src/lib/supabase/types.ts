@@ -106,14 +106,17 @@ export type Database = {
       }
       embalagens: {
         Row: {
+          criado_em: string | null
           id: string
           nome: string
         }
         Insert: {
+          criado_em?: string | null
           id?: string
           nome: string
         }
         Update: {
+          criado_em?: string | null
           id?: string
           nome?: string
         }
@@ -187,14 +190,17 @@ export type Database = {
       }
       especialidades: {
         Row: {
+          criado_em: string | null
           id: string
           nome: string
         }
         Insert: {
+          criado_em?: string | null
           id?: string
           nome: string
         }
         Update: {
+          criado_em?: string | null
           id?: string
           nome?: string
         }
@@ -434,14 +440,17 @@ export type Database = {
       }
       salas: {
         Row: {
+          criado_em: string | null
           id: string
           nome: string
         }
         Insert: {
+          criado_em?: string | null
           id?: string
           nome: string
         }
         Update: {
+          criado_em?: string | null
           id?: string
           nome?: string
         }
@@ -702,6 +711,7 @@ export const Constants = {
 // Table: embalagens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: entrada_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -720,6 +730,7 @@ export const Constants = {
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -773,6 +784,7 @@ export const Constants = {
 // Table: salas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -879,6 +891,8 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: especialidades
+//   Policy "especialidades_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: fornecedores
