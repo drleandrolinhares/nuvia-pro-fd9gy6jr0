@@ -72,7 +72,10 @@ const navData = [
   {
     title: 'CONFIGURAÇÕES',
     icon: Settings,
-    items: [{ title: 'Parâmetros Gerais', url: '/configuracoes' }],
+    items: [
+      { title: 'Parâmetros Gerais', url: '/configuracoes' },
+      { title: 'Colaboradores', url: '/colaboradores', icon: Users },
+    ],
   },
 ]
 

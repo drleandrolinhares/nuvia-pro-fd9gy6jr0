@@ -7,6 +7,7 @@ import Layout from './components/Layout'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
 import Configuracoes from './pages/Configuracoes'
+import Colaboradores from './pages/Colaboradores'
 import Placeholder from './pages/Placeholder'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
@@ -38,6 +39,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
+        <Route path="/colaboradores" element={<Colaboradores />} />
 
         {/* Operacional Routes */}
         <Route path="/operacional/sac" element={<Placeholder />} />

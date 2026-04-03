@@ -9,6 +9,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      cargo_permissoes: {
+        Row: {
+          cargo_id: string
+          permissao_id: string
+        }
+        Insert: {
+          cargo_id: string
+          permissao_id: string
+        }
+        Update: {
+          cargo_id?: string
+          permissao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cargo_permissoes_cargo_id_fkey'
+            columns: ['cargo_id']
+            isOneToOne: false
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'cargo_permissoes_permissao_id_fkey'
+            columns: ['permissao_id']
+            isOneToOne: false
+            referencedRelation: 'permissoes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      cargos: {
+        Row: {
+          descricao: string | null
+          id: string
+          nome: string
+          setor: string | null
+        }
+        Insert: {
+          descricao?: string | null
+          id?: string
+          nome: string
+          setor?: string | null
+        }
+        Update: {
+          descricao?: string | null
+          id?: string
+          nome?: string
+          setor?: string | null
+        }
+        Relationships: []
+      }
+      colaboradores_detalhes: {
+        Row: {
+          agencia: string | null
+          banco: string | null
+          beneficiario_emergencia: string | null
+          conta: string | null
+          ctps: string | null
+          dependentes: number | null
+          pis: string | null
+          pix: string | null
+          usuario_id: string
+        }
+        Insert: {
+          agencia?: string | null
+          banco?: string | null
+          beneficiario_emergencia?: string | null
+          conta?: string | null
+          ctps?: string | null
+          dependentes?: number | null
+          pis?: string | null
+          pix?: string | null
+          usuario_id: string
+        }
+        Update: {
+          agencia?: string | null
+          banco?: string | null
+          beneficiario_emergencia?: string | null
+          conta?: string | null
+          ctps?: string | null
+          dependentes?: number | null
+          pis?: string | null
+          pix?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'colaboradores_detalhes_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: true
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       especialidades: {
         Row: {
           id: string
@@ -20,6 +115,27 @@ export type Database = {
         }
         Update: {
           id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      permissoes: {
+        Row: {
+          descricao: string | null
+          id: string
+          modulo: string | null
+          nome: string
+        }
+        Insert: {
+          descricao?: string | null
+          id?: string
+          modulo?: string | null
+          nome: string
+        }
+        Update: {
+          descricao?: string | null
+          id?: string
+          modulo?: string | null
           nome?: string
         }
         Relationships: []
@@ -86,33 +202,98 @@ export type Database = {
           },
         ]
       }
+      usuario_permissoes: {
+        Row: {
+          permissao_id: string
+          usuario_id: string
+        }
+        Insert: {
+          permissao_id: string
+          usuario_id: string
+        }
+        Update: {
+          permissao_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'usuario_permissoes_permissao_id_fkey'
+            columns: ['permissao_id']
+            isOneToOne: false
+            referencedRelation: 'permissoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'usuario_permissoes_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       usuarios: {
         Row: {
+          cargo_id: string | null
+          cpf: string | null
+          criado_em: string | null
+          data_admissao: string | null
+          data_nascimento: string | null
           email: string
+          endereco: string | null
           id: string
           nome: string
           role: string | null
+          salario: number | null
+          status: string | null
+          telefone: string | null
         }
         Insert: {
+          cargo_id?: string | null
+          cpf?: string | null
+          criado_em?: string | null
+          data_admissao?: string | null
+          data_nascimento?: string | null
           email: string
+          endereco?: string | null
           id: string
           nome: string
           role?: string | null
+          salario?: number | null
+          status?: string | null
+          telefone?: string | null
         }
         Update: {
+          cargo_id?: string | null
+          cpf?: string | null
+          criado_em?: string | null
+          data_admissao?: string | null
+          data_nascimento?: string | null
           email?: string
+          endereco?: string | null
           id?: string
           nome?: string
           role?: string | null
+          salario?: number | null
+          status?: string | null
+          telefone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'usuarios_cargo_id_fkey'
+            columns: ['cargo_id']
+            isOneToOne: false
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -254,9 +435,32 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: cargo_permissoes
+//   cargo_id: uuid (not null)
+//   permissao_id: uuid (not null)
+// Table: cargos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   descricao: text (nullable)
+//   setor: text (nullable)
+// Table: colaboradores_detalhes
+//   usuario_id: uuid (not null)
+//   banco: text (nullable)
+//   agencia: text (nullable)
+//   conta: text (nullable)
+//   pix: text (nullable)
+//   ctps: text (nullable)
+//   pis: text (nullable)
+//   dependentes: integer (nullable, default: 0)
+//   beneficiario_emergencia: text (nullable)
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
+// Table: permissoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   descricao: text (nullable)
+//   modulo: text (nullable)
 // Table: produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -273,27 +477,75 @@ export const Constants = {
 //   quantidade_estoque: integer (nullable, default: 0)
 //   quantidade_minima: integer (nullable, default: 0)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: usuario_permissoes
+//   usuario_id: uuid (not null)
+//   permissao_id: uuid (not null)
 // Table: usuarios
 //   id: uuid (not null)
 //   email: text (not null)
 //   nome: text (not null)
 //   role: text (nullable, default: 'user'::text)
+//   cpf: text (nullable)
+//   data_nascimento: date (nullable)
+//   telefone: text (nullable)
+//   endereco: text (nullable)
+//   cargo_id: uuid (nullable)
+//   data_admissao: date (nullable)
+//   salario: numeric (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
 
 // --- CONSTRAINTS ---
+// Table: cargo_permissoes
+//   FOREIGN KEY cargo_permissoes_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE CASCADE
+//   FOREIGN KEY cargo_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
+//   PRIMARY KEY cargo_permissoes_pkey: PRIMARY KEY (cargo_id, permissao_id)
+// Table: cargos
+//   PRIMARY KEY cargos_pkey: PRIMARY KEY (id)
+// Table: colaboradores_detalhes
+//   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
+//   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: especialidades
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
+// Table: permissoes
+//   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: produtos
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
 //   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
+// Table: usuario_permissoes
+//   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
+//   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
+//   FOREIGN KEY usuario_permissoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: usuarios
+//   FOREIGN KEY usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: cargo_permissoes
+//   Policy "cargo_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "cargo_permissoes_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: cargos
+//   Policy "cargos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "cargos_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: colaboradores_detalhes
+//   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "colaboradores_detalhes_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR is_admin())
 // Table: especialidades
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: permissoes
+//   Policy "permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "permissoes_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: produtos
 //   Policy "produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
@@ -304,11 +556,42 @@ export const Constants = {
 //     USING: true
 //   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: usuario_permissoes
+//   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "usuario_permissoes_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: usuarios
+//   Policy "usuarios_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "usuarios_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: is_admin()
 //   Policy "usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (id = auth.uid())
+//     USING: ((id = auth.uid()) OR is_admin())
+
+// --- DATABASE FUNCTIONS ---
+// FUNCTION is_admin()
+//   CREATE OR REPLACE FUNCTION public.is_admin()
+//    RETURNS boolean
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_role text;
+//     v_email text;
+//   BEGIN
+//     v_email := current_setting('request.jwt.claims', true)::jsonb ->> 'email';
+//     IF v_email IN ('drleandro@nuvia.com', 'drleandrolinhares@gmail.com') THEN
+//       RETURN true;
+//     END IF;
+//
+//     SELECT role INTO v_role FROM public.usuarios WHERE id = auth.uid();
+//     RETURN v_role = 'admin';
+//   END;
+//   $function$
+//
 
 // --- INDEXES ---
 // Table: especialidades
