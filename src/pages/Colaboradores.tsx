@@ -37,6 +37,7 @@ import {
   ShieldAlert,
   Loader2,
 } from 'lucide-react'
+import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,26 +59,40 @@ export default function Colaboradores() {
   const [statusFilter, setStatusFilter] = useState<string>('todos')
   const [cargoFilter, setCargoFilter] = useState<string>('todos')
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const permitted = await checkHasPermission('Gerenciar Colaboradores')
-        setHasPermission(permitted)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [editingUsuario, setEditingUsuario] = useState<UsuarioWithCargo | null>(null)
 
-        if (permitted) {
-          const [us, cs] = await Promise.all([getUsuarios(), getCargos()])
-          setUsuarios(us)
-          setCargos(cs)
-        }
-      } catch (error) {
-        console.error(error)
-        toast.error('Erro ao carregar colaboradores')
-      } finally {
-        setLoading(false)
+  const load = async () => {
+    try {
+      const permitted = await checkHasPermission('Gerenciar Colaboradores')
+      setHasPermission(permitted)
+
+      if (permitted) {
+        const [us, cs] = await Promise.all([getUsuarios(), getCargos()])
+        setUsuarios(us)
+        setCargos(cs)
       }
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao carregar colaboradores')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
+
+  const handleNew = () => {
+    setEditingUsuario(null)
+    setSheetOpen(true)
+  }
+
+  const handleEdit = (u: UsuarioWithCargo) => {
+    setEditingUsuario(u)
+    setSheetOpen(true)
+  }
 
   const handleToggleStatus = async (id: string, currentStatus: string | null) => {
     try {
@@ -133,7 +148,10 @@ export default function Colaboradores() {
           </h1>
           <p className="text-muted-foreground mt-1">Visualize e gerencie a equipe da clínica.</p>
         </div>
-        <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-colors">
+        <Button
+          onClick={handleNew}
+          className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-colors"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Novo Colaborador
         </Button>
@@ -254,10 +272,16 @@ export default function Colaboradores() {
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer">
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(usuario)}
+                              className="cursor-pointer"
+                            >
                               <Eye className="w-4 h-4 mr-2 text-slate-500" /> Visualizar Detalhes
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(usuario)}
+                              className="cursor-pointer"
+                            >
                               <Edit className="w-4 h-4 mr-2 text-slate-500" /> Editar
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

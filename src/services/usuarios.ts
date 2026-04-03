@@ -29,6 +29,62 @@ export async function updateUsuarioStatus(id: string, status: string) {
   if (error) throw error
 }
 
+export async function getColaboradorDetalhes(usuarioId: string) {
+  const { data, error } = await supabase
+    .from('colaboradores_detalhes')
+    .select('*')
+    .eq('usuario_id', usuarioId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function saveColaborador(data: any, isEdit: boolean) {
+  let userId = data.id
+
+  if (!isEdit) {
+    const { data: edgeData, error: edgeError } = await supabase.functions.invoke('create-user', {
+      body: {
+        email: data.email,
+        password: data.password,
+        nome: data.nome,
+      },
+    })
+    if (edgeError) throw edgeError
+    if (edgeData?.error) throw new Error(edgeData.error)
+    userId = edgeData.user.id
+  }
+
+  const { error: userError } = await supabase.from('usuarios').upsert({
+    id: userId,
+    email: data.email,
+    nome: data.nome,
+    cpf: data.cpf,
+    data_nascimento: data.data_nascimento || null,
+    telefone: data.telefone,
+    endereco: data.endereco,
+    cargo_id: data.cargo_id,
+    data_admissao: data.data_admissao || null,
+    salario: data.salario || null,
+    status: data.status || 'ativo',
+  })
+  if (userError) throw userError
+
+  const { error: detalhesError } = await supabase.from('colaboradores_detalhes').upsert({
+    usuario_id: userId,
+    banco: data.banco,
+    agencia: data.agencia,
+    conta: data.conta,
+    pix: data.pix,
+    ctps: data.ctps,
+    pis: data.pis,
+    beneficiario_emergencia: data.beneficiario_emergencia,
+  })
+  if (detalhesError) throw detalhesError
+
+  return userId
+}
+
 export async function checkHasPermission(permissionName: string) {
   const { data: isAdmin } = await supabase.rpc('is_admin')
   if (isAdmin) return true
