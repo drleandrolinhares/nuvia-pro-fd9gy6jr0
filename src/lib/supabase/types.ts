@@ -510,6 +510,7 @@ export const Constants = {
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
 // Table: permissoes
+//   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: produtos
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
@@ -637,5 +638,7 @@ export const Constants = {
 // --- INDEXES ---
 // Table: especialidades
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
+// Table: permissoes
+//   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)

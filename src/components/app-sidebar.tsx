@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Activity,
   BarChart3,
@@ -34,6 +34,15 @@ import {
 } from '@/components/ui/sidebar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/hooks/use-auth'
 
 const navData = [
   {
@@ -81,6 +90,13 @@ const navData = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <Sidebar className="border-r-sidebar-border">
@@ -170,28 +186,46 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 px-2 py-2 mb-2">
-              <Avatar className="size-9 border border-sidebar-border">
-                <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1" />
-                <AvatarFallback className="bg-secondary text-secondary-foreground">
-                  LS
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-medium truncate text-sidebar-foreground">
-                  drleandro@nuvia.com
-                </span>
-                <span className="text-xs text-sidebar-foreground/60 truncate">
-                  LEANDRO DE SOUZA
-                </span>
-              </div>
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton className="text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors">
-              <LogOut className="size-4" />
-              <span>SAIR DO SISTEMA</span>
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-3 px-2 py-2 mb-2 cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors w-full outline-none">
+                  <Avatar className="size-9 border border-sidebar-border">
+                    <AvatarImage
+                      src={`https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`}
+                    />
+                    <AvatarFallback className="bg-secondary text-secondary-foreground">
+                      {user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() ||
+                        user?.email?.substring(0, 2)?.toUpperCase() ||
+                        'US'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col overflow-hidden flex-1 text-left">
+                    <span className="text-sm font-medium truncate text-sidebar-foreground">
+                      {user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário'}
+                    </span>
+                    <span className="text-xs text-sidebar-foreground/60 truncate">
+                      {user?.email || ''}
+                    </span>
+                  </div>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end" className="w-56 mb-2">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/perfil')} className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Meu Perfil</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair do Sistema</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
