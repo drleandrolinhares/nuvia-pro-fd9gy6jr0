@@ -211,9 +211,21 @@ export function EntradaProdutoModal({
 
   useEffect(() => {
     if (watchedEspecialidadeId) {
-      fetchEspecialidadeCampos(watchedEspecialidadeId).then((res) => {
-        if (res.data) setCamposDinamicosConfig(res.data)
-      })
+      supabase
+        .from('campo_configuracao')
+        .select('*, campos_personalizados(*)')
+        .eq('especialidade_id', watchedEspecialidadeId)
+        .eq('ativo', true)
+        .order('ordem', { ascending: true })
+        .then((res) => {
+          if (res.data && res.data.length > 0) {
+            setCamposDinamicosConfig(res.data)
+          } else {
+            fetchEspecialidadeCampos(watchedEspecialidadeId).then((res2) => {
+              if (res2.data) setCamposDinamicosConfig(res2.data)
+            })
+          }
+        })
     } else {
       setCamposDinamicosConfig([])
     }
@@ -621,6 +633,7 @@ export function EntradaProdutoModal({
                   {camposDinamicosConfig.map((config) => {
                     const campo = config.campos || config.campos_personalizados
                     if (!campo) return null
+                    const labelName = config.label_customizado || campo.nome
                     return (
                       <FormField
                         key={config.campo_id}
@@ -629,12 +642,12 @@ export function EntradaProdutoModal({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[#d4af37] font-bold text-[11px] uppercase tracking-wider">
-                              {campo.nome}
+                              {labelName}
                             </FormLabel>
                             <FormControl>
                               {campo.tipo === 'dropdown' && campo.opcoes ? (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
-                                  <SelectTrigger className="bg-slate-100 border-[#1a2a4a] text-[#1a2a4a] font-bold h-9 focus:ring-[#d4af37]">
+                                  <SelectTrigger className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus:ring-[#d4af37]">
                                     <SelectValue placeholder="Selecione..." />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -648,7 +661,7 @@ export function EntradaProdutoModal({
                               ) : (
                                 <Input
                                   type={campo.tipo === 'number' ? 'number' : 'text'}
-                                  className="bg-slate-100 border-[#1a2a4a] text-[#1a2a4a] font-bold h-9 focus-visible:ring-[#d4af37] focus-visible:border-[#d4af37]"
+                                  className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus-visible:ring-[#d4af37] focus-visible:border-[#d4af37]"
                                   {...field}
                                   value={field.value || ''}
                                 />

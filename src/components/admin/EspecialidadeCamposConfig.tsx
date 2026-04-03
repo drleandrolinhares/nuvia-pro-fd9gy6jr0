@@ -17,14 +17,23 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Settings2 } from 'lucide-react'
+import { Loader2, Settings2, ArrowUp, ArrowDown } from 'lucide-react'
 import * as cadastrosService from '@/services/cadastros'
 import { CadastroItem, CampoPersonalizado } from '@/services/cadastros'
 
 interface Props {
   especialidades: CadastroItem[]
+}
+
+type ConfigItem = {
+  campo_id: string
+  ativo: boolean
+  label_customizado: string
+  ordem: number
+  nome_original: string
 }
 
 export function EspecialidadeCamposConfig({ especialidades }: Props) {
@@ -34,7 +43,7 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedEspecialidade, setSelectedEspecialidade] = useState<CadastroItem | null>(null)
 
-  const [activeCampos, setActiveCampos] = useState<Set<string>>(new Set())
+  const [configs, setConfigs] = useState<ConfigItem[]>([])
   const [isLoadingConfig, setIsLoadingConfig] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -58,8 +67,33 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
     setIsModalOpen(true)
     setIsLoadingConfig(true)
     try {
-      const ativos = await cadastrosService.getEspecialidadeCamposAtivos(especialidade.id)
-      setActiveCampos(new Set(ativos))
+      const existingConfigs = await cadastrosService.getCampoConfiguracoes(especialidade.id)
+
+      const mergedConfigs: ConfigItem[] = campos.map((campo) => {
+        const existing = existingConfigs.find((c) => c.campo_id === campo.id)
+        return {
+          campo_id: campo.id,
+          nome_original: campo.nome,
+          ativo: existing?.ativo ?? false,
+          label_customizado: existing?.label_customizado || '',
+          ordem: existing?.ordem ?? 999,
+        }
+      })
+
+      // Sort by order, then by original name
+      mergedConfigs.sort((a, b) => {
+        if (a.ativo && !b.ativo) return -1
+        if (!a.ativo && b.ativo) return 1
+        if (a.ordem !== b.ordem) return a.ordem - b.ordem
+        return a.nome_original.localeCompare(b.nome_original)
+      })
+
+      // Re-normalize order
+      mergedConfigs.forEach((c, idx) => {
+        c.ordem = idx + 1
+      })
+
+      setConfigs(mergedConfigs)
     } catch (error: any) {
       toast.error('Erro ao carregar configurações', { description: error.message })
     } finally {
@@ -68,25 +102,52 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
   }
 
   const handleToggleCampo = (campoId: string) => {
-    setActiveCampos((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(campoId)) {
-        newSet.delete(campoId)
-      } else {
-        newSet.add(campoId)
-      }
-      return newSet
-    })
+    setConfigs((prev) => prev.map((c) => (c.campo_id === campoId ? { ...c, ativo: !c.ativo } : c)))
+  }
+
+  const handleChangeLabel = (campoId: string, value: string) => {
+    setConfigs((prev) =>
+      prev.map((c) => (c.campo_id === campoId ? { ...c, label_customizado: value } : c)),
+    )
+  }
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index > 0) {
+      setConfigs((prev) => {
+        const newConfigs = [...prev]
+        const temp = newConfigs[index]
+        newConfigs[index] = newConfigs[index - 1]
+        newConfigs[index - 1] = temp
+        newConfigs.forEach((c, idx) => (c.ordem = idx + 1))
+        return newConfigs
+      })
+    } else if (direction === 'down' && index < configs.length - 1) {
+      setConfigs((prev) => {
+        const newConfigs = [...prev]
+        const temp = newConfigs[index]
+        newConfigs[index] = newConfigs[index + 1]
+        newConfigs[index + 1] = temp
+        newConfigs.forEach((c, idx) => (c.ordem = idx + 1))
+        return newConfigs
+      })
+    }
   }
 
   const handleSave = async () => {
     if (!selectedEspecialidade) return
     setIsSaving(true)
     try {
-      await cadastrosService.salvarEspecialidadeCampos(
-        selectedEspecialidade.id,
-        Array.from(activeCampos),
-      )
+      const toSave = configs
+        .filter((c) => c.ativo)
+        .map((c) => ({
+          especialidade_id: selectedEspecialidade.id,
+          campo_id: c.campo_id,
+          label_customizado: c.label_customizado || null,
+          ordem: c.ordem,
+          ativo: c.ativo,
+        }))
+
+      await cadastrosService.salvarCampoConfiguracoes(selectedEspecialidade.id, toSave as any)
       toast.success('Configurações salvas com sucesso!')
       setIsModalOpen(false)
     } catch (error: any) {
@@ -141,11 +202,11 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800 text-slate-100">
+        <DialogContent className="sm:max-w-[600px] bg-slate-950 border-slate-800 text-slate-100">
           <DialogHeader>
-            <DialogTitle className="text-amber-500">Campos Adicionais</DialogTitle>
+            <DialogTitle className="text-amber-500">Configuração de Campos</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Selecione os campos que devem ser exibidos ao cadastrar produtos para a especialidade{' '}
+              Personalize a exibição dos campos para a especialidade{' '}
               <strong className="text-slate-200 font-semibold">
                 {selectedEspecialidade?.nome}
               </strong>
@@ -159,30 +220,65 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                 <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
               </div>
             ) : (
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                {campos.map((campo) => (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                {configs.map((config, index) => (
                   <div
-                    key={campo.id}
-                    className="flex items-center space-x-3 p-2 hover:bg-slate-900 rounded-md transition-colors"
+                    key={config.campo_id}
+                    className="flex items-center gap-3 p-3 bg-slate-900 rounded-md border border-slate-800"
                   >
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 hover:text-amber-500"
+                        disabled={index === 0}
+                        onClick={() => handleMove(index, 'up')}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 hover:text-amber-500"
+                        disabled={index === configs.length - 1}
+                        onClick={() => handleMove(index, 'down')}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+
                     <Checkbox
-                      id={`campo-${campo.id}`}
-                      checked={activeCampos.has(campo.id)}
-                      onCheckedChange={() => handleToggleCampo(campo.id)}
-                      className="border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                      id={`campo-${config.campo_id}`}
+                      checked={config.ativo}
+                      onCheckedChange={() => handleToggleCampo(config.campo_id)}
+                      className="border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 mt-1 self-start"
                     />
-                    <Label
-                      htmlFor={`campo-${campo.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                    >
-                      {campo.nome}
-                    </Label>
+
+                    <div className="flex-1 flex flex-col gap-2">
+                      <Label
+                        htmlFor={`campo-${config.campo_id}`}
+                        className="text-sm font-medium leading-none text-slate-300 cursor-pointer"
+                      >
+                        {config.nome_original}
+                      </Label>
+                      {config.ativo && (
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-xs text-slate-500">
+                            Label Customizado (Opcional)
+                          </Label>
+                          <Input
+                            value={config.label_customizado}
+                            onChange={(e) => handleChangeLabel(config.campo_id, e.target.value)}
+                            placeholder={config.nome_original}
+                            className="bg-slate-950 border-slate-800 text-sm h-8"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
-                {campos.length === 0 && (
-                  <p className="text-center text-slate-500 text-sm">
-                    Nenhum campo disponível no sistema.
-                  </p>
+                {configs.length === 0 && (
+                  <p className="text-center text-slate-500 text-sm">Nenhum campo disponível.</p>
                 )}
               </div>
             )}
