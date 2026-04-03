@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Boxes,
   Loader2,
+  Trash2,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -26,7 +27,7 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { fetchProdutos, Produto } from '@/services/produtos'
+import { fetchProdutos, Produto, deleteProduto } from '@/services/produtos'
 import { useToast } from '@/hooks/use-toast'
 import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
 import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
@@ -34,6 +35,16 @@ import { VisualizarProdutoModal } from '@/components/estoque/VisualizarProdutoMo
 import { EditarProdutoModal } from '@/components/estoque/EditarProdutoModal'
 import { PackagePlus, PackageMinus } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 export default function Estoque() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -46,6 +57,8 @@ export default function Estoque() {
   const [modalSaidaOpen, setModalSaidaOpen] = useState(false)
   const [produtoVisualizar, setProdutoVisualizar] = useState<Produto | null>(null)
   const [produtoEditar, setProdutoEditar] = useState<Produto | null>(null)
+  const [produtoExcluir, setProdutoExcluir] = useState<Produto | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [canManage, setCanManage] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
   const { toast } = useToast()
@@ -87,6 +100,30 @@ export default function Estoque() {
   useEffect(() => {
     loadData()
   }, [toast])
+
+  const handleDelete = async () => {
+    if (!produtoExcluir) return
+
+    setIsDeleting(true)
+    const { error } = await deleteProduto(produtoExcluir.id)
+
+    if (error) {
+      toast({
+        title: 'Erro ao excluir produto',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else {
+      toast({
+        title: 'Produto excluído',
+        description: 'O produto foi removido com sucesso.',
+      })
+      loadData()
+    }
+
+    setIsDeleting(false)
+    setProdutoExcluir(null)
+  }
 
   const { capitalInvestido, unidadesTotais, maiorCapital, maiorVolume } = useMemo(() => {
     let cap = 0
@@ -427,6 +464,17 @@ export default function Estoque() {
                               <span className="sr-only">Editar</span>
                             </Button>
                           )}
+                          {canManage && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setProdutoExcluir(item)}
+                              className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-100"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Excluir</span>
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -460,6 +508,39 @@ export default function Estoque() {
         produto={produtoEditar}
         onSuccess={loadData}
       />
+      <AlertDialog
+        open={!!produtoExcluir}
+        onOpenChange={(open) => !open && !isDeleting && setProdutoExcluir(null)}
+      >
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Produto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o produto{' '}
+              <strong className="text-slate-900">{produtoExcluir?.nome}</strong>? Esta ação removerá
+              o item permanentemente e não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-600"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

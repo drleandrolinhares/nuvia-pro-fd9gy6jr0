@@ -100,6 +100,12 @@ export const updateProduto = async (id: string, updates: Partial<Produto>) => {
   return { data, error }
 }
 
+export const deleteProduto = async (id: string) => {
+  const { data, error } = await supabase.from('produtos').delete().eq('id', id)
+
+  return { data, error }
+}
+
 export const fetchProdutoMovimentacoes = async (produto_id: string) => {
   const [entradas, saidas] = await Promise.all([
     supabase
