@@ -24,7 +24,14 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 
-import { createProduto, fetchEspecialidades, Produto } from '@/services/produtos'
+import {
+  createProduto,
+  fetchEspecialidades,
+  Produto,
+  fetchEspecialidadeCampos,
+  upsertProdutoCamposValores,
+} from '@/services/produtos'
+import * as cadastrosService from '@/services/cadastros'
 
 const formSchema = z.object({
   codigo_barras: z.string().optional(),
@@ -53,6 +60,13 @@ export function CriarProdutoModal({
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
+  const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
+  const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
+
+  const [marcasImplante, setMarcasImplante] = useState<{ id: string; nome: string }[]>([])
+  const [diametrosImplante, setDiametrosImplante] = useState<{ id: string; nome: string }[]>([])
+  const [tamanhosImplante, setTamanhosImplante] = useState<{ id: string; nome: string }[]>([])
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,8 +90,24 @@ export function CriarProdutoModal({
       fetchEspecialidades().then((res) => {
         if (res.data) setEspecialidades(res.data)
       })
+      cadastrosService.getItems('marcas_implante').then(setMarcasImplante)
+      cadastrosService.getItems('diametros_implante').then(setDiametrosImplante)
+      cadastrosService.getItems('tamanhos_implante').then(setTamanhosImplante)
     }
   }, [open, form, initialNome])
+
+  const watchedEspecialidadeId = form.watch('especialidade_id')
+
+  useEffect(() => {
+    if (watchedEspecialidadeId && watchedEspecialidadeId !== 'none') {
+      fetchEspecialidadeCampos(watchedEspecialidadeId).then((res) => {
+        if (res.data) setCamposDinamicos(res.data)
+      })
+    } else {
+      setCamposDinamicos([])
+    }
+    setValoresDinamicos({})
+  }, [watchedEspecialidadeId])
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
@@ -99,6 +129,9 @@ export function CriarProdutoModal({
         variant: 'destructive',
       })
     } else if (data) {
+      if (Object.keys(valoresDinamicos).length > 0) {
+        await upsertProdutoCamposValores(data.id, valoresDinamicos)
+      }
       toast({ title: 'Sucesso', description: 'Produto criado com sucesso.' })
       onSuccess(data as Produto)
       onOpenChange(false)
@@ -210,6 +243,67 @@ export function CriarProdutoModal({
                 </FormItem>
               )}
             />
+
+            {camposDinamicos.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
+                <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider">
+                  DADOS DO IMPLANTE
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {camposDinamicos.map((config) => {
+                    const campo = config.campos
+                    if (!campo) return null
+
+                    let options: { id: string; nome: string }[] = []
+                    if (campo.nome.toLowerCase().includes('marca')) options = marcasImplante
+                    else if (
+                      campo.nome.toLowerCase().includes('diâmetro') ||
+                      campo.nome.toLowerCase().includes('diametro')
+                    )
+                      options = diametrosImplante
+                    else if (campo.nome.toLowerCase().includes('tamanho'))
+                      options = tamanhosImplante
+
+                    return (
+                      <div key={campo.id} className="space-y-2">
+                        <Label className="text-slate-200">{campo.nome}</Label>
+                        {options.length > 0 || campo.tipo === 'select' ? (
+                          <Select
+                            value={valoresDinamicos[campo.id] || ''}
+                            onValueChange={(val) =>
+                              setValoresDinamicos((prev) => ({ ...prev, [campo.id]: val }))
+                            }
+                          >
+                            <SelectTrigger className="bg-white/5 border-white/10 text-white focus:ring-[#d4af37]">
+                              <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.map((opt) => (
+                                <SelectItem key={opt.id} value={opt.nome}>
+                                  {opt.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            className="bg-white/5 border-white/10 text-white focus-visible:ring-[#d4af37]"
+                            placeholder={`Digite ${campo.nome.toLowerCase()}`}
+                            value={valoresDinamicos[campo.id] || ''}
+                            onChange={(e) =>
+                              setValoresDinamicos((prev) => ({
+                                ...prev,
+                                [campo.id]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

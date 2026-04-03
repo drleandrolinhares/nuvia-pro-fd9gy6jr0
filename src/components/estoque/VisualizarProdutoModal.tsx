@@ -5,7 +5,12 @@ import { Loader2, ArrowDownRight, ArrowUpRight, Package } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Produto, fetchProdutoMovimentacoes } from '@/services/produtos'
+import {
+  Produto,
+  fetchProdutoMovimentacoes,
+  fetchEspecialidadeCampos,
+  fetchProdutoCamposValores,
+} from '@/services/produtos'
 
 interface VisualizarProdutoModalProps {
   produto: Produto | null
@@ -22,9 +27,29 @@ export function VisualizarProdutoModal({
   const [saidas, setSaidas] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
+  const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
+  const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
+
   useEffect(() => {
     if (open && produto) {
       loadMovimentacoes()
+      if (produto.especialidade_id) {
+        fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
+          if (res.data) setCamposDinamicos(res.data)
+        })
+        fetchProdutoCamposValores(produto.id).then((res) => {
+          if (res.data) {
+            const vals: Record<string, string> = {}
+            res.data.forEach((item: any) => {
+              vals[item.campo_id] = item.valor
+            })
+            setValoresDinamicos(vals)
+          }
+        })
+      } else {
+        setCamposDinamicos([])
+        setValoresDinamicos({})
+      }
     }
   }, [open, produto])
 
@@ -90,6 +115,28 @@ export function VisualizarProdutoModal({
               </p>
             </div>
           </div>
+
+          {camposDinamicos.length > 0 && (
+            <div className="bg-[#1a2a4a] text-white p-5 rounded-xl space-y-4 shadow-sm animate-fade-in">
+              <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider border-b border-white/10 pb-2">
+                Dados do Implante
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {camposDinamicos.map((config) => {
+                  const campo = config.campos
+                  if (!campo) return null
+                  return (
+                    <div key={campo.id}>
+                      <p className="text-xs font-medium text-slate-300">{campo.nome}</p>
+                      <p className="font-semibold text-white mt-1">
+                        {valoresDinamicos[campo.id] || '-'}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex justify-center py-8">
