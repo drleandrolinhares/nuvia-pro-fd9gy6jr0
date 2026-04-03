@@ -212,6 +212,7 @@ export function EntradaProdutoModal({
           observacoes: '',
           observacoes_criticas: '',
           manter_campos: false,
+          referencia_consumo: 'quantidade_comprada',
         })
         setSelectedProdutoId(null)
         setHistorico([])
@@ -247,26 +248,28 @@ export function EntradaProdutoModal({
       } else {
         form.setValue('data_validade', '')
       }
+      if (produto.referencia_consumo === 'itens_embalagem' || produto.referencia_consumo === 'quantidade_comprada') {
+        form.setValue('referencia_consumo', produto.referencia_consumo)
+      }
     } else {
       setSelectedProdutoId(null)
-      form.setValue('codigo_barras', '')
-      form.setValue('marca', '')
+      form.setValue('codigo_barras', '')      form.setValue('marca', '')
       form.setValue('especialidade_id', '')
       form.setValue('embalagem_id', '')
       form.setValue('sala_id', '')
       form.setValue('numero_armario', '')
       form.setValue('estoque_minimo', 0)
       form.setValue('data_validade', '')
+      form.setValue('referencia_consumo', 'quantidade_comprada')
       setHistorico([])
     }
   }
-
   const qtyComprada = form.watch('quantidade_comprada') || 1
   const itensEmb = form.watch('itens_embalagem') || 1
   const refConsumo = form.watch('referencia_consumo')
   const valorTotal = form.watch('valor_total') || 0
 
-  const totalAdicionado = refConsumo === 'itens_embalagem' ? qtyComprada * itensEmb : qtyComprada
+  const totalAdicionado = refConsumo === 'itens_embalagem' ? itensEmb : qtyComprada
   const valorAtribuido = totalAdicionado > 0 ? valorTotal / totalAdicionado : 0
   const estoqueAtual = selectedProdutoId
     ? localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0
@@ -299,8 +302,8 @@ export function EntradaProdutoModal({
         quantidade_estoque: 0,
         custo_unitario: 0,
         validade: dataValidadeParsed,
+        referencia_consumo: values.referencia_consumo,
       })
-
       if (error || !novoProduto) {
         toast({ title: 'Erro', description: 'Erro ao criar produto.', variant: 'destructive' })
         setLoading(false)
@@ -318,9 +321,9 @@ export function EntradaProdutoModal({
         numero_armario: values.numero_armario || null,
         quantidade_minima: values.estoque_minimo,
         validade: dataValidadeParsed,
+        referencia_consumo: values.referencia_consumo,
       })
     }
-
     const obsFinal = []
     if (values.observacoes) obsFinal.push(values.observacoes)
 
@@ -328,14 +331,14 @@ export function EntradaProdutoModal({
     const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
     const totalAdicSubmit =
       refConsumo === 'itens_embalagem'
-        ? values.quantidade_comprada * values.itens_embalagem
+        ? values.itens_embalagem
         : values.quantidade_comprada
     const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
     const { error: entradaError } = await registrarEntrada({
       produto_id: finalProdutoId,
       fornecedor_id: null,
-      quantidade_embalagem: refConsumo === 'itens_embalagem' ? values.itens_embalagem : 1,
+      quantidade_embalagem: values.itens_embalagem,
       quantidade_comprada: values.quantidade_comprada,
       unidade_consumo: embalagemObj ? embalagemObj.nome : 'Unidade',
       preco_unitario: valorAtribSubmit,

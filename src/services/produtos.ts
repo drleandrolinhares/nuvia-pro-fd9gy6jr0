@@ -18,6 +18,7 @@ export interface Produto {
   custo_unitario: number
   quantidade_estoque: number
   quantidade_minima: number
+  referencia_consumo?: string | null
   especialidades?: {
     nome: string
   } | null

@@ -97,6 +97,8 @@ export function SaidaProdutoModal({
 
   const tipoSaida = form.watch('tipo_saida')
   const quantidade = form.watch('quantidade')
+  const produtoId = form.watch('produto_id')
+  const selectedProduto = produtos.find((p) => p.id === produtoId)
 
   useEffect(() => {
     if (tipoSaida === 'parcial' && quantidade) {
@@ -239,7 +241,15 @@ export function SaidaProdutoModal({
                 name="quantidade"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantidade a Sair *</FormLabel>
+                    <FormLabel>
+                      Quantidade a Sair{' '}
+                      {selectedProduto?.referencia_consumo === 'itens_embalagem'
+                        ? '(Itens)'
+                        : selectedProduto?.referencia_consumo === 'quantidade_comprada'
+                          ? '(Embalagens/Qtd Comprada)'
+                          : ''}{' '}
+                      *
+                    </FormLabel>
                     <FormControl>
                       <Input type="number" min="1" className="border-slate-300" {...field} />
                     </FormControl>
@@ -291,7 +301,13 @@ export function SaidaProdutoModal({
                 render={({ field }) => (
                   <FormItem className="animate-fade-in-down bg-amber-50 p-3 rounded-lg border border-amber-100">
                     <FormLabel className="text-amber-900 font-semibold">
-                      Quantidade a Devolver *
+                      Quantidade a Devolver{' '}
+                      {selectedProduto?.referencia_consumo === 'itens_embalagem'
+                        ? '(Itens)'
+                        : selectedProduto?.referencia_consumo === 'quantidade_comprada'
+                          ? '(Embalagens/Qtd Comprada)'
+                          : ''}{' '}
+                      *
                     </FormLabel>
                     <FormControl>
                       <Input
