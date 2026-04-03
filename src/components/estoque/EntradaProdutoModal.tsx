@@ -218,10 +218,24 @@ export function EntradaProdutoModal({
       })
       .subscribe()
 
+    const fornecedoresSub = supabase
+      .channel('fornecedores-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fornecedores' }, () => {
+        supabase
+          .from('fornecedores')
+          .select('id, nome')
+          .order('nome')
+          .then(({ data }) => {
+            if (data) setFornecedores(data)
+          })
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(especialidadesSub)
       supabase.removeChannel(embalagensSub)
       supabase.removeChannel(salasSub)
+      supabase.removeChannel(fornecedoresSub)
     }
   }, [])
 

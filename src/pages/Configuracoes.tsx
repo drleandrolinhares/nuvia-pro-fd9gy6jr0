@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
 import { PermissoesTab } from './configuracoes/PermissoesTab'
+import { FornecedoresTab } from './configuracoes/FornecedoresTab'
+import { Truck } from 'lucide-react'
 
 export default function Configuracoes() {
   return (
@@ -41,6 +43,12 @@ export default function Configuracoes() {
             className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
           >
             <SlidersHorizontal className="size-4 mr-2" /> Parâmetros
+          </TabsTrigger>
+          <TabsTrigger
+            value="fornecedores"
+            className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+          >
+            <Truck className="size-4 mr-2" /> Fornecedores
           </TabsTrigger>
         </TabsList>
 
@@ -88,6 +96,10 @@ export default function Configuracoes() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="fornecedores" className="m-0">
+          <FornecedoresTab />
         </TabsContent>
       </Tabs>
     </div>
