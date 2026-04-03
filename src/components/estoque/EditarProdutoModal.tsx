@@ -55,7 +55,7 @@ export function EditarProdutoModal({
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
-  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, { id: string; nome: string }[]>>({})
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, any[]>>({})
 
   const { toast } = useToast()
 
@@ -64,10 +64,10 @@ export function EditarProdutoModal({
       loadEspecialidades()
       cadastrosService.getCampoOpcoes().then((data) => {
         if (data) {
-          const map: Record<string, { id: string; nome: string }[]> = {}
+          const map: Record<string, any[]> = {}
           data.forEach((o) => {
             if (!map[o.campo_id]) map[o.campo_id] = []
-            map[o.campo_id].push({ id: o.id, nome: o.nome })
+            map[o.campo_id].push({ id: o.id, nome: o.nome, especialidade_id: o.especialidade_id })
           })
           setCampoOpcoes(map)
         }
@@ -266,7 +266,9 @@ export function EditarProdutoModal({
                   if (!campo) return null
 
                   const labelName = config.label_customizado || campo.nome
-                  const options = campoOpcoes[campo.id] || []
+                  const options = (campoOpcoes[campo.id] || []).filter(
+                    (o: any) => !o.especialidade_id || o.especialidade_id === especialidadeId,
+                  )
                   const isDynamicDropdown = options.length > 0 || campo.tipo === 'select'
 
                   return (

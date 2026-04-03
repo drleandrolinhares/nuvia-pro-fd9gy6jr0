@@ -118,7 +118,7 @@ export function EntradaProdutoModal({
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
   const [camposDinamicosConfig, setCamposDinamicosConfig] = useState<any[]>([])
-  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, { id: string; nome: string }[]>>({})
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, any[]>>({})
 
   const [openProduto, setOpenProduto] = useState(false)
   const [selectedProdutoId, setSelectedProdutoId] = useState<string | null>(null)
@@ -178,14 +178,14 @@ export function EntradaProdutoModal({
 
     supabase
       .from('campo_opcoes')
-      .select('id, campo_id, nome')
+      .select('id, campo_id, especialidade_id, nome')
       .order('nome')
       .then(({ data }) => {
         if (data) {
-          const map: Record<string, { id: string; nome: string }[]> = {}
+          const map: Record<string, any[]> = {}
           data.forEach((o) => {
             if (!map[o.campo_id]) map[o.campo_id] = []
-            map[o.campo_id].push({ id: o.id, nome: o.nome })
+            map[o.campo_id].push({ id: o.id, nome: o.nome, especialidade_id: o.especialidade_id })
           })
           setCampoOpcoes(map)
         }
@@ -595,7 +595,13 @@ export function EntradaProdutoModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>Especialidade</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val)
+                        form.setValue('campos_dinamicos', {})
+                      }}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className={inputClass}>
                           <SelectValue placeholder="Selecione..." />
@@ -651,7 +657,10 @@ export function EntradaProdutoModal({
                     if (!campo) return null
                     const labelName = config.label_customizado || campo.nome
 
-                    const options = campoOpcoes[campo.id] || []
+                    const options = (campoOpcoes[campo.id] || []).filter(
+                      (o: any) =>
+                        !o.especialidade_id || o.especialidade_id === watchedEspecialidadeId,
+                    )
                     const isDynamicDropdown = options.length > 0 || campo.tipo === 'select'
 
                     return (
