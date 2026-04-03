@@ -10,7 +10,10 @@ import { Loader2, ShieldAlert } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 
 type ActiveCampoTab = {
+  id: string
   campo_id: string
+  especialidade_id: string
+  especialidade_nome: string
   label: string
 }
 
@@ -56,7 +59,9 @@ export default function CadastrosBasicos() {
         cadastrosService.getCampoOpcoes(),
         supabase
           .from('especialidade_campos')
-          .select('campo_id, label_customizado, ativo, campos_personalizados(nome)')
+          .select(
+            'campo_id, especialidade_id, label_customizado, ativo, campos_personalizados(nome), especialidades(nome)' as any,
+          )
           .eq('ativo', true),
       ])
 
@@ -65,21 +70,41 @@ export default function CadastrosBasicos() {
       setSalas(salasData)
 
       const mapOpcoes: Record<string, CadastroItem[]> = {}
-      opcoesData?.forEach((o) => {
-        if (!mapOpcoes[o.campo_id]) mapOpcoes[o.campo_id] = []
-        mapOpcoes[o.campo_id].push({ id: o.id, nome: o.nome, data_criacao: o.data_criacao })
+      opcoesData?.forEach((o: any) => {
+        const key = o.especialidade_id
+          ? `${o.especialidade_id}_${o.campo_id}`
+          : `global_${o.campo_id}`
+        if (!mapOpcoes[key]) mapOpcoes[key] = []
+        mapOpcoes[key].push({ id: o.id, nome: o.nome, data_criacao: o.data_criacao })
       })
-      setCampoOpcoes(mapOpcoes)
 
       const activeMap = new Map<string, ActiveCampoTab>()
       ecData.data?.forEach((ec: any) => {
-        if (!activeMap.has(ec.campo_id)) {
-          activeMap.set(ec.campo_id, {
+        const id = `${ec.especialidade_id}_${ec.campo_id}`
+        if (!activeMap.has(id)) {
+          activeMap.set(id, {
+            id,
             campo_id: ec.campo_id,
+            especialidade_id: ec.especialidade_id,
+            especialidade_nome: ec.especialidades?.nome || 'Especialidade',
             label: ec.label_customizado || ec.campos_personalizados?.nome || 'Campo',
           })
         }
+
+        const globalKey = `global_${ec.campo_id}`
+        if (mapOpcoes[globalKey]) {
+          if (!mapOpcoes[id]) mapOpcoes[id] = []
+          const existingIds = new Set(mapOpcoes[id].map((x) => x.id))
+          mapOpcoes[globalKey].forEach((go) => {
+            if (!existingIds.has(go.id)) {
+              mapOpcoes[id].push(go)
+              existingIds.add(go.id)
+            }
+          })
+        }
       })
+
+      setCampoOpcoes(mapOpcoes)
       setActiveCampos(Array.from(activeMap.values()).sort((a, b) => a.label.localeCompare(b.label)))
     } catch (error: any) {
       toast.error('Erro ao carregar dados', { description: error.message })
@@ -127,15 +152,17 @@ export default function CadastrosBasicos() {
     },
   })
 
-  const makeCampoOpcoesHandlers = (campo_id: string) => ({
+  const makeCampoOpcoesHandlers = (ac: ActiveCampoTab) => ({
     onAdd: async (nome: string) => {
       try {
-        const newItem = await cadastrosService.createCampoOpcao(campo_id, nome)
+        const newItem = await cadastrosService.createCampoOpcao(
+          ac.campo_id,
+          ac.especialidade_id,
+          nome,
+        )
         setCampoOpcoes((prev) => ({
           ...prev,
-          [campo_id]: [...(prev[campo_id] || []), newItem].sort((a, b) =>
-            a.nome.localeCompare(b.nome),
-          ),
+          [ac.id]: [...(prev[ac.id] || []), newItem].sort((a, b) => a.nome.localeCompare(b.nome)),
         }))
         toast.success('Opção adicionada com sucesso!')
       } catch (error: any) {
@@ -147,7 +174,7 @@ export default function CadastrosBasicos() {
         const updatedItem = await cadastrosService.updateCampoOpcao(id, nome)
         setCampoOpcoes((prev) => ({
           ...prev,
-          [campo_id]: prev[campo_id]
+          [ac.id]: prev[ac.id]
             .map((item) => (item.id === id ? updatedItem : item))
             .sort((a, b) => a.nome.localeCompare(b.nome)),
         }))
@@ -161,7 +188,7 @@ export default function CadastrosBasicos() {
         await cadastrosService.deleteCampoOpcao(id)
         setCampoOpcoes((prev) => ({
           ...prev,
-          [campo_id]: prev[campo_id].filter((item) => item.id !== id),
+          [ac.id]: prev[ac.id].filter((item) => item.id !== id),
         }))
         toast.success('Opção excluída com sucesso!')
       } catch (error: any) {
@@ -230,11 +257,12 @@ export default function CadastrosBasicos() {
 
           {activeCampos.map((ac) => (
             <TabsTrigger
-              key={ac.campo_id}
-              value={`campo_${ac.campo_id}`}
-              className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+              key={ac.id}
+              value={`campo_${ac.id}`}
+              className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm flex flex-col items-start gap-0.5"
             >
-              {ac.label}
+              <span>{ac.label}</span>
+              <span className="text-[10px] opacity-70 font-normal">{ac.especialidade_nome}</span>
             </TabsTrigger>
           ))}
 
@@ -279,16 +307,16 @@ export default function CadastrosBasicos() {
 
           {activeCampos.map((ac) => (
             <TabsContent
-              key={ac.campo_id}
-              value={`campo_${ac.campo_id}`}
+              key={ac.id}
+              value={`campo_${ac.id}`}
               className="m-0 focus-visible:outline-none"
             >
               <CrudSection
-                title={`Opções para ${ac.label}`}
+                title={`Opções de ${ac.label} (${ac.especialidade_nome})`}
                 itemName="Opção"
-                items={campoOpcoes[ac.campo_id] || []}
+                items={campoOpcoes[ac.id] || []}
                 isLoading={isLoadingData}
-                {...makeCampoOpcoesHandlers(ac.campo_id)}
+                {...makeCampoOpcoesHandlers(ac)}
               />
             </TabsContent>
           ))}

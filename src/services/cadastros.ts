@@ -49,16 +49,20 @@ export const deleteItem = async (table: AllowedTables, id: string) => {
 export const getCampoOpcoes = async () => {
   const { data, error } = await supabase
     .from('campo_opcoes')
-    .select('id, campo_id, nome, data_criacao')
+    .select('id, campo_id, especialidade_id, nome, data_criacao' as any)
     .order('nome')
   if (error) throw error
   return data
 }
 
-export const createCampoOpcao = async (campo_id: string, nome: string) => {
+export const createCampoOpcao = async (
+  campo_id: string,
+  especialidade_id: string,
+  nome: string,
+) => {
   const { data, error } = await supabase
     .from('campo_opcoes')
-    .insert([{ campo_id, nome }])
+    .insert([{ campo_id, especialidade_id, nome } as any])
     .select('id, nome, data_criacao')
     .single()
   if (error) throw error

@@ -51,6 +51,35 @@ export type Database = {
           },
         ]
       }
+      campo_opcoes: {
+        Row: {
+          campo_id: string
+          data_criacao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          campo_id: string
+          data_criacao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          campo_id?: string
+          data_criacao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'campo_opcoes_campo_id_fkey'
+            columns: ['campo_id']
+            isOneToOne: false
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       campos_personalizados: {
         Row: {
           data_criacao: string | null
@@ -909,6 +938,11 @@ export const Constants = {
 //   label_customizado: text (nullable)
 //   ordem: integer (nullable, default: 0)
 //   ativo: boolean (nullable, default: true)
+// Table: campo_opcoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   campo_id: uuid (not null)
+//   nome: text (not null)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: campos_personalizados
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1062,6 +1096,9 @@ export const Constants = {
 //   UNIQUE campo_configuracao_especialidade_id_campo_id_key: UNIQUE (especialidade_id, campo_id)
 //   FOREIGN KEY campo_configuracao_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
 //   PRIMARY KEY campo_configuracao_pkey: PRIMARY KEY (id)
+// Table: campo_opcoes
+//   FOREIGN KEY campo_opcoes_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
+//   PRIMARY KEY campo_opcoes_pkey: PRIMARY KEY (id)
 // Table: campos_personalizados
 //   UNIQUE campos_personalizados_nome_key: UNIQUE (nome)
 //   PRIMARY KEY campos_personalizados_pkey: PRIMARY KEY (id)
@@ -1138,6 +1175,10 @@ export const Constants = {
 // Table: campo_configuracao
 //   Policy "campo_configuracao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: campo_opcoes
+//   Policy "campo_opcoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: campos_personalizados
 //   Policy "campos_personalizados_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -1381,6 +1422,8 @@ export const Constants = {
 // --- INDEXES ---
 // Table: campo_configuracao
 //   CREATE UNIQUE INDEX campo_configuracao_especialidade_id_campo_id_key ON public.campo_configuracao USING btree (especialidade_id, campo_id)
+// Table: campo_opcoes
+//   CREATE INDEX campo_opcoes_campo_id_idx ON public.campo_opcoes USING btree (campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
 // Table: diametros_implante
