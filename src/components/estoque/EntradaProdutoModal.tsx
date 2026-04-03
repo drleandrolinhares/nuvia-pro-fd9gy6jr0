@@ -248,12 +248,16 @@ export function EntradaProdutoModal({
       } else {
         form.setValue('data_validade', '')
       }
-      if (produto.referencia_consumo === 'itens_embalagem' || produto.referencia_consumo === 'quantidade_comprada') {
+      if (
+        produto.referencia_consumo === 'itens_embalagem' ||
+        produto.referencia_consumo === 'quantidade_comprada'
+      ) {
         form.setValue('referencia_consumo', produto.referencia_consumo)
       }
     } else {
       setSelectedProdutoId(null)
-      form.setValue('codigo_barras', '')      form.setValue('marca', '')
+      form.setValue('codigo_barras', '')
+      form.setValue('marca', '')
       form.setValue('especialidade_id', '')
       form.setValue('embalagem_id', '')
       form.setValue('sala_id', '')
@@ -330,9 +334,7 @@ export function EntradaProdutoModal({
     const precoTotalCalc = values.valor_total
     const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
     const totalAdicSubmit =
-      refConsumo === 'itens_embalagem'
-        ? values.itens_embalagem
-        : values.quantidade_comprada
+      refConsumo === 'itens_embalagem' ? values.itens_embalagem : values.quantidade_comprada
     const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
     const { error: entradaError } = await registrarEntrada({
