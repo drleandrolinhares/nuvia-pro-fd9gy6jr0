@@ -106,6 +106,7 @@ export const salvarEspecialidadeCampos = async (especialidadeId: string, configs
       campo_id: c.campo_id,
       ordem: c.ordem,
       ativo: c.ativo,
+      label_customizado: c.label_customizado || null,
     }))
     const { error: insertError } = await supabase.from('especialidade_campos').insert(inserts)
     if (insertError) throw insertError

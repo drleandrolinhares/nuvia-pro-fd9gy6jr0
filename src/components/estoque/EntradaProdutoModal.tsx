@@ -238,7 +238,7 @@ export function EntradaProdutoModal({
   useEffect(() => {
     if (watchedEspecialidadeId) {
       supabase
-        .from('campo_configuracao')
+        .from('especialidade_campos')
         .select('*, campos_personalizados(*)')
         .eq('especialidade_id', watchedEspecialidadeId)
         .eq('ativo', true)
@@ -661,7 +661,7 @@ export function EntradaProdutoModal({
                     if (!campo) return null
                     const labelName = config.label_customizado || campo.nome
 
-                    const nomeStr = labelName.toLowerCase()
+                    const nomeStr = campo.nome.toLowerCase()
                     const isMarcaImplante = nomeStr.includes('marca')
                     const isDiametroImplante =
                       nomeStr.includes('diâmetro') || nomeStr.includes('diametro')

@@ -281,6 +281,7 @@ export type Database = {
           campo_id: string
           especialidade_id: string
           id: string | null
+          label_customizado: string | null
           ordem: number | null
         }
         Insert: {
@@ -288,6 +289,7 @@ export type Database = {
           campo_id: string
           especialidade_id: string
           id?: string | null
+          label_customizado?: string | null
           ordem?: number | null
         }
         Update: {
@@ -295,6 +297,7 @@ export type Database = {
           campo_id?: string
           especialidade_id?: string
           id?: string | null
+          label_customizado?: string | null
           ordem?: number | null
         }
         Relationships: [
@@ -960,6 +963,7 @@ export const Constants = {
 //   ativo: boolean (nullable, default: true)
 //   id: uuid (nullable, default: gen_random_uuid())
 //   ordem: integer (nullable, default: 0)
+//   label_customizado: text (nullable)
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
