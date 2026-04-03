@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Search,
   ScanLine,
@@ -11,6 +11,8 @@ import {
   Boxes,
   Loader2,
   Trash2,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -162,6 +164,41 @@ export default function Estoque() {
 
     return matchesSearch && matchesStatus
   })
+
+  const groupedData = useMemo(() => {
+    const groups: Record<string, Produto[]> = {}
+    filteredData.forEach((p) => {
+      if (!groups[p.nome]) {
+        groups[p.nome] = []
+      }
+      groups[p.nome].push(p)
+    })
+
+    return Object.entries(groups)
+      .map(([nome, items]) => {
+        const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
+        const isCritico = items.some((item) => item.quantidade_estoque <= item.quantidade_minima)
+        return {
+          nome,
+          items,
+          quantidadeTotal,
+          isCritico,
+        }
+      })
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [filteredData])
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  const toggleGroup = (nome: string) => {
+    const newSet = new Set(expandedGroups)
+    if (newSet.has(nome)) {
+      newSet.delete(nome)
+    } else {
+      newSet.add(nome)
+    }
+    setExpandedGroups(newSet)
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-8">
@@ -381,103 +418,147 @@ export default function Estoque() {
                     <p>Carregando produtos...</p>
                   </TableCell>
                 </TableRow>
-              ) : filteredData.length === 0 ? (
+              ) : groupedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     Nenhum produto encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredData.map((item) => {
-                  const isCritico = item.quantidade_estoque <= item.quantidade_minima
+                groupedData.map((group) => {
+                  const isExpanded = expandedGroups.has(group.nome)
                   return (
-                    <TableRow
-                      key={item.id}
-                      className="hover:bg-slate-50 border-slate-100 transition-colors"
-                    >
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900">{item.nome}</span>
-                          <span className="text-xs text-slate-500">
-                            {item.marca || 'Sem marca'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-slate-600 text-sm">
-                        {item.embalagens?.nome || item.embalagem || '-'}
-                      </TableCell>
-                      <TableCell className="text-slate-600 text-sm">
-                        {item.salas?.nome || item.sala || '-'}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {item.validade ? (
-                          <Badge
-                            variant="outline"
-                            className="font-mono text-xs border-slate-200 text-slate-600"
-                          >
-                            {format(parseISO(item.validade), 'dd/MM/yyyy')}
-                          </Badge>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center font-mono text-xs text-slate-500">
-                        {item.lote || '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-slate-900">
-                        R${' '}
-                        {item.custo_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex flex-col items-end">
-                          <span
-                            className={`font-bold text-lg ${isCritico ? 'text-red-600' : 'text-slate-900'}`}
-                          >
-                            {item.quantidade_estoque}
-                          </span>
-                          {isCritico && (
-                            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider bg-red-100 px-1 rounded mt-1">
-                              Baixo
+                    <React.Fragment key={group.nome}>
+                      <TableRow
+                        className="hover:bg-slate-50 border-slate-100 transition-colors cursor-pointer bg-slate-50/50"
+                        onClick={() => toggleGroup(group.nome)}
+                      >
+                        <TableCell className="font-bold text-slate-900">
+                          <div className="flex items-center gap-2">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-slate-500" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-slate-500" />
+                            )}
+                            {group.nome}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {group.items.length} variação(ões)
+                        </TableCell>
+                        <TableCell className="text-slate-400 text-sm">-</TableCell>
+                        <TableCell className="text-slate-400 text-center">-</TableCell>
+                        <TableCell className="text-slate-400 text-center">-</TableCell>
+                        <TableCell className="text-slate-400 text-right">-</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-col items-end">
+                            <span
+                              className={`font-bold text-lg ${group.isCritico ? 'text-red-600' : 'text-slate-900'}`}
+                            >
+                              {group.quantidadeTotal}
                             </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setProdutoVisualizar(item)}
-                            className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-200"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">Visualizar</span>
-                          </Button>
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setProdutoEditar(item)}
-                              className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
+                            {group.isCritico && (
+                              <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider bg-red-100 px-1 rounded mt-1">
+                                Baixo
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center text-slate-400">-</TableCell>
+                      </TableRow>
+                      {isExpanded &&
+                        group.items.map((item) => {
+                          const isCritico = item.quantidade_estoque <= item.quantidade_minima
+                          return (
+                            <TableRow
+                              key={item.id}
+                              className="hover:bg-slate-50 border-slate-100 transition-colors bg-white"
                             >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Editar</span>
-                            </Button>
-                          )}
-                          {canManage && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setProdutoExcluir(item)}
-                              className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-100"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Excluir</span>
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                              <TableCell className="pl-8">
+                                <div className="flex flex-col border-l-2 border-slate-200 pl-3">
+                                  <span className="font-medium text-slate-700">
+                                    {item.marca || 'Sem marca'}
+                                  </span>
+                                  {item.variacao && (
+                                    <span className="text-xs text-slate-500">{item.variacao}</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-slate-600 text-sm">
+                                {item.embalagens?.nome || item.embalagem || '-'}
+                              </TableCell>
+                              <TableCell className="text-slate-600 text-sm">
+                                {item.salas?.nome || item.sala || '-'}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.validade ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-xs border-slate-200 text-slate-600"
+                                  >
+                                    {format(parseISO(item.validade), 'dd/MM/yyyy')}
+                                  </Badge>
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center font-mono text-xs text-slate-500">
+                                {item.lote || '-'}
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-slate-900">
+                                R${' '}
+                                {item.custo_unitario.toLocaleString('pt-BR', {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex flex-col items-end">
+                                  <span
+                                    className={`font-bold ${isCritico ? 'text-red-600' : 'text-slate-900'}`}
+                                  >
+                                    {item.quantidade_estoque}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setProdutoVisualizar(item)}
+                                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-200"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                    <span className="sr-only">Visualizar</span>
+                                  </Button>
+                                  {canEdit && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setProdutoEditar(item)}
+                                      className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                      <span className="sr-only">Editar</span>
+                                    </Button>
+                                  )}
+                                  {canManage && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setProdutoExcluir(item)}
+                                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-100"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      <span className="sr-only">Excluir</span>
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                    </React.Fragment>
                   )
                 })
               )}
