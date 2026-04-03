@@ -11,6 +11,7 @@ export interface Fornecedor {
   observacoes: string | null
   url: string | null
   senha: string | null
+  usuario_login: string | null
   criado_em: string | null
 }
 

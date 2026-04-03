@@ -384,7 +384,10 @@ export type Database = {
           id: string
           nome: string
           observacoes: string | null
+          senha: string | null
           telefone: string | null
+          url: string | null
+          usuario_login: string | null
         }
         Insert: {
           cnpj?: string | null
@@ -395,7 +398,10 @@ export type Database = {
           id?: string
           nome: string
           observacoes?: string | null
+          senha?: string | null
           telefone?: string | null
+          url?: string | null
+          usuario_login?: string | null
         }
         Update: {
           cnpj?: string | null
@@ -406,7 +412,10 @@ export type Database = {
           id?: string
           nome?: string
           observacoes?: string | null
+          senha?: string | null
           telefone?: string | null
+          url?: string | null
+          usuario_login?: string | null
         }
         Relationships: []
       }
@@ -1029,6 +1038,9 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   contato_principal: text (nullable)
 //   observacoes: text (nullable)
+//   url: text (nullable)
+//   senha: text (nullable)
+//   usuario_login: text (nullable)
 // Table: historico_compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)

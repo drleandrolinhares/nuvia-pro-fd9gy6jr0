@@ -63,6 +63,7 @@ const formSchema = z.object({
   telefone: z.string().optional(),
   email: z.string().email('E-mail inválido').or(z.literal('')).optional(),
   url: z.string().optional(),
+  usuario_login: z.string().optional(),
   senha: z.string().optional(),
   endereco: z.string().optional(),
   observacoes: z.string().optional(),
@@ -86,6 +87,7 @@ export default function Fornecedores() {
       telefone: '',
       email: '',
       url: '',
+      usuario_login: '',
       senha: '',
       endereco: '',
       observacoes: '',
@@ -123,6 +125,7 @@ export default function Fornecedores() {
       telefone: f?.telefone || '',
       email: f?.email || '',
       url: f?.url || '',
+      usuario_login: f?.usuario_login || '',
       senha: f?.senha || '',
       endereco: f?.endereco || '',
       observacoes: f?.observacoes || '',
@@ -357,52 +360,76 @@ export default function Fornecedores() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border">
-                <FormField
-                  control={form.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase text-fuchsia-700">
-                        URL do Portal
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="www.portal.com.br" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="senha"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase text-fuchsia-700">
-                        Senha de Acesso
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input type={showPassword ? 'text' : 'password'} {...field} />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-4 h-4 text-slate-500" />
-                            ) : (
-                              <Eye className="w-4 h-4 text-slate-500" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="bg-slate-50 p-4 rounded-lg border space-y-4">
+                <h3 className="text-xs font-bold uppercase text-fuchsia-700 flex items-center gap-2">
+                  Central de Acesso
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase text-slate-600">
+                          URL
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="www.portal.com.br" className="bg-white" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="usuario_login"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase text-slate-600">
+                          Usuário/Login
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="usuario ou email" className="bg-white" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="senha"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase text-slate-600">
+                          Senha
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              className="bg-white"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                              ) : (
+                                <Eye className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <FormField
