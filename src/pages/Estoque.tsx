@@ -29,7 +29,8 @@ import { Badge } from '@/components/ui/badge'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { useToast } from '@/hooks/use-toast'
 import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
-import { PackagePlus } from 'lucide-react'
+import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
+import { PackagePlus, PackageMinus } from 'lucide-react'
 
 export default function Estoque() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -39,6 +40,7 @@ export default function Estoque() {
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
   const [modalEntradaOpen, setModalEntradaOpen] = useState(false)
+  const [modalSaidaOpen, setModalSaidaOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -113,14 +115,24 @@ export default function Estoque() {
           </p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <Button
-            onClick={() => setModalEntradaOpen(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold w-full md:w-auto"
-          >
-            <PackagePlus className="w-4 h-4 mr-2" />
-            Nova Entrada
-          </Button>
-          <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800 w-full md:w-auto">
+          <div className="flex gap-2 w-full md:w-auto">
+            <Button
+              onClick={() => setModalEntradaOpen(true)}
+              className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+            >
+              <PackagePlus className="w-4 h-4 mr-2" />
+              Entrada
+            </Button>
+            <Button
+              onClick={() => setModalSaidaOpen(true)}
+              variant="outline"
+              className="flex-1 md:flex-none border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-950 font-bold bg-slate-900/50"
+            >
+              <PackageMinus className="w-4 h-4 mr-2" />
+              Saída
+            </Button>
+          </div>
+          <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800 w-full md:w-auto hidden lg:flex">
             <span className="text-sm font-medium capitalize">
               {format(currentTime, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </span>
@@ -399,6 +411,12 @@ export default function Estoque() {
       <EntradaProdutoModal
         open={modalEntradaOpen}
         onOpenChange={setModalEntradaOpen}
+        produtos={produtos}
+        onSuccess={loadData}
+      />
+      <SaidaProdutoModal
+        open={modalSaidaOpen}
+        onOpenChange={setModalSaidaOpen}
         produtos={produtos}
         onSuccess={loadData}
       />
