@@ -356,6 +356,48 @@ export type Database = {
         }
         Relationships: []
       }
+      produto_campos_valores: {
+        Row: {
+          atualizado_em: string
+          campo_id: string
+          criado_em: string
+          id: string
+          produto_id: string
+          valor: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          campo_id: string
+          criado_em?: string
+          id?: string
+          produto_id: string
+          valor?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          campo_id?: string
+          criado_em?: string
+          id?: string
+          produto_id?: string
+          valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'produto_campos_valores_campo_id_fkey'
+            columns: ['campo_id']
+            isOneToOne: false
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'produto_campos_valores_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       produtos: {
         Row: {
           categoria: string | null
@@ -823,6 +865,13 @@ export const Constants = {
 //   nome: text (not null)
 //   descricao: text (nullable)
 //   modulo: text (nullable)
+// Table: produto_campos_valores
+//   id: uuid (not null, default: gen_random_uuid())
+//   produto_id: uuid (not null)
+//   campo_id: uuid (not null)
+//   valor: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -912,6 +961,11 @@ export const Constants = {
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
+// Table: produto_campos_valores
+//   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
+//   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
+//   UNIQUE produto_campos_valores_produto_id_campo_id_key: UNIQUE (produto_id, campo_id)
+//   FOREIGN KEY produto_campos_valores_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 // Table: produtos
 //   FOREIGN KEY produtos_embalagem_id_fkey: FOREIGN KEY (embalagem_id) REFERENCES embalagens(id) ON DELETE SET NULL
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
@@ -1010,6 +1064,10 @@ export const Constants = {
 //     USING: is_admin()
 //   Policy "permissoes_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: produto_campos_valores
+//   Policy "produto_campos_valores_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: produtos
 //   Policy "produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1166,6 +1224,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
+// Table: produto_campos_valores
+//   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
 // Table: salas
 //   CREATE UNIQUE INDEX salas_nome_key ON public.salas USING btree (nome)
 // Table: usuarios

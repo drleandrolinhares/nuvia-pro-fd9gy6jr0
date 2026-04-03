@@ -68,6 +68,7 @@ const formSchema = z.object({
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
   embalagem_id: z.string().optional(),
+  fornecedor_id: z.string().optional(),
 
   quantidade_comprada: z.coerce.number().min(1, 'Deve ser maior que zero'),
   itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
@@ -113,6 +114,7 @@ export function EntradaProdutoModal({
   const [especialidades, setEspecialidades] = useState<{ id: string; nome: string }[]>([])
   const [embalagens, setEmbalagens] = useState<{ id: string; nome: string }[]>([])
   const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
+  const [fornecedores, setFornecedores] = useState<{ id: string; nome: string }[]>([])
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
   const [camposDinamicosConfig, setCamposDinamicosConfig] = useState<any[]>([])
@@ -130,6 +132,7 @@ export function EntradaProdutoModal({
       marca: '',
       especialidade_id: '',
       embalagem_id: '',
+      fornecedor_id: '',
       quantidade_comprada: 1,
       itens_embalagem: 1,
       valor_total: 0,
@@ -163,6 +166,14 @@ export function EntradaProdutoModal({
     fetchSalas().then((res) => {
       if (res.data) setSalas(res.data)
     })
+
+    supabase
+      .from('fornecedores')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setFornecedores(data)
+      })
 
     const especialidadesSub = supabase
       .channel('especialidades-changes')
@@ -217,6 +228,7 @@ export function EntradaProdutoModal({
           marca: '',
           especialidade_id: '',
           embalagem_id: '',
+          fornecedor_id: '',
           quantidade_comprada: 1,
           itens_embalagem: 1,
           valor_total: 0,
@@ -368,7 +380,7 @@ export function EntradaProdutoModal({
 
     const { error: entradaError } = await registrarEntrada({
       produto_id: finalProdutoId,
-      fornecedor_id: null,
+      fornecedor_id: values.fornecedor_id || null,
       quantidade_embalagem: values.itens_embalagem,
       quantidade_comprada: values.quantidade_comprada,
       unidade_consumo: embalagemObj ? embalagemObj.nome : 'Unidade',
@@ -401,6 +413,9 @@ export function EntradaProdutoModal({
         form.setValue('quantidade_comprada', 1)
         form.setValue('itens_embalagem', 1)
         form.setValue('valor_total', 0)
+        form.setValue('campos_dinamicos', {})
+        form.setValue('codigo_barras', '')
+        setSelectedProdutoId(null)
       } else {
         onOpenChange(false)
       }
@@ -595,6 +610,32 @@ export function EntradaProdutoModal({
               <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b pb-2">
                 INFORMAÇÕES DE COMPRA E EMBALAGEM
               </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <FormField
+                  control={form.control}
+                  name="fornecedor_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Fornecedor</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className={inputClass}>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {fornecedores.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <FormField
                   control={form.control}
