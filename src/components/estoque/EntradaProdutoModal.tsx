@@ -118,10 +118,7 @@ export function EntradaProdutoModal({
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
   const [camposDinamicosConfig, setCamposDinamicosConfig] = useState<any[]>([])
-
-  const [marcasImplante, setMarcasImplante] = useState<{ id: string; nome: string }[]>([])
-  const [diametrosImplante, setDiametrosImplante] = useState<{ id: string; nome: string }[]>([])
-  const [tamanhosImplante, setTamanhosImplante] = useState<{ id: string; nome: string }[]>([])
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, { id: string; nome: string }[]>>({})
 
   const [openProduto, setOpenProduto] = useState(false)
   const [selectedProdutoId, setSelectedProdutoId] = useState<string | null>(null)
@@ -180,25 +177,18 @@ export function EntradaProdutoModal({
       })
 
     supabase
-      .from('marcas_implante')
-      .select('id, nome')
+      .from('campo_opcoes')
+      .select('id, campo_id, nome')
       .order('nome')
       .then(({ data }) => {
-        if (data) setMarcasImplante(data)
-      })
-    supabase
-      .from('diametros_implante')
-      .select('id, nome')
-      .order('nome')
-      .then(({ data }) => {
-        if (data) setDiametrosImplante(data)
-      })
-    supabase
-      .from('tamanhos_implante')
-      .select('id, nome')
-      .order('nome')
-      .then(({ data }) => {
-        if (data) setTamanhosImplante(data)
+        if (data) {
+          const map: Record<string, { id: string; nome: string }[]> = {}
+          data.forEach((o) => {
+            if (!map[o.campo_id]) map[o.campo_id] = []
+            map[o.campo_id].push({ id: o.id, nome: o.nome })
+          })
+          setCampoOpcoes(map)
+        }
       })
 
     const especialidadesSub = supabase
@@ -661,22 +651,8 @@ export function EntradaProdutoModal({
                     if (!campo) return null
                     const labelName = config.label_customizado || campo.nome
 
-                    const nomeStr = campo.nome.toLowerCase()
-                    const isMarcaImplante = nomeStr.includes('marca')
-                    const isDiametroImplante =
-                      nomeStr.includes('diâmetro') || nomeStr.includes('diametro')
-                    const isTamanhoImplante = nomeStr.includes('tamanho')
-
-                    const isDynamicDropdown =
-                      isMarcaImplante || isDiametroImplante || isTamanhoImplante
-
-                    let options: { id: string; nome: string }[] = []
-                    if (isMarcaImplante) options = marcasImplante
-                    else if (isDiametroImplante) options = diametrosImplante
-                    else if (isTamanhoImplante) options = tamanhosImplante
-                    else if (campo.tipo === 'dropdown' && campo.opcoes) {
-                      options = (campo.opcoes as string[]).map((opt) => ({ id: opt, nome: opt }))
-                    }
+                    const options = campoOpcoes[campo.id] || []
+                    const isDynamicDropdown = options.length > 0 || campo.tipo === 'select'
 
                     return (
                       <FormField
@@ -689,7 +665,7 @@ export function EntradaProdutoModal({
                               {labelName}
                             </FormLabel>
                             <FormControl>
-                              {isDynamicDropdown || (campo.tipo === 'dropdown' && campo.opcoes) ? (
+                              {isDynamicDropdown ? (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
                                   <SelectTrigger className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus:ring-[#d4af37]">
                                     <SelectValue placeholder="Selecione..." />
@@ -700,6 +676,11 @@ export function EntradaProdutoModal({
                                         {opt.nome}
                                       </SelectItem>
                                     ))}
+                                    {options.length === 0 && (
+                                      <SelectItem value="none" disabled>
+                                        Sem opções cadastradas
+                                      </SelectItem>
+                                    )}
                                   </SelectContent>
                                 </Select>
                               ) : (

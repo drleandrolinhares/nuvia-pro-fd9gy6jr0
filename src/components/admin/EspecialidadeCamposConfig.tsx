@@ -26,6 +26,7 @@ import { CadastroItem, CampoPersonalizado } from '@/services/cadastros'
 
 interface Props {
   especialidades: CadastroItem[]
+  onChange?: () => void
 }
 
 type ConfigItem = {
@@ -36,7 +37,7 @@ type ConfigItem = {
   label_customizado: string
 }
 
-export function EspecialidadeCamposConfig({ especialidades }: Props) {
+export function EspecialidadeCamposConfig({ especialidades, onChange }: Props) {
   const [campos, setCampos] = useState<CampoPersonalizado[]>([])
   const [isLoadingCampos, setIsLoadingCampos] = useState(false)
 
@@ -99,8 +100,8 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
     }
   }
 
-  const handleToggleCampo = (campoId: string) => {
-    setConfigs((prev) => prev.map((c) => (c.campo_id === campoId ? { ...c, ativo: !c.ativo } : c)))
+  const handleToggleCampo = (campoId: string, checked: boolean) => {
+    setConfigs((prev) => prev.map((c) => (c.campo_id === campoId ? { ...c, ativo: checked } : c)))
   }
 
   const handleLabelChange = (campoId: string, value: string) => {
@@ -149,6 +150,7 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
 
       toast.success('Configurações salvas com sucesso!')
       setIsModalOpen(false)
+      if (onChange) onChange()
     } catch (error: any) {
       toast.error('Erro ao salvar configurações', { description: error.message })
     } finally {
@@ -250,14 +252,16 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                     <Checkbox
                       id={`campo-${config.campo_id}`}
                       checked={config.ativo}
-                      onCheckedChange={() => handleToggleCampo(config.campo_id)}
+                      onCheckedChange={(checked) =>
+                        handleToggleCampo(config.campo_id, checked === true)
+                      }
                       className="h-5 w-5 border-[#1a2a4a] data-[state=checked]:bg-[#1a2a4a] data-[state=checked]:text-[#d4af37]"
                     />
 
                     <div className="flex-1 flex flex-col gap-2">
                       <Label
                         htmlFor={`campo-${config.campo_id}`}
-                        className="text-xs font-bold text-[#1a2a4a] uppercase drop-shadow-sm opacity-70"
+                        className="text-xs font-bold text-[#1a2a4a] uppercase drop-shadow-sm opacity-70 cursor-pointer"
                       >
                         Campo Original: {config.nome_original}
                       </Label>

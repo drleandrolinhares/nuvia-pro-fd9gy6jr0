@@ -7,6 +7,12 @@ import * as cadastrosService from '@/services/cadastros'
 import { CadastroItem, AllowedTables } from '@/services/cadastros'
 import { toast } from 'sonner'
 import { Loader2, ShieldAlert } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+
+type ActiveCampoTab = {
+  campo_id: string
+  label: string
+}
 
 export default function CadastrosBasicos() {
   const navigate = useNavigate()
@@ -16,9 +22,10 @@ export default function CadastrosBasicos() {
   const [especialidades, setEspecialidades] = useState<CadastroItem[]>([])
   const [embalagens, setEmbalagens] = useState<CadastroItem[]>([])
   const [salas, setSalas] = useState<CadastroItem[]>([])
-  const [marcas, setMarcas] = useState<CadastroItem[]>([])
-  const [diametros, setDiametros] = useState<CadastroItem[]>([])
-  const [tamanhos, setTamanhos] = useState<CadastroItem[]>([])
+
+  const [activeCampos, setActiveCampos] = useState<ActiveCampoTab[]>([])
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, CadastroItem[]>>({})
+
   const [isLoadingData, setIsLoadingData] = useState(true)
 
   useEffect(() => {
@@ -42,21 +49,38 @@ export default function CadastrosBasicos() {
   const loadData = async () => {
     setIsLoadingData(true)
     try {
-      const [espData, embData, salasData, marcasData, diametrosData, tamanhosData] =
-        await Promise.all([
-          cadastrosService.getItems('especialidades'),
-          cadastrosService.getItems('embalagens'),
-          cadastrosService.getItems('salas'),
-          cadastrosService.getItems('marcas_implante'),
-          cadastrosService.getItems('diametros_implante'),
-          cadastrosService.getItems('tamanhos_implante'),
-        ])
+      const [espData, embData, salasData, opcoesData, ecData] = await Promise.all([
+        cadastrosService.getItems('especialidades'),
+        cadastrosService.getItems('embalagens'),
+        cadastrosService.getItems('salas'),
+        cadastrosService.getCampoOpcoes(),
+        supabase
+          .from('especialidade_campos')
+          .select('campo_id, label_customizado, ativo, campos_personalizados(nome)')
+          .eq('ativo', true),
+      ])
+
       setEspecialidades(espData)
       setEmbalagens(embData)
       setSalas(salasData)
-      setMarcas(marcasData)
-      setDiametros(diametrosData)
-      setTamanhos(tamanhosData)
+
+      const mapOpcoes: Record<string, CadastroItem[]> = {}
+      opcoesData?.forEach((o) => {
+        if (!mapOpcoes[o.campo_id]) mapOpcoes[o.campo_id] = []
+        mapOpcoes[o.campo_id].push({ id: o.id, nome: o.nome, data_criacao: o.data_criacao })
+      })
+      setCampoOpcoes(mapOpcoes)
+
+      const activeMap = new Map<string, ActiveCampoTab>()
+      ecData.data?.forEach((ec: any) => {
+        if (!activeMap.has(ec.campo_id)) {
+          activeMap.set(ec.campo_id, {
+            campo_id: ec.campo_id,
+            label: ec.label_customizado || ec.campos_personalizados?.nome || 'Campo',
+          })
+        }
+      })
+      setActiveCampos(Array.from(activeMap.values()).sort((a, b) => a.label.localeCompare(b.label)))
     } catch (error: any) {
       toast.error('Erro ao carregar dados', { description: error.message })
     } finally {
@@ -99,6 +123,49 @@ export default function CadastrosBasicos() {
         toast.error('Erro ao excluir registro', {
           description: 'Verifique se o item está em uso. ' + error.message,
         })
+      }
+    },
+  })
+
+  const makeCampoOpcoesHandlers = (campo_id: string) => ({
+    onAdd: async (nome: string) => {
+      try {
+        const newItem = await cadastrosService.createCampoOpcao(campo_id, nome)
+        setCampoOpcoes((prev) => ({
+          ...prev,
+          [campo_id]: [...(prev[campo_id] || []), newItem].sort((a, b) =>
+            a.nome.localeCompare(b.nome),
+          ),
+        }))
+        toast.success('Opção adicionada com sucesso!')
+      } catch (error: any) {
+        toast.error('Erro ao adicionar opção', { description: error.message })
+      }
+    },
+    onEdit: async (id: string, nome: string) => {
+      try {
+        const updatedItem = await cadastrosService.updateCampoOpcao(id, nome)
+        setCampoOpcoes((prev) => ({
+          ...prev,
+          [campo_id]: prev[campo_id]
+            .map((item) => (item.id === id ? updatedItem : item))
+            .sort((a, b) => a.nome.localeCompare(b.nome)),
+        }))
+        toast.success('Opção atualizada com sucesso!')
+      } catch (error: any) {
+        toast.error('Erro ao atualizar opção', { description: error.message })
+      }
+    },
+    onDelete: async (id: string) => {
+      try {
+        await cadastrosService.deleteCampoOpcao(id)
+        setCampoOpcoes((prev) => ({
+          ...prev,
+          [campo_id]: prev[campo_id].filter((item) => item.id !== id),
+        }))
+        toast.success('Opção excluída com sucesso!')
+      } catch (error: any) {
+        toast.error('Erro ao excluir opção', { description: error.message })
       }
     },
   })
@@ -160,27 +227,20 @@ export default function CadastrosBasicos() {
           >
             Salas
           </TabsTrigger>
-          <TabsTrigger
-            value="marcas"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
-          >
-            Marcas de Implante
-          </TabsTrigger>
-          <TabsTrigger
-            value="diametros"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
-          >
-            Diâmetros de Implante
-          </TabsTrigger>
-          <TabsTrigger
-            value="tamanhos"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
-          >
-            Tamanhos de Implante
-          </TabsTrigger>
+
+          {activeCampos.map((ac) => (
+            <TabsTrigger
+              key={ac.campo_id}
+              value={`campo_${ac.campo_id}`}
+              className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+            >
+              {ac.label}
+            </TabsTrigger>
+          ))}
+
           <TabsTrigger
             value="campos_especialidade"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm ml-auto bg-slate-800 text-slate-200 hover:bg-slate-700"
           >
             Campos por Especialidade
           </TabsTrigger>
@@ -217,38 +277,27 @@ export default function CadastrosBasicos() {
             />
           </TabsContent>
 
-          <TabsContent value="marcas" className="m-0 focus-visible:outline-none">
-            <CrudSection
-              title="Marcas de Implante"
-              itemName="Marca"
-              items={marcas}
-              isLoading={isLoadingData}
-              {...makeHandlers('marcas_implante', setMarcas)}
-            />
-          </TabsContent>
-
-          <TabsContent value="diametros" className="m-0 focus-visible:outline-none">
-            <CrudSection
-              title="Diâmetros de Implante"
-              itemName="Diâmetro"
-              items={diametros}
-              isLoading={isLoadingData}
-              {...makeHandlers('diametros_implante', setDiametros)}
-            />
-          </TabsContent>
-
-          <TabsContent value="tamanhos" className="m-0 focus-visible:outline-none">
-            <CrudSection
-              title="Tamanhos de Implante"
-              itemName="Tamanho"
-              items={tamanhos}
-              isLoading={isLoadingData}
-              {...makeHandlers('tamanhos_implante', setTamanhos)}
-            />
-          </TabsContent>
+          {activeCampos.map((ac) => (
+            <TabsContent
+              key={ac.campo_id}
+              value={`campo_${ac.campo_id}`}
+              className="m-0 focus-visible:outline-none"
+            >
+              <CrudSection
+                title={`Opções para ${ac.label}`}
+                itemName="Opção"
+                items={campoOpcoes[ac.campo_id] || []}
+                isLoading={isLoadingData}
+                {...makeCampoOpcoesHandlers(ac.campo_id)}
+              />
+            </TabsContent>
+          ))}
 
           <TabsContent value="campos_especialidade" className="m-0 focus-visible:outline-none">
-            <EspecialidadeCamposConfig especialidades={especialidades} />
+            <EspecialidadeCamposConfig
+              especialidades={especialidades}
+              onChange={() => loadData()}
+            />
           </TabsContent>
         </div>
       </Tabs>

@@ -6,13 +6,7 @@ export type CadastroItem = {
   data_criacao?: string | null
 }
 
-export type AllowedTables =
-  | 'especialidades'
-  | 'embalagens'
-  | 'salas'
-  | 'marcas_implante'
-  | 'diametros_implante'
-  | 'tamanhos_implante'
+export type AllowedTables = 'especialidades' | 'embalagens' | 'salas'
 
 export const checkIsAdmin = async () => {
   const { data, error } = await supabase.rpc('is_admin')
@@ -49,6 +43,41 @@ export const updateItem = async (table: AllowedTables, id: string, nome: string)
 
 export const deleteItem = async (table: AllowedTables, id: string) => {
   const { error } = await supabase.from(table).delete().eq('id', id)
+  if (error) throw error
+}
+
+export const getCampoOpcoes = async () => {
+  const { data, error } = await supabase
+    .from('campo_opcoes')
+    .select('id, campo_id, nome, data_criacao')
+    .order('nome')
+  if (error) throw error
+  return data
+}
+
+export const createCampoOpcao = async (campo_id: string, nome: string) => {
+  const { data, error } = await supabase
+    .from('campo_opcoes')
+    .insert([{ campo_id, nome }])
+    .select('id, nome, data_criacao')
+    .single()
+  if (error) throw error
+  return data as CadastroItem
+}
+
+export const updateCampoOpcao = async (id: string, nome: string) => {
+  const { data, error } = await supabase
+    .from('campo_opcoes')
+    .update({ nome })
+    .eq('id', id)
+    .select('id, nome, data_criacao')
+    .single()
+  if (error) throw error
+  return data as CadastroItem
+}
+
+export const deleteCampoOpcao = async (id: string) => {
+  const { error } = await supabase.from('campo_opcoes').delete().eq('id', id)
   if (error) throw error
 }
 

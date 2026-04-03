@@ -55,19 +55,23 @@ export function EditarProdutoModal({
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
-
-  const [marcasImplante, setMarcasImplante] = useState<{ id: string; nome: string }[]>([])
-  const [diametrosImplante, setDiametrosImplante] = useState<{ id: string; nome: string }[]>([])
-  const [tamanhosImplante, setTamanhosImplante] = useState<{ id: string; nome: string }[]>([])
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, { id: string; nome: string }[]>>({})
 
   const { toast } = useToast()
 
   useEffect(() => {
     if (open) {
       loadEspecialidades()
-      cadastrosService.getItems('marcas_implante').then(setMarcasImplante)
-      cadastrosService.getItems('diametros_implante').then(setDiametrosImplante)
-      cadastrosService.getItems('tamanhos_implante').then(setTamanhosImplante)
+      cadastrosService.getCampoOpcoes().then((data) => {
+        if (data) {
+          const map: Record<string, { id: string; nome: string }[]> = {}
+          data.forEach((o) => {
+            if (!map[o.campo_id]) map[o.campo_id] = []
+            map[o.campo_id].push({ id: o.id, nome: o.nome })
+          })
+          setCampoOpcoes(map)
+        }
+      })
 
       if (produto) {
         setNome(produto.nome || '')
@@ -258,22 +262,17 @@ export function EditarProdutoModal({
               </h3>
               <div className="grid grid-cols-1 gap-4">
                 {camposDinamicos.map((config) => {
-                  const campo = config.campos
+                  const campo = config.campos || config.campos_personalizados
                   if (!campo) return null
 
-                  let options: { id: string; nome: string }[] = []
-                  if (campo.nome.toLowerCase().includes('marca')) options = marcasImplante
-                  else if (
-                    campo.nome.toLowerCase().includes('diâmetro') ||
-                    campo.nome.toLowerCase().includes('diametro')
-                  )
-                    options = diametrosImplante
-                  else if (campo.nome.toLowerCase().includes('tamanho')) options = tamanhosImplante
+                  const labelName = config.label_customizado || campo.nome
+                  const options = campoOpcoes[campo.id] || []
+                  const isDynamicDropdown = options.length > 0 || campo.tipo === 'select'
 
                   return (
                     <div key={campo.id} className="space-y-2">
-                      <Label className="text-slate-200">{campo.nome}</Label>
-                      {options.length > 0 || campo.tipo === 'select' ? (
+                      <Label className="text-slate-200">{labelName}</Label>
+                      {isDynamicDropdown ? (
                         <Select
                           value={valoresDinamicos[campo.id] || ''}
                           onValueChange={(val) =>
@@ -281,7 +280,7 @@ export function EditarProdutoModal({
                           }
                         >
                           <SelectTrigger className="bg-white/5 border-white/10 text-white focus:ring-[#d4af37]">
-                            <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                            <SelectValue placeholder={`Selecione...`} />
                           </SelectTrigger>
                           <SelectContent>
                             {options.map((opt) => (
@@ -289,12 +288,17 @@ export function EditarProdutoModal({
                                 {opt.nome}
                               </SelectItem>
                             ))}
+                            {options.length === 0 && (
+                              <SelectItem value="none" disabled>
+                                Sem opções cadastradas
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       ) : (
                         <Input
                           className="bg-white/5 border-white/10 text-white focus-visible:ring-[#d4af37]"
-                          placeholder={`Digite ${campo.nome.toLowerCase()}`}
+                          placeholder={`Digite ${labelName.toLowerCase()}`}
                           value={valoresDinamicos[campo.id] || ''}
                           onChange={(e) =>
                             setValoresDinamicos((prev) => ({ ...prev, [campo.id]: e.target.value }))
