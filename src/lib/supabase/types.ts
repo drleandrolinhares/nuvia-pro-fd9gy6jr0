@@ -293,6 +293,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -536,9 +537,9 @@ export const Constants = {
 //     USING: true
 // Table: colaboradores_detalhes
 //   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: is_admin()
+//     USING: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_read" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((usuario_id = auth.uid()) OR is_admin())
+//     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 // Table: especialidades
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -565,13 +566,53 @@ export const Constants = {
 //   Policy "usuarios_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
 //   Policy "usuarios_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: is_admin()
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((id = auth.uid()) OR is_admin())
+//     USING: ((id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION has_permission(text)
+//   CREATE OR REPLACE FUNCTION public.has_permission(permission_name text)
+//    RETURNS boolean
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//    SET search_path TO 'public'
+//   AS $function$
+//   DECLARE
+//     v_is_admin boolean;
+//     v_has_user_perm boolean;
+//     v_has_cargo_perm boolean;
+//     v_user_id uuid;
+//   BEGIN
+//     v_is_admin := public.is_admin();
+//     if v_is_admin then return true; end if;
+//
+//     v_user_id := auth.uid();
+//     if v_user_id is null then return false; end if;
+//
+//     -- check user perms
+//     SELECT EXISTS (
+//       SELECT 1 FROM public.usuario_permissoes up
+//       JOIN public.permissoes p ON p.id = up.permissao_id
+//       WHERE up.usuario_id = v_user_id AND p.nome = permission_name
+//     ) INTO v_has_user_perm;
+//
+//     if v_has_user_perm then return true; end if;
+//
+//     -- check cargo perms
+//     SELECT EXISTS (
+//       SELECT 1 FROM public.usuarios u
+//       JOIN public.cargo_permissoes cp ON cp.cargo_id = u.cargo_id
+//       JOIN public.permissoes p ON p.id = cp.permissao_id
+//       WHERE u.id = v_user_id AND p.nome = permission_name
+//     ) INTO v_has_cargo_perm;
+//
+//     return v_has_cargo_perm;
+//   END;
+//   $function$
+//
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean

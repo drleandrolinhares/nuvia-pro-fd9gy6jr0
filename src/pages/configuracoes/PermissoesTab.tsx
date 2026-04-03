@@ -1,59 +1,240 @@
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
-import { useConfigData } from '@/hooks/use-config-data'
+import { Plus, Shield, UserCog, ShieldAlert } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import {
+  checkIsAdmin,
+  getCargos,
+  getPermissoes,
+  getUsuariosComPermissoes,
+  Cargo,
+  Permissao,
+  UsuarioComPermissoes,
+} from '@/services/permissoes'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { CargoDialog } from './CargoDialog'
+import { UsuarioPermissoesDialog } from './UsuarioPermissoesDialog'
 
 export function PermissoesTab() {
-  const { cargos, permissoes, loading } = useConfigData()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [cargos, setCargos] = useState<Cargo[]>([])
+  const [permissoes, setPermissoes] = useState<Permissao[]>([])
+  const [usuarios, setUsuarios] = useState<UsuarioComPermissoes[]>([])
+  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  const [cargoDialogOpe, setCargoDialogOpen] = useState(false)
+  const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null)
+
+  const [userDialogOpen, setUserDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UsuarioComPermissoes | null>(null)
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const admin = await checkIsAdmin()
+      setIsAdmin(admin)
+      if (!admin) return
+
+      const [c, p, u] = await Promise.all([
+        getCargos(),
+        getPermissoes(),
+        getUsuariosComPermissoes(),
+      ])
+      setCargos(c)
+      setPermissoes(p)
+      setUsuarios(u)
+    } catch (error: any) {
+      toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  if (!loading && !isAdmin) {
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+          <ShieldAlert className="size-12 mb-4 text-destructive opacity-80" />
+          <h3 className="text-lg font-bold uppercase tracking-wider mb-2 text-foreground">
+            Acesso Restrito
+          </h3>
+          <p className="text-sm">
+            Apenas usuários com privilégios de CEO (Administrador) podem configurar cargos e
+            permissões.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="border-border/50 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
         <div>
-          <CardTitle className="uppercase tracking-wider">Cargos e Permissões</CardTitle>
-          <CardDescription>Defina quais módulos cada cargo pode acessar.</CardDescription>
+          <CardTitle className="uppercase tracking-wider text-lg">Cargos e Permissões</CardTitle>
+          <CardDescription>Gerencie o controle de acesso (RBAC) da clínica.</CardDescription>
         </div>
-        <Button size="sm" variant="outline" className="uppercase tracking-wider text-xs font-bold">
+        <Button
+          size="sm"
+          onClick={() => {
+            setSelectedCargo(null)
+            setCargoDialogOpen(true)
+          }}
+          className="uppercase tracking-wider text-xs font-bold"
+        >
           <Plus className="size-4 mr-2" /> Novo Cargo
         </Button>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Carregando cargos...</div>
-        ) : cargos.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">Nenhum cargo encontrado.</div>
-        ) : (
-          cargos.map((cargo) => (
-            <div key={cargo.id} className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-sm uppercase tracking-wider">{cargo.nome}</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {cargo.descricao} • Setor: {cargo.setor}
-                  </p>
-                </div>
-                <Button variant="ghost" size="sm" className="h-8 text-xs uppercase tracking-wider">
-                  Editar
-                </Button>
+      <CardContent>
+        <Tabs defaultValue="cargos" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="cargos" className="uppercase tracking-wider text-xs font-bold">
+              <Shield className="size-4 mr-2" /> Cargos
+            </TabsTrigger>
+            <TabsTrigger value="usuarios" className="uppercase tracking-wider text-xs font-bold">
+              <UserCog className="size-4 mr-2" /> Exceções por Colaborador
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cargos" className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">Carregando cargos...</div>
+            ) : cargos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">Nenhum cargo cadastrado.</div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {cargos.map((cargo) => (
+                  <div
+                    key={cargo.id}
+                    className="rounded-lg border p-4 space-y-3 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-bold text-sm uppercase tracking-wider">
+                            {cargo.nome}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            {cargo.descricao || 'Sem descrição'} • Setor:{' '}
+                            {cargo.setor || 'Não definido'}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCargo(cargo)
+                            setCargoDialogOpen(true)
+                          }}
+                          className="h-8 text-xs uppercase tracking-wider shrink-0 ml-2"
+                        >
+                          Editar
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {cargo.cargo_permissoes?.map((cp) => {
+                          const perm = permissoes.find((p) => p.id === cp.permissao_id)
+                          return perm ? (
+                            <Badge
+                              key={perm.id}
+                              variant="secondary"
+                              className="text-[10px] uppercase"
+                            >
+                              {perm.nome}
+                            </Badge>
+                          ) : null
+                        })}
+                        {(!cargo.cargo_permissoes || cargo.cargo_permissoes.length === 0) && (
+                          <span className="text-xs text-muted-foreground italic">
+                            Sem permissões atribuídas
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-wrap gap-2">
-                {cargo.cargo_permissoes?.map((cp: any) => {
-                  const perm = permissoes.find((p) => p.id === cp.permissao_id)
-                  return perm ? (
-                    <Badge key={perm.id} variant="secondary" className="text-[10px] uppercase">
-                      {perm.nome}
-                    </Badge>
-                  ) : null
-                })}
-                {(!cargo.cargo_permissoes || cargo.cargo_permissoes.length === 0) && (
-                  <span className="text-xs text-muted-foreground italic">
-                    Sem permissões atribuídas
-                  </span>
-                )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="usuarios" className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Carregando colaboradores...
               </div>
-            </div>
-          ))
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {usuarios.map((user) => (
+                  <div
+                    key={user.id}
+                    className="rounded-lg border p-4 flex flex-col justify-between space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm uppercase tracking-wider">{user.nome}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email} • Cargo: {user.cargo?.nome || 'Nenhum'}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setUserDialogOpen(true)
+                        }}
+                        className="h-8 text-xs uppercase tracking-wider shrink-0 ml-2"
+                      >
+                        Permissões
+                      </Button>
+                    </div>
+                    {user.usuario_permissoes?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {user.usuario_permissoes.map((up) => {
+                          const p = permissoes.find((p) => p.id === up.permissao_id)
+                          return p ? (
+                            <Badge
+                              key={p.id}
+                              variant="outline"
+                              className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/20"
+                            >
+                              {p.nome}
+                            </Badge>
+                          ) : null
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {cargoDialogOpe && (
+          <CargoDialog
+            open={cargoDialogOpe}
+            onOpenChange={setCargoDialogOpen}
+            cargo={selectedCargo}
+            permissoes={permissoes}
+            onSave={loadData}
+          />
+        )}
+        {userDialogOpen && (
+          <UsuarioPermissoesDialog
+            open={userDialogOpen}
+            onOpenChange={setUserDialogOpen}
+            usuario={selectedUser!}
+            permissoes={permissoes}
+            onSave={loadData}
+          />
         )}
       </CardContent>
     </Card>
