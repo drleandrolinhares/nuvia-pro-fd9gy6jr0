@@ -9,6 +9,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      campo_configuracao: {
+        Row: {
+          ativo: boolean | null
+          campo_id: string | null
+          especialidade_id: string | null
+          id: string
+          label_customizado: string | null
+          ordem: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          campo_id?: string | null
+          especialidade_id?: string | null
+          id?: string
+          label_customizado?: string | null
+          ordem?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          campo_id?: string | null
+          especialidade_id?: string | null
+          id?: string
+          label_customizado?: string | null
+          ordem?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'campo_configuracao_campo_id_fkey'
+            columns: ['campo_id']
+            isOneToOne: false
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'campo_configuracao_especialidade_id_fkey'
+            columns: ['especialidade_id']
+            isOneToOne: false
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       campos_personalizados: {
         Row: {
           data_criacao: string | null
@@ -803,6 +845,13 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: campo_configuracao
+//   id: uuid (not null, default: gen_random_uuid())
+//   especialidade_id: uuid (nullable)
+//   campo_id: uuid (nullable)
+//   label_customizado: text (nullable)
+//   ordem: integer (nullable, default: 0)
+//   ativo: boolean (nullable, default: true)
 // Table: campos_personalizados
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -938,6 +987,11 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 
 // --- CONSTRAINTS ---
+// Table: campo_configuracao
+//   FOREIGN KEY campo_configuracao_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
+//   UNIQUE campo_configuracao_especialidade_id_campo_id_key: UNIQUE (especialidade_id, campo_id)
+//   FOREIGN KEY campo_configuracao_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
+//   PRIMARY KEY campo_configuracao_pkey: PRIMARY KEY (id)
 // Table: campos_personalizados
 //   UNIQUE campos_personalizados_nome_key: UNIQUE (nome)
 //   PRIMARY KEY campos_personalizados_pkey: PRIMARY KEY (id)
@@ -1002,6 +1056,9 @@ export const Constants = {
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: campo_configuracao
+//   Policy "campo_configuracao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: campos_personalizados
 //   Policy "campos_personalizados_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -1228,6 +1285,8 @@ export const Constants = {
 //   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
+// Table: campo_configuracao
+//   CREATE UNIQUE INDEX campo_configuracao_especialidade_id_campo_id_key ON public.campo_configuracao USING btree (especialidade_id, campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
 // Table: embalagens

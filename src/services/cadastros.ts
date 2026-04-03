@@ -75,33 +75,20 @@ export const getEspecialidadeCamposAtivos = async (especialidadeId: string) => {
   return data.map((d) => d.campo_id) as string[]
 }
 
-export type CampoConfiguracao = {
-  id?: string
-  especialidade_id: string
-  campo_id: string
-  label_customizado: string | null
-  ordem: number
-  ativo: boolean
-  campos_personalizados?: CampoPersonalizado
-}
-
-export const getCampoConfiguracoes = async (especialidadeId: string) => {
+export const getEspecialidadeCampos = async (especialidadeId: string) => {
   const { data, error } = await supabase
-    .from('campo_configuracao')
+    .from('especialidade_campos')
     .select('*, campos_personalizados(*)')
     .eq('especialidade_id', especialidadeId)
     .order('ordem', { ascending: true })
 
   if (error) throw error
-  return data as CampoConfiguracao[]
+  return data
 }
 
-export const salvarCampoConfiguracoes = async (
-  especialidadeId: string,
-  configs: CampoConfiguracao[],
-) => {
+export const salvarEspecialidadeCampos = async (especialidadeId: string, configs: any[]) => {
   const { error: deleteError } = await supabase
-    .from('campo_configuracao')
+    .from('especialidade_campos')
     .delete()
     .eq('especialidade_id', especialidadeId)
 
@@ -111,11 +98,10 @@ export const salvarCampoConfiguracoes = async (
     const inserts = configs.map((c) => ({
       especialidade_id: especialidadeId,
       campo_id: c.campo_id,
-      label_customizado: c.label_customizado,
       ordem: c.ordem,
       ativo: c.ativo,
     }))
-    const { error: insertError } = await supabase.from('campo_configuracao').insert(inserts)
+    const { error: insertError } = await supabase.from('especialidade_campos').insert(inserts)
     if (insertError) throw insertError
   }
 }

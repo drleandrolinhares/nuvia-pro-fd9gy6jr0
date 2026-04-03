@@ -17,10 +17,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Settings2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Loader2, Plus, ArrowUp, ArrowDown } from 'lucide-react'
 import * as cadastrosService from '@/services/cadastros'
 import { CadastroItem, CampoPersonalizado } from '@/services/cadastros'
 
@@ -31,7 +30,6 @@ interface Props {
 type ConfigItem = {
   campo_id: string
   ativo: boolean
-  label_customizado: string
   ordem: number
   nome_original: string
 }
@@ -67,20 +65,18 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
     setIsModalOpen(true)
     setIsLoadingConfig(true)
     try {
-      const existingConfigs = await cadastrosService.getCampoConfiguracoes(especialidade.id)
+      const existingConfigs = await cadastrosService.getEspecialidadeCampos(especialidade.id)
 
       const mergedConfigs: ConfigItem[] = campos.map((campo) => {
-        const existing = existingConfigs.find((c) => c.campo_id === campo.id)
+        const existing = existingConfigs.find((c: any) => c.campo_id === campo.id)
         return {
           campo_id: campo.id,
           nome_original: campo.nome,
           ativo: existing?.ativo ?? false,
-          label_customizado: existing?.label_customizado || '',
           ordem: existing?.ordem ?? 999,
         }
       })
 
-      // Sort by order, then by original name
       mergedConfigs.sort((a, b) => {
         if (a.ativo && !b.ativo) return -1
         if (!a.ativo && b.ativo) return 1
@@ -88,7 +84,6 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
         return a.nome_original.localeCompare(b.nome_original)
       })
 
-      // Re-normalize order
       mergedConfigs.forEach((c, idx) => {
         c.ordem = idx + 1
       })
@@ -103,12 +98,6 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
 
   const handleToggleCampo = (campoId: string) => {
     setConfigs((prev) => prev.map((c) => (c.campo_id === campoId ? { ...c, ativo: !c.ativo } : c)))
-  }
-
-  const handleChangeLabel = (campoId: string, value: string) => {
-    setConfigs((prev) =>
-      prev.map((c) => (c.campo_id === campoId ? { ...c, label_customizado: value } : c)),
-    )
   }
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
@@ -142,12 +131,11 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
         .map((c) => ({
           especialidade_id: selectedEspecialidade.id,
           campo_id: c.campo_id,
-          label_customizado: c.label_customizado || null,
           ordem: c.ordem,
           ativo: c.ativo,
         }))
 
-      await cadastrosService.salvarCampoConfiguracoes(selectedEspecialidade.id, toSave as any)
+      await cadastrosService.salvarEspecialidadeCampos(selectedEspecialidade.id, toSave)
       toast.success('Configurações salvas com sucesso!')
       setIsModalOpen(false)
     } catch (error: any) {
@@ -158,8 +146,8 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-sidebar-border bg-sidebar overflow-hidden">
+    <div className="space-y-4 animate-fade-in">
+      <div className="rounded-xl border border-sidebar-border bg-sidebar overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-sidebar-border hover:bg-transparent">
@@ -188,10 +176,9 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenConfig(esp)}
-                      className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-amber-500"
+                      className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-[#d4af37] transition-colors"
                     >
-                      <Settings2 className="w-4 h-4 mr-2" />
-                      Configurar Campos
+                      <Plus className="w-4 h-4 mr-2" />+ Configurar Campos
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -202,12 +189,14 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-slate-950 border-slate-800 text-slate-100">
-          <DialogHeader>
-            <DialogTitle className="text-amber-500">Configuração de Campos</DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Personalize a exibição dos campos para a especialidade{' '}
-              <strong className="text-slate-200 font-semibold">
+        <DialogContent className="sm:max-w-[600px] bg-[#1a2a4a] border-[#d4af37]/30 text-white shadow-2xl">
+          <DialogHeader className="pb-4 border-b border-[#d4af37]/20">
+            <DialogTitle className="text-[#d4af37] font-bold tracking-wider text-xl uppercase">
+              DADOS DO IMPLANTE
+            </DialogTitle>
+            <DialogDescription className="text-slate-300 mt-2">
+              Selecione e ordene os campos que aparecerão para a especialidade{' '}
+              <strong className="text-[#d4af37] font-semibold">
                 {selectedEspecialidade?.nome}
               </strong>
               .
@@ -217,20 +206,20 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
           <div className="py-4">
             {isLoadingCampos || isLoadingConfig ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#d4af37]" />
               </div>
             ) : (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
                 {configs.map((config, index) => (
                   <div
                     key={config.campo_id}
-                    className="flex items-center gap-3 p-3 bg-slate-900 rounded-md border border-slate-800"
+                    className="flex items-center gap-4 p-3.5 bg-[#f3f4f6] rounded-lg border border-[#1a2a4a] shadow-sm transition-all hover:shadow-md"
                   >
                     <div className="flex flex-col gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 hover:text-amber-500"
+                        className="h-7 w-7 text-[#1a2a4a] hover:text-[#d4af37] hover:bg-[#1a2a4a]/10"
                         disabled={index === 0}
                         onClick={() => handleMove(index, 'up')}
                       >
@@ -239,7 +228,7 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 hover:text-amber-500"
+                        className="h-7 w-7 text-[#1a2a4a] hover:text-[#d4af37] hover:bg-[#1a2a4a]/10"
                         disabled={index === configs.length - 1}
                         onClick={() => handleMove(index, 'down')}
                       >
@@ -251,51 +240,45 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                       id={`campo-${config.campo_id}`}
                       checked={config.ativo}
                       onCheckedChange={() => handleToggleCampo(config.campo_id)}
-                      className="border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 mt-1 self-start"
+                      className="h-5 w-5 border-[#1a2a4a] data-[state=checked]:bg-[#1a2a4a] data-[state=checked]:text-[#d4af37]"
                     />
 
-                    <div className="flex-1 flex flex-col gap-2">
+                    <div className="flex-1 flex flex-col gap-1">
                       <Label
                         htmlFor={`campo-${config.campo_id}`}
-                        className="text-sm font-medium leading-none text-slate-300 cursor-pointer"
+                        className="text-base font-bold text-[#d4af37] cursor-pointer drop-shadow-sm"
                       >
                         {config.nome_original}
                       </Label>
                       {config.ativo && (
-                        <div className="flex flex-col gap-1">
-                          <Label className="text-xs text-slate-500">
-                            Label Customizado (Opcional)
-                          </Label>
-                          <Input
-                            value={config.label_customizado}
-                            onChange={(e) => handleChangeLabel(config.campo_id, e.target.value)}
-                            placeholder={config.nome_original}
-                            className="bg-slate-950 border-slate-800 text-sm h-8"
-                          />
-                        </div>
+                        <span className="text-xs text-[#1a2a4a] font-medium opacity-70">
+                          Campo ativo e visível
+                        </span>
                       )}
                     </div>
                   </div>
                 ))}
                 {configs.length === 0 && (
-                  <p className="text-center text-slate-500 text-sm">Nenhum campo disponível.</p>
+                  <p className="text-center text-slate-300 text-sm py-4">
+                    Nenhum campo disponível.
+                  </p>
                 )}
               </div>
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t border-[#d4af37]/20">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setIsModalOpen(false)}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+              className="text-slate-300 hover:bg-white/10 hover:text-white"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
               disabled={isSaving || isLoadingConfig || isLoadingCampos}
-              className="bg-amber-600 text-white hover:bg-amber-700"
+              className="bg-[#d4af37] text-[#1a2a4a] font-bold hover:bg-[#c29e2f] transition-colors"
             >
               {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Salvar Configurações
