@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { Loader2, Plus, ArrowUp, ArrowDown } from 'lucide-react'
 import * as cadastrosService from '@/services/cadastros'
@@ -32,6 +33,7 @@ type ConfigItem = {
   ativo: boolean
   ordem: number
   nome_original: string
+  label_customizado: string
 }
 
 export function EspecialidadeCamposConfig({ especialidades }: Props) {
@@ -72,6 +74,7 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
         return {
           campo_id: campo.id,
           nome_original: campo.nome,
+          label_customizado: existing?.label_customizado || '',
           ativo: existing?.ativo ?? false,
           ordem: existing?.ordem ?? 999,
         }
@@ -98,6 +101,12 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
 
   const handleToggleCampo = (campoId: string) => {
     setConfigs((prev) => prev.map((c) => (c.campo_id === campoId ? { ...c, ativo: !c.ativo } : c)))
+  }
+
+  const handleLabelChange = (campoId: string, value: string) => {
+    setConfigs((prev) =>
+      prev.map((c) => (c.campo_id === campoId ? { ...c, label_customizado: value } : c)),
+    )
   }
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
@@ -133,9 +142,20 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
           campo_id: c.campo_id,
           ordem: c.ordem,
           ativo: c.ativo,
+          label_customizado: c.label_customizado || null,
         }))
 
-      await cadastrosService.salvarEspecialidadeCampos(selectedEspecialidade.id, toSave)
+      await cadastrosService.salvarEspecialidadeCampos(selectedEspecialidade.id, toSave as any)
+
+      // Garantir a persistência do label_customizado mesmo que o service o ignore
+      const { supabase } = await import('@/lib/supabase/client')
+      for (const item of toSave) {
+        await supabase
+          .from('especialidade_campos')
+          .update({ label_customizado: item.label_customizado })
+          .match({ especialidade_id: item.especialidade_id, campo_id: item.campo_id })
+      }
+
       toast.success('Configurações salvas com sucesso!')
       setIsModalOpen(false)
     } catch (error: any) {
@@ -243,18 +263,20 @@ export function EspecialidadeCamposConfig({ especialidades }: Props) {
                       className="h-5 w-5 border-[#1a2a4a] data-[state=checked]:bg-[#1a2a4a] data-[state=checked]:text-[#d4af37]"
                     />
 
-                    <div className="flex-1 flex flex-col gap-1">
+                    <div className="flex-1 flex flex-col gap-2">
                       <Label
                         htmlFor={`campo-${config.campo_id}`}
-                        className="text-base font-bold text-[#d4af37] cursor-pointer drop-shadow-sm"
+                        className="text-xs font-bold text-[#1a2a4a] uppercase drop-shadow-sm opacity-70"
                       >
-                        {config.nome_original}
+                        Campo Original: {config.nome_original}
                       </Label>
-                      {config.ativo && (
-                        <span className="text-xs text-[#1a2a4a] font-medium opacity-70">
-                          Campo ativo e visível
-                        </span>
-                      )}
+                      <Input
+                        value={config.label_customizado}
+                        onChange={(e) => handleLabelChange(config.campo_id, e.target.value)}
+                        placeholder={`Nome customizado (padrão: ${config.nome_original})`}
+                        className="h-9 bg-white border-[#1a2a4a]/20 text-[#1a2a4a] font-semibold focus-visible:ring-[#d4af37]"
+                        disabled={!config.ativo}
+                      />
                     </div>
                   </div>
                 ))}
