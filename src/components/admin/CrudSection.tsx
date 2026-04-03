@@ -100,37 +100,41 @@ export function CrudSection({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-100">{title}</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-sidebar-foreground">{title}</h2>
         <Button
           onClick={handleOpenAdd}
-          className="bg-amber-500 hover:bg-amber-600 text-white border-0"
+          className="bg-amber-500 hover:bg-amber-600 text-white border-0 rounded-full shadow-lg px-6 transition-all"
         >
           <Plus className="w-4 h-4 mr-2" />
           Adicionar {itemName}
         </Button>
       </div>
 
-      <div className="rounded-md border border-slate-800 bg-slate-900/50">
+      <div className="rounded-xl border border-sidebar-border bg-sidebar overflow-hidden shadow-elevation">
         <Table>
-          <TableHeader>
-            <TableRow className="border-slate-800 hover:bg-transparent">
-              <TableHead className="text-slate-400">Nome</TableHead>
-              <TableHead className="text-slate-400">Data de Criação</TableHead>
-              <TableHead className="text-slate-400 text-right">Ações</TableHead>
+          <TableHeader className="bg-sidebar-accent/30">
+            <TableRow className="border-sidebar-border hover:bg-transparent">
+              <TableHead className="text-sidebar-foreground/70 font-medium">Nome</TableHead>
+              <TableHead className="text-sidebar-foreground/70 font-medium">
+                Data de Criação
+              </TableHead>
+              <TableHead className="text-sidebar-foreground/70 font-medium text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow className="border-slate-800 hover:bg-transparent">
-                <TableCell colSpan={3} className="text-center py-8 text-slate-500">
+              <TableRow className="border-sidebar-border hover:bg-transparent">
+                <TableCell colSpan={3} className="text-center py-12 text-sidebar-foreground/50">
                   Carregando registros...
                 </TableCell>
               </TableRow>
             ) : items.length === 0 ? (
-              <TableRow className="border-slate-800 hover:bg-transparent">
-                <TableCell colSpan={3} className="text-center py-8 text-slate-500">
+              <TableRow className="border-sidebar-border hover:bg-transparent">
+                <TableCell colSpan={3} className="text-center py-12 text-sidebar-foreground/50">
                   Nenhum registro encontrado.
                 </TableCell>
               </TableRow>
@@ -138,10 +142,10 @@ export function CrudSection({
               items.map((item) => (
                 <TableRow
                   key={item.id}
-                  className="border-slate-800 hover:bg-slate-800/30 transition-colors"
+                  className="border-sidebar-border hover:bg-sidebar-accent/30 transition-colors"
                 >
-                  <TableCell className="font-medium text-slate-200">{item.nome}</TableCell>
-                  <TableCell className="text-slate-400">
+                  <TableCell className="font-semibold text-sidebar-primary">{item.nome}</TableCell>
+                  <TableCell className="text-sidebar-foreground/60">
                     {item.criado_em ? format(new Date(item.criado_em), 'dd/MM/yyyy HH:mm') : '-'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -150,7 +154,7 @@ export function CrudSection({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenEdit(item)}
-                        className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-slate-800"
+                        className="h-8 w-8 text-sidebar-primary hover:text-sidebar-primary/80 hover:bg-sidebar-accent rounded-full transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -158,7 +162,7 @@ export function CrudSection({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenDelete(item)}
-                        className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-slate-800"
+                        className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-sidebar-accent rounded-full transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -172,9 +176,9 @@ export function CrudSection({
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-slate-950 border-slate-800 text-slate-200 sm:max-w-[425px]">
+        <DialogContent className="bg-sidebar border-sidebar-border text-sidebar-foreground sm:max-w-[425px] rounded-xl shadow-elevation">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-sidebar-foreground">
               {editingItem ? `Editar ${itemName}` : `Novo(a) ${itemName}`}
             </DialogTitle>
           </DialogHeader>
@@ -183,7 +187,7 @@ export function CrudSection({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={`Nome da ${itemName.toLowerCase()}`}
-              className="bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500 focus-visible:ring-amber-500"
+              className="bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/50 focus-visible:ring-sidebar-primary rounded-lg"
               autoFocus
             />
           </div>
@@ -192,14 +196,14 @@ export function CrudSection({
               variant="ghost"
               onClick={() => setIsModalOpen(false)}
               disabled={isSubmitting}
-              className="hover:bg-slate-800 hover:text-slate-200 text-slate-400"
+              className="hover:bg-sidebar-accent hover:text-sidebar-foreground text-sidebar-foreground/70 rounded-full"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !inputValue.trim()}
-              className="bg-amber-500 hover:bg-amber-600 text-white border-0"
+              className="bg-amber-500 hover:bg-amber-600 text-white border-0 rounded-full shadow-md"
             >
               Salvar
             </Button>
@@ -208,25 +212,27 @@ export function CrudSection({
       </Dialog>
 
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent className="bg-slate-950 border-slate-800 text-slate-200">
+        <AlertDialogContent className="bg-sidebar border-sidebar-border text-sidebar-foreground rounded-xl shadow-elevation">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-slate-100">Você tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+            <AlertDialogTitle className="text-sidebar-foreground">
+              Você tem certeza?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sidebar-foreground/70">
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro
-              <span className="font-semibold text-amber-500"> {deletingItem?.nome}</span>.
+              <span className="font-semibold text-sidebar-primary"> {deletingItem?.nome}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isSubmitting}
-              className="bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+              className="bg-transparent border-sidebar-border text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-full"
             >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={isSubmitting}
-              className="bg-red-500 hover:bg-red-600 text-white border-0"
+              className="bg-red-500 hover:bg-red-600 text-white border-0 rounded-full shadow-md"
             >
               Sim, excluir
             </AlertDialogAction>
