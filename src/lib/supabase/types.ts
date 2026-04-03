@@ -173,6 +173,24 @@ export type Database = {
           },
         ]
       }
+      diametros_implante: {
+        Row: {
+          data_criacao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          data_criacao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          data_criacao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       embalagens: {
         Row: {
           data_criacao: string | null
@@ -386,6 +404,24 @@ export type Database = {
           },
         ]
       }
+      marcas_implante: {
+        Row: {
+          data_criacao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          data_criacao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          data_criacao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       permissoes: {
         Row: {
           descricao: string | null
@@ -592,6 +628,24 @@ export type Database = {
         ]
       }
       salas: {
+        Row: {
+          data_criacao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          data_criacao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          data_criacao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      tamanhos_implante: {
         Row: {
           data_criacao: string | null
           id: string
@@ -877,6 +931,10 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: diametros_implante
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: embalagens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -921,6 +979,10 @@ export const Constants = {
 //   preco_anterior: numeric (not null)
 //   data_compra: timestamp with time zone (nullable, default: now())
 //   criado_em: timestamp with time zone (nullable, default: now())
+// Table: marcas_implante
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -968,6 +1030,10 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: tamanhos_implante
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -1004,6 +1070,9 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: diametros_implante
+//   UNIQUE diametros_implante_nome_key: UNIQUE (nome)
+//   PRIMARY KEY diametros_implante_pkey: PRIMARY KEY (id)
 // Table: embalagens
 //   UNIQUE embalagens_nome_key: UNIQUE (nome)
 //   PRIMARY KEY embalagens_pkey: PRIMARY KEY (id)
@@ -1024,6 +1093,9 @@ export const Constants = {
 //   FOREIGN KEY historico_compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY historico_compras_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY historico_compras_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+// Table: marcas_implante
+//   UNIQUE marcas_implante_nome_key: UNIQUE (nome)
+//   PRIMARY KEY marcas_implante_pkey: PRIMARY KEY (id)
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
@@ -1045,6 +1117,9 @@ export const Constants = {
 // Table: salas
 //   UNIQUE salas_nome_key: UNIQUE (nome)
 //   PRIMARY KEY salas_pkey: PRIMARY KEY (id)
+// Table: tamanhos_implante
+//   UNIQUE tamanhos_implante_nome_key: UNIQUE (nome)
+//   PRIMARY KEY tamanhos_implante_pkey: PRIMARY KEY (id)
 // Table: usuario_permissoes
 //   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
@@ -1083,6 +1158,11 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: diametros_implante
+//   Policy "diametros_implante_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "diametros_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: embalagens
 //   Policy "embalagens_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1128,6 +1208,11 @@ export const Constants = {
 //   Policy "historico_compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: marcas_implante
+//   Policy "marcas_implante_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "marcas_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: permissoes
 //   Policy "permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -1161,6 +1246,11 @@ export const Constants = {
 //   Policy "salas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "salas_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: tamanhos_implante
+//   Policy "tamanhos_implante_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "tamanhos_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: usuario_permissoes
 //   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
@@ -1289,15 +1379,21 @@ export const Constants = {
 //   CREATE UNIQUE INDEX campo_configuracao_especialidade_id_campo_id_key ON public.campo_configuracao USING btree (especialidade_id, campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
+// Table: diametros_implante
+//   CREATE UNIQUE INDEX diametros_implante_nome_key ON public.diametros_implante USING btree (nome)
 // Table: embalagens
 //   CREATE UNIQUE INDEX embalagens_nome_key ON public.embalagens USING btree (nome)
 // Table: especialidades
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
+// Table: marcas_implante
+//   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: produto_campos_valores
 //   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
 // Table: salas
 //   CREATE UNIQUE INDEX salas_nome_key ON public.salas USING btree (nome)
+// Table: tamanhos_implante
+//   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)

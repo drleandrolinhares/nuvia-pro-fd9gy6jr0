@@ -119,6 +119,10 @@ export function EntradaProdutoModal({
   const [loading, setLoading] = useState(false)
   const [camposDinamicosConfig, setCamposDinamicosConfig] = useState<any[]>([])
 
+  const [marcasImplante, setMarcasImplante] = useState<{ id: string; nome: string }[]>([])
+  const [diametrosImplante, setDiametrosImplante] = useState<{ id: string; nome: string }[]>([])
+  const [tamanhosImplante, setTamanhosImplante] = useState<{ id: string; nome: string }[]>([])
+
   const [openProduto, setOpenProduto] = useState(false)
   const [selectedProdutoId, setSelectedProdutoId] = useState<string | null>(null)
 
@@ -173,6 +177,28 @@ export function EntradaProdutoModal({
       .order('nome')
       .then(({ data }) => {
         if (data) setFornecedores(data)
+      })
+
+    supabase
+      .from('marcas_implante')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setMarcasImplante(data)
+      })
+    supabase
+      .from('diametros_implante')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setDiametrosImplante(data)
+      })
+    supabase
+      .from('tamanhos_implante')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setTamanhosImplante(data)
       })
 
     const especialidadesSub = supabase
@@ -634,6 +660,24 @@ export function EntradaProdutoModal({
                     const campo = config.campos || config.campos_personalizados
                     if (!campo) return null
                     const labelName = config.label_customizado || campo.nome
+
+                    const nomeStr = labelName.toLowerCase()
+                    const isMarcaImplante = nomeStr.includes('marca')
+                    const isDiametroImplante =
+                      nomeStr.includes('diâmetro') || nomeStr.includes('diametro')
+                    const isTamanhoImplante = nomeStr.includes('tamanho')
+
+                    const isDynamicDropdown =
+                      isMarcaImplante || isDiametroImplante || isTamanhoImplante
+
+                    let options: { id: string; nome: string }[] = []
+                    if (isMarcaImplante) options = marcasImplante
+                    else if (isDiametroImplante) options = diametrosImplante
+                    else if (isTamanhoImplante) options = tamanhosImplante
+                    else if (campo.tipo === 'dropdown' && campo.opcoes) {
+                      options = (campo.opcoes as string[]).map((opt) => ({ id: opt, nome: opt }))
+                    }
+
                     return (
                       <FormField
                         key={config.campo_id}
@@ -645,15 +689,15 @@ export function EntradaProdutoModal({
                               {labelName}
                             </FormLabel>
                             <FormControl>
-                              {campo.tipo === 'dropdown' && campo.opcoes ? (
+                              {isDynamicDropdown || (campo.tipo === 'dropdown' && campo.opcoes) ? (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
                                   <SelectTrigger className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus:ring-[#d4af37]">
                                     <SelectValue placeholder="Selecione..." />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {(campo.opcoes as string[]).map((opt: string) => (
-                                      <SelectItem key={opt} value={opt}>
-                                        {opt}
+                                    {options.map((opt) => (
+                                      <SelectItem key={opt.id} value={opt.nome}>
+                                        {opt.nome}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
