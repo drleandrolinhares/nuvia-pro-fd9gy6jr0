@@ -617,31 +617,46 @@ export function EntradaProdutoModal({
                   CAMPOS DA ESPECIALIDADE
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {camposDinamicosConfig.map((config) => (
-                    <FormField
-                      key={config.campo_id}
-                      control={form.control}
-                      name={`campos_dinamicos.${config.campo_id}`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={labelClass}>
-                            {config.campos_personalizados?.nome}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type={
-                                config.campos_personalizados?.tipo === 'number' ? 'number' : 'text'
-                              }
-                              className={inputClass}
-                              {...field}
-                              value={field.value || ''}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                  {camposDinamicosConfig.map((config) => {
+                    const campo = config.campos || config.campos_personalizados
+                    if (!campo) return null
+                    return (
+                      <FormField
+                        key={config.campo_id}
+                        control={form.control}
+                        name={`campos_dinamicos.${config.campo_id}`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={labelClass}>{campo.nome}</FormLabel>
+                            <FormControl>
+                              {campo.tipo === 'dropdown' && campo.opcoes ? (
+                                <Select onValueChange={field.onChange} value={field.value || ''}>
+                                  <SelectTrigger className={inputClass}>
+                                    <SelectValue placeholder="Selecione..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {(campo.opcoes as string[]).map((opt: string) => (
+                                      <SelectItem key={opt} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  type={campo.tipo === 'number' ? 'number' : 'text'}
+                                  className={inputClass}
+                                  {...field}
+                                  value={field.value || ''}
+                                />
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )}

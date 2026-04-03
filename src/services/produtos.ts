@@ -111,14 +111,18 @@ export const fetchEspecialidadeCampos = async (especialidade_id: string) => {
     .from('especialidade_campos')
     .select(`
       campo_id,
-      campos_personalizados (
+      ordem,
+      campos:campos_personalizados (
         id,
         nome,
-        tipo
+        tipo,
+        opcoes,
+        descricao
       )
     `)
     .eq('especialidade_id', especialidade_id)
     .eq('ativo', true)
+    .order('ordem', { ascending: true })
 
   return { data: data as any[], error }
 }
