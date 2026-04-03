@@ -477,30 +477,70 @@ export function EntradaProdutoModal({
                         onBlur={() => setTimeout(() => setOpenProduto(false), 200)}
                       />
                     </FormControl>
-                    {openProduto &&
-                      localProdutos.filter((p) =>
-                        p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
-                      ).length > 0 && (
-                        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-md shadow-lg p-1">
-                          {localProdutos
-                            .filter((p) =>
-                              p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
-                            )
-                            .map((p) => (
-                              <div
-                                key={p.id}
-                                className="px-3 py-2 text-sm cursor-pointer hover:bg-fuchsia-50 hover:text-fuchsia-700 rounded transition-colors"
+                    {openProduto && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-md shadow-lg p-1">
+                        {localProdutos.filter((p) =>
+                          p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
+                        ).length > 0 ? (
+                          <>
+                            {localProdutos
+                              .filter((p) =>
+                                p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
+                              )
+                              .map((p) => (
+                                <div
+                                  key={p.id}
+                                  className="px-3 py-2 text-sm cursor-pointer hover:bg-fuchsia-50 hover:text-fuchsia-700 rounded transition-colors flex flex-col"
+                                  onClick={() => {
+                                    field.onChange(p.nome)
+                                    handleProdutoSelect(p)
+                                    setOpenProduto(false)
+                                  }}
+                                >
+                                  <span className="font-medium text-slate-800">{p.nome}</span>
+                                  {p.marca && (
+                                    <span className="text-xs text-slate-500">Marca: {p.marca}</span>
+                                  )}
+                                </div>
+                              ))}
+                            {field.value &&
+                              !localProdutos.find(
+                                (p) => p.nome.toLowerCase() === field.value.toLowerCase(),
+                              ) && (
+                                <div
+                                  className="px-3 py-2 text-sm cursor-pointer text-fuchsia-600 font-medium hover:bg-fuchsia-50 rounded transition-colors flex items-center border-t border-slate-100 mt-1 pt-2"
+                                  onClick={() => {
+                                    setSelectedProdutoId(null)
+                                    setOpenProduto(false)
+                                  }}
+                                >
+                                  <PackagePlus className="w-4 h-4 mr-2" />+ Criar Novo Produto "
+                                  {field.value}"
+                                </div>
+                              )}
+                          </>
+                        ) : (
+                          <div className="px-3 py-4 text-sm text-slate-500 text-center flex flex-col items-center justify-center gap-2">
+                            <span>Nenhum produto encontrado.</span>
+                            {field.value && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 text-fuchsia-600 border-fuchsia-200 hover:bg-fuchsia-50 w-full"
                                 onClick={() => {
-                                  field.onChange(p.nome)
-                                  handleProdutoSelect(p)
+                                  setSelectedProdutoId(null)
                                   setOpenProduto(false)
                                 }}
                               >
-                                {p.nome}
-                              </div>
-                            ))}
-                        </div>
-                      )}
+                                <PackagePlus className="w-4 h-4 mr-2" />
+                                Criar "{field.value}"
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
