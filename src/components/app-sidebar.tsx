@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   CloudCog,
+  Database,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -82,6 +83,7 @@ const navData = [
     title: 'CONFIGURAÇÕES',
     icon: Settings,
     items: [
+      { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database },
       { title: 'Parâmetros Gerais', url: '/configuracoes' },
       { title: 'Colaboradores', url: '/colaboradores', icon: Users },
     ],

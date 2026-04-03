@@ -679,7 +679,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      referencia_consumo_enum: ['qtd_comprada', 'itens_embalagem'],
+    },
   },
 } as const
 
@@ -773,7 +775,7 @@ export const Constants = {
 //   numero_armario: text (nullable)
 //   embalagem_id: uuid (nullable)
 //   sala_id: uuid (nullable)
-//   referencia_consumo: public.referencia_consumo_enum (nullable, default: 'qtd_comprada'::public.referencia_consumo_enum)
+//   referencia_consumo: referencia_consumo_enum (nullable, default: 'qtd_comprada'::referencia_consumo_enum)
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -1033,7 +1035,7 @@ export const Constants = {
 //   DECLARE
 //     v_ref text;
 //   BEGIN
-//     SELECT referencia_consumo INTO v_ref FROM public.produtos WHERE id = NEW.produto_id;
+//     SELECT referencia_consumo::text INTO v_ref FROM public.produtos WHERE id = NEW.produto_id;
 //
 //     IF v_ref = 'itens_embalagem' THEN
 //       UPDATE public.produtos
