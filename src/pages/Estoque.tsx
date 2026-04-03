@@ -46,7 +46,8 @@ export default function Estoque() {
   const [modalSaidaOpen, setModalSaidaOpen] = useState(false)
   const [produtoVisualizar, setProdutoVisualizar] = useState<Produto | null>(null)
   const [produtoEditar, setProdutoEditar] = useState<Produto | null>(null)
-  const [hasEditPermission, setHasEditPermission] = useState(false)
+  const [canManage, setCanManage] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -57,7 +58,8 @@ export default function Estoque() {
       const { data: editar } = await supabase.rpc('has_permission', {
         permission_name: 'Editar Estoque',
       })
-      setHasEditPermission(!!gerenciar || !!editar)
+      setCanManage(!!gerenciar)
+      setCanEdit(!!editar)
     }
     checkPermission()
   }, [])
@@ -134,23 +136,25 @@ export default function Estoque() {
           </p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="flex gap-2 w-full md:w-auto">
-            <Button
-              onClick={() => setModalEntradaOpen(true)}
-              className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
-            >
-              <PackagePlus className="w-4 h-4 mr-2" />
-              Entrada
-            </Button>
-            <Button
-              onClick={() => setModalSaidaOpen(true)}
-              variant="outline"
-              className="flex-1 md:flex-none border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-950 font-bold bg-slate-900/50"
-            >
-              <PackageMinus className="w-4 h-4 mr-2" />
-              Saída
-            </Button>
-          </div>
+          {canManage && (
+            <div className="flex gap-2 w-full md:w-auto">
+              <Button
+                onClick={() => setModalEntradaOpen(true)}
+                className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+              >
+                <PackagePlus className="w-4 h-4 mr-2" />
+                Entrada
+              </Button>
+              <Button
+                onClick={() => setModalSaidaOpen(true)}
+                variant="outline"
+                className="flex-1 md:flex-none border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-950 font-bold bg-slate-900/50"
+              >
+                <PackageMinus className="w-4 h-4 mr-2" />
+                Saída
+              </Button>
+            </div>
+          )}
           <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800 w-full md:w-auto hidden lg:flex">
             <span className="text-sm font-medium capitalize">
               {format(currentTime, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -410,7 +414,7 @@ export default function Estoque() {
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">Visualizar</span>
                           </Button>
-                          {hasEditPermission && (
+                          {canEdit && (
                             <Button
                               variant="ghost"
                               size="icon"
