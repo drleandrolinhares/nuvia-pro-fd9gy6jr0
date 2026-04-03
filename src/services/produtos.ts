@@ -7,6 +7,8 @@ export interface Produto {
   variacao: string | null
   categoria: string | null
   especialidade_id: string | null
+  embalagem_id: string | null
+  sala_id: string | null
   codigo_barras: string | null
   embalagem: string | null
   sala: string | null
@@ -19,6 +21,12 @@ export interface Produto {
   especialidades?: {
     nome: string
   } | null
+  embalagens?: {
+    nome: string
+  } | null
+  salas?: {
+    nome: string
+  } | null
 }
 
 export const fetchProdutos = async () => {
@@ -27,6 +35,12 @@ export const fetchProdutos = async () => {
     .select(`
       *,
       especialidades (
+        nome
+      ),
+      embalagens (
+        nome
+      ),
+      salas (
         nome
       )
     `)
@@ -41,6 +55,18 @@ export const fetchEspecialidades = async () => {
   return { data, error }
 }
 
+export const fetchEmbalagens = async () => {
+  const { data, error } = await supabase.from('embalagens').select('*').order('nome')
+
+  return { data, error }
+}
+
+export const fetchSalas = async () => {
+  const { data, error } = await supabase.from('salas').select('*').order('nome')
+
+  return { data, error }
+}
+
 export const createProduto = async (produto: Partial<Produto>) => {
   const { data, error } = await supabase
     .from('produtos')
@@ -48,6 +74,12 @@ export const createProduto = async (produto: Partial<Produto>) => {
     .select(`
       *,
       especialidades (
+        nome
+      ),
+      embalagens (
+        nome
+      ),
+      salas (
         nome
       )
     `)

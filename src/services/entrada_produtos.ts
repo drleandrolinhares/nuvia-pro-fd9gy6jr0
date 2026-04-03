@@ -36,7 +36,10 @@ export const registrarEntrada = async (dados: {
   preco_unitario: number
   preco_total: number
   data_entrada: string
+  data_validade?: string | null
+  numero_nfe?: string | null
   observacoes?: string
+  observacoes_criticas?: string | null
 }) => {
   // Fetch current product to get previous price and stock
   const { data: produto } = await supabase
@@ -60,7 +63,10 @@ export const registrarEntrada = async (dados: {
       preco_unitario: dados.preco_unitario,
       preco_total: dados.preco_total,
       data_entrada: dados.data_entrada,
+      data_validade: dados.data_validade,
+      numero_nfe: dados.numero_nfe,
       observacoes: dados.observacoes,
+      observacoes_criticas: dados.observacoes_criticas,
     })
     .select()
     .single()

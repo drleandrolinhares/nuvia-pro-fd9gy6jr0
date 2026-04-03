@@ -367,9 +367,11 @@ export default function Estoque() {
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600 text-sm">
-                        {item.embalagem || '-'}
+                        {item.embalagens?.nome || item.embalagem || '-'}
                       </TableCell>
-                      <TableCell className="text-slate-600 text-sm">{item.sala || '-'}</TableCell>
+                      <TableCell className="text-slate-600 text-sm">
+                        {item.salas?.nome || item.sala || '-'}
+                      </TableCell>
                       <TableCell className="text-center">
                         {item.validade ? (
                           <Badge

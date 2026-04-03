@@ -48,7 +48,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
-import { Produto, fetchEspecialidades, createProduto, updateProduto } from '@/services/produtos'
+import {
+  Produto,
+  fetchEspecialidades,
+  fetchEmbalagens,
+  fetchSalas,
+  createProduto,
+  updateProduto,
+} from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
 
 const formSchema = z.object({
@@ -56,7 +63,7 @@ const formSchema = z.object({
   nome_material: z.string().min(1, 'Obrigatório'),
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
-  embalagem: z.string().optional(),
+  embalagem_id: z.string().optional(),
 
   quantidade_comprada: z.coerce.number().min(1, 'Deve ser maior que zero'),
   itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
@@ -68,7 +75,7 @@ const formSchema = z.object({
   data_validade: z.string().optional(),
   numero_nfe: z.string().optional(),
 
-  sala_armazenamento: z.string().optional(),
+  sala_id: z.string().optional(),
   numero_armario: z.string().optional(),
   estoque_minimo: z.coerce.number().min(0).optional(),
 
@@ -99,6 +106,8 @@ export function EntradaProdutoModal({
 }: EntradaProdutoModalProps) {
   const [localProdutos, setLocalProdutos] = useState<Produto[]>([])
   const [especialidades, setEspecialidades] = useState<{ id: string; nome: string }[]>([])
+  const [embalagens, setEmbalagens] = useState<{ id: string; nome: string }[]>([])
+  const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
   const [historico, setHistorico] = useState<UltimaCompra[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -114,7 +123,7 @@ export function EntradaProdutoModal({
       nome_material: '',
       marca: '',
       especialidade_id: '',
-      embalagem: '',
+      embalagem_id: '',
       quantidade_comprada: 1,
       itens_embalagem: 1,
       valor_atribuido: 0,
@@ -122,7 +131,7 @@ export function EntradaProdutoModal({
       data_entrada: new Date(),
       data_validade: '',
       numero_nfe: '',
-      sala_armazenamento: '',
+      sala_id: '',
       numero_armario: '',
       estoque_minimo: 0,
       observacoes: '',
@@ -139,6 +148,12 @@ export function EntradaProdutoModal({
     fetchEspecialidades().then((res) => {
       if (res.data) setEspecialidades(res.data)
     })
+    fetchEmbalagens().then((res) => {
+      if (res.data) setEmbalagens(res.data)
+    })
+    fetchSalas().then((res) => {
+      if (res.data) setSalas(res.data)
+    })
   }, [])
 
   useEffect(() => {
@@ -149,7 +164,7 @@ export function EntradaProdutoModal({
           nome_material: '',
           marca: '',
           especialidade_id: '',
-          embalagem: '',
+          embalagem_id: '',
           quantidade_comprada: 1,
           itens_embalagem: 1,
           valor_atribuido: 0,
@@ -157,7 +172,7 @@ export function EntradaProdutoModal({
           data_entrada: new Date(),
           data_validade: '',
           numero_nfe: '',
-          sala_armazenamento: '',
+          sala_id: '',
           numero_armario: '',
           estoque_minimo: 0,
           observacoes: '',
@@ -186,17 +201,28 @@ export function EntradaProdutoModal({
       form.setValue('codigo_barras', produto.codigo_barras || '')
       form.setValue('marca', produto.marca || '')
       form.setValue('especialidade_id', produto.especialidade_id || '')
-      form.setValue('embalagem', produto.embalagem || '')
-      form.setValue('sala_armazenamento', produto.sala || '')
+      form.setValue('embalagem_id', produto.embalagem_id || '')
+      form.setValue('sala_id', produto.sala_id || '')
+      form.setValue('numero_armario', produto.numero_armario || '')
       form.setValue('estoque_minimo', produto.quantidade_minima || 0)
+      if (produto.validade) {
+        const parts = produto.validade.split('-')
+        if (parts.length >= 2) {
+          form.setValue('data_validade', `${parts[1]}/${parts[0]}`)
+        }
+      } else {
+        form.setValue('data_validade', '')
+      }
     } else {
       setSelectedProdutoId(null)
       form.setValue('codigo_barras', '')
       form.setValue('marca', '')
       form.setValue('especialidade_id', '')
-      form.setValue('embalagem', '')
-      form.setValue('sala_armazenamento', '')
+      form.setValue('embalagem_id', '')
+      form.setValue('sala_id', '')
+      form.setValue('numero_armario', '')
       form.setValue('estoque_minimo', 0)
+      form.setValue('data_validade', '')
       setHistorico([])
     }
   }
@@ -214,17 +240,17 @@ export function EntradaProdutoModal({
   const estoquePosAdicao = estoqueAtual + totalAdicionado
   const ultimaCompra = historico.length > 0 ? historico[0] : null
 
-  const salasDisponiveis = useMemo(() => {
-    const salas = new Set<string>()
-    localProdutos.forEach((p) => {
-      if (p.sala && p.sala.trim() !== '') salas.add(p.sala)
-    })
-    return Array.from(salas).sort()
-  }, [localProdutos])
-
   const onSubmit = async (values: EntradaFormValues) => {
     setLoading(true)
     let finalProdutoId = selectedProdutoId
+
+    let dataValidadeParsed = null
+    if (values.data_validade) {
+      const [mes, ano] = values.data_validade.split('/')
+      if (mes && ano && mes.length === 2 && ano.length === 4) {
+        dataValidadeParsed = `${ano}-${mes}-01`
+      }
+    }
 
     if (!finalProdutoId) {
       const { data: novoProduto, error } = await createProduto({
@@ -232,12 +258,13 @@ export function EntradaProdutoModal({
         codigo_barras: values.codigo_barras,
         marca: values.marca,
         especialidade_id: values.especialidade_id || null,
-        embalagem: values.embalagem,
-        sala: values.sala_armazenamento,
+        embalagem_id: values.embalagem_id || null,
+        sala_id: values.sala_id || null,
+        numero_armario: values.numero_armario || null,
         quantidade_minima: values.estoque_minimo,
         quantidade_estoque: 0,
         custo_unitario: 0,
-        validade: values.data_validade || null,
+        validade: dataValidadeParsed,
       })
 
       if (error || !novoProduto) {
@@ -252,31 +279,33 @@ export function EntradaProdutoModal({
         codigo_barras: values.codigo_barras,
         marca: values.marca,
         especialidade_id: values.especialidade_id || null,
-        embalagem: values.embalagem,
-        sala: values.sala_armazenamento,
+        embalagem_id: values.embalagem_id || null,
+        sala_id: values.sala_id || null,
+        numero_armario: values.numero_armario || null,
         quantidade_minima: values.estoque_minimo,
-        validade: values.data_validade || null,
+        validade: dataValidadeParsed,
       })
     }
 
     const obsFinal = []
-    if (values.numero_nfe) obsFinal.push(`NFe: ${values.numero_nfe}`)
-    if (values.numero_armario) obsFinal.push(`Armário: ${values.numero_armario}`)
     if (values.observacoes) obsFinal.push(values.observacoes)
-    if (values.observacoes_criticas) obsFinal.push(`CRÍTICO: ${values.observacoes_criticas}`)
 
     const precoTotalCalc = values.quantidade_comprada * values.valor_atribuido
+    const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
 
     const { error: entradaError } = await registrarEntrada({
       produto_id: finalProdutoId,
       fornecedor_id: null,
       quantidade_embalagem: refConsumo === 'itens_embalagem' ? values.itens_embalagem : 1,
       quantidade_comprada: values.quantidade_comprada,
-      unidade_consumo: values.embalagem || 'Unidade',
+      unidade_consumo: embalagemObj ? embalagemObj.nome : 'Unidade',
       preco_unitario: values.valor_atribuido,
       preco_total: precoTotalCalc,
       data_entrada: values.data_entrada.toISOString(),
-      observacoes: obsFinal.join('\n'),
+      data_validade: dataValidadeParsed,
+      numero_nfe: values.numero_nfe || null,
+      observacoes: obsFinal.length > 0 ? obsFinal.join('\n') : undefined,
+      observacoes_criticas: values.observacoes_criticas || null,
     })
 
     setLoading(false)
@@ -422,7 +451,7 @@ export function EntradaProdutoModal({
               />
               <FormField
                 control={form.control}
-                name="embalagem"
+                name="embalagem_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>Embalagem de Compra</FormLabel>
@@ -433,12 +462,11 @@ export function EntradaProdutoModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Caixa">Caixa</SelectItem>
-                        <SelectItem value="Unidade">Unidade</SelectItem>
-                        <SelectItem value="Frasco">Frasco</SelectItem>
-                        <SelectItem value="Pote">Pote</SelectItem>
-                        <SelectItem value="Rolo">Rolo</SelectItem>
-                        <SelectItem value="Pacote">Pacote</SelectItem>
+                        {embalagens.map((emb) => (
+                          <SelectItem key={emb.id} value={emb.id}>
+                            {emb.nome}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -626,7 +654,7 @@ export function EntradaProdutoModal({
               />
               <FormField
                 control={form.control}
-                name="sala_armazenamento"
+                name="sala_id"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className={labelClass}>Sala de Armazenamento</FormLabel>
@@ -642,37 +670,34 @@ export function EntradaProdutoModal({
                               !field.value && 'text-muted-foreground',
                             )}
                           >
-                            {field.value || 'Selecione ou digite...'}
+                            {field.value
+                              ? salas.find((s) => s.id === field.value)?.nome
+                              : 'Selecione a sala...'}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-[300px] p-0">
                         <Command>
-                          <CommandInput
-                            placeholder="Buscar sala..."
-                            onValueChange={(v) => {
-                              if (v) form.setValue('sala_armazenamento', v)
-                            }}
-                          />
+                          <CommandInput placeholder="Buscar sala..." />
                           <CommandList>
                             <CommandEmpty className="p-4 text-center text-sm text-slate-500">
                               NENHUMA SALA CADASTRADA
                             </CommandEmpty>
                             <CommandGroup>
-                              {salasDisponiveis.map((sala) => (
+                              {salas.map((sala) => (
                                 <CommandItem
-                                  key={sala}
-                                  value={sala}
-                                  onSelect={() => form.setValue('sala_armazenamento', sala)}
+                                  key={sala.id}
+                                  value={sala.nome}
+                                  onSelect={() => form.setValue('sala_id', sala.id)}
                                 >
                                   <Check
                                     className={cn(
                                       'mr-2 h-4 w-4',
-                                      sala === field.value ? 'opacity-100' : 'opacity-0',
+                                      sala.id === field.value ? 'opacity-100' : 'opacity-0',
                                     )}
                                   />
-                                  {sala}
+                                  {sala.nome}
                                 </CommandItem>
                               ))}
                             </CommandGroup>

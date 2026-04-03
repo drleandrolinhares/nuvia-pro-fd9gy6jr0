@@ -281,6 +281,7 @@ export type Database = {
           lote: string | null
           marca: string | null
           nome: string
+          numero_armario: string | null
           quantidade_estoque: number | null
           quantidade_minima: number | null
           sala: string | null
@@ -298,6 +299,7 @@ export type Database = {
           lote?: string | null
           marca?: string | null
           nome: string
+          numero_armario?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           sala?: string | null
@@ -315,6 +317,7 @@ export type Database = {
           lote?: string | null
           marca?: string | null
           nome?: string
+          numero_armario?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           sala?: string | null
@@ -688,6 +691,7 @@ export const Constants = {
 //   quantidade_estoque: integer (nullable, default: 0)
 //   quantidade_minima: integer (nullable, default: 0)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+//   numero_armario: text (nullable)
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
