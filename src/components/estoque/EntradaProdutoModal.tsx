@@ -60,7 +60,7 @@ const formSchema = z.object({
 
   quantidade_comprada: z.coerce.number().min(1, 'Deve ser maior que zero'),
   itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
-  preco_total: z.coerce.number().min(0, 'Obrigatório'),
+  valor_atribuido: z.coerce.number().min(0, 'Obrigatório'),
 
   referencia_consumo: z.enum(['quantidade_comprada', 'itens_embalagem']),
 
@@ -117,7 +117,7 @@ export function EntradaProdutoModal({
       embalagem: '',
       quantidade_comprada: 1,
       itens_embalagem: 1,
-      preco_total: 0,
+      valor_atribuido: 0,
       referencia_consumo: 'quantidade_comprada',
       data_entrada: new Date(),
       data_validade: '',
@@ -152,7 +152,7 @@ export function EntradaProdutoModal({
           embalagem: '',
           quantidade_comprada: 1,
           itens_embalagem: 1,
-          preco_total: 0,
+          valor_atribuido: 0,
           referencia_consumo: 'quantidade_comprada',
           data_entrada: new Date(),
           data_validade: '',
@@ -204,10 +204,10 @@ export function EntradaProdutoModal({
   const qtyComprada = form.watch('quantidade_comprada') || 1
   const itensEmb = form.watch('itens_embalagem') || 1
   const refConsumo = form.watch('referencia_consumo')
-  const precoTotal = form.watch('preco_total') || 0
+  const valorAtribuido = form.watch('valor_atribuido') || 0
 
+  const precoTotal = qtyComprada * valorAtribuido
   const totalAdicionado = refConsumo === 'itens_embalagem' ? qtyComprada * itensEmb : qtyComprada
-  const valorAtribuido = totalAdicionado > 0 ? precoTotal / totalAdicionado : 0
   const estoqueAtual = selectedProdutoId
     ? localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0
     : 0
@@ -265,14 +265,16 @@ export function EntradaProdutoModal({
     if (values.observacoes) obsFinal.push(values.observacoes)
     if (values.observacoes_criticas) obsFinal.push(`CRÍTICO: ${values.observacoes_criticas}`)
 
+    const precoTotalCalc = values.quantidade_comprada * values.valor_atribuido
+
     const { error: entradaError } = await registrarEntrada({
       produto_id: finalProdutoId,
       fornecedor_id: null,
       quantidade_embalagem: refConsumo === 'itens_embalagem' ? values.itens_embalagem : 1,
       quantidade_comprada: values.quantidade_comprada,
       unidade_consumo: values.embalagem || 'Unidade',
-      preco_unitario: valorAtribuido,
-      preco_total: values.preco_total,
+      preco_unitario: values.valor_atribuido,
+      preco_total: precoTotalCalc,
       data_entrada: values.data_entrada.toISOString(),
       observacoes: obsFinal.join('\n'),
     })
@@ -286,16 +288,9 @@ export function EntradaProdutoModal({
       onSuccess()
 
       if (values.manter_campos) {
-        form.setValue('codigo_barras', '')
         form.setValue('quantidade_comprada', 1)
         form.setValue('itens_embalagem', 1)
-        form.setValue('preco_total', 0)
-        form.setValue('numero_nfe', '')
-        form.setValue('observacoes', '')
-        form.setValue('observacoes_criticas', '')
-        setSelectedProdutoId(null)
-        form.setValue('nome_material', '')
-        setHistorico([])
+        form.setValue('valor_atribuido', 0)
       } else {
         onOpenChange(false)
       }
@@ -483,16 +478,19 @@ export function EntradaProdutoModal({
                     </FormItem>
                   )}
                 />
-                <div className="flex flex-col space-y-2">
-                  <span className={labelClass}>Valor Atribuído (Unitário)</span>
-                  <div className="h-9 px-3 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700">
-                    R${' '}
-                    {valorAtribuido.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="valor_atribuido"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClass}>Valor Atribuído (Unitário)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" className={inputClass} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="flex flex-col space-y-2">
                   <span className={labelClass}>Estoque Atual</span>
@@ -500,27 +498,17 @@ export function EntradaProdutoModal({
                     {estoqueAtual}
                   </div>
                 </div>
-                <FormField
-                  control={form.control}
-                  name="preco_total"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={labelClass}>Valor Total da Compra</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                          <Input
-                            type="number"
-                            step="0.01"
-                            className={cn(inputClass, 'pl-9')}
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex flex-col space-y-2">
+                  <span className={labelClass}>Valor Total da Compra</span>
+                  <div className="relative h-9 bg-slate-100/80 border border-slate-200 rounded-md flex items-center text-sm font-semibold text-slate-700 pl-9">
+                    <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    R${' '}
+                    {precoTotal.toLocaleString('pt-BR', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
                 <div className="flex flex-col space-y-2">
                   <span className={labelClass}>Estoque Pós Adição</span>
                   <div className="h-9 px-3 bg-fuchsia-50 border border-fuchsia-100 rounded-md flex items-center text-sm font-bold text-fuchsia-700">
