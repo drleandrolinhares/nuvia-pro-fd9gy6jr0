@@ -9,6 +9,7 @@ import Estoque from './pages/Estoque'
 import Configuracoes from './pages/Configuracoes'
 import Colaboradores from './pages/Colaboradores'
 import Perfil from './pages/Perfil'
+import CadastrosBasicos from './pages/admin/CadastrosBasicos'
 import Placeholder from './pages/Placeholder'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
@@ -42,6 +43,7 @@ const AppRoutes = () => {
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/admin/cadastros" element={<CadastrosBasicos />} />
 
         {/* Operacional Routes */}
         <Route path="/operacional/sac" element={<Placeholder />} />

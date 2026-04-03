@@ -104,13 +104,31 @@ export type Database = {
           },
         ]
       }
+      embalagens: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       entrada_produtos: {
         Row: {
           criado_em: string | null
           data_entrada: string | null
+          data_validade: string | null
           fornecedor_id: string | null
           id: string
+          numero_nfe: string | null
           observacoes: string | null
+          observacoes_criticas: string | null
           preco_total: number
           preco_unitario: number
           produto_id: string
@@ -121,9 +139,12 @@ export type Database = {
         Insert: {
           criado_em?: string | null
           data_entrada?: string | null
+          data_validade?: string | null
           fornecedor_id?: string | null
           id?: string
+          numero_nfe?: string | null
           observacoes?: string | null
+          observacoes_criticas?: string | null
           preco_total: number
           preco_unitario: number
           produto_id: string
@@ -134,9 +155,12 @@ export type Database = {
         Update: {
           criado_em?: string | null
           data_entrada?: string | null
+          data_validade?: string | null
           fornecedor_id?: string | null
           id?: string
+          numero_nfe?: string | null
           observacoes?: string | null
+          observacoes_criticas?: string | null
           preco_total?: number
           preco_unitario?: number
           produto_id?: string
@@ -276,6 +300,7 @@ export type Database = {
           custo_unitario: number | null
           data_criacao: string | null
           embalagem: string | null
+          embalagem_id: string | null
           especialidade_id: string | null
           id: string
           lote: string | null
@@ -285,6 +310,7 @@ export type Database = {
           quantidade_estoque: number | null
           quantidade_minima: number | null
           sala: string | null
+          sala_id: string | null
           validade: string | null
           variacao: string | null
         }
@@ -294,6 +320,7 @@ export type Database = {
           custo_unitario?: number | null
           data_criacao?: string | null
           embalagem?: string | null
+          embalagem_id?: string | null
           especialidade_id?: string | null
           id?: string
           lote?: string | null
@@ -303,6 +330,7 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           sala?: string | null
+          sala_id?: string | null
           validade?: string | null
           variacao?: string | null
         }
@@ -312,6 +340,7 @@ export type Database = {
           custo_unitario?: number | null
           data_criacao?: string | null
           embalagem?: string | null
+          embalagem_id?: string | null
           especialidade_id?: string | null
           id?: string
           lote?: string | null
@@ -321,15 +350,30 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           sala?: string | null
+          sala_id?: string | null
           validade?: string | null
           variacao?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: 'produtos_embalagem_id_fkey'
+            columns: ['embalagem_id']
+            isOneToOne: false
+            referencedRelation: 'embalagens'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'produtos_especialidade_id_fkey'
             columns: ['especialidade_id']
             isOneToOne: false
             referencedRelation: 'especialidades'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'produtos_sala_id_fkey'
+            columns: ['sala_id']
+            isOneToOne: false
+            referencedRelation: 'salas'
             referencedColumns: ['id']
           },
         ]
@@ -387,6 +431,21 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      salas: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
       usuario_permissoes: {
         Row: {
@@ -640,6 +699,9 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: embalagens
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
 // Table: entrada_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -652,6 +714,9 @@ export const Constants = {
 //   data_entrada: timestamp with time zone (nullable, default: now())
 //   observacoes: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   data_validade: date (nullable)
+//   numero_nfe: text (nullable)
+//   observacoes_criticas: text (nullable)
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -692,6 +757,8 @@ export const Constants = {
 //   quantidade_minima: integer (nullable, default: 0)
 //   data_criacao: timestamp with time zone (nullable, default: now())
 //   numero_armario: text (nullable)
+//   embalagem_id: uuid (nullable)
+//   sala_id: uuid (nullable)
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -703,6 +770,9 @@ export const Constants = {
 //   observacoes: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   quantidade_devolver: integer (nullable)
+// Table: salas
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -731,6 +801,9 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: embalagens
+//   UNIQUE embalagens_nome_key: UNIQUE (nome)
+//   PRIMARY KEY embalagens_pkey: PRIMARY KEY (id)
 // Table: entrada_produtos
 //   FOREIGN KEY entrada_produtos_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY entrada_produtos_pkey: PRIMARY KEY (id)
@@ -748,13 +821,18 @@ export const Constants = {
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: produtos
+//   FOREIGN KEY produtos_embalagem_id_fkey: FOREIGN KEY (embalagem_id) REFERENCES embalagens(id) ON DELETE SET NULL
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
 //   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY produtos_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
 // Table: saida_produtos
 //   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 //   CHECK saida_produtos_tipo_saida_check: CHECK ((tipo_saida = ANY (ARRAY['definitiva'::text, 'parcial'::text])))
 //   FOREIGN KEY saida_produtos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: salas
+//   UNIQUE salas_nome_key: UNIQUE (nome)
+//   PRIMARY KEY salas_pkey: PRIMARY KEY (id)
 // Table: usuario_permissoes
 //   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
@@ -785,6 +863,11 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: embalagens
+//   Policy "embalagens_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "embalagens_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: entrada_produtos
 //   Policy "entrada_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -843,6 +926,11 @@ export const Constants = {
 //   Policy "saida_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: salas
+//   Policy "salas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "salas_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: usuario_permissoes
 //   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -940,9 +1028,13 @@ export const Constants = {
 //   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
+// Table: embalagens
+//   CREATE UNIQUE INDEX embalagens_nome_key ON public.embalagens USING btree (nome)
 // Table: especialidades
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
+// Table: salas
+//   CREATE UNIQUE INDEX salas_nome_key ON public.salas USING btree (nome)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
