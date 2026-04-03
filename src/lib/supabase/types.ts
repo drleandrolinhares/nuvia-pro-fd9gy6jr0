@@ -539,8 +539,12 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))
+//   Policy "colaboradores_detalhes_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (usuario_id = auth.uid())
 //   Policy "colaboradores_detalhes_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
+//   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (usuario_id = auth.uid())
 // Table: especialidades
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
