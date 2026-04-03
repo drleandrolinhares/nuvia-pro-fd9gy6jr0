@@ -16,6 +16,9 @@ export default function CadastrosBasicos() {
   const [especialidades, setEspecialidades] = useState<CadastroItem[]>([])
   const [embalagens, setEmbalagens] = useState<CadastroItem[]>([])
   const [salas, setSalas] = useState<CadastroItem[]>([])
+  const [marcas, setMarcas] = useState<CadastroItem[]>([])
+  const [diametros, setDiametros] = useState<CadastroItem[]>([])
+  const [tamanhos, setTamanhos] = useState<CadastroItem[]>([])
   const [isLoadingData, setIsLoadingData] = useState(true)
 
   useEffect(() => {
@@ -39,14 +42,21 @@ export default function CadastrosBasicos() {
   const loadData = async () => {
     setIsLoadingData(true)
     try {
-      const [espData, embData, salasData] = await Promise.all([
-        cadastrosService.getItems('especialidades'),
-        cadastrosService.getItems('embalagens'),
-        cadastrosService.getItems('salas'),
-      ])
+      const [espData, embData, salasData, marcasData, diametrosData, tamanhosData] =
+        await Promise.all([
+          cadastrosService.getItems('especialidades'),
+          cadastrosService.getItems('embalagens'),
+          cadastrosService.getItems('salas'),
+          cadastrosService.getItems('marcas_implante'),
+          cadastrosService.getItems('diametros_implante'),
+          cadastrosService.getItems('tamanhos_implante'),
+        ])
       setEspecialidades(espData)
       setEmbalagens(embData)
       setSalas(salasData)
+      setMarcas(marcasData)
+      setDiametros(diametrosData)
+      setTamanhos(tamanhosData)
     } catch (error: any) {
       toast.error('Erro ao carregar dados', { description: error.message })
     } finally {
@@ -126,33 +136,51 @@ export default function CadastrosBasicos() {
           Cadastros Básicos
         </h1>
         <p className="text-sidebar-foreground/60 mt-2">
-          Gerencie as especialidades, embalagens e salas utilizadas no sistema de estoque.
+          Gerencie as especialidades, embalagens, salas e demais opções utilizadas no sistema.
         </p>
       </div>
 
       <Tabs defaultValue="especialidades" className="w-full">
-        <TabsList className="bg-sidebar border border-sidebar-border w-full justify-start rounded-xl h-auto p-1.5 mb-8 flex-wrap shadow-subtle">
+        <TabsList className="bg-sidebar border border-sidebar-border w-full justify-start rounded-xl h-auto p-1.5 mb-8 flex-wrap shadow-subtle gap-1">
           <TabsTrigger
             value="especialidades"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-6 py-2.5 rounded-lg font-medium transition-all"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
             Especialidades
           </TabsTrigger>
           <TabsTrigger
             value="embalagens"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-6 py-2.5 rounded-lg font-medium transition-all"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
-            Embalagens de Compra
+            Embalagens
           </TabsTrigger>
           <TabsTrigger
             value="salas"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-6 py-2.5 rounded-lg font-medium transition-all"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
-            Salas de Armazenamento
+            Salas
+          </TabsTrigger>
+          <TabsTrigger
+            value="marcas"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+          >
+            Marcas de Implante
+          </TabsTrigger>
+          <TabsTrigger
+            value="diametros"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+          >
+            Diâmetros de Implante
+          </TabsTrigger>
+          <TabsTrigger
+            value="tamanhos"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+          >
+            Tamanhos de Implante
           </TabsTrigger>
           <TabsTrigger
             value="campos_especialidade"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-6 py-2.5 rounded-lg font-medium transition-all"
+            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
             Campos por Especialidade
           </TabsTrigger>
@@ -186,6 +214,36 @@ export default function CadastrosBasicos() {
               items={salas}
               isLoading={isLoadingData}
               {...makeHandlers('salas', setSalas)}
+            />
+          </TabsContent>
+
+          <TabsContent value="marcas" className="m-0 focus-visible:outline-none">
+            <CrudSection
+              title="Marcas de Implante"
+              itemName="Marca"
+              items={marcas}
+              isLoading={isLoadingData}
+              {...makeHandlers('marcas_implante', setMarcas)}
+            />
+          </TabsContent>
+
+          <TabsContent value="diametros" className="m-0 focus-visible:outline-none">
+            <CrudSection
+              title="Diâmetros de Implante"
+              itemName="Diâmetro"
+              items={diametros}
+              isLoading={isLoadingData}
+              {...makeHandlers('diametros_implante', setDiametros)}
+            />
+          </TabsContent>
+
+          <TabsContent value="tamanhos" className="m-0 focus-visible:outline-none">
+            <CrudSection
+              title="Tamanhos de Implante"
+              itemName="Tamanho"
+              items={tamanhos}
+              isLoading={isLoadingData}
+              {...makeHandlers('tamanhos_implante', setTamanhos)}
             />
           </TabsContent>
 

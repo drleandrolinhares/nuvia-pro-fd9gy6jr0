@@ -6,7 +6,13 @@ export type CadastroItem = {
   data_criacao?: string | null
 }
 
-export type AllowedTables = 'especialidades' | 'embalagens' | 'salas'
+export type AllowedTables =
+  | 'especialidades'
+  | 'embalagens'
+  | 'salas'
+  | 'marcas_implante'
+  | 'diametros_implante'
+  | 'tamanhos_implante'
 
 export const checkIsAdmin = async () => {
   const { data, error } = await supabase.rpc('is_admin')
