@@ -9,7 +9,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      especialidades: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      produtos: {
+        Row: {
+          categoria: string | null
+          codigo_barras: string | null
+          custo_unitario: number | null
+          data_criacao: string | null
+          embalagem: string | null
+          especialidade_id: string | null
+          id: string
+          lote: string | null
+          marca: string | null
+          nome: string
+          quantidade_estoque: number | null
+          quantidade_minima: number | null
+          sala: string | null
+          validade: string | null
+          variacao: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          codigo_barras?: string | null
+          custo_unitario?: number | null
+          data_criacao?: string | null
+          embalagem?: string | null
+          especialidade_id?: string | null
+          id?: string
+          lote?: string | null
+          marca?: string | null
+          nome: string
+          quantidade_estoque?: number | null
+          quantidade_minima?: number | null
+          sala?: string | null
+          validade?: string | null
+          variacao?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          codigo_barras?: string | null
+          custo_unitario?: number | null
+          data_criacao?: string | null
+          embalagem?: string | null
+          especialidade_id?: string | null
+          id?: string
+          lote?: string | null
+          marca?: string | null
+          nome?: string
+          quantidade_estoque?: number | null
+          quantidade_minima?: number | null
+          sala?: string | null
+          validade?: string | null
+          variacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'produtos_especialidade_id_fkey'
+            columns: ['especialidade_id']
+            isOneToOne: false
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          email: string
+          id: string
+          nome: string
+          role: string | null
+        }
+        Insert: {
+          email: string
+          id: string
+          nome: string
+          role?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          nome?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -153,3 +250,68 @@ export const Constants = {
 // IMPORTANT: The TypeScript types above map UUID, TEXT, VARCHAR all to "string".
 // Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
 // Always use the correct PostgreSQL type when writing SQL migrations.
+
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: especialidades
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+// Table: produtos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   marca: text (nullable)
+//   variacao: text (nullable)
+//   categoria: text (nullable)
+//   especialidade_id: uuid (nullable)
+//   codigo_barras: text (nullable)
+//   embalagem: text (nullable)
+//   sala: text (nullable)
+//   validade: date (nullable)
+//   lote: text (nullable)
+//   custo_unitario: numeric (nullable, default: 0)
+//   quantidade_estoque: integer (nullable, default: 0)
+//   quantidade_minima: integer (nullable, default: 0)
+//   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: usuarios
+//   id: uuid (not null)
+//   email: text (not null)
+//   nome: text (not null)
+//   role: text (nullable, default: 'user'::text)
+
+// --- CONSTRAINTS ---
+// Table: especialidades
+//   UNIQUE especialidades_nome_key: UNIQUE (nome)
+//   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
+// Table: produtos
+//   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
+//   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
+// Table: usuarios
+//   UNIQUE usuarios_email_key: UNIQUE (email)
+//   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: especialidades
+//   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: produtos
+//   Policy "produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "produtos_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: usuarios
+//   Policy "usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (id = auth.uid())
+
+// --- INDEXES ---
+// Table: especialidades
+//   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
+// Table: usuarios
+//   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
