@@ -83,6 +83,12 @@ export function VisualizarProdutoModal({
               <p className="text-sm font-medium text-slate-500">Estoque Mínimo</p>
               <p className="font-semibold text-slate-900">{produto.quantidade_minima}</p>
             </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Sala / Armário</p>
+              <p className="font-semibold text-slate-900">
+                {produto.sala || '-'} {produto.numero_armario ? `/ ${produto.numero_armario}` : ''}
+              </p>
+            </div>
           </div>
 
           {loading ? (

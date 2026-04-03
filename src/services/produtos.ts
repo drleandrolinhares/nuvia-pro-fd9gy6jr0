@@ -10,6 +10,7 @@ export interface Produto {
   codigo_barras: string | null
   embalagem: string | null
   sala: string | null
+  numero_armario: string | null
   validade: string | null
   lote: string | null
   custo_unitario: number

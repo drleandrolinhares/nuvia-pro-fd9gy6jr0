@@ -43,6 +43,7 @@ export function EditarProdutoModal({
   const [codigoBarras, setCodigoBarras] = useState('')
   const [quantidadeMinima, setQuantidadeMinima] = useState('')
   const [sala, setSala] = useState('')
+  const [numeroArmario, setNumeroArmario] = useState('')
 
   const { toast } = useToast()
 
@@ -56,6 +57,7 @@ export function EditarProdutoModal({
         setCodigoBarras(produto.codigo_barras || '')
         setQuantidadeMinima(produto.quantidade_minima?.toString() || '0')
         setSala(produto.sala || '')
+        setNumeroArmario(produto.numero_armario || '')
       }
     }
   }, [open, produto])
@@ -86,6 +88,7 @@ export function EditarProdutoModal({
       codigo_barras: codigoBarras.trim() || null,
       quantidade_minima: parseInt(quantidadeMinima) || 0,
       sala: sala.trim() || null,
+      numero_armario: numeroArmario.trim() || null,
     })
 
     setLoading(false)
@@ -110,7 +113,7 @@ export function EditarProdutoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Editar Produto</DialogTitle>
         </DialogHeader>
@@ -164,9 +167,9 @@ export function EditarProdutoModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="qtd_min">Estoque Mínimo</Label>
+              <Label htmlFor="qtd_min">Estq. Mínimo</Label>
               <Input
                 id="qtd_min"
                 type="number"
@@ -176,12 +179,21 @@ export function EditarProdutoModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sala">Sala de Armazenamento</Label>
+              <Label htmlFor="sala">Sala</Label>
               <Input
                 id="sala"
                 value={sala}
                 onChange={(e) => setSala(e.target.value)}
                 placeholder="Ex: Estoque Principal"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="armario">Nº do Armário</Label>
+              <Input
+                id="armario"
+                value={numeroArmario}
+                onChange={(e) => setNumeroArmario(e.target.value)}
+                placeholder="Ex: A1"
               />
             </div>
           </div>
