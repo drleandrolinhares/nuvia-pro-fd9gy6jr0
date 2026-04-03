@@ -15,6 +15,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
+          opcoes: Json | null
           tipo: string | null
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
+          opcoes?: Json | null
           tipo?: string | null
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
+          opcoes?: Json | null
           tipo?: string | null
         }
         Relationships: []
@@ -217,16 +220,22 @@ export type Database = {
           ativo: boolean | null
           campo_id: string
           especialidade_id: string
+          id: string | null
+          ordem: number | null
         }
         Insert: {
           ativo?: boolean | null
           campo_id: string
           especialidade_id: string
+          id?: string | null
+          ordem?: number | null
         }
         Update: {
           ativo?: boolean | null
           campo_id?: string
           especialidade_id?: string
+          id?: string | null
+          ordem?: number | null
         }
         Relationships: [
           {
@@ -800,6 +809,7 @@ export const Constants = {
 //   descricao: text (nullable)
 //   tipo: text (nullable, default: 'text'::text)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+//   opcoes: jsonb (nullable)
 // Table: cargo_permissoes
 //   cargo_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -841,6 +851,8 @@ export const Constants = {
 //   especialidade_id: uuid (not null)
 //   campo_id: uuid (not null)
 //   ativo: boolean (nullable, default: true)
+//   id: uuid (nullable, default: gen_random_uuid())
+//   ordem: integer (nullable, default: 0)
 // Table: especialidades
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)

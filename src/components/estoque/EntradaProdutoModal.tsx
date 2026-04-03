@@ -612,9 +612,10 @@ export function EntradaProdutoModal({
             </div>
 
             {camposDinamicosConfig.length > 0 && (
-              <div className="bg-fuchsia-50/50 p-5 rounded-xl border border-fuchsia-100 shadow-sm">
-                <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b border-fuchsia-200 pb-2">
-                  CAMPOS DA ESPECIALIDADE
+              <div className="bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md">
+                <h3 className="text-[#d4af37] font-extrabold mb-5 text-xs tracking-widest border-b border-[#d4af37]/30 pb-2 uppercase">
+                  DADOS DO{' '}
+                  {especialidades.find((e) => e.id === watchedEspecialidadeId)?.nome || 'MATERIAL'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {camposDinamicosConfig.map((config) => {
@@ -627,11 +628,13 @@ export function EntradaProdutoModal({
                         name={`campos_dinamicos.${config.campo_id}`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className={labelClass}>{campo.nome}</FormLabel>
+                            <FormLabel className="text-[#d4af37] font-bold text-[11px] uppercase tracking-wider">
+                              {campo.nome}
+                            </FormLabel>
                             <FormControl>
                               {campo.tipo === 'dropdown' && campo.opcoes ? (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
-                                  <SelectTrigger className={inputClass}>
+                                  <SelectTrigger className="bg-slate-100 border-[#1a2a4a] text-[#1a2a4a] font-bold h-9 focus:ring-[#d4af37]">
                                     <SelectValue placeholder="Selecione..." />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -645,7 +648,7 @@ export function EntradaProdutoModal({
                               ) : (
                                 <Input
                                   type={campo.tipo === 'number' ? 'number' : 'text'}
-                                  className={inputClass}
+                                  className="bg-slate-100 border-[#1a2a4a] text-[#1a2a4a] font-bold h-9 focus-visible:ring-[#d4af37] focus-visible:border-[#d4af37]"
                                   {...field}
                                   value={field.value || ''}
                                 />
