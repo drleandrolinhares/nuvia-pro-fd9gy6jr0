@@ -1583,6 +1583,44 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
+//   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_ao_finalizar_compra()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_item RECORD;
+//     v_qtd INT;
+//   BEGIN
+//     IF OLD.status != 'Finalizada' AND NEW.status = 'Finalizada' THEN
+//       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
+//         IF v_item.referencia_consumo = 'itens_embalagem' THEN
+//           v_qtd := COALESCE(v_item.itens_embalagem, 0);
+//         ELSE
+//           v_qtd := COALESCE(v_item.qtd_comprada, 0);
+//         END IF;
+//
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd
+//         WHERE id = v_item.produto_id;
+//       END LOOP;
+//     ELSIF OLD.status = 'Finalizada' AND NEW.status != 'Finalizada' THEN
+//       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
+//         IF v_item.referencia_consumo = 'itens_embalagem' THEN
+//           v_qtd := COALESCE(v_item.itens_embalagem, 0);
+//         ELSE
+//           v_qtd := COALESCE(v_item.qtd_comprada, 0);
+//         END IF;
+//
+//         UPDATE public.produtos
+//         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd)
+//         WHERE id = v_item.produto_id;
+//       END LOOP;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_atualiza_estoque_compra_item()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_compra_item()
 //    RETURNS trigger
@@ -1591,8 +1629,10 @@ export const Constants = {
 //   DECLARE
 //     v_qtd_adicionar_new integer := 0;
 //     v_qtd_adicionar_old integer := 0;
+//     v_status text;
 //   BEGIN
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+//       SELECT status INTO v_status FROM public.compras WHERE id = NEW.compra_id;
 //       IF NEW.referencia_consumo = 'itens_embalagem' THEN
 //         v_qtd_adicionar_new := COALESCE(NEW.itens_embalagem, 0);
 //       ELSE
@@ -1601,11 +1641,17 @@ export const Constants = {
 //     END IF;
 //
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
+//       SELECT status INTO v_status FROM public.compras WHERE id = OLD.compra_id;
 //       IF OLD.referencia_consumo = 'itens_embalagem' THEN
 //         v_qtd_adicionar_old := COALESCE(OLD.itens_embalagem, 0);
 //       ELSE
 //         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0);
 //       END IF;
+//     END IF;
+//
+//     -- Se não for Finalizada, não mexe no estoque agora
+//     IF v_status IS NULL OR v_status != 'Finalizada' THEN
+//       IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 //     END IF;
 //
 //     IF TG_OP = 'INSERT' THEN
@@ -1630,7 +1676,7 @@ export const Constants = {
 //       RETURN NEW;
 //     ELSIF TG_OP = 'DELETE' THEN
 //       UPDATE public.produtos
-//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old
+//       SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old)
 //       WHERE id = OLD.produto_id;
 //       RETURN OLD;
 //     END IF;
@@ -1715,6 +1761,8 @@ export const Constants = {
 // --- TRIGGERS ---
 // Table: compra_itens
 //   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR DELETE OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
+// Table: compras
+//   after_compra_status_change: CREATE TRIGGER after_compra_status_change AFTER UPDATE ON public.compras FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos

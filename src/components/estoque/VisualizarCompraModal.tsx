@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/table'
 import { Loader2, Edit, Trash2, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 
 interface VisualizarCompraModalProps {
@@ -171,109 +170,107 @@ export function VisualizarCompraModal({
           </div>
         </div>
 
-        <ScrollArea className="flex-grow">
-          <div className="p-6">
-            <div>
-              <h3 className="text-base font-bold text-[#1a2a4a] mb-4 flex items-center">
-                <span className="w-1.5 h-5 bg-[#d4af37] rounded-full mr-2"></span>
-                Produtos da Compra
-              </h3>
-              <div className="rounded-md border border-slate-200 overflow-hidden shadow-sm">
-                <Table>
-                  <TableHeader className="bg-[#1a2a4a]">
-                    <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Produto
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Marca
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Especialidade
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
-                        Qtd
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
-                        V. Unit
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
-                        Subtotal
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Ref. Consumo
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Sala
-                      </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-center">
-                        Ações
-                      </TableHead>
+        <div className="flex-1 overflow-y-auto min-h-0 p-6">
+          <div>
+            <h3 className="text-base font-bold text-[#1a2a4a] mb-4 flex items-center">
+              <span className="w-1.5 h-5 bg-[#d4af37] rounded-full mr-2"></span>
+              Produtos da Compra
+            </h3>
+            <div className="rounded-md border border-slate-200 overflow-hidden shadow-sm">
+              <Table>
+                <TableHeader className="bg-[#1a2a4a]">
+                  <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                      Produto
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                      Marca
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                      Especialidade
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
+                      Qtd
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
+                      V. Unit
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
+                      Subtotal
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                      Ref. Consumo
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                      Sala
+                    </TableHead>
+                    <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-center">
+                      Ações
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="bg-white">
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#d4af37] mb-2" />
+                        <p className="text-sm text-slate-500 font-medium">Carregando itens...</p>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody className="bg-white">
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#d4af37] mb-2" />
-                          <p className="text-sm text-slate-500 font-medium">Carregando itens...</p>
+                  ) : itens.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={9}
+                        className="text-center py-8 text-slate-500 text-sm font-medium"
+                      >
+                        Nenhum produto vinculado a esta compra.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    itens.map((item) => (
+                      <TableRow key={item.id} className="hover:bg-slate-50 border-slate-100">
+                        <TableCell className="font-medium text-[#1a2a4a]">
+                          {item.produtos?.nome || '-'}
                         </TableCell>
-                      </TableRow>
-                    ) : itens.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={9}
-                          className="text-center py-8 text-slate-500 text-sm font-medium"
-                        >
-                          Nenhum produto vinculado a esta compra.
+                        <TableCell className="text-slate-600 text-sm">
+                          {item.produtos?.marca || '-'}
                         </TableCell>
-                      </TableRow>
-                    ) : (
-                      itens.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-slate-50 border-slate-100">
-                          <TableCell className="font-medium text-[#1a2a4a]">
-                            {item.produtos?.nome || '-'}
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-sm">
-                            {item.produtos?.marca || '-'}
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-sm">
-                            {item.produtos?.especialidades?.nome || '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-bold text-[#1a2a4a]">
+                        <TableCell className="text-slate-600 text-sm">
+                          {item.produtos?.especialidades?.nome || '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-[#1a2a4a]">
+                          {item.referencia_consumo === 'itens_embalagem'
+                            ? `${item.itens_embalagem} (${item.qtd_comprada} emb.)`
+                            : item.qtd_comprada}
+                        </TableCell>
+                        <TableCell className="text-right text-slate-600 text-sm font-medium">
+                          {formatCurrency(item.valor_unitario)}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-[#1a2a4a]">
+                          {formatCurrency(item.valor_total)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="font-normal text-[10px] bg-slate-50 border-slate-200 text-slate-700"
+                          >
                             {item.referencia_consumo === 'itens_embalagem'
-                              ? `${item.itens_embalagem} (${item.qtd_comprada} emb.)`
-                              : item.qtd_comprada}
-                          </TableCell>
-                          <TableCell className="text-right text-slate-600 text-sm font-medium">
-                            {formatCurrency(item.valor_unitario)}
-                          </TableCell>
-                          <TableCell className="text-right font-bold text-[#1a2a4a]">
-                            {formatCurrency(item.valor_total)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className="font-normal text-[10px] bg-slate-50 border-slate-200 text-slate-700"
-                            >
-                              {item.referencia_consumo === 'itens_embalagem'
-                                ? 'Embalagem'
-                                : 'Unidade'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-sm">
-                            {item.salas?.nome || item.produtos?.salas?.nome || '-'}
-                          </TableCell>
-                          <TableCell className="text-center text-slate-400">-</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                              ? 'Embalagem'
+                              : 'Unidade'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600 text-sm">
+                          {item.salas?.nome || item.produtos?.salas?.nome || '-'}
+                        </TableCell>
+                        <TableCell className="text-center text-slate-400">-</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="p-4 border-t border-slate-100 bg-slate-50 flex sm:justify-between items-center gap-2 shrink-0">
           <div className="flex gap-2 w-full sm:w-auto">
