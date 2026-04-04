@@ -212,6 +212,44 @@ export type Database = {
           },
         ]
       }
+      compras: {
+        Row: {
+          data: string
+          data_criacao: string | null
+          fornecedor_id: string | null
+          id: string
+          nfe: string | null
+          status: string
+          valor_total_compra: number
+        }
+        Insert: {
+          data: string
+          data_criacao?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          nfe?: string | null
+          status?: string
+          valor_total_compra?: number
+        }
+        Update: {
+          data?: string
+          data_criacao?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          nfe?: string | null
+          status?: string
+          valor_total_compra?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'compras_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
+            isOneToOne: false
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       diametros_implante: {
         Row: {
           data_criacao: string | null
@@ -994,6 +1032,14 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: compras
+//   id: uuid (not null, default: gen_random_uuid())
+//   fornecedor_id: uuid (nullable)
+//   data: date (not null)
+//   nfe: text (nullable)
+//   valor_total_compra: numeric (not null, default: 0)
+//   status: text (not null, default: 'pendente'::text)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: diametros_implante
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1143,6 +1189,9 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: compras
+//   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
+//   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
 // Table: diametros_implante
 //   UNIQUE diametros_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY diametros_implante_pkey: PRIMARY KEY (id)
@@ -1235,6 +1284,16 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: compras
+//   Policy "compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "compras_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "compras_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: diametros_implante
 //   Policy "diametros_implante_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1458,6 +1517,8 @@ export const Constants = {
 //   CREATE INDEX campo_opcoes_campo_id_idx ON public.campo_opcoes USING btree (campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
+// Table: compras
+//   CREATE INDEX compras_fornecedor_id_idx ON public.compras USING btree (fornecedor_id)
 // Table: diametros_implante
 //   CREATE UNIQUE INDEX diametros_implante_nome_key ON public.diametros_implante USING btree (nome)
 // Table: embalagens
