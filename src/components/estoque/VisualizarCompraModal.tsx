@@ -101,7 +101,7 @@ export function VisualizarCompraModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[850px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white border-slate-200">
-        <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a]">
+        <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a] shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-[#d4af37]">
               Detalhes da Compra
@@ -110,44 +110,46 @@ export function VisualizarCompraModal({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-grow">
-          <div className="p-6 space-y-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
-              <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Fornecedor
-                </p>
-                <p
-                  className="text-sm font-bold text-[#1a2a4a] truncate"
-                  title={compra.fornecedores?.nome || 'N/A'}
-                >
-                  {compra.fornecedores?.nome || 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Data
-                </p>
-                <p className="text-sm font-bold text-[#1a2a4a]">
-                  {compra.data ? format(parseISO(compra.data), 'dd/MM/yyyy') : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  NFe
-                </p>
-                <p className="text-sm font-bold text-[#1a2a4a]">{compra.nfe || 'Não informada'}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Valor Total
-                </p>
-                <p className="text-sm font-bold text-[#d4af37]">
-                  {formatCurrency(compra.valor_total_compra)}
-                </p>
-              </div>
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 shrink-0 z-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Fornecedor
+              </p>
+              <p
+                className="text-sm font-bold text-[#1a2a4a] truncate"
+                title={compra.fornecedores?.nome || 'N/A'}
+              >
+                {compra.fornecedores?.nome || 'N/A'}
+              </p>
             </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Data
+              </p>
+              <p className="text-sm font-bold text-[#1a2a4a]">
+                {compra.data ? format(parseISO(compra.data), 'dd/MM/yyyy') : 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                NFe
+              </p>
+              <p className="text-sm font-bold text-[#1a2a4a]">{compra.nfe || 'Não informada'}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Valor Total
+              </p>
+              <p className="text-sm font-bold text-[#d4af37]">
+                {formatCurrency(compra.valor_total_compra)}
+              </p>
+            </div>
+          </div>
+        </div>
 
+        <ScrollArea className="flex-grow">
+          <div className="p-6">
             <div>
               <h3 className="text-base font-bold text-[#1a2a4a] mb-4 flex items-center">
                 <span className="w-1.5 h-5 bg-[#d4af37] rounded-full mr-2"></span>
@@ -250,7 +252,7 @@ export function VisualizarCompraModal({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="p-4 border-t border-slate-100 bg-slate-50 flex sm:justify-between items-center gap-2">
+        <DialogFooter className="p-4 border-t border-slate-100 bg-slate-50 flex sm:justify-between items-center gap-2 shrink-0">
           <div className="flex gap-2 w-full sm:w-auto">
             {isAdmin && (
               <>
