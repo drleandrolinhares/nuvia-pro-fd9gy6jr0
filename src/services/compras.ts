@@ -35,6 +35,7 @@ export interface CompraItem {
   estoque_adicionado?: number | null
   data_validade?: string | null
   numero_armario?: string | null
+  sala_id?: string | null
   observacoes?: string | null
 }
 
@@ -72,6 +73,7 @@ export const createCompra = async (
       estoque_adicionado: i.estoque_adicionado,
       data_validade: i.data_validade,
       numero_armario: i.numero_armario,
+      sala_id: i.sala_id,
       observacoes: i.observacoes,
     }))
 
@@ -114,6 +116,7 @@ export const updateCompra = async (
         estoque_adicionado: i.estoque_adicionado,
         data_validade: i.data_validade,
         numero_armario: i.numero_armario,
+        sala_id: i.sala_id,
         observacoes: i.observacoes,
       }))
       const { error: errItens } = await supabase.from('compra_itens' as any).insert(itensPayload)
@@ -157,6 +160,7 @@ export const fetchCompraItens = async (compraId: string) => {
     .from('compra_itens' as any)
     .select(`
       *,
+      salas (nome),
       produtos (
         nome,
         marca,

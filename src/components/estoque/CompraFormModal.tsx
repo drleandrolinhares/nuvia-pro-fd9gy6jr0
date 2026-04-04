@@ -78,12 +78,12 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
         fetchCompraItens(compra.id).then((res) => {
           if (res.data)
             setItens(
-              res.data.map((i) => ({
+              res.data.map((i: any) => ({
                 ...i,
                 produto_nome: i.produtos?.nome,
                 produto_marca: i.produtos?.marca,
                 produto_especialidade: i.produtos?.especialidades?.nome,
-                produto_sala: i.produtos?.salas?.nome,
+                produto_sala: i.salas?.nome || i.produtos?.salas?.nome,
               })),
             )
         })

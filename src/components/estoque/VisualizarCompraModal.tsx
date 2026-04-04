@@ -237,7 +237,7 @@ export function VisualizarCompraModal({
                             </Badge>
                           </TableCell>
                           <TableCell className="text-slate-600 text-sm">
-                            {item.produtos?.salas?.nome || '-'}
+                            {item.salas?.nome || item.produtos?.salas?.nome || '-'}
                           </TableCell>
                           <TableCell className="text-center text-slate-400">-</TableCell>
                         </TableRow>
