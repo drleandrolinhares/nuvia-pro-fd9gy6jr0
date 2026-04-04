@@ -212,6 +212,57 @@ export type Database = {
           },
         ]
       }
+      compra_itens: {
+        Row: {
+          compra_id: string
+          data_criacao: string | null
+          id: string
+          itens_embalagem: number | null
+          produto_id: string
+          qtd_comprada: number
+          referencia_consumo: string | null
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          compra_id: string
+          data_criacao?: string | null
+          id?: string
+          itens_embalagem?: number | null
+          produto_id: string
+          qtd_comprada?: number
+          referencia_consumo?: string | null
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Update: {
+          compra_id?: string
+          data_criacao?: string | null
+          id?: string
+          itens_embalagem?: number | null
+          produto_id?: string
+          qtd_comprada?: number
+          referencia_consumo?: string | null
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'compra_itens_compra_id_fkey'
+            columns: ['compra_id']
+            isOneToOne: false
+            referencedRelation: 'compras'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'compra_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       compras: {
         Row: {
           data: string
@@ -1032,6 +1083,16 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: compra_itens
+//   id: uuid (not null, default: gen_random_uuid())
+//   compra_id: uuid (not null)
+//   produto_id: uuid (not null)
+//   valor_total: numeric (not null, default: 0)
+//   qtd_comprada: integer (not null, default: 0)
+//   itens_embalagem: integer (nullable)
+//   referencia_consumo: text (nullable)
+//   valor_unitario: numeric (not null, default: 0)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   fornecedor_id: uuid (nullable)
@@ -1189,6 +1250,10 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: compra_itens
+//   FOREIGN KEY compra_itens_compra_id_fkey: FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE
+//   PRIMARY KEY compra_itens_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY compra_itens_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT
 // Table: compras
 //   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
@@ -1284,6 +1349,10 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: compra_itens
+//   Policy "compra_itens_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: compras
 //   Policy "compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1464,6 +1533,28 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_atualiza_estoque_compra_item()
+//   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_compra_item()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_qtd_adicionar integer;
+//   BEGIN
+//     IF NEW.referencia_consumo = 'itens_embalagem' THEN
+//       v_qtd_adicionar := COALESCE(NEW.itens_embalagem, 0);
+//     ELSE
+//       v_qtd_adicionar := COALESCE(NEW.qtd_comprada, 0);
+//     END IF;
+//
+//     UPDATE public.produtos
+//     SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar
+//     WHERE id = NEW.produto_id;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_atualiza_estoque_entrada()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_entrada()
 //    RETURNS trigger
@@ -1505,6 +1596,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: compra_itens
+//   after_compra_item_insert: CREATE TRIGGER after_compra_item_insert AFTER INSERT ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos
@@ -1517,6 +1610,9 @@ export const Constants = {
 //   CREATE INDEX campo_opcoes_campo_id_idx ON public.campo_opcoes USING btree (campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
+// Table: compra_itens
+//   CREATE INDEX compra_itens_compra_id_idx ON public.compra_itens USING btree (compra_id)
+//   CREATE INDEX compra_itens_produto_id_idx ON public.compra_itens USING btree (produto_id)
 // Table: compras
 //   CREATE INDEX compras_fornecedor_id_idx ON public.compras USING btree (fornecedor_id)
 // Table: diametros_implante

@@ -220,6 +220,14 @@ export function ComprasTab() {
         open={!!compraVisualizar}
         onOpenChange={(open) => !open && setCompraVisualizar(null)}
         compra={compraVisualizar}
+        onEdit={(compra) => {
+          setCompraVisualizar(null)
+          handleOpenEdit(compra)
+        }}
+        onDelete={(compra) => {
+          setCompraVisualizar(null)
+          setCompraExcluir(compra)
+        }}
       />
 
       <AlertDialog

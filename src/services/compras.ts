@@ -114,7 +114,7 @@ export const fetchCompraItens = async (compraId: string) => {
     .from('compra_itens' as any)
     .select(`
       *,
-      produtos (nome)
+      produtos (nome, marca)
     `)
     .eq('compra_id', compraId)
 }
