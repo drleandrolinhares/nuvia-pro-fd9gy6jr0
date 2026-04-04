@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   fetchProdutos,
   fetchEspecialidades,
@@ -30,10 +29,10 @@ import {
   Produto,
 } from '@/services/produtos'
 import { fetchUltimasComprasProduto, CompraItem } from '@/services/compras'
-import { getItems } from '@/services/cadastros'
 import { format, parseISO } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
 
 interface CompraData {
   fornecedor_id?: string
@@ -67,9 +66,7 @@ export function CompraItemFormModal({
   const [embalagens, setEmbalagens] = useState<any[]>([])
   const [ultimas, setUltimas] = useState<any[]>([])
 
-  const [opcoesMarcas, setOpcoesMarcas] = useState<any[]>([])
-  const [opcoesDiametros, setOpcoesDiametros] = useState<any[]>([])
-  const [opcoesTamanhos, setOpcoesTamanhos] = useState<any[]>([])
+  const [campoOpcoes, setCampoOpcoes] = useState<Record<string, any[]>>({})
 
   const [produtoId, setProdutoId] = useState('')
   const [nome, setNome] = useState('')
@@ -97,9 +94,21 @@ export function CompraItemFormModal({
       fetchProdutos().then((res) => setProdutos(res.data || []))
       fetchEspecialidades().then((res) => setEspecialidades(res.data || []))
       fetchEmbalagens().then((res) => setEmbalagens(res.data || []))
-      getItems('marcas_implante').then((res) => setOpcoesMarcas(res || []))
-      getItems('diametros_implante').then((res) => setOpcoesDiametros(res || []))
-      getItems('tamanhos_implante').then((res) => setOpcoesTamanhos(res || []))
+
+      supabase
+        .from('campo_opcoes')
+        .select('id, campo_id, especialidade_id, nome')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) {
+            const map: Record<string, any[]> = {}
+            data.forEach((o) => {
+              if (!map[o.campo_id]) map[o.campo_id] = []
+              map[o.campo_id].push({ id: o.id, nome: o.nome, especialidade_id: o.especialidade_id })
+            })
+            setCampoOpcoes(map)
+          }
+        })
     } else {
       resetForm()
     }
@@ -162,9 +171,21 @@ export function CompraItemFormModal({
 
   useEffect(() => {
     if (especialidadeId) {
-      fetchEspecialidadeCampos(especialidadeId).then((res) => {
-        setCamposPersonalizados(res.data || [])
-      })
+      supabase
+        .from('especialidade_campos')
+        .select('*, campos_personalizados(*)')
+        .eq('especialidade_id', especialidadeId)
+        .eq('ativo', true)
+        .order('ordem', { ascending: true })
+        .then((res) => {
+          if (res.data && res.data.length > 0) {
+            setCamposPersonalizados(res.data)
+          } else {
+            fetchEspecialidadeCampos(especialidadeId).then((res2) => {
+              if (res2.data) setCamposPersonalizados(res2.data)
+            })
+          }
+        })
     } else {
       setCamposPersonalizados([])
     }
@@ -188,16 +209,8 @@ export function CompraItemFormModal({
   }, [valorTotal, qtdComprada, itensEmbalagem, referenciaConsumo])
 
   const especialidadeNome =
-    especialidades.find((e) => e.id === especialidadeId)?.nome?.toLowerCase() || ''
-  const isImplantodontia =
-    especialidadeNome.includes('implante') || especialidadeNome.includes('implantodontia')
-  const isProtese = especialidadeNome.includes('prótese') || especialidadeNome.includes('protese')
-  const showCard = (isImplantodontia || isProtese) && camposPersonalizados.length > 0
-  const cardTitle = isImplantodontia
-    ? 'DADOS DO IMPLANTE'
-    : isProtese
-      ? 'DADOS DA PRÓTESE'
-      : 'DADOS ADICIONAIS'
+    especialidades.find((e) => e.id === especialidadeId)?.nome?.toUpperCase() || 'MATERIAL'
+  const showCard = camposPersonalizados.length > 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -483,61 +496,67 @@ export function CompraItemFormModal({
             </div>
 
             {showCard && (
-              <Card className="col-span-1 md:col-span-3 mt-2 border-slate-200 animate-in fade-in slide-in-from-top-2">
-                <CardHeader className="pb-3 bg-slate-50 border-b border-slate-200">
-                  <CardTitle className="text-sm font-bold text-slate-800 uppercase">
-                    {cardTitle}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                  {camposPersonalizados.map((campo) => {
-                    const label = campo.label_customizado || campo.campos?.nome || ''
-                    const labelLower = label.toLowerCase()
-                    let opcoes: any[] | null = null
+              <div className="col-span-1 md:col-span-3 mt-2 bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md animate-in fade-in slide-in-from-top-2">
+                <h3 className="text-[#d4af37] font-extrabold mb-5 text-xs tracking-widest border-b border-[#d4af37]/30 pb-2 uppercase">
+                  DADOS DO {especialidadeNome}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {camposPersonalizados.map((config) => {
+                    const campo = config.campos || config.campos_personalizados
+                    if (!campo) return null
+                    const label = config.label_customizado || campo.nome || ''
 
-                    if (labelLower.includes('marca')) opcoes = opcoesMarcas
-                    else if (labelLower.includes('diâmetro') || labelLower.includes('diametro'))
-                      opcoes = opcoesDiametros
-                    else if (labelLower.includes('tamanho')) opcoes = opcoesTamanhos
+                    const options = (campoOpcoes[campo.id] || []).filter(
+                      (o: any) => !o.especialidade_id || o.especialidade_id === especialidadeId,
+                    )
+                    const isDynamicDropdown = options.length > 0 || campo.tipo === 'select'
 
                     return (
-                      <div key={campo.campo_id} className="space-y-2">
-                        <Label>{label}</Label>
-                        {opcoes ? (
+                      <div key={config.campo_id} className="space-y-2">
+                        <Label className="text-[#d4af37] font-bold text-[11px] uppercase tracking-wider">
+                          {label}
+                        </Label>
+                        {isDynamicDropdown ? (
                           <Select
-                            value={valoresCampos[campo.campo_id] || ''}
+                            value={valoresCampos[config.campo_id] || ''}
                             onValueChange={(val) =>
-                              setValoresCampos({ ...valoresCampos, [campo.campo_id]: val })
+                              setValoresCampos({ ...valoresCampos, [config.campo_id]: val })
                             }
                           >
-                            <SelectTrigger className="border-slate-300 bg-white">
+                            <SelectTrigger className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus:ring-[#d4af37]">
                               <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {opcoes.map((o) => (
+                              {options.map((o) => (
                                 <SelectItem key={o.id} value={o.nome}>
                                   {o.nome}
                                 </SelectItem>
                               ))}
+                              {options.length === 0 && (
+                                <SelectItem value="none" disabled>
+                                  Sem opções cadastradas
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         ) : (
                           <Input
-                            value={valoresCampos[campo.campo_id] || ''}
+                            type={campo.tipo === 'number' ? 'number' : 'text'}
+                            value={valoresCampos[config.campo_id] || ''}
                             onChange={(e) =>
                               setValoresCampos({
                                 ...valoresCampos,
-                                [campo.campo_id]: e.target.value,
+                                [config.campo_id]: e.target.value,
                               })
                             }
-                            className="border-slate-300"
+                            className="bg-slate-800 border-[#1a2a4a] text-white font-bold h-9 focus-visible:ring-[#d4af37] focus-visible:border-[#d4af37]"
                           />
                         )}
                       </div>
                     )
                   })}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {ultimas.length > 0 && (
