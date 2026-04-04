@@ -88,7 +88,7 @@ export function VisualizarCompraModal({
       case 'rascunho':
       default:
         return (
-          <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 border-transparent font-bold">
+          <Badge className="bg-[#d4af37] hover:bg-[#d4af37]/90 text-[#1a2a4a] border-transparent font-bold">
             Rascunho
           </Badge>
         )
@@ -97,10 +97,10 @@ export function VisualizarCompraModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white border-slate-200">
-        <DialogHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50">
+      <DialogContent className="sm:max-w-[850px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white border-slate-200">
+        <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a]">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold text-slate-900">
+            <DialogTitle className="text-xl font-bold text-[#d4af37]">
               Detalhes da Compra
             </DialogTitle>
             <div>{renderStatus(compra.status)}</div>
@@ -115,7 +115,7 @@ export function VisualizarCompraModal({
                   Fornecedor
                 </p>
                 <p
-                  className="text-sm font-bold text-slate-900 truncate"
+                  className="text-sm font-bold text-[#1a2a4a] truncate"
                   title={compra.fornecedores?.nome || 'N/A'}
                 >
                   {compra.fornecedores?.nome || 'N/A'}
@@ -125,7 +125,7 @@ export function VisualizarCompraModal({
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                   Data
                 </p>
-                <p className="text-sm font-bold text-slate-900">
+                <p className="text-sm font-bold text-[#1a2a4a]">
                   {compra.data ? format(parseISO(compra.data), 'dd/MM/yyyy') : 'N/A'}
                 </p>
               </div>
@@ -133,43 +133,46 @@ export function VisualizarCompraModal({
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                   NFe
                 </p>
-                <p className="text-sm font-bold text-slate-900">{compra.nfe || 'Não informada'}</p>
+                <p className="text-sm font-bold text-[#1a2a4a]">{compra.nfe || 'Não informada'}</p>
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                   Valor Total
                 </p>
-                <p className="text-sm font-bold text-amber-600">
+                <p className="text-sm font-bold text-[#d4af37]">
                   {formatCurrency(compra.valor_total_compra)}
                 </p>
               </div>
             </div>
 
             <div>
-              <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center">
-                <span className="w-1.5 h-5 bg-amber-500 rounded-full mr-2"></span>
+              <h3 className="text-base font-bold text-[#1a2a4a] mb-4 flex items-center">
+                <span className="w-1.5 h-5 bg-[#d4af37] rounded-full mr-2"></span>
                 Produtos da Compra
               </h3>
               <div className="rounded-md border border-slate-200 overflow-hidden shadow-sm">
                 <Table>
-                  <TableHeader className="bg-slate-900">
-                    <TableRow className="hover:bg-slate-900 border-slate-800">
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider">
+                  <TableHeader className="bg-[#1a2a4a]">
+                    <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
                         Produto
                       </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider">
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
                         Marca
                       </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider">
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                        Especialidade
+                      </TableHead>
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
                         Ref. Consumo
                       </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider text-right">
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
                         Qtd
                       </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider text-right">
-                        V. Unitário
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
+                        V. Unit
                       </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-[10px] tracking-wider text-right">
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
                         Subtotal
                       </TableHead>
                     </TableRow>
@@ -177,15 +180,15 @@ export function VisualizarCompraModal({
                   <TableBody className="bg-white">
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500 mb-2" />
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#d4af37] mb-2" />
                           <p className="text-sm text-slate-500 font-medium">Carregando itens...</p>
                         </TableCell>
                       </TableRow>
                     ) : itens.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={6}
+                          colSpan={7}
                           className="text-center py-8 text-slate-500 text-sm font-medium"
                         >
                           Nenhum produto vinculado a esta compra.
@@ -194,11 +197,14 @@ export function VisualizarCompraModal({
                     ) : (
                       itens.map((item) => (
                         <TableRow key={item.id} className="hover:bg-slate-50 border-slate-100">
-                          <TableCell className="font-medium text-slate-900">
+                          <TableCell className="font-medium text-[#1a2a4a]">
                             {item.produtos?.nome || '-'}
                           </TableCell>
                           <TableCell className="text-slate-600 text-sm">
                             {item.produtos?.marca || '-'}
+                          </TableCell>
+                          <TableCell className="text-slate-600 text-sm">
+                            {item.produtos?.especialidades?.nome || '-'}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -210,7 +216,7 @@ export function VisualizarCompraModal({
                                 : 'Por Unidade'}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-bold text-slate-900">
+                          <TableCell className="text-right font-bold text-[#1a2a4a]">
                             {item.referencia_consumo === 'itens_embalagem'
                               ? item.itens_embalagem
                               : item.qtd_comprada}
@@ -218,7 +224,7 @@ export function VisualizarCompraModal({
                           <TableCell className="text-right text-slate-600 text-sm font-medium">
                             {formatCurrency(item.valor_unitario)}
                           </TableCell>
-                          <TableCell className="text-right font-bold text-slate-900">
+                          <TableCell className="text-right font-bold text-[#1a2a4a]">
                             {formatCurrency(item.valor_total)}
                           </TableCell>
                         </TableRow>
@@ -237,7 +243,7 @@ export function VisualizarCompraModal({
               <>
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900 font-semibold"
+                  className="flex-1 sm:flex-none text-[#1a2a4a] border-slate-300 hover:bg-slate-100 hover:text-[#1a2a4a] font-semibold"
                   onClick={() => onEdit?.(compra)}
                 >
                   <Edit className="w-4 h-4 mr-2" />
@@ -256,7 +262,7 @@ export function VisualizarCompraModal({
           </div>
           <Button
             onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto bg-slate-900 text-amber-400 hover:bg-slate-800 hover:text-amber-300 font-bold tracking-wide"
+            className="w-full sm:w-auto bg-[#1a2a4a] text-[#d4af37] hover:bg-[#1a2a4a]/90 font-bold tracking-wide"
           >
             Fechar
           </Button>

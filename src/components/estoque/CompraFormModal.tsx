@@ -37,6 +37,7 @@ import {
 import { fetchSalas } from '@/services/produtos'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { CompraItemFormModal } from './CompraItemFormModal'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface Props {
   open: boolean
@@ -82,6 +83,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                 ...i,
                 produto_nome: i.produtos?.nome,
                 produto_marca: i.produtos?.marca,
+                produto_especialidade: i.produtos?.especialidades?.nome,
               })),
             )
         })
@@ -115,7 +117,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
     }
 
     const { error } = compra
-      ? await updateCompra(compra.id, payload)
+      ? await updateCompra(compra.id, payload, itens)
       : await createCompra(payload, itens)
 
     if (error) {
@@ -131,166 +133,176 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{compra ? 'Editar Compra' : 'Nova Compra'}</DialogTitle>
+        <DialogContent className="sm:max-w-[850px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white border-slate-200">
+          <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a]">
+            <DialogTitle className="text-xl font-bold text-[#d4af37]">
+              {compra ? 'Editar Compra' : 'Nova Compra'}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6 py-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Fornecedor</Label>
-                <Select
-                  value={formData.fornecedor_id}
-                  onValueChange={(v) => setFormData({ ...formData, fornecedor_id: v })}
-                >
-                  <SelectTrigger className="border-slate-300 focus:ring-slate-900">
-                    <SelectValue placeholder="Selecione um fornecedor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fornecedores.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Data da Compra *</Label>
-                <Input
-                  type="date"
-                  required
-                  value={formData.data}
-                  onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-                  className="border-slate-300"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>NFe *</Label>
-                <Input
-                  required
-                  placeholder="Número da NFe"
-                  value={formData.nfe}
-                  onChange={(e) => setFormData({ ...formData, nfe: e.target.value })}
-                  className="border-slate-300"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Sala de Armazenamento</Label>
-                <Select
-                  value={formData.sala_id}
-                  onValueChange={(v) => setFormData({ ...formData, sala_id: v })}
-                >
-                  <SelectTrigger className="border-slate-300 focus:ring-slate-900">
-                    <SelectValue placeholder="Selecione a sala" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {salas.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(v) => setFormData({ ...formData, status: v })}
-                >
-                  <SelectTrigger className="border-slate-300 focus:ring-slate-900">
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Rascunho">Rascunho</SelectItem>
-                    <SelectItem value="Finalizada">Finalizada</SelectItem>
-                    <SelectItem value="Cancelada">Cancelada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Total (Calc)</Label>
-                <Input
-                  value={`R$ ${valorTotalCalculado.toFixed(2)}`}
-                  disabled
-                  className="bg-amber-50 text-amber-900 font-bold border-amber-200"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-3 bg-white p-4 rounded-md border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-bold text-slate-900">Produtos da Compra</Label>
-                {!compra && (
+          <ScrollArea className="flex-grow">
+            <form id="compra-form" onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">Fornecedor</Label>
+                  <Select
+                    value={formData.fornecedor_id}
+                    onValueChange={(v) => setFormData({ ...formData, fornecedor_id: v })}
+                  >
+                    <SelectTrigger className="border-slate-300 focus:ring-[#d4af37]">
+                      <SelectValue placeholder="Selecione um fornecedor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fornecedores.map((f) => (
+                        <SelectItem key={f.id} value={f.id}>
+                          {f.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">Data da Compra *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={formData.data}
+                    onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                    className="border-slate-300 focus-visible:ring-[#d4af37]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">NFe *</Label>
+                  <Input
+                    required
+                    placeholder="Número da NFe"
+                    value={formData.nfe}
+                    onChange={(e) => setFormData({ ...formData, nfe: e.target.value })}
+                    className="border-slate-300 focus-visible:ring-[#d4af37]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">Sala de Armazenamento</Label>
+                  <Select
+                    value={formData.sala_id}
+                    onValueChange={(v) => setFormData({ ...formData, sala_id: v })}
+                  >
+                    <SelectTrigger className="border-slate-300 focus:ring-[#d4af37]">
+                      <SelectValue placeholder="Selecione a sala" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {salas.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(v) => setFormData({ ...formData, status: v })}
+                  >
+                    <SelectTrigger className="border-slate-300 focus:ring-[#d4af37]">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Rascunho">Rascunho</SelectItem>
+                      <SelectItem value="Finalizada">Finalizada</SelectItem>
+                      <SelectItem value="Cancelada">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#1a2a4a] font-semibold">Valor Total (Calc)</Label>
+                  <Input
+                    value={`R$ ${valorTotalCalculado.toFixed(2)}`}
+                    disabled
+                    className="bg-amber-50 text-amber-900 font-bold border-amber-200"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-white p-4 rounded-md border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-bold text-[#1a2a4a] flex items-center">
+                    <span className="w-1.5 h-5 bg-[#d4af37] rounded-full mr-2"></span>
+                    Produtos da Compra
+                  </Label>
                   <Button
                     type="button"
                     size="sm"
                     onClick={() => setItemModalOpen(true)}
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                    className="bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
                   >
                     <Plus className="w-4 h-4 mr-1" /> Adicionar Produto
                   </Button>
-                )}
-              </div>
-              <div className="border border-slate-200 rounded-md overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-slate-900">
-                    <TableRow className="hover:bg-slate-900 border-slate-800">
-                      <TableHead className="font-bold text-slate-50 uppercase text-xs">
-                        Produto
-                      </TableHead>
-                      <TableHead className="font-bold text-slate-50 uppercase text-xs">
-                        Marca
-                      </TableHead>
-                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
-                        Qtd
-                      </TableHead>
-                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
-                        V. Unit
-                      </TableHead>
-                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
-                        Subtotal
-                      </TableHead>
-                      <TableHead className="text-center font-bold text-slate-50 uppercase text-xs">
-                        Ref. Consumo
-                      </TableHead>
-                      {!compra && <TableHead className="w-[60px]"></TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {itens.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-slate-500">
-                          Nenhum produto adicionado.
-                        </TableCell>
+                </div>
+                <div className="border border-slate-200 rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-[#1a2a4a]">
+                      <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
+                        <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
+                          Produto
+                        </TableHead>
+                        <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
+                          Marca
+                        </TableHead>
+                        <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
+                          Especialidade
+                        </TableHead>
+                        <TableHead className="text-right font-bold text-[#d4af37] uppercase text-xs">
+                          Qtd
+                        </TableHead>
+                        <TableHead className="text-right font-bold text-[#d4af37] uppercase text-xs">
+                          V. Unit
+                        </TableHead>
+                        <TableHead className="text-right font-bold text-[#d4af37] uppercase text-xs">
+                          Subtotal
+                        </TableHead>
+                        <TableHead className="text-center font-bold text-[#d4af37] uppercase text-xs">
+                          Ref. Consumo
+                        </TableHead>
+                        <TableHead className="w-[60px]"></TableHead>
                       </TableRow>
-                    ) : (
-                      itens.map((item, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell className="font-medium text-slate-900">
-                            {item.produto_nome}
+                    </TableHeader>
+                    <TableBody>
+                      {itens.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-6 text-slate-500">
+                            Nenhum produto adicionado.
                           </TableCell>
-                          <TableCell className="text-slate-600">
-                            {item.produto_marca || '-'}
-                          </TableCell>
-                          <TableCell className="text-right text-slate-700">
-                            {item.qtd_comprada}
-                          </TableCell>
-                          <TableCell className="text-right text-slate-700">
-                            R$ {item.valor_unitario.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right text-slate-900 font-bold">
-                            R$ {item.valor_total.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                              {item.referencia_consumo === 'itens_embalagem'
-                                ? 'Por Embalagem'
-                                : 'Por Qtd'}
-                            </span>
-                          </TableCell>
-                          {!compra && (
+                        </TableRow>
+                      ) : (
+                        itens.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-medium text-[#1a2a4a]">
+                              {item.produto_nome}
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {item.produto_marca || '-'}
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {item.produto_especialidade || '-'}
+                            </TableCell>
+                            <TableCell className="text-right text-slate-700">
+                              {item.qtd_comprada}
+                            </TableCell>
+                            <TableCell className="text-right text-slate-700">
+                              R$ {item.valor_unitario.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right text-[#1a2a4a] font-bold">
+                              R$ {item.valor_total.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="text-[10px] uppercase font-bold px-2 py-1 rounded-full bg-slate-100 text-[#1a2a4a] border border-slate-200">
+                                {item.referencia_consumo === 'itens_embalagem'
+                                  ? 'Embalagem'
+                                  : 'Unidade'}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-center">
                               <div className="flex items-center justify-end gap-1">
                                 <Button
@@ -304,29 +316,30 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                                 </Button>
                               </div>
                             </TableCell>
-                          )}
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div>
+            </form>
+          </ScrollArea>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-bold"
-              >
-                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Salvar Compra
-              </Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter className="p-4 border-t border-slate-100 bg-slate-50">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button
+              form="compra-form"
+              type="submit"
+              disabled={loading}
+              className="bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
+            >
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar Compra
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

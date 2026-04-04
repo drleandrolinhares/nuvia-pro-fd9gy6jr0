@@ -121,7 +121,7 @@ export function ComprasTab() {
               setCompraEditar(null)
               setModalFormOpen(true)
             }}
-            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+            className="w-full sm:w-auto bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Compra
@@ -132,18 +132,18 @@ export function ComprasTab() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-900">
-              <TableRow className="hover:bg-slate-900 border-slate-800">
-                <TableHead className="font-bold text-slate-50 uppercase text-xs">
+            <TableHeader className="bg-[#1a2a4a]">
+              <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
                   Fornecedor
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase text-xs">Data</TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase text-xs">NFe</TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase text-xs">
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs">Data</TableHead>
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs">NFe</TableHead>
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
                   Valor Total
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase text-xs">Status</TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase text-xs text-center">
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs">Status</TableHead>
+                <TableHead className="font-bold text-[#d4af37] uppercase text-xs text-center">
                   Ações
                 </TableHead>
               </TableRow>
