@@ -245,7 +245,7 @@ export function SaidaProdutoModal({
                       Quantidade a Sair{' '}
                       {selectedProduto?.referencia_consumo === 'itens_embalagem'
                         ? '(Itens)'
-                        : selectedProduto?.referencia_consumo === 'quantidade_comprada'
+                        : selectedProduto?.referencia_consumo === 'qtd_comprada'
                           ? '(Embalagens/Qtd Comprada)'
                           : ''}{' '}
                       *
@@ -304,7 +304,7 @@ export function SaidaProdutoModal({
                       Quantidade a Devolver{' '}
                       {selectedProduto?.referencia_consumo === 'itens_embalagem'
                         ? '(Itens)'
-                        : selectedProduto?.referencia_consumo === 'quantidade_comprada'
+                        : selectedProduto?.referencia_consumo === 'qtd_comprada'
                           ? '(Embalagens/Qtd Comprada)'
                           : ''}{' '}
                       *

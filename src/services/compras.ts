@@ -73,12 +73,39 @@ export const createCompra = async (
 export const updateCompra = async (
   id: string,
   compra: Partial<Omit<Compra, 'id' | 'data_criacao' | 'fornecedores'>>,
+  itens?: CompraItem[],
 ) => {
-  return await supabase
+  const { data, error } = await supabase
     .from('compras' as any)
     .update(compra)
     .eq('id', id)
     .select()
+    .single()
+
+  if (error) return { data: null, error }
+
+  if (itens) {
+    await supabase
+      .from('compra_itens' as any)
+      .delete()
+      .eq('compra_id', id)
+
+    if (itens.length > 0) {
+      const itensPayload = itens.map((i) => ({
+        compra_id: id,
+        produto_id: i.produto_id,
+        valor_total: i.valor_total,
+        qtd_comprada: i.qtd_comprada,
+        itens_embalagem: i.itens_embalagem,
+        referencia_consumo: i.referencia_consumo,
+        valor_unitario: i.valor_unitario,
+      }))
+      const { error: errItens } = await supabase.from('compra_itens' as any).insert(itensPayload)
+      if (errItens) return { data, error: errItens }
+    }
+  }
+
+  return { data, error: null }
 }
 
 export const deleteCompra = async (id: string) => {
