@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { fetchProdutos, Produto, deleteProduto } from '@/services/produtos'
 import { FornecedoresTab } from '@/components/estoque/FornecedoresTab'
+import { ComprasTab } from '@/components/estoque/ComprasTab'
 import { useToast } from '@/hooks/use-toast'
 import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
 import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
@@ -252,12 +253,20 @@ export default function Estoque() {
             Produtos
           </TabsTrigger>
           {canManage && (
-            <TabsTrigger
-              value="fornecedores"
-              className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
-            >
-              Fornecedores
-            </TabsTrigger>
+            <>
+              <TabsTrigger
+                value="fornecedores"
+                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
+              >
+                Fornecedores
+              </TabsTrigger>
+              <TabsTrigger
+                value="compras"
+                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
+              >
+                Compras
+              </TabsTrigger>
+            </>
           )}
         </TabsList>
 
@@ -651,6 +660,12 @@ export default function Estoque() {
         {canManage && (
           <TabsContent value="fornecedores" className="mt-0 border-none p-0 outline-none">
             <FornecedoresTab />
+          </TabsContent>
+        )}
+
+        {canManage && (
+          <TabsContent value="compras" className="mt-0 border-none p-0 outline-none">
+            <ComprasTab />
           </TabsContent>
         )}
       </Tabs>
