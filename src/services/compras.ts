@@ -23,6 +23,7 @@ export interface CompraItem {
   compra_id?: string
   produto_id: string
   produto_nome?: string
+  produto_marca?: string
   valor_total: number
   qtd_comprada: number
   itens_embalagem: number | null

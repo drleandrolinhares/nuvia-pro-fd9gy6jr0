@@ -34,6 +34,7 @@ import {
   CompraItem,
   fetchCompraItens,
 } from '@/services/compras'
+import { fetchSalas } from '@/services/produtos'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { CompraItemFormModal } from './CompraItemFormModal'
 
@@ -48,11 +49,13 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [fornecedores, setFornecedores] = useState<FornecedorBasico[]>([])
+  const [salas, setSalas] = useState<any[]>([])
 
   const [formData, setFormData] = useState({
     fornecedor_id: '',
     data: '',
     nfe: '',
+    sala_id: '',
     status: 'Rascunho',
   })
 
@@ -62,21 +65,32 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
   useEffect(() => {
     if (open) {
       fetchFornecedoresBasico().then(({ data }) => setFornecedores(data || []))
+      fetchSalas().then(({ data }) => setSalas(data || []))
+
       if (compra) {
         setFormData({
           fornecedor_id: compra.fornecedor_id || '',
           data: compra.data || '',
           nfe: compra.nfe || '',
+          sala_id: '',
           status: compra.status || 'Rascunho',
         })
         fetchCompraItens(compra.id).then((res) => {
-          if (res.data) setItens(res.data.map((i) => ({ ...i, produto_nome: i.produtos?.nome })))
+          if (res.data)
+            setItens(
+              res.data.map((i) => ({
+                ...i,
+                produto_nome: i.produtos?.nome,
+                produto_marca: i.produtos?.marca,
+              })),
+            )
         })
       } else {
         setFormData({
           fornecedor_id: '',
           data: new Date().toISOString().split('T')[0],
           nfe: '',
+          sala_id: '',
           status: 'Rascunho',
         })
         setItens([])
@@ -152,8 +166,9 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                 />
               </div>
               <div className="space-y-2">
-                <Label>NFe</Label>
+                <Label>NFe *</Label>
                 <Input
+                  required
                   placeholder="Número da NFe"
                   value={formData.nfe}
                   onChange={(e) => setFormData({ ...formData, nfe: e.target.value })}
@@ -161,14 +176,24 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                 />
               </div>
               <div className="space-y-2">
-                <Label>Valor Total (Calc)</Label>
-                <Input
-                  value={`R$ ${valorTotalCalculado.toFixed(2)}`}
-                  disabled
-                  className="bg-slate-100 text-slate-900 font-bold border-slate-300"
-                />
+                <Label>Sala de Armazenamento</Label>
+                <Select
+                  value={formData.sala_id}
+                  onValueChange={(v) => setFormData({ ...formData, sala_id: v })}
+                >
+                  <SelectTrigger className="border-slate-300 focus:ring-slate-900">
+                    <SelectValue placeholder="Selecione a sala" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {salas.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <Label>Status</Label>
                 <Select
                   value={formData.status}
@@ -184,9 +209,17 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Valor Total (Calc)</Label>
+                <Input
+                  value={`R$ ${valorTotalCalculado.toFixed(2)}`}
+                  disabled
+                  className="bg-amber-50 text-amber-900 font-bold border-amber-200"
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 bg-white p-4 rounded-md border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <Label className="text-base font-bold text-slate-900">Produtos da Compra</Label>
                 {!compra && (
@@ -202,12 +235,25 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
               </div>
               <div className="border border-slate-200 rounded-md overflow-hidden">
                 <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow>
-                      <TableHead className="font-semibold text-slate-900">Produto</TableHead>
-                      <TableHead className="text-right font-semibold text-slate-900">Qtd</TableHead>
-                      <TableHead className="text-right font-semibold text-slate-900">
-                        Valor Total
+                  <TableHeader className="bg-slate-900">
+                    <TableRow className="hover:bg-slate-900 border-slate-800">
+                      <TableHead className="font-bold text-slate-50 uppercase text-xs">
+                        Produto
+                      </TableHead>
+                      <TableHead className="font-bold text-slate-50 uppercase text-xs">
+                        Marca
+                      </TableHead>
+                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
+                        Qtd
+                      </TableHead>
+                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
+                        V. Unit
+                      </TableHead>
+                      <TableHead className="text-right font-bold text-slate-50 uppercase text-xs">
+                        Subtotal
+                      </TableHead>
+                      <TableHead className="text-center font-bold text-slate-50 uppercase text-xs">
+                        Ref. Consumo
                       </TableHead>
                       {!compra && <TableHead className="w-[60px]"></TableHead>}
                     </TableRow>
@@ -215,33 +261,48 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                   <TableBody>
                     {itens.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                        <TableCell colSpan={7} className="text-center py-6 text-slate-500">
                           Nenhum produto adicionado.
                         </TableCell>
                       </TableRow>
                     ) : (
                       itens.map((item, idx) => (
                         <TableRow key={idx}>
-                          <TableCell className="font-medium text-slate-700">
+                          <TableCell className="font-medium text-slate-900">
                             {item.produto_nome}
                           </TableCell>
-                          <TableCell className="text-right text-slate-600">
+                          <TableCell className="text-slate-600">
+                            {item.produto_marca || '-'}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-700">
                             {item.qtd_comprada}
                           </TableCell>
-                          <TableCell className="text-right text-slate-600 font-medium">
+                          <TableCell className="text-right text-slate-700">
+                            R$ {item.valor_unitario.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-900 font-bold">
                             R$ {item.valor_total.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                              {item.referencia_consumo === 'itens_embalagem'
+                                ? 'Por Embalagem'
+                                : 'Por Qtd'}
+                            </span>
                           </TableCell>
                           {!compra && (
                             <TableCell className="text-center">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setItens(itens.filter((_, i) => i !== idx))}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setItens(itens.filter((_, i) => i !== idx))}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           )}
                         </TableRow>
@@ -272,6 +333,14 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
       <CompraItemFormModal
         open={itemModalOpen}
         onOpenChange={setItemModalOpen}
+        compraData={{
+          fornecedor_id: formData.fornecedor_id,
+          fornecedorNome: fornecedores.find((f) => f.id === formData.fornecedor_id)?.nome,
+          data: formData.data,
+          nfe: formData.nfe,
+          sala_id: formData.sala_id,
+          salaNome: salas.find((s) => s.id === formData.sala_id)?.nome,
+        }}
         onAdd={(item) => setItens([...itens, item])}
       />
     </>

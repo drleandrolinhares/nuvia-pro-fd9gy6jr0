@@ -16,185 +16,488 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { fetchProdutos, Produto } from '@/services/produtos'
+import { Switch } from '@/components/ui/switch'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  fetchProdutos,
+  fetchEspecialidades,
+  fetchEmbalagens,
+  createProduto,
+  updateProduto,
+  fetchEspecialidadeCampos,
+  upsertProdutoCamposValores,
+  fetchProdutoCamposValores,
+  Produto,
+} from '@/services/produtos'
 import { fetchUltimasComprasProduto, CompraItem } from '@/services/compras'
 import { format, parseISO } from 'date-fns'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+
+interface CompraData {
+  fornecedor_id?: string
+  fornecedorNome?: string
+  data?: string
+  nfe?: string
+  sala_id?: string
+  salaNome?: string
+}
 
 interface Props {
   open: boolean
   onOpenChange: (o: boolean) => void
+  compraData: CompraData
   onAdd: (item: CompraItem) => void
 }
 
-export function CompraItemFormModal({ open, onOpenChange, onAdd }: Props) {
+export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: Props) {
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
   const [produtos, setProdutos] = useState<Produto[]>([])
-  const [prodId, setProdId] = useState('')
+  const [especialidades, setEspecialidades] = useState<any[]>([])
+  const [embalagens, setEmbalagens] = useState<any[]>([])
   const [ultimas, setUltimas] = useState<any[]>([])
 
-  const [vt, setVt] = useState('')
-  const [qc, setQc] = useState('')
-  const [ie, setIe] = useState('')
+  const [produtoId, setProdutoId] = useState('')
+  const [nome, setNome] = useState('')
+  const [marca, setMarca] = useState('')
+  const [especialidadeId, setEspecialidadeId] = useState('')
+  const [embalagemId, setEmbalagemId] = useState('')
+  const [valorTotal, setValorTotal] = useState('')
+  const [qtdComprada, setQtdComprada] = useState('')
+  const [itensEmbalagem, setItensEmbalagem] = useState('')
+  const [referenciaConsumo, setReferenciaConsumo] = useState<'qtd_comprada' | 'itens_embalagem'>(
+    'qtd_comprada',
+  )
+  const [validade, setValidade] = useState('')
+  const [numeroArmario, setNumeroArmario] = useState('')
+  const [estoqueMinimo, setEstoqueMinimo] = useState('')
+  const [observacoes, setObservacoes] = useState('')
+  const [manterPreenchido, setManterPreenchido] = useState(false)
+
+  const [camposPersonalizados, setCamposPersonalizados] = useState<any[]>([])
+  const [valoresCampos, setValoresCampos] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (open) {
       fetchProdutos().then((res) => setProdutos(res.data || []))
+      fetchEspecialidades().then((res) => setEspecialidades(res.data || []))
+      fetchEmbalagens().then((res) => setEmbalagens(res.data || []))
     } else {
-      setProdId('')
-      setVt('')
-      setQc('')
-      setIe('')
-      setUltimas([])
+      resetForm()
     }
   }, [open])
 
   useEffect(() => {
-    if (prodId) {
-      fetchUltimasComprasProduto(prodId).then((res) => setUltimas(res.data || []))
-    } else {
-      setUltimas([])
-    }
-  }, [prodId])
+    if (produtoId && produtoId !== 'new') {
+      const p = produtos.find((x) => x.id === produtoId)
+      if (p) {
+        setNome(p.nome)
+        setMarca(p.marca || '')
+        setEspecialidadeId(p.especialidade_id || '')
+        setEmbalagemId(p.embalagem_id || '')
+        setReferenciaConsumo(p.referencia_consumo || 'qtd_comprada')
+        setValidade(p.validade || '')
+        setNumeroArmario(p.numero_armario || '')
+        setEstoqueMinimo(p.quantidade_minima?.toString() || '')
 
-  const produto = useMemo(() => produtos.find((p) => p.id === prodId), [produtos, prodId])
+        fetchUltimasComprasProduto(p.id).then((res) => setUltimas(res.data || []))
+        fetchProdutoCamposValores(p.id).then((res) => {
+          const vals: Record<string, string> = {}
+          res.data?.forEach((v) => {
+            vals[v.campo_id] = v.valor
+          })
+          setValoresCampos(vals)
+        })
+      }
+    } else {
+      setNome('')
+      setMarca('')
+      setReferenciaConsumo('qtd_comprada')
+      setValidade('')
+      setNumeroArmario('')
+      setEstoqueMinimo('')
+      setUltimas([])
+      setValoresCampos({})
+    }
+  }, [produtoId, produtos])
+
+  useEffect(() => {
+    if (especialidadeId) {
+      fetchEspecialidadeCampos(especialidadeId).then((res) => {
+        setCamposPersonalizados(res.data || [])
+      })
+    } else {
+      setCamposPersonalizados([])
+    }
+  }, [especialidadeId])
+
+  const resetForm = () => {
+    setProdutoId('')
+    setNome('')
+    setValorTotal('')
+    setQtdComprada('')
+    setItensEmbalagem('')
+    setObservacoes('')
+  }
 
   const vu = useMemo(() => {
-    if (!produto) return 0
-    const val = parseFloat(vt) || 0
-    if (produto.referencia_consumo === 'itens_embalagem') {
-      return val / (parseInt(ie) || 1)
+    const vt = parseFloat(valorTotal) || 0
+    const qc = parseInt(qtdComprada) || 1
+    const ie = parseInt(itensEmbalagem) || 1
+    if (referenciaConsumo === 'itens_embalagem') {
+      return vt / ie
     }
-    return val / (parseInt(qc) || 1)
-  }, [vt, qc, ie, produto])
+    return vt / qc
+  }, [valorTotal, qtdComprada, itensEmbalagem, referenciaConsumo])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const especialidadeSelecionada = especialidades.find((e) => e.id === especialidadeId)
+  const isImplantodontia = especialidadeSelecionada?.nome?.toLowerCase().includes('implantodontia')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!produto) return
+    if (!produtoId) return
+    setLoading(true)
+
+    let finalProdutoId = produtoId
+
+    const payloadProduto = {
+      nome,
+      marca: marca || null,
+      especialidade_id: especialidadeId || null,
+      embalagem_id: embalagemId || null,
+      sala_id: compraData.sala_id || null,
+      validade: validade || null,
+      numero_armario: numeroArmario || null,
+      quantidade_minima: parseInt(estoqueMinimo) || 0,
+      referencia_consumo: referenciaConsumo,
+      custo_unitario: vu,
+    }
+
+    if (produtoId === 'new') {
+      const { data, error } = await createProduto({
+        ...payloadProduto,
+        quantidade_estoque: 0,
+      })
+      if (error || !data) {
+        toast({
+          title: 'Erro ao criar produto',
+          description: error?.message,
+          variant: 'destructive',
+        })
+        setLoading(false)
+        return
+      }
+      finalProdutoId = data.id
+      setProdutos([...produtos, data as Produto])
+    } else {
+      const { error } = await updateProduto(produtoId, payloadProduto)
+      if (error) {
+        toast({
+          title: 'Erro ao atualizar produto',
+          description: error.message,
+          variant: 'destructive',
+        })
+        setLoading(false)
+        return
+      }
+    }
+
+    if (Object.keys(valoresCampos).length > 0) {
+      await upsertProdutoCamposValores(finalProdutoId, valoresCampos)
+    }
+
     onAdd({
-      produto_id: produto.id,
-      produto_nome: produto.nome,
-      valor_total: parseFloat(vt) || 0,
-      qtd_comprada: parseInt(qc) || 0,
+      produto_id: finalProdutoId,
+      produto_nome: nome,
+      produto_marca: marca,
+      valor_total: parseFloat(valorTotal) || 0,
+      qtd_comprada: parseInt(qtdComprada) || 0,
       itens_embalagem:
-        produto.referencia_consumo === 'itens_embalagem' ? parseInt(ie) || null : null,
-      referencia_consumo: produto.referencia_consumo,
+        referenciaConsumo === 'itens_embalagem' ? parseInt(itensEmbalagem) || null : null,
+      referencia_consumo: referenciaConsumo,
       valor_unitario: vu,
     })
-    onOpenChange(false)
+
+    setLoading(false)
+    if (!manterPreenchido) {
+      onOpenChange(false)
+    } else {
+      resetForm()
+      toast({ title: 'Adicionado', description: 'Produto adicionado à compra.' })
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Produto</DialogTitle>
+          <DialogTitle className="text-xl">Adicionar Produto à Compra</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Produto</Label>
-            <Select value={prodId} onValueChange={setProdId}>
-              <SelectTrigger className="border-slate-300 focus:ring-slate-900">
-                <SelectValue placeholder="Selecione um produto..." />
-              </SelectTrigger>
-              <SelectContent>
-                {produtos.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+        <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm flex flex-wrap gap-x-6 gap-y-2 mb-2">
+          <div>
+            <span className="font-bold text-amber-900">Fornecedor:</span>{' '}
+            <span className="text-amber-800">{compraData.fornecedorNome || '-'}</span>
           </div>
+          <div>
+            <span className="font-bold text-amber-900">Data:</span>{' '}
+            <span className="text-amber-800">
+              {compraData.data ? format(parseISO(compraData.data), 'dd/MM/yyyy') : '-'}
+            </span>
+          </div>
+          <div>
+            <span className="font-bold text-amber-900">NFe:</span>{' '}
+            <span className="text-amber-800">{compraData.nfe || '-'}</span>
+          </div>
+          <div>
+            <span className="font-bold text-amber-900">Sala:</span>{' '}
+            <span className="text-amber-800">{compraData.salaNome || '-'}</span>
+          </div>
+        </div>
 
-          {produto && (
-            <div className="flex flex-col gap-3 p-3 bg-slate-50 rounded-md border border-slate-200">
-              <div className="flex flex-wrap gap-2 text-xs">
-                <Badge variant="outline" className="bg-white">
-                  Estoque Atual: {produto.quantidade_estoque}
-                </Badge>
-                <Badge variant="outline" className="bg-white">
-                  Ref:{' '}
-                  {produto.referencia_consumo === 'itens_embalagem'
-                    ? 'Por Embalagem'
-                    : 'Por Qtd Comprada'}
-                </Badge>
-              </div>
-              {ultimas.length > 0 && (
-                <div className="text-xs text-slate-600 mt-1">
-                  <span className="font-bold text-slate-800 block mb-1">Últimas Compras:</span>
-                  {ultimas.map((u, i) => (
-                    <div
-                      key={i}
-                      className="flex justify-between py-0.5 border-b border-slate-100 last:border-0"
-                    >
-                      <span>
-                        {format(parseISO(u.data_criacao), 'dd/MM/yy')} -{' '}
-                        {u.compras?.fornecedores?.nome}
-                      </span>
-                      <span className="font-medium">
-                        {u.qtd_comprada} un. a R$ {u.valor_unitario.toFixed(2)}/un
-                      </span>
-                    </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Produto *</Label>
+              <Select value={produtoId} onValueChange={setProdutoId}>
+                <SelectTrigger className="border-slate-300">
+                  <SelectValue placeholder="Selecione ou crie um novo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new" className="font-bold text-amber-600 bg-amber-50">
+                    --- Novo Produto ---
+                  </SelectItem>
+                  {produtos.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nome}
+                    </SelectItem>
                   ))}
-                </div>
-              )}
+                </SelectContent>
+              </Select>
             </div>
-          )}
 
-          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nome do Material *</Label>
+              <Input
+                required
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Marca</Label>
+              <Input
+                value={marca}
+                onChange={(e) => setMarca(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Especialidade</Label>
+              <Select value={especialidadeId} onValueChange={setEspecialidadeId}>
+                <SelectTrigger className="border-slate-300">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {especialidades.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Embalagem de Compra</Label>
+              <Select value={embalagemId} onValueChange={setEmbalagemId}>
+                <SelectTrigger className="border-slate-300">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {embalagens.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Valor Total da Compra (R$) *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={valorTotal}
+                onChange={(e) => setValorTotal(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Qtd Comprada *</Label>
               <Input
                 type="number"
-                required
                 min="1"
-                value={qc}
-                onChange={(e) => setQc(e.target.value)}
+                required
+                value={qtdComprada}
+                onChange={(e) => setQtdComprada(e.target.value)}
+                className="border-slate-300"
               />
             </div>
-            {produto?.referencia_consumo === 'itens_embalagem' && (
-              <div className="space-y-2">
-                <Label>Itens na Embalagem *</Label>
-                <Input
-                  type="number"
-                  required
-                  min="1"
-                  value={ie}
-                  onChange={(e) => setIe(e.target.value)}
-                />
-              </div>
-            )}
+
             <div className="space-y-2">
-              <Label>Valor Total (R$) *</Label>
+              <Label>Itens na Embalagem</Label>
               <Input
                 type="number"
-                step="0.01"
-                required
-                min="0"
-                value={vt}
-                onChange={(e) => setVt(e.target.value)}
+                min="1"
+                value={itensEmbalagem}
+                onChange={(e) => setItensEmbalagem(e.target.value)}
+                className="border-slate-300"
               />
             </div>
+
             <div className="space-y-2">
-              <Label>Valor Unit. (Calc)</Label>
+              <Label>Referência de Consumo *</Label>
+              <Select value={referenciaConsumo} onValueChange={(v: any) => setReferenciaConsumo(v)}>
+                <SelectTrigger className="border-slate-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="qtd_comprada">Qtd Comprada</SelectItem>
+                  <SelectItem value="itens_embalagem">Itens na Embalagem</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Valor Unitário (Calc)</Label>
               <Input
                 value={`R$ ${vu.toFixed(2)}`}
                 disabled
-                className="bg-slate-100 text-slate-600"
+                className="bg-slate-100 text-slate-700 font-medium"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data de Validade</Label>
+              <Input
+                type="date"
+                value={validade}
+                onChange={(e) => setValidade(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Número do Armário</Label>
+              <Input
+                value={numeroArmario}
+                onChange={(e) => setNumeroArmario(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Estoque Mínimo</Label>
+              <Input
+                type="number"
+                min="0"
+                value={estoqueMinimo}
+                onChange={(e) => setEstoqueMinimo(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Input
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+
+            {isImplantodontia && camposPersonalizados.length > 0 && (
+              <Card className="col-span-1 md:col-span-2 mt-2 border-slate-200">
+                <CardHeader className="pb-3 bg-slate-50 border-b border-slate-200">
+                  <CardTitle className="text-sm font-bold text-slate-800">
+                    DADOS DO IMPLANTE
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                  {camposPersonalizados.map((campo) => (
+                    <div key={campo.campo_id} className="space-y-2">
+                      <Label>{campo.label_customizado || campo.campos?.nome}</Label>
+                      <Input
+                        value={valoresCampos[campo.campo_id] || ''}
+                        onChange={(e) =>
+                          setValoresCampos({ ...valoresCampos, [campo.campo_id]: e.target.value })
+                        }
+                        className="border-slate-300"
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {ultimas.length > 0 && (
+              <div className="col-span-1 md:col-span-2 text-xs text-slate-600 mt-2 p-3 bg-slate-50 rounded-md border border-slate-200">
+                <span className="font-bold text-slate-800 block mb-1">
+                  Histórico de Últimas Compras deste produto:
+                </span>
+                {ultimas.map((u, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between py-1 border-b border-slate-100 last:border-0"
+                  >
+                    <span>
+                      {format(parseISO(u.data_criacao), 'dd/MM/yy')} -{' '}
+                      {u.compras?.fornecedores?.nome}
+                    </span>
+                    <span className="font-medium">
+                      {u.qtd_comprada} un. a R$ {u.valor_unitario.toFixed(2)}/un
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2 mt-2 col-span-1 md:col-span-2 bg-slate-50 p-3 rounded-md border border-slate-200">
+              <Switch
+                id="manter-preenchido"
+                checked={manterPreenchido}
+                onCheckedChange={setManterPreenchido}
+              />
+              <Label
+                htmlFor="manter-preenchido"
+                className="cursor-pointer font-medium text-slate-800"
+              >
+                Manter Preenchido (Adicionar Múltiplos Produtos)
+              </Label>
             </div>
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={!prodId}
-              className="bg-slate-900 hover:bg-slate-800 text-white"
+              disabled={!produtoId || loading}
+              className="bg-slate-900 hover:bg-slate-800 text-white font-bold"
             >
-              Adicionar
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar Produto e Adicionar à Compra
             </Button>
           </DialogFooter>
         </form>
