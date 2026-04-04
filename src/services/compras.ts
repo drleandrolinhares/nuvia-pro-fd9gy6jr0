@@ -10,6 +10,7 @@ export interface Compra {
   fornecedor_id: string | null
   data: string
   nfe: string | null
+  sala_id?: string | null
   valor_total_compra: number
   status: string
   data_criacao: string
@@ -30,6 +31,10 @@ export interface CompraItem {
   itens_embalagem: number | null
   referencia_consumo: string | null
   valor_unitario: number
+  estoque_adicionado?: number | null
+  data_validade?: string | null
+  numero_armario?: string | null
+  observacoes?: string | null
 }
 
 export const fetchCompras = async () => {
@@ -63,6 +68,10 @@ export const createCompra = async (
       itens_embalagem: i.itens_embalagem,
       referencia_consumo: i.referencia_consumo,
       valor_unitario: i.valor_unitario,
+      estoque_adicionado: i.estoque_adicionado,
+      data_validade: i.data_validade,
+      numero_armario: i.numero_armario,
+      observacoes: i.observacoes,
     }))
 
     const { error: errItens } = await supabase.from('compra_itens' as any).insert(itensPayload)
@@ -101,6 +110,10 @@ export const updateCompra = async (
         itens_embalagem: i.itens_embalagem,
         referencia_consumo: i.referencia_consumo,
         valor_unitario: i.valor_unitario,
+        estoque_adicionado: i.estoque_adicionado,
+        data_validade: i.data_validade,
+        numero_armario: i.numero_armario,
+        observacoes: i.observacoes,
       }))
       const { error: errItens } = await supabase.from('compra_itens' as any).insert(itensPayload)
       if (errItens) return { data, error: errItens }

@@ -218,6 +218,13 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
         referenciaConsumo === 'itens_embalagem' ? parseInt(itensEmbalagem) || null : null,
       referencia_consumo: referenciaConsumo,
       valor_unitario: vu,
+      estoque_adicionado:
+        referenciaConsumo === 'itens_embalagem'
+          ? parseInt(itensEmbalagem) || 0
+          : parseInt(qtdComprada) || 0,
+      data_validade: validade || null,
+      numero_armario: numeroArmario || null,
+      observacoes: observacoes || null,
     })
 
     setLoading(false)

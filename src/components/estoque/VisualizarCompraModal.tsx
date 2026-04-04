@@ -43,8 +43,11 @@ export function VisualizarCompraModal({
 
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data } = await supabase.rpc('is_admin')
-      setIsAdmin(!!data)
+      const { data: admin } = await supabase.rpc('is_admin')
+      const { data: perm } = await supabase.rpc('has_permission', {
+        permission_name: 'Gerenciar Estoque',
+      })
+      setIsAdmin(!!admin || !!perm)
     }
     checkAdmin()
   }, [])
@@ -218,7 +221,7 @@ export function VisualizarCompraModal({
                           </TableCell>
                           <TableCell className="text-right font-bold text-[#1a2a4a]">
                             {item.referencia_consumo === 'itens_embalagem'
-                              ? item.itens_embalagem
+                              ? `${item.itens_embalagem} (${item.qtd_comprada} emb.)`
                               : item.qtd_comprada}
                           </TableCell>
                           <TableCell className="text-right text-slate-600 text-sm font-medium">

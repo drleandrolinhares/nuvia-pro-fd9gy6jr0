@@ -42,8 +42,11 @@ export function ComprasTab() {
   const { toast } = useToast()
 
   const checkAdmin = async () => {
-    const { data } = await supabase.rpc('is_admin')
-    setIsAdmin(!!data)
+    const { data: admin } = await supabase.rpc('is_admin')
+    const { data: perm } = await supabase.rpc('has_permission', {
+      permission_name: 'Gerenciar Estoque',
+    })
+    setIsAdmin(!!admin || !!perm)
   }
 
   const loadData = async () => {

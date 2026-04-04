@@ -73,7 +73,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
           fornecedor_id: compra.fornecedor_id || '',
           data: compra.data || '',
           nfe: compra.nfe || '',
-          sala_id: '',
+          sala_id: compra.sala_id || '',
           status: compra.status || 'Rascunho',
         })
         fetchCompraItens(compra.id).then((res) => {
@@ -112,6 +112,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
       fornecedor_id: formData.fornecedor_id || null,
       data: formData.data,
       nfe: formData.nfe,
+      sala_id: formData.sala_id || null,
       valor_total_compra: valorTotalCalculado,
       status: formData.status,
     }
