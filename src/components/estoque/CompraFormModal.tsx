@@ -242,6 +242,9 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                         <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
                           Marca
                         </TableHead>
+                        <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
+                          Especialidade
+                        </TableHead>
                         <TableHead className="font-bold text-[#d4af37] uppercase text-xs text-right">
                           Qtd
                         </TableHead>
@@ -265,7 +268,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                     <TableBody>
                       {itens.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                          <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                             Nenhum produto adicionado.
                           </TableCell>
                         </TableRow>
@@ -277,6 +280,9 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                             </TableCell>
                             <TableCell className="text-slate-600">
                               {item.produto_marca || '-'}
+                            </TableCell>
+                            <TableCell className="text-slate-600 text-sm">
+                              {item.produto_especialidade || '-'}
                             </TableCell>
                             <TableCell className="text-right text-slate-700">
                               {item.qtd_comprada}

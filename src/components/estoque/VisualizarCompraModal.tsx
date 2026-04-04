@@ -166,9 +166,6 @@ export function VisualizarCompraModal({
                       <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
                         Especialidade
                       </TableHead>
-                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
-                        Ref. Consumo
-                      </TableHead>
                       <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
                         Qtd
                       </TableHead>
@@ -178,12 +175,21 @@ export function VisualizarCompraModal({
                       <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-right">
                         Subtotal
                       </TableHead>
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                        Ref. Consumo
+                      </TableHead>
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
+                        Sala
+                      </TableHead>
+                      <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider text-center">
+                        Ações
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="bg-white">
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={9} className="text-center py-8">
                           <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#d4af37] mb-2" />
                           <p className="text-sm text-slate-500 font-medium">Carregando itens...</p>
                         </TableCell>
@@ -191,7 +197,7 @@ export function VisualizarCompraModal({
                     ) : itens.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={9}
                           className="text-center py-8 text-slate-500 text-sm font-medium"
                         >
                           Nenhum produto vinculado a esta compra.
@@ -209,16 +215,6 @@ export function VisualizarCompraModal({
                           <TableCell className="text-slate-600 text-sm">
                             {item.produtos?.especialidades?.nome || '-'}
                           </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className="font-normal text-xs bg-slate-50 border-slate-200 text-slate-700"
-                            >
-                              {item.referencia_consumo === 'itens_embalagem'
-                                ? 'Por Embalagem'
-                                : 'Por Unidade'}
-                            </Badge>
-                          </TableCell>
                           <TableCell className="text-right font-bold text-[#1a2a4a]">
                             {item.referencia_consumo === 'itens_embalagem'
                               ? `${item.itens_embalagem} (${item.qtd_comprada} emb.)`
@@ -230,6 +226,20 @@ export function VisualizarCompraModal({
                           <TableCell className="text-right font-bold text-[#1a2a4a]">
                             {formatCurrency(item.valor_total)}
                           </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="font-normal text-[10px] bg-slate-50 border-slate-200 text-slate-700"
+                            >
+                              {item.referencia_consumo === 'itens_embalagem'
+                                ? 'Embalagem'
+                                : 'Unidade'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-slate-600 text-sm">
+                            {item.produtos?.salas?.nome || '-'}
+                          </TableCell>
+                          <TableCell className="text-center text-slate-400">-</TableCell>
                         </TableRow>
                       ))
                     )}
