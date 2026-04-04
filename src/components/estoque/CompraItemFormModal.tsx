@@ -30,6 +30,7 @@ import {
   Produto,
 } from '@/services/produtos'
 import { fetchUltimasComprasProduto, CompraItem } from '@/services/compras'
+import { getItems } from '@/services/cadastros'
 import { format, parseISO } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -66,6 +67,10 @@ export function CompraItemFormModal({
   const [embalagens, setEmbalagens] = useState<any[]>([])
   const [ultimas, setUltimas] = useState<any[]>([])
 
+  const [opcoesMarcas, setOpcoesMarcas] = useState<any[]>([])
+  const [opcoesDiametros, setOpcoesDiametros] = useState<any[]>([])
+  const [opcoesTamanhos, setOpcoesTamanhos] = useState<any[]>([])
+
   const [produtoId, setProdutoId] = useState('')
   const [nome, setNome] = useState('')
   const [marca, setMarca] = useState('')
@@ -92,6 +97,9 @@ export function CompraItemFormModal({
       fetchProdutos().then((res) => setProdutos(res.data || []))
       fetchEspecialidades().then((res) => setEspecialidades(res.data || []))
       fetchEmbalagens().then((res) => setEmbalagens(res.data || []))
+      getItems('marcas_implante').then((res) => setOpcoesMarcas(res || []))
+      getItems('diametros_implante').then((res) => setOpcoesDiametros(res || []))
+      getItems('tamanhos_implante').then((res) => setOpcoesTamanhos(res || []))
     } else {
       resetForm()
     }
@@ -482,18 +490,52 @@ export function CompraItemFormModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                  {camposPersonalizados.map((campo) => (
-                    <div key={campo.campo_id} className="space-y-2">
-                      <Label>{campo.label_customizado || campo.campos?.nome}</Label>
-                      <Input
-                        value={valoresCampos[campo.campo_id] || ''}
-                        onChange={(e) =>
-                          setValoresCampos({ ...valoresCampos, [campo.campo_id]: e.target.value })
-                        }
-                        className="border-slate-300"
-                      />
-                    </div>
-                  ))}
+                  {camposPersonalizados.map((campo) => {
+                    const label = campo.label_customizado || campo.campos?.nome || ''
+                    const labelLower = label.toLowerCase()
+                    let opcoes: any[] | null = null
+
+                    if (labelLower.includes('marca')) opcoes = opcoesMarcas
+                    else if (labelLower.includes('diâmetro') || labelLower.includes('diametro'))
+                      opcoes = opcoesDiametros
+                    else if (labelLower.includes('tamanho')) opcoes = opcoesTamanhos
+
+                    return (
+                      <div key={campo.campo_id} className="space-y-2">
+                        <Label>{label}</Label>
+                        {opcoes ? (
+                          <Select
+                            value={valoresCampos[campo.campo_id] || ''}
+                            onValueChange={(val) =>
+                              setValoresCampos({ ...valoresCampos, [campo.campo_id]: val })
+                            }
+                          >
+                            <SelectTrigger className="border-slate-300 bg-white">
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {opcoes.map((o) => (
+                                <SelectItem key={o.id} value={o.nome}>
+                                  {o.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            value={valoresCampos[campo.campo_id] || ''}
+                            onChange={(e) =>
+                              setValoresCampos({
+                                ...valoresCampos,
+                                [campo.campo_id]: e.target.value,
+                              })
+                            }
+                            className="border-slate-300"
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
                 </CardContent>
               </Card>
             )}

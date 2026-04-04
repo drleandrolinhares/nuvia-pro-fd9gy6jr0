@@ -225,6 +225,7 @@ export type Database = {
           produto_id: string
           qtd_comprada: number
           referencia_consumo: string | null
+          sala_id: string | null
           valor_total: number
           valor_unitario: number
         }
@@ -240,6 +241,7 @@ export type Database = {
           produto_id: string
           qtd_comprada?: number
           referencia_consumo?: string | null
+          sala_id?: string | null
           valor_total?: number
           valor_unitario?: number
         }
@@ -255,6 +257,7 @@ export type Database = {
           produto_id?: string
           qtd_comprada?: number
           referencia_consumo?: string | null
+          sala_id?: string | null
           valor_total?: number
           valor_unitario?: number
         }
@@ -271,6 +274,13 @@ export type Database = {
             columns: ['produto_id']
             isOneToOne: false
             referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'compra_itens_sala_id_fkey'
+            columns: ['sala_id']
+            isOneToOne: false
+            referencedRelation: 'salas'
             referencedColumns: ['id']
           },
         ]
@@ -490,6 +500,7 @@ export type Database = {
           cnpj: string | null
           contato_principal: string | null
           criado_em: string | null
+          data_criacao: string | null
           email: string | null
           endereco: string | null
           id: string
@@ -504,6 +515,7 @@ export type Database = {
           cnpj?: string | null
           contato_principal?: string | null
           criado_em?: string | null
+          data_criacao?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -518,6 +530,7 @@ export type Database = {
           cnpj?: string | null
           contato_principal?: string | null
           criado_em?: string | null
+          data_criacao?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -1119,6 +1132,7 @@ export const Constants = {
 //   data_validade: date (nullable)
 //   numero_armario: text (nullable)
 //   observacoes: text (nullable)
+//   sala_id: uuid (nullable)
 // Table: compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   fornecedor_id: uuid (nullable)
@@ -1175,6 +1189,7 @@ export const Constants = {
 //   url: text (nullable)
 //   senha: text (nullable)
 //   usuario_login: text (nullable)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: historico_compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -1281,6 +1296,7 @@ export const Constants = {
 //   FOREIGN KEY compra_itens_compra_id_fkey: FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE
 //   PRIMARY KEY compra_itens_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY compra_itens_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT
+//   FOREIGN KEY compra_itens_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
 // Table: compras
 //   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
@@ -1378,9 +1394,15 @@ export const Constants = {
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
 // Table: compra_itens
-//   Policy "compra_itens_all" (ALL, PERMISSIVE) roles={authenticated}
+//   Policy "compra_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "compra_itens_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//   Policy "compra_itens_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
-//     WITH CHECK: true
+//   Policy "compra_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+//     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: compras
 //   Policy "compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1708,6 +1730,7 @@ export const Constants = {
 // Table: compra_itens
 //   CREATE INDEX compra_itens_compra_id_idx ON public.compra_itens USING btree (compra_id)
 //   CREATE INDEX compra_itens_produto_id_idx ON public.compra_itens USING btree (produto_id)
+//   CREATE INDEX compra_itens_sala_id_idx ON public.compra_itens USING btree (sala_id)
 // Table: compras
 //   CREATE INDEX compras_fornecedor_id_idx ON public.compras USING btree (fornecedor_id)
 // Table: diametros_implante
