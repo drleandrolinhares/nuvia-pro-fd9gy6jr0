@@ -170,3 +170,12 @@ export const fetchCompraItens = async (compraId: string) => {
     `)
     .eq('compra_id', compraId)
 }
+
+export const finalizarCompra = async (id: string) => {
+  return await supabase
+    .from('compras' as any)
+    .update({ status: 'Finalizada' })
+    .eq('id', id)
+    .select()
+    .single()
+}

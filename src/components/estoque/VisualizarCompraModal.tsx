@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Compra, fetchCompraItens } from '@/services/compras'
+import { Compra, fetchCompraItens, finalizarCompra } from '@/services/compras'
 import { format, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -18,9 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Loader2, Edit, Trash2 } from 'lucide-react'
+import { Loader2, Edit, Trash2, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from 'sonner'
 
 interface VisualizarCompraModalProps {
   open: boolean
@@ -28,6 +29,7 @@ interface VisualizarCompraModalProps {
   compra: Compra | null
   onEdit?: (compra: Compra) => void
   onDelete?: (compra: Compra) => void
+  onSuccess?: () => void
 }
 
 export function VisualizarCompraModal({
@@ -40,6 +42,27 @@ export function VisualizarCompraModal({
   const [itens, setItens] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isFinalizando, setIsFinalizando] = useState(false)
+
+  const handleFinalizar = async () => {
+    if (!compra) return
+    setIsFinalizando(true)
+
+    const { error } = await finalizarCompra(compra.id)
+
+    setIsFinalizando(false)
+
+    if (error) {
+      toast.error('Erro ao finalizar a compra')
+      return
+    }
+
+    toast.success('Compra finalizada com sucesso! Estoque atualizado.')
+    onOpenChange(false)
+    if (typeof onSuccess === 'function') {
+      onSuccess()
+    }
+  }
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -256,9 +279,24 @@ export function VisualizarCompraModal({
           <div className="flex gap-2 w-full sm:w-auto">
             {isAdmin && (
               <>
+                {compra.status?.toLowerCase() === 'rascunho' && (
+                  <Button
+                    variant="default"
+                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                    onClick={handleFinalizar}
+                    disabled={isFinalizando || itens.length === 0}
+                  >
+                    {isFinalizando ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Finalizar Compra
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-[#1a2a4a] border-slate-300 hover:bg-slate-100 hover:text-[#1a2a4a] font-semibold"
+                  className="flex-1 sm:flex-none text-[#1a2a4a] border-slate-300 hover:bg-slate-100 hover:text-[#1a2a4a] font-semibold shadow-sm"
                   onClick={() => onEdit?.(compra)}
                 >
                   <Edit className="w-4 h-4 mr-2" />
@@ -266,7 +304,7 @@ export function VisualizarCompraModal({
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 font-semibold"
+                  className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 font-semibold shadow-sm"
                   onClick={() => onDelete?.(compra)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -277,7 +315,7 @@ export function VisualizarCompraModal({
           </div>
           <Button
             onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto bg-[#1a2a4a] text-[#d4af37] hover:bg-[#1a2a4a]/90 font-bold tracking-wide"
+            className="w-full sm:w-auto bg-[#1a2a4a] text-[#d4af37] hover:bg-[#1a2a4a]/90 font-bold tracking-wide shadow-sm"
           >
             Fechar
           </Button>
