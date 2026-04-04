@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, Loader2, Building2 } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -132,7 +134,7 @@ export function FornecedoresTab() {
           </div>
           <Button
             onClick={openAddModal}
-            className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+            className="w-full md:w-auto bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
           >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Fornecedor
@@ -143,21 +145,24 @@ export function FornecedoresTab() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-900">
-              <TableRow className="hover:bg-slate-900 border-slate-800">
-                <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs">
+            <TableHeader className="bg-[#1a2a4a]">
+              <TableRow className="hover:bg-[#1a2a4a] border-transparent">
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs">
                   Fornecedor
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs">
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs">
                   CNPJ
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs">
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs">
                   Telefone
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs">
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs">
                   E-mail
                 </TableHead>
-                <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs text-center w-36">
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs text-center">
+                  Data de Criação
+                </TableHead>
+                <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs text-center w-36">
                   Ações
                 </TableHead>
               </TableRow>
@@ -165,14 +170,14 @@ export function FornecedoresTab() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={6} className="text-center py-12 text-slate-500">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p>Carregando fornecedores...</p>
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={6} className="text-center py-12 text-slate-500">
                     <div className="flex flex-col items-center justify-center">
                       <Building2 className="h-12 w-12 text-slate-300 mb-2" />
                       <p className="font-medium text-slate-400">Nenhum fornecedor encontrado.</p>
@@ -191,6 +196,11 @@ export function FornecedoresTab() {
                     </TableCell>
                     <TableCell className="text-slate-600 text-sm">{f.telefone || '-'}</TableCell>
                     <TableCell className="text-slate-600 text-sm">{f.email || '-'}</TableCell>
+                    <TableCell className="text-slate-600 text-sm text-center">
+                      {f.criado_em
+                        ? format(parseISO(f.criado_em), 'dd/MM/yyyy', { locale: ptBR })
+                        : '-'}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         <Button
@@ -205,7 +215,7 @@ export function FornecedoresTab() {
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditModal(f)}
-                          className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
+                          className="h-8 w-8 text-slate-500 hover:text-[#d4af37] hover:bg-[#d4af37]/10"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -234,19 +244,21 @@ export function FornecedoresTab() {
         fornecedor={fornecedorEdit}
       />
 
-      <FornecedorViewModal
-        isOpen={!!fornecedorView}
-        onClose={() => setFornecedorView(null)}
-        fornecedor={fornecedorView}
-      />
+      {fornecedorView && (
+        <FornecedorViewModal
+          isOpen={!!fornecedorView}
+          onClose={() => setFornecedorView(null)}
+          fornecedor={fornecedorView}
+        />
+      )}
 
       <AlertDialog
         open={!!fornecedorDelete}
         onOpenChange={(open) => !open && !isDeleting && setFornecedorDelete(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="border-[#1a2a4a]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Fornecedor</AlertDialogTitle>
+            <AlertDialogTitle className="text-[#1a2a4a]">Excluir Fornecedor</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir o fornecedor{' '}
               <strong className="text-slate-900">{fornecedorDelete?.nome}</strong>? Esta ação

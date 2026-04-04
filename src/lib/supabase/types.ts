@@ -1539,19 +1539,53 @@ export const Constants = {
 //    LANGUAGE plpgsql
 //   AS $function$
 //   DECLARE
-//     v_qtd_adicionar integer;
+//     v_qtd_adicionar_new integer := 0;
+//     v_qtd_adicionar_old integer := 0;
 //   BEGIN
-//     IF NEW.referencia_consumo = 'itens_embalagem' THEN
-//       v_qtd_adicionar := COALESCE(NEW.itens_embalagem, 0);
-//     ELSE
-//       v_qtd_adicionar := COALESCE(NEW.qtd_comprada, 0);
+//     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+//       IF NEW.referencia_consumo = 'itens_embalagem' THEN
+//         v_qtd_adicionar_new := COALESCE(NEW.itens_embalagem, 0);
+//       ELSE
+//         v_qtd_adicionar_new := COALESCE(NEW.qtd_comprada, 0);
+//       END IF;
 //     END IF;
 //
-//     UPDATE public.produtos
-//     SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar
-//     WHERE id = NEW.produto_id;
+//     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
+//       IF OLD.referencia_consumo = 'itens_embalagem' THEN
+//         v_qtd_adicionar_old := COALESCE(OLD.itens_embalagem, 0);
+//       ELSE
+//         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0);
+//       END IF;
+//     END IF;
 //
-//     RETURN NEW;
+//     IF TG_OP = 'INSERT' THEN
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar_new
+//       WHERE id = NEW.produto_id;
+//       RETURN NEW;
+//     ELSIF TG_OP = 'UPDATE' THEN
+//       IF NEW.produto_id = OLD.produto_id THEN
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old + v_qtd_adicionar_new
+//         WHERE id = NEW.produto_id;
+//       ELSE
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old
+//         WHERE id = OLD.produto_id;
+//
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar_new
+//         WHERE id = NEW.produto_id;
+//       END IF;
+//       RETURN NEW;
+//     ELSIF TG_OP = 'DELETE' THEN
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old
+//       WHERE id = OLD.produto_id;
+//       RETURN OLD;
+//     END IF;
+//
+//     RETURN NULL;
 //   END;
 //   $function$
 //
@@ -1584,24 +1618,57 @@ export const Constants = {
 //    RETURNS trigger
 //    LANGUAGE plpgsql
 //   AS $function$
+//   DECLARE
+//     v_qtd_new integer := 0;
+//     v_qtd_old integer := 0;
 //   BEGIN
-//     -- Quando uma nova saída é registrada, reduz a quantidade no estoque do produto
-//     UPDATE public.produtos
-//     SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - NEW.quantidade
-//     WHERE id = NEW.produto_id;
+//     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+//       v_qtd_new := COALESCE(NEW.quantidade, 0);
+//     END IF;
 //
-//     RETURN NEW;
+//     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
+//       v_qtd_old := COALESCE(OLD.quantidade, 0);
+//     END IF;
+//
+//     IF TG_OP = 'INSERT' THEN
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
+//       WHERE id = NEW.produto_id;
+//       RETURN NEW;
+//     ELSIF TG_OP = 'UPDATE' THEN
+//       IF NEW.produto_id = OLD.produto_id THEN
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_old - v_qtd_new
+//         WHERE id = NEW.produto_id;
+//       ELSE
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_old
+//         WHERE id = OLD.produto_id;
+//
+//         UPDATE public.produtos
+//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
+//         WHERE id = NEW.produto_id;
+//       END IF;
+//       RETURN NEW;
+//     ELSIF TG_OP = 'DELETE' THEN
+//       UPDATE public.produtos
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_old
+//       WHERE id = OLD.produto_id;
+//       RETURN OLD;
+//     END IF;
+//
+//     RETURN NULL;
 //   END;
 //   $function$
 //
 
 // --- TRIGGERS ---
 // Table: compra_itens
-//   after_compra_item_insert: CREATE TRIGGER after_compra_item_insert AFTER INSERT ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
+//   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR DELETE OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos
-//   after_saida_produto: CREATE TRIGGER after_saida_produto AFTER INSERT ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
+//   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
 // Table: campo_configuracao
