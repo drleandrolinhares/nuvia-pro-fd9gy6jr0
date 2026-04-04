@@ -39,18 +39,25 @@ interface CompraData {
   fornecedorNome?: string
   data?: string
   nfe?: string
-  sala_id?: string
-  salaNome?: string
 }
 
 interface Props {
   open: boolean
   onOpenChange: (o: boolean) => void
   compraData: CompraData
+  salas: any[]
+  itemToEdit?: CompraItem
   onAdd: (item: CompraItem) => void
 }
 
-export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: Props) {
+export function CompraItemFormModal({
+  open,
+  onOpenChange,
+  compraData,
+  salas,
+  itemToEdit,
+  onAdd,
+}: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
 
@@ -64,6 +71,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
   const [marca, setMarca] = useState('')
   const [especialidadeId, setEspecialidadeId] = useState('')
   const [embalagemId, setEmbalagemId] = useState('')
+  const [salaId, setSalaId] = useState('')
   const [valorTotal, setValorTotal] = useState('')
   const [qtdComprada, setQtdComprada] = useState('')
   const [itensEmbalagem, setItensEmbalagem] = useState('')
@@ -90,6 +98,20 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
   }, [open])
 
   useEffect(() => {
+    if (itemToEdit && produtos.length > 0) {
+      setProdutoId(itemToEdit.produto_id)
+      setValorTotal(itemToEdit.valor_total.toString())
+      setQtdComprada(itemToEdit.qtd_comprada.toString())
+      setItensEmbalagem(itemToEdit.itens_embalagem ? itemToEdit.itens_embalagem.toString() : '')
+      setReferenciaConsumo((itemToEdit.referencia_consumo as any) || 'qtd_comprada')
+      setObservacoes(itemToEdit.observacoes || '')
+      if (itemToEdit.data_validade) {
+        setValidade(itemToEdit.data_validade.substring(0, 7))
+      }
+    }
+  }, [itemToEdit, produtos])
+
+  useEffect(() => {
     if (produtoId && produtoId !== 'new') {
       const p = produtos.find((x) => x.id === produtoId)
       if (p) {
@@ -97,10 +119,14 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
         setMarca(p.marca || '')
         setEspecialidadeId(p.especialidade_id || '')
         setEmbalagemId(p.embalagem_id || '')
-        setReferenciaConsumo(p.referencia_consumo || 'qtd_comprada')
-        setValidade(p.validade || '')
+        setSalaId(p.sala_id || '')
         setNumeroArmario(p.numero_armario || '')
         setEstoqueMinimo(p.quantidade_minima?.toString() || '')
+
+        if (!itemToEdit || itemToEdit.produto_id !== produtoId) {
+          setReferenciaConsumo(p.referencia_consumo || 'qtd_comprada')
+          setValidade(p.validade ? p.validade.substring(0, 7) : '')
+        }
 
         fetchUltimasComprasProduto(p.id).then((res) => setUltimas(res.data || []))
         fetchProdutoCamposValores(p.id).then((res) => {
@@ -111,17 +137,20 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
           setValoresCampos(vals)
         })
       }
-    } else {
+    } else if (produtoId === 'new') {
       setNome('')
       setMarca('')
-      setReferenciaConsumo('qtd_comprada')
-      setValidade('')
+      if (!itemToEdit) setReferenciaConsumo('qtd_comprada')
+      if (!itemToEdit) setValidade('')
       setNumeroArmario('')
       setEstoqueMinimo('')
+      setSalaId('')
+      setEspecialidadeId('')
+      setEmbalagemId('')
       setUltimas([])
       setValoresCampos({})
     }
-  }, [produtoId, produtos])
+  }, [produtoId, produtos, itemToEdit])
 
   useEffect(() => {
     if (especialidadeId) {
@@ -146,14 +175,21 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
     const vt = parseFloat(valorTotal) || 0
     const qc = parseInt(qtdComprada) || 1
     const ie = parseInt(itensEmbalagem) || 1
-    if (referenciaConsumo === 'itens_embalagem') {
-      return vt / ie
-    }
+    if (referenciaConsumo === 'itens_embalagem') return vt / ie
     return vt / qc
   }, [valorTotal, qtdComprada, itensEmbalagem, referenciaConsumo])
 
-  const especialidadeSelecionada = especialidades.find((e) => e.id === especialidadeId)
-  const isImplantodontia = especialidadeSelecionada?.nome?.toLowerCase().includes('implantodontia')
+  const especialidadeNome =
+    especialidades.find((e) => e.id === especialidadeId)?.nome?.toLowerCase() || ''
+  const isImplantodontia =
+    especialidadeNome.includes('implante') || especialidadeNome.includes('implantodontia')
+  const isProtese = especialidadeNome.includes('prótese') || especialidadeNome.includes('protese')
+  const showCard = (isImplantodontia || isProtese) && camposPersonalizados.length > 0
+  const cardTitle = isImplantodontia
+    ? 'DADOS DO IMPLANTE'
+    : isProtese
+      ? 'DADOS DA PRÓTESE'
+      : 'DADOS ADICIONAIS'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -161,14 +197,15 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
     setLoading(true)
 
     let finalProdutoId = produtoId
+    const dbValidade = validade ? `${validade}-01` : null
 
     const payloadProduto = {
       nome,
       marca: marca || null,
       especialidade_id: especialidadeId || null,
       embalagem_id: embalagemId || null,
-      sala_id: compraData.sala_id || null,
-      validade: validade || null,
+      sala_id: salaId || null,
+      validade: dbValidade,
       numero_armario: numeroArmario || null,
       quantidade_minima: parseInt(estoqueMinimo) || 0,
       referencia_consumo: referenciaConsumo,
@@ -176,16 +213,9 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
     }
 
     if (produtoId === 'new') {
-      const { data, error } = await createProduto({
-        ...payloadProduto,
-        quantidade_estoque: 0,
-      })
+      const { data, error } = await createProduto({ ...payloadProduto, quantidade_estoque: 0 })
       if (error || !data) {
-        toast({
-          title: 'Erro ao criar produto',
-          description: error?.message,
-          variant: 'destructive',
-        })
+        toast({ title: 'Erro', description: error?.message, variant: 'destructive' })
         setLoading(false)
         return
       }
@@ -194,11 +224,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
     } else {
       const { error } = await updateProduto(produtoId, payloadProduto)
       if (error) {
-        toast({
-          title: 'Erro ao atualizar produto',
-          description: error.message,
-          variant: 'destructive',
-        })
+        toast({ title: 'Erro', description: error.message, variant: 'destructive' })
         setLoading(false)
         return
       }
@@ -212,6 +238,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
       produto_id: finalProdutoId,
       produto_nome: nome,
       produto_marca: marca,
+      produto_sala: salas.find((s) => s.id === salaId)?.nome,
       valor_total: parseFloat(valorTotal) || 0,
       qtd_comprada: parseInt(qtdComprada) || 0,
       itens_embalagem:
@@ -222,7 +249,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
         referenciaConsumo === 'itens_embalagem'
           ? parseInt(itensEmbalagem) || 0
           : parseInt(qtdComprada) || 0,
-      data_validade: validade || null,
+      data_validade: dbValidade,
       numero_armario: numeroArmario || null,
       observacoes: observacoes || null,
     })
@@ -238,9 +265,11 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Adicionar Produto à Compra</DialogTitle>
+          <DialogTitle className="text-xl">
+            {itemToEdit ? 'Editar Produto' : 'Adicionar Produto à Compra'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm flex flex-wrap gap-x-6 gap-y-2 mb-2">
@@ -258,17 +287,13 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
             <span className="font-bold text-amber-900">NFe:</span>{' '}
             <span className="text-amber-800">{compraData.nfe || '-'}</span>
           </div>
-          <div>
-            <span className="font-bold text-amber-900">Sala:</span>{' '}
-            <span className="text-amber-800">{compraData.salaNome || '-'}</span>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2 md:col-span-2">
               <Label>Produto *</Label>
-              <Select value={produtoId} onValueChange={setProdutoId}>
+              <Select value={produtoId} onValueChange={setProdutoId} disabled={!!itemToEdit}>
                 <SelectTrigger className="border-slate-300">
                   <SelectValue placeholder="Selecione ou crie um novo..." />
                 </SelectTrigger>
@@ -337,7 +362,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
             </div>
 
             <div className="space-y-2">
-              <Label>Valor Total da Compra (R$) *</Label>
+              <Label>Valor Total (R$) *</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -395,13 +420,29 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
             </div>
 
             <div className="space-y-2">
-              <Label>Data de Validade</Label>
+              <Label>Data de Validade (MM/AAAA)</Label>
               <Input
-                type="date"
+                type="month"
                 value={validade}
                 onChange={(e) => setValidade(e.target.value)}
                 className="border-slate-300"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Sala de Armazenamento</Label>
+              <Select value={salaId} onValueChange={setSalaId}>
+                <SelectTrigger className="border-slate-300">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {salas.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -424,7 +465,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-3">
               <Label>Observações</Label>
               <Input
                 value={observacoes}
@@ -433,14 +474,14 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
               />
             </div>
 
-            {isImplantodontia && camposPersonalizados.length > 0 && (
-              <Card className="col-span-1 md:col-span-2 mt-2 border-slate-200">
+            {showCard && (
+              <Card className="col-span-1 md:col-span-3 mt-2 border-slate-200 animate-in fade-in slide-in-from-top-2">
                 <CardHeader className="pb-3 bg-slate-50 border-b border-slate-200">
-                  <CardTitle className="text-sm font-bold text-slate-800">
-                    DADOS DO IMPLANTE
+                  <CardTitle className="text-sm font-bold text-slate-800 uppercase">
+                    {cardTitle}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                   {camposPersonalizados.map((campo) => (
                     <div key={campo.campo_id} className="space-y-2">
                       <Label>{campo.label_customizado || campo.campos?.nome}</Label>
@@ -458,7 +499,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
             )}
 
             {ultimas.length > 0 && (
-              <div className="col-span-1 md:col-span-2 text-xs text-slate-600 mt-2 p-3 bg-slate-50 rounded-md border border-slate-200">
+              <div className="col-span-1 md:col-span-3 text-xs text-slate-600 mt-2 p-3 bg-slate-50 rounded-md border border-slate-200">
                 <span className="font-bold text-slate-800 block mb-1">
                   Histórico de Últimas Compras deste produto:
                 </span>
@@ -479,19 +520,21 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
               </div>
             )}
 
-            <div className="flex items-center space-x-2 mt-2 col-span-1 md:col-span-2 bg-slate-50 p-3 rounded-md border border-slate-200">
-              <Switch
-                id="manter-preenchido"
-                checked={manterPreenchido}
-                onCheckedChange={setManterPreenchido}
-              />
-              <Label
-                htmlFor="manter-preenchido"
-                className="cursor-pointer font-medium text-slate-800"
-              >
-                Manter Preenchido (Adicionar Múltiplos Produtos)
-              </Label>
-            </div>
+            {!itemToEdit && (
+              <div className="flex items-center space-x-2 mt-2 col-span-1 md:col-span-3 bg-slate-50 p-3 rounded-md border border-slate-200">
+                <Switch
+                  id="manter-preenchido"
+                  checked={manterPreenchido}
+                  onCheckedChange={setManterPreenchido}
+                />
+                <Label
+                  htmlFor="manter-preenchido"
+                  className="cursor-pointer font-medium text-slate-800"
+                >
+                  Manter Preenchido (Adicionar Múltiplos Produtos)
+                </Label>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="mt-6">
@@ -504,7 +547,7 @@ export function CompraItemFormModal({ open, onOpenChange, compraData, onAdd }: P
               className="bg-slate-900 hover:bg-slate-800 text-white font-bold"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Salvar Produto e Adicionar à Compra
+              {itemToEdit ? 'Salvar Alterações' : 'Salvar Produto e Adicionar à Compra'}
             </Button>
           </DialogFooter>
         </form>

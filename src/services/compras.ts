@@ -26,6 +26,7 @@ export interface CompraItem {
   produto_nome?: string
   produto_marca?: string
   produto_especialidade?: string
+  produto_sala?: string
   valor_total: number
   qtd_comprada: number
   itens_embalagem: number | null
@@ -159,7 +160,8 @@ export const fetchCompraItens = async (compraId: string) => {
       produtos (
         nome,
         marca,
-        especialidades (nome)
+        especialidades (nome),
+        salas (nome)
       )
     `)
     .eq('compra_id', compraId)
