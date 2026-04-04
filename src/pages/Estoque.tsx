@@ -131,13 +131,30 @@ export default function Estoque() {
     setProdutoExcluir(null)
   }
 
+  const produtosDashboard = useMemo(() => {
+    return produtos
+      .filter((p) => p.compra_itens?.some((ci) => ci.compras?.status === 'Finalizada'))
+      .map((p) => {
+        const finalizedPurchases =
+          p.compra_itens?.filter((ci) => ci.compras?.status === 'Finalizada') || []
+        finalizedPurchases.sort(
+          (a, b) =>
+            new Date(b.compras?.data || 0).getTime() - new Date(a.compras?.data || 0).getTime(),
+        )
+
+        const latestCusto =
+          finalizedPurchases.length > 0 ? finalizedPurchases[0].valor_unitario : p.custo_unitario
+        return { ...p, custo_unitario: latestCusto }
+      })
+  }, [produtos])
+
   const { capitalInvestido, unidadesTotais, maiorCapital, maiorVolume } = useMemo(() => {
     let cap = 0
     let uni = 0
     const espCap: Record<string, number> = {}
     const espVol: Record<string, number> = {}
 
-    produtos.forEach((p) => {
+    produtosDashboard.forEach((p) => {
       const valor = p.custo_unitario * p.quantidade_estoque
       cap += valor
       uni += p.quantidade_estoque
@@ -156,9 +173,9 @@ export default function Estoque() {
       maiorCapital: mCap,
       maiorVolume: mVol,
     }
-  }, [produtos])
+  }, [produtosDashboard])
 
-  const filteredData = produtos.filter((item) => {
+  const filteredData = produtosDashboard.filter((item) => {
     const matchesSearch =
       item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.marca?.toLowerCase() || '').includes(searchTerm.toLowerCase())

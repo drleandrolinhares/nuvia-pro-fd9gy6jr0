@@ -1592,7 +1592,8 @@ export const Constants = {
 //     v_item RECORD;
 //     v_qtd INT;
 //   BEGIN
-//     IF OLD.status != 'Finalizada' AND NEW.status = 'Finalizada' THEN
+//     -- From anything to Finalizada -> Add stock
+//     IF OLD.status IS DISTINCT FROM 'Finalizada' AND NEW.status = 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
 //         IF v_item.referencia_consumo = 'itens_embalagem' THEN
 //           v_qtd := COALESCE(v_item.itens_embalagem, 0);
@@ -1604,7 +1605,9 @@ export const Constants = {
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
-//     ELSIF OLD.status = 'Finalizada' AND NEW.status != 'Finalizada' THEN
+//
+//     -- From Finalizada to anything -> Revert stock
+//     ELSIF OLD.status = 'Finalizada' AND NEW.status IS DISTINCT FROM 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
 //         IF v_item.referencia_consumo = 'itens_embalagem' THEN
 //           v_qtd := COALESCE(v_item.itens_embalagem, 0);
@@ -1617,6 +1620,7 @@ export const Constants = {
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
 //     END IF;
+//
 //     RETURN NEW;
 //   END;
 //   $function$
@@ -1627,10 +1631,11 @@ export const Constants = {
 //    LANGUAGE plpgsql
 //   AS $function$
 //   DECLARE
+//     v_status text;
 //     v_qtd_adicionar_new integer := 0;
 //     v_qtd_adicionar_old integer := 0;
-//     v_status text;
 //   BEGIN
+//     -- Identify parent status
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       SELECT status INTO v_status FROM public.compras WHERE id = NEW.compra_id;
 //       IF NEW.referencia_consumo = 'itens_embalagem' THEN
@@ -1649,11 +1654,12 @@ export const Constants = {
 //       END IF;
 //     END IF;
 //
-//     -- Se não for Finalizada, não mexe no estoque agora
-//     IF v_status IS NULL OR v_status != 'Finalizada' THEN
+//     -- If status is not Finalizada, we don't touch the stock
+//     IF v_status IS DISTINCT FROM 'Finalizada' THEN
 //       IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 //     END IF;
 //
+//     -- If Finalizada, apply changes
 //     IF TG_OP = 'INSERT' THEN
 //       UPDATE public.produtos
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar_new
@@ -1666,7 +1672,7 @@ export const Constants = {
 //         WHERE id = NEW.produto_id;
 //       ELSE
 //         UPDATE public.produtos
-//         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old
+//         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old)
 //         WHERE id = OLD.produto_id;
 //
 //         UPDATE public.produtos
@@ -1760,9 +1766,10 @@ export const Constants = {
 
 // --- TRIGGERS ---
 // Table: compra_itens
-//   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR DELETE OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
+//   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
+//   before_compra_item_delete: CREATE TRIGGER before_compra_item_delete BEFORE DELETE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
 // Table: compras
-//   after_compra_status_change: CREATE TRIGGER after_compra_status_change AFTER UPDATE ON public.compras FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
+//   after_compra_status_change: CREATE TRIGGER after_compra_status_change AFTER UPDATE OF status ON public.compras FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos

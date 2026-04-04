@@ -28,6 +28,15 @@ export interface Produto {
   salas?: {
     nome: string
   } | null
+  compra_itens?:
+    | {
+        valor_unitario: number
+        compras: {
+          data: string
+          status: string
+        } | null
+      }[]
+    | null
 }
 
 export const fetchProdutos = async () => {
@@ -43,6 +52,13 @@ export const fetchProdutos = async () => {
       ),
       salas (
         nome
+      ),
+      compra_itens (
+        valor_unitario,
+        compras (
+          data,
+          status
+        )
       )
     `)
     .order('nome')
@@ -156,7 +172,7 @@ export const upsertProdutoCamposValores = async (
 }
 
 export const fetchProdutoMovimentacoes = async (produto_id: string) => {
-  const [entradas, saidas] = await Promise.all([
+  const [entradas, saidas, compras] = await Promise.all([
     supabase
       .from('entrada_produtos')
       .select(`
@@ -179,11 +195,37 @@ export const fetchProdutoMovimentacoes = async (produto_id: string) => {
       .eq('produto_id', produto_id)
       .order('data_saida', { ascending: false })
       .limit(3),
+    supabase
+      .from('compra_itens')
+      .select(`
+        qtd_comprada,
+        valor_total,
+        compras!inner (
+          data,
+          status,
+          fornecedores (nome)
+        )
+      `)
+      .eq('produto_id', produto_id)
+      .eq('compras.status', 'Finalizada'),
   ])
 
+  const formattedCompras = (compras.data || []).map((ci: any) => ({
+    data_entrada: ci.compras?.data,
+    quantidade_comprada: ci.qtd_comprada,
+    preco_total: ci.valor_total,
+    fornecedores: ci.compras?.fornecedores,
+  }))
+
+  const allEntradas = [...(entradas.data || []), ...formattedCompras]
+    .sort(
+      (a, b) => new Date(b.data_entrada || 0).getTime() - new Date(a.data_entrada || 0).getTime(),
+    )
+    .slice(0, 3)
+
   return {
-    entradas: entradas.data || [],
+    entradas: allEntradas,
     saidas: saidas.data || [],
-    error: entradas.error || saidas.error,
+    error: entradas.error || saidas.error || compras.error,
   }
 }
