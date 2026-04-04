@@ -50,7 +50,6 @@ const AppRoutes = () => {
         {/* Operacional Routes */}
         <Route path="/operacional/sac" element={<Placeholder />} />
         <Route path="/operacional/rotina" element={<Placeholder />} />
-        <Route path="/operacional/relatorio" element={<Placeholder />} />
         <Route path="/operacional/performance" element={<Placeholder />} />
         <Route path="/operacional/comunicados" element={<Placeholder />} />
 

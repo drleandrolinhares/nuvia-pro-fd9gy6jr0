@@ -8,13 +8,16 @@ import {
   Clock,
   CloudCog,
   Database,
-  FileText,
+  FileBarChart,
+  Handshake,
+  Landmark,
   LayoutDashboard,
   LogOut,
   MessageSquare,
   Package,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Truck,
   Users,
   User,
@@ -57,7 +60,6 @@ const navData = [
     items: [
       { title: 'SAC', url: '/operacional/sac', icon: MessageSquare },
       { title: 'Rotina Diária', url: '/operacional/rotina', icon: Clock },
-      { title: 'Relatório de Rotina', url: '/operacional/relatorio', icon: FileText },
       { title: 'Performance', url: '/operacional/performance', icon: BarChart3 },
       { title: 'Comunicados', url: '/operacional/comunicados', icon: Bell },
     ],
@@ -66,9 +68,9 @@ const navData = [
     title: 'COMERCIAL',
     icon: Briefcase,
     items: [
-      { title: 'Gestão de Vendas', url: '/comercial/vendas' },
-      { title: 'Negociação', url: '/comercial/negociacao' },
-      { title: 'Gestão Fiscal', url: '/comercial/fiscal' },
+      { title: 'Gestão de Vendas', url: '/comercial/vendas', icon: FileBarChart },
+      { title: 'Negociação', url: '/comercial/negociacao', icon: Handshake },
+      { title: 'Gestão Fiscal', url: '/comercial/fiscal', icon: Landmark },
     ],
   },
   {
@@ -82,7 +84,7 @@ const navData = [
     icon: Settings,
     items: [
       { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database },
-      { title: 'Parâmetros Gerais', url: '/configuracoes' },
+      { title: 'Parâmetros Gerais', url: '/configuracoes', icon: SlidersHorizontal },
       { title: 'Colaboradores', url: '/colaboradores', icon: Users },
       { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
     ],
@@ -148,11 +150,11 @@ export function AppSidebar() {
                   className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
                 >
                   <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
-                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs">
-                      {group.icon && <group.icon className="size-4 text-secondary" />}
+                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500">
+                      {group.icon && <group.icon className="size-4 text-amber-500" />}
                       {group.title}
                     </div>
-                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-sidebar-foreground/50" />
                   </CollapsibleTrigger>
                 </SidebarGroupLabel>
                 <CollapsibleContent>
@@ -165,7 +167,7 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               asChild
                               isActive={location.pathname === item.url}
-                              className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
+                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
                             >
                               <Link to={item.url}>
                                 {ItemIcon && <ItemIcon />}
