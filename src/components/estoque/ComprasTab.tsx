@@ -17,6 +17,7 @@ import { Compra, fetchCompras, deleteCompra } from '@/services/compras'
 import { CompraFormModal } from './CompraFormModal'
 import { VisualizarCompraModal } from './VisualizarCompraModal'
 import { format, parseISO } from 'date-fns'
+import { supabase } from '@/lib/supabase/client'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,7 +38,13 @@ export function ComprasTab() {
   const [compraVisualizar, setCompraVisualizar] = useState<Compra | null>(null)
   const [compraExcluir, setCompraExcluir] = useState<Compra | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const { toast } = useToast()
+
+  const checkAdmin = async () => {
+    const { data } = await supabase.rpc('is_admin')
+    setIsAdmin(!!data)
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -56,6 +63,7 @@ export function ComprasTab() {
 
   useEffect(() => {
     loadData()
+    checkAdmin()
   }, [])
 
   const handleDelete = async () => {
@@ -84,13 +92,13 @@ export function ComprasTab() {
 
   const renderStatus = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'concluído':
-      case 'concluido':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Concluído</Badge>
-      case 'cancelado':
-        return <Badge variant="destructive">Cancelado</Badge>
+      case 'finalizada':
+        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Finalizada</Badge>
+      case 'cancelada':
+        return <Badge variant="destructive">Cancelada</Badge>
+      case 'rascunho':
       default:
-        return <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950">Pendente</Badge>
+        return <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950">Rascunho</Badge>
     }
   }
 
@@ -183,22 +191,26 @@ export function ComprasTab() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(compra)}
-                          className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setCompraExcluir(compra)}
-                          className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-100"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEdit(compra)}
+                              className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-100"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setCompraExcluir(compra)}
+                              className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-100"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

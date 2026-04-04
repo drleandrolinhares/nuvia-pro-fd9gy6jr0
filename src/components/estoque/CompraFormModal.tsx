@@ -53,7 +53,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
     fornecedor_id: '',
     data: '',
     nfe: '',
-    status: 'pendente',
+    status: 'Rascunho',
   })
 
   const [itens, setItens] = useState<CompraItem[]>([])
@@ -67,7 +67,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
           fornecedor_id: compra.fornecedor_id || '',
           data: compra.data || '',
           nfe: compra.nfe || '',
-          status: compra.status || 'pendente',
+          status: compra.status || 'Rascunho',
         })
         fetchCompraItens(compra.id).then((res) => {
           if (res.data) setItens(res.data.map((i) => ({ ...i, produto_nome: i.produtos?.nome })))
@@ -77,7 +77,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
           fornecedor_id: '',
           data: new Date().toISOString().split('T')[0],
           nfe: '',
-          status: 'pendente',
+          status: 'Rascunho',
         })
         setItens([])
       }
@@ -167,6 +167,22 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
                   disabled
                   className="bg-slate-100 text-slate-900 font-bold border-slate-300"
                 />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v) => setFormData({ ...formData, status: v })}
+                >
+                  <SelectTrigger className="border-slate-300 focus:ring-slate-900">
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Rascunho">Rascunho</SelectItem>
+                    <SelectItem value="Finalizada">Finalizada</SelectItem>
+                    <SelectItem value="Cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

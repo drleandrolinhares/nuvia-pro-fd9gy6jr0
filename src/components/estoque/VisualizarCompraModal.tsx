@@ -73,23 +73,23 @@ export function VisualizarCompraModal({
 
   const renderStatus = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'concluído':
-      case 'concluido':
+      case 'finalizada':
         return (
           <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-transparent">
-            Concluído
+            Finalizada
           </Badge>
         )
-      case 'cancelado':
+      case 'cancelada':
         return (
           <Badge variant="destructive" className="border-transparent">
-            Cancelado
+            Cancelada
           </Badge>
         )
+      case 'rascunho':
       default:
         return (
           <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 border-transparent font-bold">
-            Pendente
+            Rascunho
           </Badge>
         )
     }
