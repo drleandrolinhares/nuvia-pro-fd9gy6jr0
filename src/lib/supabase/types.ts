@@ -216,8 +216,12 @@ export type Database = {
         Row: {
           compra_id: string
           data_criacao: string | null
+          data_validade: string | null
+          estoque_adicionado: number | null
           id: string
           itens_embalagem: number | null
+          numero_armario: string | null
+          observacoes: string | null
           produto_id: string
           qtd_comprada: number
           referencia_consumo: string | null
@@ -227,8 +231,12 @@ export type Database = {
         Insert: {
           compra_id: string
           data_criacao?: string | null
+          data_validade?: string | null
+          estoque_adicionado?: number | null
           id?: string
           itens_embalagem?: number | null
+          numero_armario?: string | null
+          observacoes?: string | null
           produto_id: string
           qtd_comprada?: number
           referencia_consumo?: string | null
@@ -238,8 +246,12 @@ export type Database = {
         Update: {
           compra_id?: string
           data_criacao?: string | null
+          data_validade?: string | null
+          estoque_adicionado?: number | null
           id?: string
           itens_embalagem?: number | null
+          numero_armario?: string | null
+          observacoes?: string | null
           produto_id?: string
           qtd_comprada?: number
           referencia_consumo?: string | null
@@ -270,6 +282,7 @@ export type Database = {
           fornecedor_id: string | null
           id: string
           nfe: string | null
+          sala_id: string | null
           status: string
           valor_total_compra: number
         }
@@ -279,6 +292,7 @@ export type Database = {
           fornecedor_id?: string | null
           id?: string
           nfe?: string | null
+          sala_id?: string | null
           status?: string
           valor_total_compra?: number
         }
@@ -288,6 +302,7 @@ export type Database = {
           fornecedor_id?: string | null
           id?: string
           nfe?: string | null
+          sala_id?: string | null
           status?: string
           valor_total_compra?: number
         }
@@ -297,6 +312,13 @@ export type Database = {
             columns: ['fornecedor_id']
             isOneToOne: false
             referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'compras_sala_id_fkey'
+            columns: ['sala_id']
+            isOneToOne: false
+            referencedRelation: 'salas'
             referencedColumns: ['id']
           },
         ]
@@ -1093,6 +1115,10 @@ export const Constants = {
 //   referencia_consumo: text (nullable)
 //   valor_unitario: numeric (not null, default: 0)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+//   estoque_adicionado: integer (nullable)
+//   data_validade: date (nullable)
+//   numero_armario: text (nullable)
+//   observacoes: text (nullable)
 // Table: compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   fornecedor_id: uuid (nullable)
@@ -1101,6 +1127,7 @@ export const Constants = {
 //   valor_total_compra: numeric (not null, default: 0)
 //   status: text (not null, default: 'pendente'::text)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+//   sala_id: uuid (nullable)
 // Table: diametros_implante
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1257,6 +1284,7 @@ export const Constants = {
 // Table: compras
 //   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY compras_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
 // Table: diametros_implante
 //   UNIQUE diametros_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY diametros_implante_pkey: PRIMARY KEY (id)

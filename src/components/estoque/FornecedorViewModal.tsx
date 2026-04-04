@@ -1,94 +1,107 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { Fornecedor } from '@/services/fornecedores'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
-  fornecedor: Fornecedor | null
+  fornecedor: Fornecedor
 }
 
 export function FornecedorViewModal({ isOpen, onClose, fornecedor }: Props) {
-  if (!fornecedor) return null
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-slate-900 border-b pb-2">
+      <DialogContent className="max-w-2xl border-[#1a2a4a] p-0 overflow-hidden bg-white">
+        <DialogHeader className="bg-[#1a2a4a] p-6">
+          <DialogTitle className="text-[#d4af37] text-xl font-bold">
             Detalhes do Fornecedor
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-6 py-4">
-          <div className="space-y-1">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">Nome</Label>
-            <p className="font-medium text-slate-900">{fornecedor.nome}</p>
+
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6">
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">Nome</h4>
+            <p className="text-slate-900 font-medium text-base">{fornecedor.nome}</p>
           </div>
-          <div className="space-y-1">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">CNPJ</Label>
-            <p className="font-medium text-slate-900">{fornecedor.cnpj || '-'}</p>
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">CNPJ</h4>
+            <p className="text-slate-900 font-mono text-base">{fornecedor.cnpj || '-'}</p>
           </div>
-          <div className="space-y-1">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">Telefone</Label>
-            <p className="font-medium text-slate-900">{fornecedor.telefone || '-'}</p>
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
+              Telefone
+            </h4>
+            <p className="text-slate-900 text-base">{fornecedor.telefone || '-'}</p>
           </div>
-          <div className="space-y-1">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">E-mail</Label>
-            <p className="font-medium text-slate-900">{fornecedor.email || '-'}</p>
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
+              E-mail
+            </h4>
+            <p className="text-slate-900 text-base">{fornecedor.email || '-'}</p>
           </div>
-          <div className="space-y-1 col-span-2">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
               Contato Principal
-            </Label>
-            <p className="font-medium text-slate-900">{fornecedor.contato_principal || '-'}</p>
+            </h4>
+            <p className="text-slate-900 text-base">{fornecedor.contato_principal || '-'}</p>
           </div>
-          <div className="space-y-1 col-span-2">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">Endereço</Label>
-            <p className="font-medium text-slate-900">{fornecedor.endereco || '-'}</p>
+          <div>
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
+              Data de Cadastro
+            </h4>
+            <p className="text-slate-900 text-base">
+              {fornecedor.criado_em
+                ? format(parseISO(fornecedor.criado_em), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                : '-'}
+            </p>
           </div>
-          {fornecedor.url && (
-            <div className="space-y-1 col-span-2 bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-sm">
-              <Label className="text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                Central de Acesso
-              </Label>
-              <p className="font-medium text-blue-600 truncate">
-                <a
-                  href={fornecedor.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline"
-                >
-                  {fornecedor.url}
-                </a>
-              </p>
-              {fornecedor.usuario_login && (
-                <p className="text-sm mt-2 text-slate-700">
-                  Login:{' '}
-                  <span className="font-mono bg-slate-200 px-2 py-0.5 rounded text-slate-900 font-semibold">
-                    {fornecedor.usuario_login}
-                  </span>
-                </p>
-              )}
-            </div>
-          )}
-          <div className="space-y-1 col-span-2">
-            <Label className="text-slate-500 text-xs uppercase tracking-wider">Observações</Label>
-            <p className="text-slate-700 bg-slate-50 p-3 rounded-md border border-slate-100 min-h-[60px] whitespace-pre-wrap">
+          <div className="col-span-1 md:col-span-2">
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
+              Endereço
+            </h4>
+            <p className="text-slate-900 text-base">{fornecedor.endereco || '-'}</p>
+          </div>
+          <div className="col-span-1 md:col-span-2">
+            <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-1">
+              Observações
+            </h4>
+            <p className="text-slate-900 text-base whitespace-pre-wrap">
               {fornecedor.observacoes || '-'}
             </p>
           </div>
-          <div className="space-y-1 col-span-2 text-right pt-4 border-t border-slate-100">
-            <span className="text-xs text-slate-400 font-medium">
-              Cadastrado em:{' '}
-              {fornecedor.criado_em
-                ? format(new Date(fornecedor.criado_em), "dd/MM/yyyy 'às' HH:mm", {
-                    locale: ptBR,
-                  })
-                : '-'}
-            </span>
-          </div>
+
+          {(fornecedor.url || fornecedor.usuario_login) && (
+            <div className="col-span-1 md:col-span-2 mt-2 p-5 bg-slate-50 border border-slate-200 rounded-lg">
+              <h3 className="font-bold text-[#1a2a4a] mb-4 text-sm uppercase tracking-wider">
+                Dados de Acesso (Portal)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    URL do Portal
+                  </h4>
+                  <p className="text-blue-600 hover:underline text-sm break-all">
+                    {fornecedor.url ? (
+                      <a href={fornecedor.url} target="_blank" rel="noreferrer">
+                        {fornecedor.url}
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    Usuário / Login
+                  </h4>
+                  <p className="text-slate-900 text-sm font-medium">
+                    {fornecedor.usuario_login || '-'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
