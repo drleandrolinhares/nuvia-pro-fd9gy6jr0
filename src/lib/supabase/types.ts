@@ -575,6 +575,7 @@ export type Database = {
         Row: {
           atualizado_em: string | null
           criado_em: string | null
+          email: string | null
           id: string
           nome: string
           status: string | null
@@ -583,6 +584,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string | null
           criado_em?: string | null
+          email?: string | null
           id?: string
           nome: string
           status?: string | null
@@ -591,6 +593,7 @@ export type Database = {
         Update: {
           atualizado_em?: string | null
           criado_em?: string | null
+          email?: string | null
           id?: string
           nome?: string
           status?: string | null
@@ -641,10 +644,52 @@ export type Database = {
           },
         ]
       }
+      dentistas: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          email: string | null
+          especialidade: string | null
+          id: string
+          nome: string
+          status: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          email?: string | null
+          especialidade?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          email?: string | null
+          especialidade?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'dentistas_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       dentistas_avaliadores: {
         Row: {
           atualizado_em: string | null
           criado_em: string | null
+          email: string | null
           especialidade: string | null
           id: string
           meta_mensal_criativos: number | null
@@ -655,6 +700,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string | null
           criado_em?: string | null
+          email?: string | null
           especialidade?: string | null
           id?: string
           meta_mensal_criativos?: number | null
@@ -665,6 +711,7 @@ export type Database = {
         Update: {
           atualizado_em?: string | null
           criado_em?: string | null
+          email?: string | null
           especialidade?: string | null
           id?: string
           meta_mensal_criativos?: number | null
@@ -1872,6 +1919,7 @@ export const Constants = {
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+//   email: text (nullable)
 // Table: criativos_gerados
 //   id: uuid (not null, default: gen_random_uuid())
 //   dentista_avaliador_id: uuid (not null)
@@ -1879,6 +1927,15 @@ export const Constants = {
 //   descricao_video: text (nullable)
 //   mes_referencia: date (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
+// Table: dentistas
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   nome: text (not null)
+//   email: text (nullable)
+//   especialidade: text (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: dentistas_avaliadores
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (nullable)
@@ -1888,6 +1945,7 @@ export const Constants = {
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+//   email: text (nullable)
 // Table: descontos_por_prazo
 //   id: uuid (not null, default: gen_random_uuid())
 //   faixa_numero: integer (not null)
@@ -2148,6 +2206,9 @@ export const Constants = {
 // Table: criativos_gerados
 //   FOREIGN KEY criativos_gerados_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE CASCADE
 //   PRIMARY KEY criativos_gerados_pkey: PRIMARY KEY (id)
+// Table: dentistas
+//   PRIMARY KEY dentistas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY dentistas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: dentistas_avaliadores
 //   PRIMARY KEY dentistas_avaliadores_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY dentistas_avaliadores_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -2314,6 +2375,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: criativos_gerados
 //   Policy "criativos_gerados_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: dentistas
+//   Policy "dentistas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: dentistas_avaliadores

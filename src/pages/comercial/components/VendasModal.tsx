@@ -49,6 +49,8 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [pacientes, setPacientes] = useState<any[]>([])
+  const [avaliadores, setAvaliadores] = useState<any[]>([])
+  const [crcsList, setCrcsList] = useState<any[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState(initialForm)
 
@@ -60,6 +62,22 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         .order('nome')
         .then(({ data }) => {
           if (data) setPacientes(data)
+        })
+
+      supabase
+        .from('dentistas_avaliadores')
+        .select('id, nome, especialidade')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setAvaliadores(data)
+        })
+
+      supabase
+        .from('crc_comercial')
+        .select('id, nome')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setCrcsList(data)
         })
     } else {
       setFormData(initialForm)
@@ -185,7 +203,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Dentista *</Label>
+                <Label>Dentista Avaliador *</Label>
                 <Select
                   value={formData.dentista_avaliador_id}
                   onValueChange={(v) => setFormData({ ...formData, dentista_avaliador_id: v })}
@@ -195,9 +213,9 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {dentistas.map((d) => (
+                    {avaliadores.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
-                        {d.nome}
+                        {d.nome} {d.especialidade ? `(${d.especialidade})` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -214,7 +232,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {crcs.map((c) => (
+                    {(crcsList.length > 0 ? crcsList : crcs).map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.nome}
                       </SelectItem>
