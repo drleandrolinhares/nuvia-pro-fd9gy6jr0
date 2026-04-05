@@ -112,6 +112,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           dentista_avaliador_id: avaliacao.dentista_avaliador_id,
           percentual_faixa: percentualDentista,
           valor_comissao: comissaoDentista,
+          status_pagamento: 'gerada',
           data_calculo: format(new Date(), 'yyyy-MM-dd'),
         })
         if (dentistaError) throw dentistaError
@@ -124,6 +125,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           crc_comercial_id: avaliacao.crc_comercial_id,
           percentual_faixa: percentualCRC,
           valor_comissao: comissaoCRC,
+          status_pagamento: 'gerada',
           data_calculo: format(new Date(), 'yyyy-MM-dd'),
         })
         if (crcError) throw crcError
