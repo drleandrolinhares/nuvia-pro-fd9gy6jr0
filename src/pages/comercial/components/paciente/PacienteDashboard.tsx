@@ -58,7 +58,7 @@ export function PacienteDashboard({ id }: { id: string }) {
         <h2 className="text-3xl font-bold tracking-tight">Ficha do Paciente</h2>
       </div>
 
-      <PacienteHeader key={`header-${refreshKey}`} paciente={paciente} onUpdate={setPaciente} />
+      <PacienteHeader key={`header-${refreshKey}`} paciente={paciente} onUpdate={handleRefresh} />
 
       <Tabs defaultValue="avaliacoes" className="w-full space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b rounded-none h-12 p-0">
