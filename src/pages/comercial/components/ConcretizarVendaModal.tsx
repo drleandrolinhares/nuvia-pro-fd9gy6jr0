@@ -179,21 +179,12 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                 <Label>Valor Total do Tratamento</Label>
                 <Input
                   required
+                  readOnly
+                  disabled
                   type="number"
                   step="0.01"
                   min="0"
                   value={valorTotalStr}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    setValorTotalStr(val)
-                    const numVal = Number(val)
-                    if (numVal > 0) {
-                      const numEntrada = Number(valorEntradaStr)
-                      setPercentualEntradaStr(((numEntrada / numVal) * 100).toFixed(2))
-                    } else {
-                      setPercentualEntradaStr('0')
-                    }
-                  }}
                 />
               </div>
               <div className="grid gap-2">
@@ -209,25 +200,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Percentual de Entrada (%)</Label>
-                <Input
-                  required
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={percentualEntradaStr}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    setPercentualEntradaStr(val)
-                    if (valorTotal > 0) {
-                      const numPerc = Number(val)
-                      setValorEntradaStr(((valorTotal * numPerc) / 100).toFixed(2))
-                    }
-                  }}
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label>Valor da Entrada (R$)</Label>
                 <Input
                   required
@@ -241,8 +213,23 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                     if (valorTotal > 0) {
                       const numEntrada = Number(val)
                       setPercentualEntradaStr(((numEntrada / valorTotal) * 100).toFixed(2))
+                    } else {
+                      setPercentualEntradaStr('0')
                     }
                   }}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Percentual de Entrada (%)</Label>
+                <Input
+                  required
+                  readOnly
+                  disabled
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={percentualEntradaStr}
                 />
               </div>
             </div>
