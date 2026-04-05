@@ -14,7 +14,6 @@ Deno.serve(async (req: Request) => {
 
     const payload = await req.json()
 
-    // O Webhook do Supabase envia o payload com a propriedade "type" (INSERT, UPDATE) e "record"
     if (payload.type === 'INSERT' || payload.type === 'UPDATE') {
       const record = payload.record
       if (!record || !record.id) {
