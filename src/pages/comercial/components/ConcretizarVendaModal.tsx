@@ -35,7 +35,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const [faixasCRC, setFaixasCRC] = useState<FaixaBase[]>([])
 
   const [valorTotalStr, setValorTotalStr] = useState<string>('0')
-  const [valorEntradaStr, setValorEntradaStr] = useState<string>('0')
+  const [valorEntradaStr, setValorEntradaStr] = useState<string>('')
   const [crcParticipou, setCrcParticipou] = useState(false)
   const [dataConcretizacao, setDataConcretizacao] = useState<string>(
     format(new Date(), 'yyyy-MM-dd'),
@@ -57,7 +57,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           if (data) {
             const vTotal = data.valor_orcamento || 0
             setValorTotalStr(vTotal.toString())
-            setValorEntradaStr('0')
+            setValorEntradaStr('')
             setCrcParticipou(!!data.crc_comercial_id)
           }
         })
@@ -66,7 +66,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
       comissoesService.crc.list().then(setFaixasCRC)
     } else {
       setValorTotalStr('0')
-      setValorEntradaStr('0')
+      setValorEntradaStr('')
       setCrcParticipou(false)
       setAvaliacao(null)
       setDataConcretizacao(format(new Date(), 'yyyy-MM-dd'))
@@ -205,6 +205,8 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   min="0"
                   value={valorEntradaStr}
                   onChange={(e) => setValorEntradaStr(e.target.value)}
+                  placeholder="Ex: 5000.00"
+                  className="bg-white dark:bg-slate-950"
                 />
               </div>
               <div className="grid gap-2">
@@ -218,6 +220,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   min="0"
                   max="100"
                   value={percentualEntrada.toFixed(2)}
+                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-medium text-slate-500"
                 />
               </div>
             </div>
