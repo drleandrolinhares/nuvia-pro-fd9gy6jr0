@@ -200,6 +200,9 @@ export default function EntradaEFaixas() {
               <TableRow>
                 <TableHead className="font-semibold text-slate-700">VALOR MÍNIMO (R$)</TableHead>
                 <TableHead className="font-semibold text-slate-700">VALOR MÁXIMO (R$)</TableHead>
+                <TableHead className="font-semibold text-center text-slate-700 w-32">
+                  FAIXA
+                </TableHead>
                 <TableHead className="font-semibold text-center text-slate-700 w-40">
                   MÁX. PARCELAS
                 </TableHead>
@@ -209,54 +212,72 @@ export default function EntradaEFaixas() {
             <TableBody>
               {faixas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-slate-500 font-medium">
+                  <TableCell colSpan={5} className="text-center py-8 text-slate-500 font-medium">
                     Nenhuma faixa de valor cadastrada.
                   </TableCell>
                 </TableRow>
               )}
-              {faixas.map((item, idx) => (
-                <TableRow key={item.id} className="hover:bg-slate-50/50">
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.valor_minimo}
-                      onChange={(e) => handleFaixaChange(idx, 'valor_minimo', e.target.value)}
-                      className="bg-white"
-                      min="0"
-                      step="0.01"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.valor_maximo}
-                      onChange={(e) => handleFaixaChange(idx, 'valor_maximo', e.target.value)}
-                      className="bg-white"
-                      min="0"
-                      step="0.01"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.max_parcelas}
-                      onChange={(e) => handleFaixaChange(idx, 'max_parcelas', e.target.value)}
-                      className="bg-white text-center"
-                      min="1"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleRemoveFaixa(idx)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {faixas.map((item, idx) => {
+                const getFaixaText = (maxParcelas: number | string) => {
+                  const p = Number(maxParcelas)
+                  if (!p || p < 2) return '-'
+                  if (p >= 2 && p <= 5) return 'FAIXA 1'
+                  if (p >= 6 && p <= 10) return 'FAIXA 2'
+                  if (p >= 11 && p <= 20) return 'FAIXA 3'
+                  if (p >= 21 && p <= 30) return 'FAIXA 4'
+                  if (p >= 31) return 'FAIXA 5'
+                  return '-'
+                }
+
+                return (
+                  <TableRow key={item.id} className="hover:bg-slate-50/50">
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.valor_minimo}
+                        onChange={(e) => handleFaixaChange(idx, 'valor_minimo', e.target.value)}
+                        className="bg-white"
+                        min="0"
+                        step="0.01"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.valor_maximo}
+                        onChange={(e) => handleFaixaChange(idx, 'valor_maximo', e.target.value)}
+                        className="bg-white"
+                        min="0"
+                        step="0.01"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 whitespace-nowrap">
+                        {getFaixaText(item.max_parcelas)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.max_parcelas}
+                        onChange={(e) => handleFaixaChange(idx, 'max_parcelas', e.target.value)}
+                        className="bg-white text-center"
+                        min="1"
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleRemoveFaixa(idx)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
           <div className="p-4 border-t border-slate-100 bg-slate-50/50">
