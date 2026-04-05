@@ -2,9 +2,52 @@ import { Landmark } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FaixasManager } from '@/components/comercial/FaixasManager'
+import { RelatorioComissoes } from '@/components/comercial/RelatorioComissoes'
 import { comissoesService } from '@/services/comissoes'
+import { useAuth } from '@/hooks/use-auth'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 
 export default function ControleComissoes() {
+  const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [dentistaId, setDentistaId] = useState<string | null>(null)
+  const [crcId, setCrcId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<string | undefined>()
+
+  useEffect(() => {
+    if (!user) return
+    const checkRoles = async () => {
+      const { data: adminCheck } = await supabase.rpc('is_admin')
+      setIsAdmin(!!adminCheck)
+
+      const { data: dentista } = await supabase
+        .from('dentistas_avaliadores')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .maybeSingle()
+      if (dentista) setDentistaId(dentista.id)
+
+      const { data: crc } = await supabase
+        .from('crc_comercial')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .maybeSingle()
+      if (crc) setCrcId(crc.id)
+
+      if (!!adminCheck || dentista || crc) {
+        setActiveTab('minhas')
+      } else {
+        setActiveTab('dentista')
+      }
+    }
+    checkRoles()
+  }, [user])
+
+  const showMinhasComissoes = isAdmin || dentistaId || crcId
+
+  if (!activeTab) return null
+
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-6xl animate-fade-in">
       <div className="flex items-center gap-3">
@@ -16,45 +59,70 @@ export default function ControleComissoes() {
             Controle de Comissões
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie as regras e faixas de remuneração variável da equipe.
+            Gerencie as regras, acompanhe pagamentos e veja o histórico de comissionamento da
+            equipe.
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="dentista" className="w-full">
-        <TabsList className="w-full max-w-md grid grid-cols-2 mb-6">
-          <TabsTrigger value="dentista">Dentista Avaliador</TabsTrigger>
-          <TabsTrigger value="crc">CRC Comercial</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 mb-6 h-auto">
+          {showMinhasComissoes && (
+            <TabsTrigger value="minhas" className="py-2">
+              {isAdmin ? 'Relatório Geral' : 'Minhas Comissões'}
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="dentista" className="py-2">
+              Dentista Avaliador
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="crc" className="py-2">
+              CRC Comercial
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="dentista" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Referências - Dentista Avaliador</CardTitle>
-              <CardDescription>
-                Configure as faixas de comissionamento baseadas no percentual de entrada recebido do
-                paciente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FaixasManager service={comissoesService.dentista} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {showMinhasComissoes && (
+          <TabsContent value="minhas" className="mt-0">
+            <RelatorioComissoes isAdmin={isAdmin} dentistaId={dentistaId} crcId={crcId} />
+          </TabsContent>
+        )}
 
-        <TabsContent value="crc" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Referências - CRC Comercial</CardTitle>
-              <CardDescription>
-                Configure as faixas de comissionamento para a equipe de Relacionamento Comercial.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FaixasManager service={comissoesService.crc} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {isAdmin && (
+          <>
+            <TabsContent value="dentista" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referências - Dentista Avaliador</CardTitle>
+                  <CardDescription>
+                    Configure as faixas de comissionamento baseadas no percentual de entrada
+                    recebido do paciente.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FaixasManager service={comissoesService.dentista} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="crc" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referências - CRC Comercial</CardTitle>
+                  <CardDescription>
+                    Configure as faixas de comissionamento para a equipe de Relacionamento
+                    Comercial.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FaixasManager service={comissoesService.crc} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   )
