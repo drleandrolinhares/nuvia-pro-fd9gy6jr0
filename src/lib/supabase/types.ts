@@ -1535,6 +1535,7 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          avatar_url: string | null
           cargo_id: string | null
           cargo_secundario_id: string | null
           cpf: string | null
@@ -1551,6 +1552,7 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          avatar_url?: string | null
           cargo_id?: string | null
           cargo_secundario_id?: string | null
           cpf?: string | null
@@ -1567,6 +1569,7 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          avatar_url?: string | null
           cargo_id?: string | null
           cargo_secundario_id?: string | null
           cpf?: string | null
@@ -2148,6 +2151,7 @@ export const Constants = {
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   cargo_secundario_id: uuid (nullable)
+//   avatar_url: text (nullable)
 // Table: vendas_concretizadas
 //   id: uuid (not null, default: gen_random_uuid())
 //   avaliacao_id: uuid (not null)

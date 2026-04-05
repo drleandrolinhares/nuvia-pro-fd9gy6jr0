@@ -17,7 +17,7 @@ export async function getMeuPerfil(userId: string) {
 }
 
 export async function updateMeusDadosPessoais(userId: string, data: any) {
-  const { error: userError } = await supabase
+  const { data: updatedUsers, error: userError } = await supabase
     .from('usuarios')
     .update({
       nome: data.nome,
@@ -27,8 +27,27 @@ export async function updateMeusDadosPessoais(userId: string, data: any) {
       endereco: data.endereco,
     })
     .eq('id', userId)
+    .select('id')
 
   if (userError) throw userError
+
+  if (!updatedUsers || updatedUsers.length === 0) {
+    const { data: authData } = await supabase.auth.getUser()
+    const email = authData?.user?.email || ''
+
+    const { error: insertError } = await supabase.from('usuarios').insert({
+      id: userId,
+      email: email,
+      nome: data.nome,
+      cpf: data.cpf,
+      data_nascimento: data.data_nascimento || null,
+      telefone: data.telefone,
+      endereco: data.endereco,
+      status: 'ativo',
+    })
+
+    if (insertError) throw insertError
+  }
 
   const { error: detalhesError } = await supabase.from('colaboradores_detalhes').upsert({
     usuario_id: userId,

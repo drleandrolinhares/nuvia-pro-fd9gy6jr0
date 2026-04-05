@@ -10,7 +10,7 @@ export async function getUsuarios() {
     .from('usuarios')
     .select(`
       *,
-      cargo:cargos(nome, setor)
+      cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
     `)
     .order('nome')
 
@@ -64,6 +64,7 @@ export async function saveColaborador(data: any, isEdit: boolean) {
     telefone: data.telefone,
     endereco: data.endereco,
     cargo_id: data.cargo_id,
+    cargo_secundario_id: data.cargo_secundario_id || null,
     data_admissao: data.data_admissao || null,
     salario: data.salario || null,
     status: data.status || 'ativo',
@@ -106,14 +107,17 @@ export async function checkHasPermission(permissionName: string) {
   // Verifica permissões atreladas ao cargo do usuário
   const { data: usuario } = await supabase
     .from('usuarios')
-    .select('cargo_id')
+    .select('cargo_id, cargo_secundario_id')
     .eq('id', user.id)
     .single()
-  if (usuario?.cargo_id) {
+
+  const cargoIds = [usuario?.cargo_id, usuario?.cargo_secundario_id].filter(Boolean)
+
+  if (cargoIds.length > 0) {
     const { data: cargoPermissoes } = await supabase
       .from('cargo_permissoes')
       .select('permissao:permissoes(nome)')
-      .eq('cargo_id', usuario.cargo_id)
+      .in('cargo_id', cargoIds)
 
     const hasCargoPerm = (cargoPermissoes as any[])?.some(
       (p) => p.permissao?.nome === permissionName,
