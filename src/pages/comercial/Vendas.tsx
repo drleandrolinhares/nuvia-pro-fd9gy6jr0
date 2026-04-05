@@ -6,6 +6,8 @@ import { useToast } from '@/components/ui/use-toast'
 import { VendasFiltros } from './components/VendasFiltros'
 import { VendasTabela } from './components/VendasTabela'
 import { VendasModal } from './components/VendasModal'
+import { VendasKPIs } from './components/VendasKPIs'
+import { useVendasKPIs } from './hooks/use-vendas-kpis'
 import { Avaliacao, VendasFiltersState } from './types'
 
 export default function Vendas() {
@@ -34,6 +36,8 @@ export default function Vendas() {
   const [totalCount, setTotalCount] = useState(0)
   const [sortColumn, setSortColumn] = useState('data_avaliacao')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+
+  const { kpis, trends, loading: kpisLoading } = useVendasKPIs(filters, debouncedValorRange)
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValorRange(filters.valorRange), 500)
@@ -143,6 +147,8 @@ export default function Vendas() {
         <h2 className="text-3xl font-bold tracking-tight">Gestão de Vendas</h2>
         <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />
       </div>
+
+      <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />
 
       <Card>
         <CardHeader>
