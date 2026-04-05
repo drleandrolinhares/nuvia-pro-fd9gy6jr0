@@ -37,6 +37,9 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const [valorTotal, setValorTotal] = useState<number>(0)
   const [valorEntrada, setValorEntrada] = useState<number>(0)
   const [crcParticipou, setCrcParticipou] = useState(false)
+  const [dataConcretizacao, setDataConcretizacao] = useState<string>(
+    format(new Date(), 'yyyy-MM-dd'),
+  )
 
   useEffect(() => {
     if (open && avaliacaoId) {
@@ -60,6 +63,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
       setValorEntrada(0)
       setCrcParticipou(false)
       setAvaliacao(null)
+      setDataConcretizacao(format(new Date(), 'yyyy-MM-dd'))
     }
   }, [open, avaliacaoId])
 
@@ -98,7 +102,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           dentista_avaliador_id: avaliacao.dentista_avaliador_id,
           crc_participou: crcParticipou,
           crc_comercial_id: crcParticipou ? avaliacao.crc_comercial_id : null,
-          data_concretizacao: format(new Date(), 'yyyy-MM-dd'),
+          data_concretizacao: dataConcretizacao,
         })
         .select('id')
         .single()
@@ -113,7 +117,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           percentual_faixa: percentualDentista,
           valor_comissao: comissaoDentista,
           status_pagamento: 'gerada',
-          data_calculo: format(new Date(), 'yyyy-MM-dd'),
+          data_calculo: dataConcretizacao,
         })
         if (dentistaError) throw dentistaError
       }
@@ -126,7 +130,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
           percentual_faixa: percentualCRC,
           valor_comissao: comissaoCRC,
           status_pagamento: 'gerada',
-          data_calculo: format(new Date(), 'yyyy-MM-dd'),
+          data_calculo: dataConcretizacao,
         })
         if (crcError) throw crcError
       }
@@ -176,7 +180,34 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Valor de Entrada</Label>
+                <Label>Data do Fechamento</Label>
+                <Input
+                  required
+                  type="date"
+                  value={dataConcretizacao}
+                  onChange={(e) => setDataConcretizacao(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Percentual de Entrada (%)</Label>
+                <Input
+                  required
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={valorTotal > 0 ? ((valorEntrada / valorTotal) * 100).toFixed(2) : ''}
+                  onChange={(e) => {
+                    const perc = Number(e.target.value)
+                    setValorEntrada((valorTotal * perc) / 100)
+                  }}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Valor da Entrada (R$)</Label>
                 <Input
                   required
                   type="number"
@@ -189,6 +220,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
+              {' '}
               <Switch
                 id="crc-participou"
                 checked={crcParticipou}

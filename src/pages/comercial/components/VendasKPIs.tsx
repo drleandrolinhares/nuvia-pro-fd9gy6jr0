@@ -29,6 +29,7 @@ export function VendasKPIs({ kpis, trends, loading }: Props) {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
   const formatPercent = (v: number) => `${v.toFixed(1)}%`
   const formatNumber = (v: number) => v.toString()
+  const formatDays = (v: number) => `${v} dias`
 
   const renderTrend = (value: number, invertColors = false) => {
     if (value === 0) {
@@ -77,6 +78,12 @@ export function VendasKPIs({ kpis, trends, loading }: Props) {
       title: 'Taxa de Conversão',
       value: formatPercent(kpis.taxaConversao),
       trend: trends.taxaConversao,
+    },
+    {
+      title: 'Ciclo Médio de Vendas',
+      value: formatDays(kpis.cicloMedioVendas),
+      trend: trends.cicloMedioVendas,
+      invertTrend: true,
     },
     {
       title: 'Em Follow-up',

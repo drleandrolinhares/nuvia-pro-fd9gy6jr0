@@ -24,6 +24,7 @@ export interface KPIData {
   leadsQuentes: number
   leadsMornos: number
   leadsFrios: number
+  cicloMedioVendas: number
 }
 
 export function useVendasKPIs(filters: VendasFiltersState, debouncedValorRange: number[]) {
@@ -85,7 +86,7 @@ export function useVendasKPIs(filters: VendasFiltersState, debouncedValorRange: 
         }
 
         const buildQuery = (start: Date | null, end: Date | null) => {
-          let selectStr = `id, status, temperatura_lead, valor_orcamento, orcamentos ( valor ), vendas_concretizadas ( valor_total_tratamento )`
+          let selectStr = `id, status, temperatura_lead, valor_orcamento, data_avaliacao, orcamentos ( valor ), vendas_concretizadas ( valor_total_tratamento, data_concretizacao )`
           if (filters.search) selectStr += `, pacientes!inner(nome)`
 
           let q = supabase.from('avaliacoes').select(selectStr)
@@ -122,6 +123,8 @@ export function useVendasKPIs(filters: VendasFiltersState, debouncedValorRange: 
           let leadsQuentes = 0
           let leadsMornos = 0
           let leadsFrios = 0
+          let cicloDiasTotal = 0
+          let qtdVendasCiclo = 0
 
           data.forEach((item) => {
             const maxOrcamento =
@@ -136,10 +139,18 @@ export function useVendasKPIs(filters: VendasFiltersState, debouncedValorRange: 
             if (isVenda) {
               vendasConcretizadas++
               if (item.vendas_concretizadas?.length > 0) {
-                valorTotalVendido += item.vendas_concretizadas.reduce(
-                  (acc: number, v: any) => acc + (v.valor_total_tratamento || 0),
-                  0,
-                )
+                item.vendas_concretizadas.forEach((v: any) => {
+                  valorTotalVendido += v.valor_total_tratamento || 0
+
+                  if (item.data_avaliacao && v.data_concretizacao) {
+                    const dInicio = parseISO(item.data_avaliacao)
+                    const dFim = parseISO(v.data_concretizacao)
+                    let diff = differenceInDays(dFim, dInicio)
+                    if (diff < 0) diff = 0
+                    cicloDiasTotal += diff
+                    qtdVendasCiclo++
+                  }
+                })
               }
             }
 
@@ -160,6 +171,7 @@ export function useVendasKPIs(filters: VendasFiltersState, debouncedValorRange: 
             leadsQuentes,
             leadsMornos,
             leadsFrios,
+            cicloMedioVendas: qtdVendasCiclo > 0 ? Math.round(cicloDiasTotal / qtdVendasCiclo) : 0,
           }
         }
 
