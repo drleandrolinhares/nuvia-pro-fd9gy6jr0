@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Shield, Save, Percent } from 'lucide-react'
+import { Save, Percent, Tag } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface Desconto {
@@ -16,11 +16,13 @@ interface Desconto {
 
 export default function DescontosPorPrazo() {
   const { toast } = useToast()
+
+  // Initial state matches the requested "mock data"
   const [faixas, setFaixas] = useState<Desconto[]>([
-    { faixa_numero: 1, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 2, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 3, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 4, percentual_desconto: 0, descricao: '' },
+    { faixa_numero: 1, percentual_desconto: 15, descricao: 'PAGAMENTO ÚNICO' },
+    { faixa_numero: 2, percentual_desconto: 5, descricao: 'PRIMEIRO GRUPO' },
+    { faixa_numero: 3, percentual_desconto: 3, descricao: 'SEGUNDO GRUPO' },
+    { faixa_numero: 4, percentual_desconto: 0, descricao: 'PARCELAS RESTANTES' },
   ])
 
   const loadData = async () => {
@@ -28,6 +30,7 @@ export default function DescontosPorPrazo() {
       .from('descontos_por_prazo')
       .select('*')
       .order('faixa_numero', { ascending: true })
+
     if (data && data.length > 0) {
       setFaixas((prev) =>
         prev.map((p) => {
@@ -74,46 +77,63 @@ export default function DescontosPorPrazo() {
     loadData()
   }
 
+  const getTitle = (numero: number) => {
+    if (numero === 1) return 'À VISTA (FAIXA 1)'
+    return `FAIXA ${numero}`
+  }
+
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-6 max-w-[1400px] mx-auto space-y-8 animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="p-3 bg-amber-100 text-amber-600 rounded-lg">
-          <Shield className="w-6 h-6" />
+          <Tag className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Descontos por Prazo</h1>
+          <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">
+            Descontos por Prazo
+          </h1>
           <p className="text-slate-500">
             Configure as faixas de descontos baseadas no prazo de pagamento.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {faixas.map((faixa) => (
-          <Card key={faixa.faixa_numero}>
+          <Card
+            key={faixa.faixa_numero}
+            className="relative overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-all duration-300"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Percent className="w-5 h-5 text-amber-500" />
-                Faixa {faixa.faixa_numero}
+              <CardTitle className="text-sm font-bold text-slate-500 flex items-center gap-2">
+                <Percent className="w-4 h-4 text-amber-500" />
+                {getTitle(faixa.faixa_numero)}
               </CardTitle>
-              <CardDescription>
-                Defina o desconto e a descrição comercial para esta faixa.
-              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>Percentual de Desconto (%)</Label>
-                <Input
-                  type="number"
-                  value={faixa.percentual_desconto}
-                  onChange={(e) =>
-                    updateFaixa(faixa.faixa_numero, 'percentual_desconto', Number(e.target.value))
-                  }
-                />
+                <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Desconto (%)
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    className="text-3xl font-bold h-16 pl-4 pr-10 text-slate-800 border-slate-300"
+                    value={faixa.percentual_desconto}
+                    onChange={(e) =>
+                      updateFaixa(faixa.faixa_numero, 'percentual_desconto', Number(e.target.value))
+                    }
+                  />
+                  <Percent className="w-6 h-6 text-slate-300 absolute right-4 top-1/2 -translate-y-1/2" />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Descrição
+                </Label>
                 <Input
+                  className="bg-slate-50 font-medium text-slate-600 h-10"
                   placeholder="Ex: À vista, Até 3x..."
                   value={faixa.descricao}
                   onChange={(e) => updateFaixa(faixa.faixa_numero, 'descricao', e.target.value)}
@@ -121,9 +141,9 @@ export default function DescontosPorPrazo() {
               </div>
               <Button
                 onClick={() => handleSave(faixa)}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold h-11"
               >
-                <Save className="w-4 h-4 mr-2" /> Salvar Faixa {faixa.faixa_numero}
+                <Save className="w-4 h-4 mr-2" /> Salvar Faixa
               </Button>
             </CardContent>
           </Card>
