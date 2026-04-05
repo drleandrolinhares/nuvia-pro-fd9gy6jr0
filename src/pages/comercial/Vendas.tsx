@@ -7,6 +7,7 @@ import { VendasFiltros } from './components/VendasFiltros'
 import { VendasTabela } from './components/VendasTabela'
 import { VendasModal } from './components/VendasModal'
 import { VendasKPIs } from './components/VendasKPIs'
+import { VendasRankingDentistas } from './components/VendasRankingDentistas'
 import { useVendasKPIs } from './hooks/use-vendas-kpis'
 import { Avaliacao, VendasFiltersState } from './types'
 
@@ -149,6 +150,8 @@ export default function Vendas() {
       </div>
 
       <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />
+
+      <VendasRankingDentistas />
 
       <Card>
         <CardHeader>
