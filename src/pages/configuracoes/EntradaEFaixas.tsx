@@ -29,15 +29,12 @@ interface FaixaParcela {
 
 export default function EntradaEFaixas() {
   const { toast } = useToast()
-  const [config, setConfig] = useState<ConfigNegociacao>({ percentual_entrada_padrao: 30 })
-  const [faixas, setFaixas] = useState<FaixaParcela[]>([
-    { valor_minimo: 1000, valor_maximo: 2999.99, max_parcelas: 12 },
-    { valor_minimo: 3000, valor_maximo: 4999.99, max_parcelas: 12 },
-    { valor_minimo: 5000, valor_maximo: 6999.99, max_parcelas: 12 },
-    { valor_minimo: 7000, valor_maximo: 8999.99, max_parcelas: 12 },
-  ])
+  const [config, setConfig] = useState<ConfigNegociacao>({ percentual_entrada_padrao: 0 })
+  const [faixas, setFaixas] = useState<FaixaParcela[]>([])
+  const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
+    setLoading(true)
     const { data: cfg } = await supabase
       .from('configuracoes_negociacao')
       .select('*')
@@ -53,9 +50,10 @@ export default function EntradaEFaixas() {
       .select('*')
       .order('valor_minimo', { ascending: true })
 
-    if (fx && fx.length > 0) {
+    if (fx) {
       setFaixas(fx)
     }
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -174,124 +172,137 @@ export default function EntradaEFaixas() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
-            ENTRADA PADRÃO
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-end gap-4">
-          <div className="space-y-2 w-64">
-            <Label className="text-xs font-semibold text-slate-600">
-              PERCENTUAL DE ENTRADA (%)
-            </Label>
-            <Input
-              type="number"
-              value={config.percentual_entrada_padrao}
-              onChange={(e) =>
-                setConfig({ ...config, percentual_entrada_padrao: Number(e.target.value) })
-              }
-            />
-          </div>
-          <Button onClick={saveConfig} className="bg-amber-500 hover:bg-amber-600 text-white">
-            <Save className="w-4 h-4 mr-2" /> Salvar Entrada
-          </Button>
-        </CardContent>
-      </Card>
+      {loading ? (
+        <div className="flex items-center justify-center p-12 text-slate-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mr-3" />
+          Carregando configurações...
+        </div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
+                ENTRADA PADRÃO
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-end gap-4">
+              <div className="space-y-2 w-64">
+                <Label className="text-xs font-semibold text-slate-600">
+                  PERCENTUAL DE ENTRADA (%)
+                </Label>
+                <Input
+                  type="number"
+                  value={config.percentual_entrada_padrao}
+                  onChange={(e) =>
+                    setConfig({ ...config, percentual_entrada_padrao: Number(e.target.value) })
+                  }
+                />
+              </div>
+              <Button onClick={saveConfig} className="bg-amber-500 hover:bg-amber-600 text-white">
+                <Save className="w-4 h-4 mr-2" /> Salvar Entrada
+              </Button>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
-            FAIXAS DE VALORES E MÁXIMO DE PARCELAS
-          </CardTitle>
-          <Button
-            onClick={() =>
-              setFaixas([...faixas, { valor_minimo: 0, valor_maximo: 0, max_parcelas: 1 }])
-            }
-            variant="outline"
-            className="gap-2"
-          >
-            <Plus className="w-4 h-4" /> NOVA FAIXA
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow>
-                  <TableHead className="font-semibold text-slate-600">VALOR MÍNIMO (R$)</TableHead>
-                  <TableHead className="font-semibold text-slate-600">VALOR MÁXIMO (R$)</TableHead>
-                  <TableHead className="font-semibold text-slate-600">MÁX. PARCELAS</TableHead>
-                  <TableHead className="w-[120px] text-right font-semibold text-slate-600">
-                    AÇÕES
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {faixas.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-slate-500">
-                      Nenhuma faixa configurada.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  faixas.map((faixa, index) => (
-                    <TableRow key={faixa.id || index}>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={faixa.valor_minimo}
-                          onChange={(e) =>
-                            updateFaixa(index, 'valor_minimo', Number(e.target.value))
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={faixa.valor_maximo}
-                          onChange={(e) =>
-                            updateFaixa(index, 'valor_maximo', Number(e.target.value))
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={faixa.max_parcelas}
-                          onChange={(e) =>
-                            updateFaixa(index, 'max_parcelas', Number(e.target.value))
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button
-                          onClick={() => saveFaixa(faixa, index)}
-                          size="icon"
-                          variant="ghost"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8"
-                          title="Salvar Faixa"
-                        >
-                          <Save className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => removeFaixa(faixa.id, index)}
-                          size="icon"
-                          variant="ghost"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                          title="Remover Faixa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
+                FAIXAS DE VALORES E MÁXIMO DE PARCELAS
+              </CardTitle>
+              <Button
+                onClick={() =>
+                  setFaixas([...faixas, { valor_minimo: 0, valor_maximo: 0, max_parcelas: 1 }])
+                }
+                variant="outline"
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" /> NOVA FAIXA
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead className="font-semibold text-slate-600">
+                        VALOR MÍNIMO (R$)
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-600">
+                        VALOR MÁXIMO (R$)
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-600">MÁX. PARCELAS</TableHead>
+                      <TableHead className="w-[120px] text-right font-semibold text-slate-600">
+                        AÇÕES
+                      </TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {faixas.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                          Nenhuma faixa configurada.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      faixas.map((faixa, index) => (
+                        <TableRow key={faixa.id || index}>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={faixa.valor_minimo}
+                              onChange={(e) =>
+                                updateFaixa(index, 'valor_minimo', Number(e.target.value))
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={faixa.valor_maximo}
+                              onChange={(e) =>
+                                updateFaixa(index, 'valor_maximo', Number(e.target.value))
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={faixa.max_parcelas}
+                              onChange={(e) =>
+                                updateFaixa(index, 'max_parcelas', Number(e.target.value))
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              onClick={() => saveFaixa(faixa, index)}
+                              size="icon"
+                              variant="ghost"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8"
+                              title="Salvar Faixa"
+                            >
+                              <Save className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => removeFaixa(faixa.id, index)}
+                              size="icon"
+                              variant="ghost"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                              title="Remover Faixa"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   )
 }

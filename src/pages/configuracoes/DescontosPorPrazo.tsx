@@ -17,15 +17,16 @@ interface Desconto {
 export default function DescontosPorPrazo() {
   const { toast } = useToast()
 
-  // Initial state matches the requested "mock data"
   const [faixas, setFaixas] = useState<Desconto[]>([
-    { faixa_numero: 1, percentual_desconto: 15, descricao: 'PAGAMENTO ÚNICO' },
-    { faixa_numero: 2, percentual_desconto: 5, descricao: 'PRIMEIRO GRUPO' },
-    { faixa_numero: 3, percentual_desconto: 3, descricao: 'SEGUNDO GRUPO' },
-    { faixa_numero: 4, percentual_desconto: 0, descricao: 'PARCELAS RESTANTES' },
+    { faixa_numero: 1, percentual_desconto: 0, descricao: '' },
+    { faixa_numero: 2, percentual_desconto: 0, descricao: '' },
+    { faixa_numero: 3, percentual_desconto: 0, descricao: '' },
+    { faixa_numero: 4, percentual_desconto: 0, descricao: '' },
   ])
+  const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
+    setLoading(true)
     const { data } = await supabase
       .from('descontos_por_prazo')
       .select('*')
@@ -39,6 +40,7 @@ export default function DescontosPorPrazo() {
         }),
       )
     }
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -98,57 +100,68 @@ export default function DescontosPorPrazo() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {faixas.map((faixa) => (
-          <Card
-            key={faixa.faixa_numero}
-            className="relative overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-all duration-300"
-          >
-            <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-            <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-bold text-slate-500 flex items-center gap-2">
-                <Percent className="w-4 h-4 text-amber-500" />
-                {getTitle(faixa.faixa_numero)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Desconto (%)
-                </Label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    className="text-3xl font-bold h-16 pl-4 pr-10 text-slate-800 border-slate-300"
-                    value={faixa.percentual_desconto}
-                    onChange={(e) =>
-                      updateFaixa(faixa.faixa_numero, 'percentual_desconto', Number(e.target.value))
-                    }
-                  />
-                  <Percent className="w-6 h-6 text-slate-300 absolute right-4 top-1/2 -translate-y-1/2" />
+      {loading ? (
+        <div className="flex items-center justify-center p-12 text-slate-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mr-3" />
+          Carregando descontos...
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {faixas.map((faixa) => (
+            <Card
+              key={faixa.faixa_numero}
+              className="relative overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-bold text-slate-500 flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-amber-500" />
+                  {getTitle(faixa.faixa_numero)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Desconto (%)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      className="text-3xl font-bold h-16 pl-4 pr-10 text-slate-800 border-slate-300"
+                      value={faixa.percentual_desconto}
+                      onChange={(e) =>
+                        updateFaixa(
+                          faixa.faixa_numero,
+                          'percentual_desconto',
+                          Number(e.target.value),
+                        )
+                      }
+                    />
+                    <Percent className="w-6 h-6 text-slate-300 absolute right-4 top-1/2 -translate-y-1/2" />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Descrição
-                </Label>
-                <Input
-                  className="bg-slate-50 font-medium text-slate-600 h-10"
-                  placeholder="Ex: À vista, Até 3x..."
-                  value={faixa.descricao}
-                  onChange={(e) => updateFaixa(faixa.faixa_numero, 'descricao', e.target.value)}
-                />
-              </div>
-              <Button
-                onClick={() => handleSave(faixa)}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold h-11"
-              >
-                <Save className="w-4 h-4 mr-2" /> Salvar Faixa
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Descrição
+                  </Label>
+                  <Input
+                    className="bg-slate-50 font-medium text-slate-600 h-10"
+                    placeholder="Ex: À vista, Até 3x..."
+                    value={faixa.descricao}
+                    onChange={(e) => updateFaixa(faixa.faixa_numero, 'descricao', e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={() => handleSave(faixa)}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold h-11"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Salvar Faixa
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
