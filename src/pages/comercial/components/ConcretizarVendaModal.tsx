@@ -30,10 +30,8 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [avaliacao, setAvaliacao] = useState<any>(null)
-
   const [faixasDentista, setFaixasDentista] = useState<FaixaBase[]>([])
   const [faixasCRC, setFaixasCRC] = useState<FaixaBase[]>([])
-
   const [valorTotalStr, setValorTotalStr] = useState<string>('0')
   const [valorEntradaStr, setValorEntradaStr] = useState<string>('')
   const [crcParticipou, setCrcParticipou] = useState(false)
@@ -85,7 +83,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
   const percentualDentista = getComissao(faixasDentista, percentualEntrada)
   const comissaoDentista = (valorTotal * percentualDentista) / 100
-
   const percentualCRC = crcParticipou ? getComissao(faixasCRC, percentualEntrada) : 0
   const comissaoCRC = (valorTotal * percentualCRC) / 100
 
@@ -171,12 +168,11 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
               <div className="grid gap-2">
                 <Label>Valor Total do Tratamento</Label>
                 <Input
-                  required
-                  readOnly
                   type="number"
                   step="0.01"
                   min="0"
                   value={valorTotalStr}
+                  readOnly
                   className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed"
                 />
               </div>
@@ -195,7 +191,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
               <div className="grid gap-2">
                 <Label>Valor da Entrada (R$)</Label>
                 <Input
-                  required
                   type="number"
                   step="0.01"
                   min="0"
@@ -203,18 +198,18 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   value={valorEntradaStr}
                   onChange={(e) => setValorEntradaStr(e.target.value)}
                   placeholder="Ex: 5000.00"
-                  className="bg-white dark:bg-slate-950 border-2 border-blue-500"
+                  className="bg-white dark:bg-slate-950"
                 />
               </div>
               <div className="grid gap-2">
                 <Label>Percentual de Entrada (%)</Label>
                 <Input
                   type="number"
-                  readOnly
                   step="0.01"
                   min="0"
                   max="100"
                   value={percentualEntrada.toFixed(2)}
+                  readOnly
                   className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-medium text-slate-600"
                 />
               </div>
