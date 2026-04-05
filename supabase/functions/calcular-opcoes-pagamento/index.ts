@@ -64,14 +64,11 @@ Deno.serve(async (req: Request) => {
     const opcoes_parcelamento = []
 
     for (let i = 1; i <= max_parcelas; i++) {
-      let faixa_numero = 0
-      if (i === 1) faixa_numero = 0
-      else if (i >= 2 && i <= 4) faixa_numero = 1
-      else if (i >= 5 && i <= 8) faixa_numero = 2
-      else if (i >= 9 && i <= 12) faixa_numero = 3
-      else if (i >= 13 && i <= 20) faixa_numero = 4
-      else if (i >= 21 && i <= 24) faixa_numero = 5
-      else faixa_numero = 5
+      let faixa_numero = 1
+      if (i === 1) faixa_numero = 1
+      else if (i >= 2 && i <= 5) faixa_numero = 2
+      else if (i >= 6 && i <= 10) faixa_numero = 3
+      else if (i >= 11) faixa_numero = 4
 
       const descontoObj = descontos?.find((d) => d.faixa_numero === faixa_numero)
       const percentual_desconto = descontoObj ? Number(descontoObj.percentual_desconto) : 0
@@ -87,7 +84,7 @@ Deno.serve(async (req: Request) => {
         valor_desconto,
         valor_final_restante,
         valor_parcela,
-        valor_total_com_desconto: valor_entrada + valor_final_restante,
+        valor_final_com_desconto: valor_entrada + valor_final_restante,
       })
     }
 
