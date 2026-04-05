@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, parseISO, format } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { VendasFiltros } from './components/VendasFiltros'
@@ -152,37 +153,66 @@ export default function Vendas() {
         {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
       </div>
 
-      <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />
+      <Tabs defaultValue="kpis" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[600px]">
+          <TabsTrigger
+            value="kpis"
+            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
+          >
+            Gestão de Vendas
+          </TabsTrigger>
+          <TabsTrigger
+            value="ranking"
+            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
+          >
+            Ranking de Avaliadores
+          </TabsTrigger>
+          <TabsTrigger
+            value="oportunidades"
+            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
+          >
+            Oportunidades Comerciais
+          </TabsTrigger>
+        </TabsList>
 
-      <VendasRankingDentistas />
+        <TabsContent value="kpis" className="space-y-4 outline-none">
+          <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />
+        </TabsContent>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Oportunidades Comerciais</CardTitle>
-          <CardDescription>
-            Acompanhamento de avaliações e negociações em andamento.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <VendasFiltros
-            filters={filters}
-            setFilters={setFilters}
-            dentistas={dentistas}
-            crcs={crcs}
-          />
-          <VendasTabela
-            avaliacoes={avaliacoes}
-            loading={loading}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            page={page}
-            totalCount={totalCount}
-            itemsPerPage={itemsPerPage}
-            setPage={setPage}
-          />
-        </CardContent>
-      </Card>
+        <TabsContent value="ranking" className="space-y-4 outline-none">
+          <VendasRankingDentistas />
+        </TabsContent>
+
+        <TabsContent value="oportunidades" className="space-y-4 outline-none">
+          <Card>
+            <CardHeader>
+              <CardTitle>Oportunidades Comerciais</CardTitle>
+              <CardDescription>
+                Acompanhamento de avaliações e negociações em andamento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VendasFiltros
+                filters={filters}
+                setFilters={setFilters}
+                dentistas={dentistas}
+                crcs={crcs}
+              />
+              <VendasTabela
+                avaliacoes={avaliacoes}
+                loading={loading}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                page={page}
+                totalCount={totalCount}
+                itemsPerPage={itemsPerPage}
+                setPage={setPage}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
