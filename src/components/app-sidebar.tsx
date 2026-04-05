@@ -290,7 +290,11 @@ export function AppSidebar() {
                 <div className="flex items-center gap-3 px-2 py-2 mb-2 cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors w-full outline-none">
                   <Avatar className="size-9 border border-sidebar-border">
                     <AvatarImage
-                      src={`https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`}
+                      src={
+                        (profile as any)?.avatar_url ||
+                        user?.user_metadata?.avatar_url ||
+                        `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`
+                      }
                     />
                     <AvatarFallback className="bg-secondary text-secondary-foreground">
                       {user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() ||

@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Loader2, User, Shield, Save } from 'lucide-react'
+import { Loader2, User, Shield, Save, Camera } from 'lucide-react'
 
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
-import { getMeuPerfil, updateMeusDadosPessoais, updateMinhaSenha } from '@/services/perfil'
+import {
+  getMeuPerfil,
+  updateMeusDadosPessoais,
+  updateMinhaSenha,
+  uploadAvatar,
+} from '@/services/perfil'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const perfilSchema = z.object({
   nome: z.string().min(3, 'Nome é obrigatório'),
@@ -56,6 +62,7 @@ export default function Perfil() {
   const [loading, setLoading] = useState(true)
   const [savingPerfil, setSavingPerfil] = useState(false)
   const [savingSenha, setSavingSenha] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [perfilData, setPerfilData] = useState<any>(null)
 
   const perfilForm = useForm<z.infer<typeof perfilSchema>>({
@@ -95,21 +102,22 @@ export default function Perfil() {
     try {
       setLoading(true)
       const data = await getMeuPerfil(user!.id)
-      setPerfilData(data)
+      const userData = data || {}
+      setPerfilData(userData)
 
       perfilForm.reset({
-        nome: data.nome || '',
-        cpf: data.cpf || '',
-        data_nascimento: data.data_nascimento || '',
-        telefone: data.telefone || '',
-        endereco: data.endereco || '',
-        banco: data.detalhes?.banco || '',
-        agencia: data.detalhes?.agencia || '',
-        conta: data.detalhes?.conta || '',
-        pix: data.detalhes?.pix || '',
-        ctps: data.detalhes?.ctps || '',
-        pis: data.detalhes?.pis || '',
-        beneficiario_emergencia: data.detalhes?.beneficiario_emergencia || '',
+        nome: userData.nome || user?.user_metadata?.name || '',
+        cpf: userData.cpf || '',
+        data_nascimento: userData.data_nascimento || '',
+        telefone: userData.telefone || '',
+        endereco: userData.endereco || '',
+        banco: userData.detalhes?.banco || '',
+        agencia: userData.detalhes?.agencia || '',
+        conta: userData.detalhes?.conta || '',
+        pix: userData.detalhes?.pix || '',
+        ctps: userData.detalhes?.ctps || '',
+        pis: userData.detalhes?.pis || '',
+        beneficiario_emergencia: userData.detalhes?.beneficiario_emergencia || '',
       })
     } catch (error: any) {
       toast({
@@ -119,6 +127,21 @@ export default function Perfil() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    try {
+      const file = event.target.files?.[0]
+      if (!file) return
+      setUploadingAvatar(true)
+      const url = await uploadAvatar(user!.id, file)
+      setPerfilData((prev: any) => ({ ...prev, avatar_url: url }))
+      toast({ title: 'Sucesso', description: 'Foto atualizada com sucesso.' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: 'Erro ao atualizar foto.', variant: 'destructive' })
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -202,9 +225,46 @@ export default function Perfil() {
                   <CardDescription>Informações restritas da empresa.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="flex flex-col items-center gap-4 mb-6 pb-6 border-b border-border/50">
+                    <div className="relative">
+                      <Avatar className="w-24 h-24 border-2 border-primary/20 shadow-sm">
+                        <AvatarImage
+                          src={
+                            perfilData?.avatar_url ||
+                            `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`
+                          }
+                        />
+                        <AvatarFallback className="text-2xl">
+                          {perfilData?.nome?.substring(0, 2)?.toUpperCase() ||
+                            user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() ||
+                            'US'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors shadow-md"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Camera className="w-4 h-4" />
+                        )}
+                        <input
+                          id="avatar-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleAvatarUpload}
+                          disabled={uploadingAvatar}
+                        />
+                      </label>
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Alterar Foto</span>
+                  </div>
+
                   <div>
                     <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                      Cargo
+                      Cargo Principal
                     </Label>
                     <p className="font-medium text-sm mt-1">
                       {perfilData?.cargo?.nome || 'Não definido'}
@@ -212,10 +272,10 @@ export default function Perfil() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                      Setor
+                      Cargo Secundário
                     </Label>
                     <p className="font-medium text-sm mt-1">
-                      {perfilData?.cargo?.setor || 'Não definido'}
+                      {perfilData?.cargo_secundario?.nome || 'Não definido'}
                     </p>
                   </div>
                   <div>

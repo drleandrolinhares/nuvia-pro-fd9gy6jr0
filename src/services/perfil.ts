@@ -5,11 +5,12 @@ export async function getMeuPerfil(userId: string) {
     .from('usuarios')
     .select(`
       *,
-      cargo:cargos(nome, setor),
+      cargo:cargos!usuarios_cargo_id_fkey(nome, setor),
+      cargo_secundario:cargos!usuarios_cargo_secundario_id_fkey(nome, setor),
       detalhes:colaboradores_detalhes(*)
     `)
     .eq('id', userId)
-    .single()
+    .maybeSingle()
 
   if (error) throw error
   return data
@@ -41,6 +42,23 @@ export async function updateMeusDadosPessoais(userId: string, data: any) {
   })
 
   if (detalhesError) throw detalhesError
+}
+
+export async function uploadAvatar(userId: string, file: File) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${userId}-${Math.random()}.${fileExt}`
+  const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file)
+  if (uploadError) throw uploadError
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+
+  const { error: updateError } = await supabase
+    .from('usuarios')
+    .update({ avatar_url: data.publicUrl })
+    .eq('id', userId)
+  if (updateError) throw updateError
+
+  return data.publicUrl
 }
 
 export async function updateMinhaSenha(email: string, senhaAtual: string, novaSenha: string) {

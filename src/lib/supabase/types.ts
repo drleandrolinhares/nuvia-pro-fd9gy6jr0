@@ -1536,6 +1536,7 @@ export type Database = {
       usuarios: {
         Row: {
           cargo_id: string | null
+          cargo_secundario_id: string | null
           cpf: string | null
           criado_em: string | null
           data_admissao: string | null
@@ -1551,6 +1552,7 @@ export type Database = {
         }
         Insert: {
           cargo_id?: string | null
+          cargo_secundario_id?: string | null
           cpf?: string | null
           criado_em?: string | null
           data_admissao?: string | null
@@ -1566,6 +1568,7 @@ export type Database = {
         }
         Update: {
           cargo_id?: string | null
+          cargo_secundario_id?: string | null
           cpf?: string | null
           criado_em?: string | null
           data_admissao?: string | null
@@ -1583,6 +1586,13 @@ export type Database = {
           {
             foreignKeyName: 'usuarios_cargo_id_fkey'
             columns: ['cargo_id']
+            isOneToOne: false
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'usuarios_cargo_secundario_id_fkey'
+            columns: ['cargo_secundario_id']
             isOneToOne: false
             referencedRelation: 'cargos'
             referencedColumns: ['id']
@@ -2137,6 +2147,7 @@ export const Constants = {
 //   salario: numeric (nullable)
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   cargo_secundario_id: uuid (nullable)
 // Table: vendas_concretizadas
 //   id: uuid (not null, default: gen_random_uuid())
 //   avaliacao_id: uuid (not null)
@@ -2288,6 +2299,7 @@ export const Constants = {
 //   FOREIGN KEY usuario_permissoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: usuarios
 //   FOREIGN KEY usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
+//   FOREIGN KEY usuarios_cargo_secundario_id_fkey: FOREIGN KEY (cargo_secundario_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
@@ -2539,45 +2551,46 @@ export const Constants = {
 //   AS $function$
 //   DECLARE
 //     v_cargo_nome text;
+//     v_cargo_secundario_nome text;
 //   BEGIN
-//     -- Executa a verificação apenas se o usuário possuir um cargo vinculado
 //     IF NEW.cargo_id IS NOT NULL THEN
 //       SELECT nome INTO v_cargo_nome FROM public.cargos WHERE id = NEW.cargo_id;
+//     END IF;
 //
-//       -- Se o cargo for 'Dentista Avaliador', sincroniza com a tabela dentistas_avaliadores
-//       IF v_cargo_nome = 'Dentista Avaliador' THEN
-//         IF NOT EXISTS (SELECT 1 FROM public.dentistas_avaliadores WHERE usuario_id = NEW.id) THEN
-//           INSERT INTO public.dentistas_avaliadores (usuario_id, nome, email, status)
-//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
-//         ELSE
-//           UPDATE public.dentistas_avaliadores
-//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
-//           WHERE usuario_id = NEW.id;
-//         END IF;
+//     IF NEW.cargo_secundario_id IS NOT NULL THEN
+//       SELECT nome INTO v_cargo_secundario_nome FROM public.cargos WHERE id = NEW.cargo_secundario_id;
+//     END IF;
+//
+//     IF v_cargo_nome = 'Dentista Avaliador' OR v_cargo_secundario_nome = 'Dentista Avaliador' THEN
+//       IF NOT EXISTS (SELECT 1 FROM public.dentistas_avaliadores WHERE usuario_id = NEW.id) THEN
+//         INSERT INTO public.dentistas_avaliadores (usuario_id, nome, email, status)
+//         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//       ELSE
+//         UPDATE public.dentistas_avaliadores
+//         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//         WHERE usuario_id = NEW.id;
 //       END IF;
+//     END IF;
 //
-//       -- Se o cargo for 'Dentista', sincroniza com a tabela dentistas
-//       IF v_cargo_nome = 'Dentista' THEN
-//         IF NOT EXISTS (SELECT 1 FROM public.dentistas WHERE usuario_id = NEW.id) THEN
-//           INSERT INTO public.dentistas (usuario_id, nome, email, status)
-//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
-//         ELSE
-//           UPDATE public.dentistas
-//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
-//           WHERE usuario_id = NEW.id;
-//         END IF;
+//     IF v_cargo_nome = 'Dentista' OR v_cargo_secundario_nome = 'Dentista' THEN
+//       IF NOT EXISTS (SELECT 1 FROM public.dentistas WHERE usuario_id = NEW.id) THEN
+//         INSERT INTO public.dentistas (usuario_id, nome, email, status)
+//         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//       ELSE
+//         UPDATE public.dentistas
+//         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//         WHERE usuario_id = NEW.id;
 //       END IF;
+//     END IF;
 //
-//       -- Sincroniza também CRC Comercial por segurança, caso seja esse o cargo
-//       IF v_cargo_nome IN ('CRC', 'CRC Comercial') THEN
-//         IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
-//           INSERT INTO public.crc_comercial (usuario_id, nome, email, status)
-//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
-//         ELSE
-//           UPDATE public.crc_comercial
-//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
-//           WHERE usuario_id = NEW.id;
-//         END IF;
+//     IF v_cargo_nome IN ('CRC', 'CRC Comercial') OR v_cargo_secundario_nome IN ('CRC', 'CRC Comercial') THEN
+//       IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
+//         INSERT INTO public.crc_comercial (usuario_id, nome, email, status)
+//         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//       ELSE
+//         UPDATE public.crc_comercial
+//         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
 //
@@ -2613,10 +2626,10 @@ export const Constants = {
 //
 //     if v_has_user_perm then return true; end if;
 //
-//     -- check cargo perms
+//     -- check cargo perms (primary or secondary)
 //     SELECT EXISTS (
 //       SELECT 1 FROM public.usuarios u
-//       JOIN public.cargo_permissoes cp ON cp.cargo_id = u.cargo_id
+//       JOIN public.cargo_permissoes cp ON (cp.cargo_id = u.cargo_id OR cp.cargo_id = u.cargo_secundario_id)
 //       JOIN public.permissoes p ON p.id = cp.permissao_id
 //       WHERE u.id = v_user_id AND p.nome = permission_name
 //     ) INTO v_has_cargo_perm;
@@ -2838,7 +2851,7 @@ export const Constants = {
 //   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 // Table: usuarios
 //   trg_ativar_cascata_dentista_avaliador_insert: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_insert AFTER INSERT ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
-//   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
+//   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, cargo_secundario_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 
 // --- INDEXES ---
 // Table: avaliacoes
