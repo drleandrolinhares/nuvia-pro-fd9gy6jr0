@@ -34,12 +34,17 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const [faixasDentista, setFaixasDentista] = useState<FaixaBase[]>([])
   const [faixasCRC, setFaixasCRC] = useState<FaixaBase[]>([])
 
-  const [valorTotal, setValorTotal] = useState<number>(0)
-  const [valorEntrada, setValorEntrada] = useState<number>(0)
+  const [valorTotalStr, setValorTotalStr] = useState<string>('0')
+  const [valorEntradaStr, setValorEntradaStr] = useState<string>('0')
+  const [percentualEntradaStr, setPercentualEntradaStr] = useState<string>('0')
   const [crcParticipou, setCrcParticipou] = useState(false)
   const [dataConcretizacao, setDataConcretizacao] = useState<string>(
     format(new Date(), 'yyyy-MM-dd'),
   )
+
+  const valorTotal = Number(valorTotalStr) || 0
+  const valorEntrada = Number(valorEntradaStr) || 0
+  const percentualEntrada = Number(percentualEntradaStr) || 0
 
   useEffect(() => {
     if (open && avaliacaoId) {
@@ -51,7 +56,10 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
         .then(({ data }) => {
           setAvaliacao(data)
           if (data) {
-            setValorTotal(data.valor_orcamento || 0)
+            const vTotal = data.valor_orcamento || 0
+            setValorTotalStr(vTotal.toString())
+            setValorEntradaStr('0')
+            setPercentualEntradaStr('0')
             setCrcParticipou(!!data.crc_comercial_id)
           }
         })
@@ -59,15 +67,14 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
       comissoesService.dentista.list().then(setFaixasDentista)
       comissoesService.crc.list().then(setFaixasCRC)
     } else {
-      setValorTotal(0)
-      setValorEntrada(0)
+      setValorTotalStr('0')
+      setValorEntradaStr('0')
+      setPercentualEntradaStr('0')
       setCrcParticipou(false)
       setAvaliacao(null)
       setDataConcretizacao(format(new Date(), 'yyyy-MM-dd'))
     }
   }, [open, avaliacaoId])
-
-  const percentualEntrada = valorTotal > 0 ? (valorEntrada / valorTotal) * 100 : 0
 
   const getComissao = (faixas: FaixaBase[], percentual: number) => {
     const faixa = faixas.find((f) => {
@@ -175,8 +182,18 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   type="number"
                   step="0.01"
                   min="0"
-                  value={valorTotal || ''}
-                  onChange={(e) => setValorTotal(Number(e.target.value))}
+                  value={valorTotalStr}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setValorTotalStr(val)
+                    const numVal = Number(val)
+                    if (numVal > 0) {
+                      const numEntrada = Number(valorEntradaStr)
+                      setPercentualEntradaStr(((numEntrada / numVal) * 100).toFixed(2))
+                    } else {
+                      setPercentualEntradaStr('0')
+                    }
+                  }}
                 />
               </div>
               <div className="grid gap-2">
@@ -199,10 +216,14 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   step="0.01"
                   min="0"
                   max="100"
-                  value={valorTotal > 0 ? ((valorEntrada / valorTotal) * 100).toFixed(2) : ''}
+                  value={percentualEntradaStr}
                   onChange={(e) => {
-                    const perc = Number(e.target.value)
-                    setValorEntrada((valorTotal * perc) / 100)
+                    const val = e.target.value
+                    setPercentualEntradaStr(val)
+                    if (valorTotal > 0) {
+                      const numPerc = Number(val)
+                      setValorEntradaStr(((valorTotal * numPerc) / 100).toFixed(2))
+                    }
                   }}
                 />
               </div>
@@ -213,8 +234,15 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   type="number"
                   step="0.01"
                   min="0"
-                  value={valorEntrada || ''}
-                  onChange={(e) => setValorEntrada(Number(e.target.value))}
+                  value={valorEntradaStr}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setValorEntradaStr(val)
+                    if (valorTotal > 0) {
+                      const numEntrada = Number(val)
+                      setPercentualEntradaStr(((numEntrada / valorTotal) * 100).toFixed(2))
+                    }
+                  }}
                 />
               </div>
             </div>
