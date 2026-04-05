@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import {
   Table,
@@ -56,7 +57,9 @@ export default function FechamentoComissoes() {
   const [loadingDetalhes, setLoadingDetalhes] = useState(false)
   const [formaPagamento, setFormaPagamento] = useState('')
   const [dataPagamento, setDataPagamento] = useState('')
+  const [observacaoPagamento, setObservacaoPagamento] = useState('')
   const [pagando, setPagando] = useState(false)
+  const [statusFiltro, setStatusFiltro] = useState<string>('todas')
 
   useEffect(() => {
     checkAccess()
@@ -121,6 +124,7 @@ export default function FechamentoComissoes() {
     setDetalhes([])
     setLoadingDetalhes(true)
     setFormaPagamento('')
+    setObservacaoPagamento('')
     setDataPagamento(new Date().toISOString().split('T')[0])
     try {
       const data = await faturamentoService.getFaturaDetalhes(fatura)
@@ -147,14 +151,14 @@ export default function FechamentoComissoes() {
     }
     setPagando(true)
     try {
-      await faturamentoService.pagarFatura(selectedFatura.id, formaPagamento, dataPagamento)
+      await faturamentoService.pagarFatura(
+        selectedFatura.id,
+        formaPagamento,
+        dataPagamento,
+        observacaoPagamento,
+      )
       toast({ title: 'Sucesso', description: 'Fatura marcada como paga com sucesso!' })
-      setSelectedFatura((prev: any) => ({
-        ...prev,
-        status_pagamento: 'pago',
-        forma_pagamento: formaPagamento,
-        data_pagamento: dataPagamento,
-      }))
+      setSelectedFatura(null)
       loadFaturas()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -162,6 +166,10 @@ export default function FechamentoComissoes() {
       setPagando(false)
     }
   }
+
+  const faturasFiltradas = faturas.filter(
+    (f) => statusFiltro === 'todas' || f.status_pagamento === statusFiltro,
+  )
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
@@ -227,18 +235,32 @@ export default function FechamentoComissoes() {
       )}
 
       <Card className="border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg">Faturas Geradas</CardTitle>
-          <CardDescription>Histórico de todos os faturamentos de comissões.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">Faturas Geradas</CardTitle>
+            <CardDescription>Histórico de todos os faturamentos de comissões.</CardDescription>
+          </div>
+          <div className="w-48">
+            <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as Faturas</SelectItem>
+                <SelectItem value="em_aberto">Em Aberto</SelectItem>
+                <SelectItem value="pago">Pagas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
-          ) : faturas.length === 0 ? (
+          ) : faturasFiltradas.length === 0 ? (
             <div className="text-center p-8 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-              Nenhuma fatura gerada até o momento.
+              Nenhuma fatura encontrada para o filtro selecionado.
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">
@@ -254,7 +276,7 @@ export default function FechamentoComissoes() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {faturas.map((f: any) => (
+                  {faturasFiltradas.map((f: any) => (
                     <TableRow
                       key={f.id}
                       className="cursor-pointer hover:bg-slate-50/80 transition-colors"
@@ -421,42 +443,57 @@ export default function FechamentoComissoes() {
             {isAdmin && selectedFatura?.status_pagamento === 'em_aberto' && (
               <div className="pt-6 mt-6 border-t border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Registrar Pagamento</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end bg-slate-50 p-5 rounded-xl border border-slate-200">
-                  <div className="space-y-2">
-                    <Label className="text-slate-700">Data do Pagamento</Label>
-                    <Input
-                      type="date"
-                      value={dataPagamento}
-                      onChange={(e) => setDataPagamento(e.target.value)}
-                      className="bg-white"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start bg-slate-50 p-5 rounded-xl border border-slate-200">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-slate-700">Data do Pagamento</Label>
+                      <Input
+                        type="date"
+                        value={dataPagamento}
+                        onChange={(e) => setDataPagamento(e.target.value)}
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-700">Forma de Pagamento</Label>
+                      <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PIX">PIX</SelectItem>
+                          <SelectItem value="Transferência Bancária">
+                            Transferência Bancária
+                          </SelectItem>
+                          <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="Outro">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-700">Forma de Pagamento</Label>
-                    <Select value={formaPagamento} onValueChange={setFormaPagamento}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PIX">PIX</SelectItem>
-                        <SelectItem value="Transferência">Transferência Bancária</SelectItem>
-                        <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                        <SelectItem value="Cheque">Cheque</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-4 h-full flex flex-col">
+                    <div className="space-y-2 flex-1">
+                      <Label className="text-slate-700">Observação do Pagamento (opcional)</Label>
+                      <Textarea
+                        value={observacaoPagamento}
+                        onChange={(e) => setObservacaoPagamento(e.target.value)}
+                        className="bg-white resize-none h-[104px]"
+                        placeholder="Ex: Comprovante enviado via WhatsApp"
+                      />
+                    </div>
+                    <Button
+                      onClick={handlePagar}
+                      disabled={pagando}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                    >
+                      {pagando ? (
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      ) : (
+                        <DollarSign className="w-5 h-5 mr-2" />
+                      )}
+                      CONFIRMAR PAGAMENTO
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handlePagar}
-                    disabled={pagando}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
-                  >
-                    {pagando ? (
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    ) : (
-                      <DollarSign className="w-5 h-5 mr-2" />
-                    )}
-                    CONFIRMAR PAGAMENTO
-                  </Button>
                 </div>
               </div>
             )}

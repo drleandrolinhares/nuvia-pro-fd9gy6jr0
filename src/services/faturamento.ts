@@ -184,13 +184,19 @@ export const faturamentoService = {
     }
   },
 
-  async pagarFatura(faturaId: string, formaPagamento: string, dataPagamento: string) {
+  async pagarFatura(
+    faturaId: string,
+    formaPagamento: string,
+    dataPagamento: string,
+    observacaoPagamento?: string,
+  ) {
     const { error } = await supabase
       .from('faturas_comissoes')
       .update({
         status_pagamento: 'pago',
         forma_pagamento: formaPagamento,
         data_pagamento: dataPagamento,
+        observacao_pagamento: observacaoPagamento,
       })
       .eq('id', faturaId)
 
