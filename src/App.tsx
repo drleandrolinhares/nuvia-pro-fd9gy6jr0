@@ -11,6 +11,8 @@ import Colaboradores from './pages/Colaboradores'
 import Fornecedores from './pages/Fornecedores'
 import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
+import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
+import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
 import Negociacao from './pages/comercial/Negociacao'
 import NotFound from './pages/NotFound'
@@ -47,6 +49,9 @@ const AppRoutes = () => {
         <Route path="/fornecedores" element={<Fornecedores />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/admin/cadastros" element={<CadastrosBasicos />} />
+
+        <Route path="/configuracoes/descontos" element={<DescontosPorPrazo />} />
+        <Route path="/configuracoes/faixas" element={<EntradaEFaixas />} />
 
         {/* Operacional Routes */}
         <Route path="/operacional/sac" element={<Placeholder />} />

@@ -333,6 +333,51 @@ export type Database = {
           },
         ]
       }
+      configuracoes_negociacao: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          percentual_entrada_padrao: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          percentual_entrada_padrao?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          percentual_entrada_padrao?: number
+        }
+        Relationships: []
+      }
+      descontos_por_prazo: {
+        Row: {
+          criado_em: string
+          descricao: string | null
+          faixa_numero: number
+          id: string
+          percentual_desconto: number
+        }
+        Insert: {
+          criado_em?: string
+          descricao?: string | null
+          faixa_numero: number
+          id?: string
+          percentual_desconto?: number
+        }
+        Update: {
+          criado_em?: string
+          descricao?: string | null
+          faixa_numero?: number
+          id?: string
+          percentual_desconto?: number
+        }
+        Relationships: []
+      }
       diametros_implante: {
         Row: {
           data_criacao: string | null
@@ -492,6 +537,30 @@ export type Database = {
           data_criacao?: string | null
           id?: string
           nome?: string
+        }
+        Relationships: []
+      }
+      faixas_valores_parcelas: {
+        Row: {
+          criado_em: string
+          id: string
+          max_parcelas: number
+          valor_maximo: number
+          valor_minimo: number
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          max_parcelas?: number
+          valor_maximo: number
+          valor_minimo?: number
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          max_parcelas?: number
+          valor_maximo?: number
+          valor_minimo?: number
         }
         Relationships: []
       }
@@ -1142,6 +1211,17 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   data_criacao: timestamp with time zone (nullable, default: now())
 //   sala_id: uuid (nullable)
+// Table: configuracoes_negociacao
+//   id: uuid (not null, default: gen_random_uuid())
+//   percentual_entrada_padrao: numeric (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: descontos_por_prazo
+//   id: uuid (not null, default: gen_random_uuid())
+//   faixa_numero: integer (not null)
+//   percentual_desconto: numeric (not null, default: 0)
+//   descricao: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: diametros_implante
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1176,6 +1256,12 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: faixas_valores_parcelas
+//   id: uuid (not null, default: gen_random_uuid())
+//   valor_minimo: numeric (not null, default: 0)
+//   valor_maximo: numeric (not null)
+//   max_parcelas: integer (not null, default: 1)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1301,6 +1387,11 @@ export const Constants = {
 //   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY compras_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
+// Table: configuracoes_negociacao
+//   PRIMARY KEY configuracoes_negociacao_pkey: PRIMARY KEY (id)
+// Table: descontos_por_prazo
+//   CHECK descontos_por_prazo_faixa_numero_check: CHECK (((faixa_numero >= 1) AND (faixa_numero <= 4)))
+//   PRIMARY KEY descontos_por_prazo_pkey: PRIMARY KEY (id)
 // Table: diametros_implante
 //   UNIQUE diametros_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY diametros_implante_pkey: PRIMARY KEY (id)
@@ -1318,6 +1409,8 @@ export const Constants = {
 // Table: especialidades
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
+// Table: faixas_valores_parcelas
+//   PRIMARY KEY faixas_valores_parcelas_pkey: PRIMARY KEY (id)
 // Table: fornecedores
 //   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
 // Table: historico_compras
@@ -1413,6 +1506,14 @@ export const Constants = {
 //   Policy "compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: configuracoes_negociacao
+//   Policy "configuracoes_negociacao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: descontos_por_prazo
+//   Policy "descontos_por_prazo_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: diametros_implante
 //   Policy "diametros_implante_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1443,6 +1544,10 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: faixas_valores_parcelas
+//   Policy "faixas_valores_parcelas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: fornecedores
 //   Policy "fornecedores_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))

@@ -9,6 +9,7 @@ import {
   CloudCog,
   Database,
   FileBarChart,
+  FileText,
   Handshake,
   Landmark,
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   MessageSquare,
   Package,
   Settings,
+  Shield,
   ShieldCheck,
   SlidersHorizontal,
   Truck,
@@ -81,12 +83,20 @@ const navData = [
   },
   {
     title: 'CONFIGURAÇÕES',
-    icon: Settings,
+    icon: Shield,
     items: [
       { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database },
       { title: 'Parâmetros Gerais', url: '/configuracoes', icon: SlidersHorizontal },
       { title: 'Colaboradores', url: '/colaboradores', icon: Users },
       { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
+      {
+        title: 'NEGOCIAÇÃO DADOS',
+        icon: FileText,
+        subItems: [
+          { title: 'Descontos por Prazo', url: '/configuracoes/descontos' },
+          { title: 'Entrada Padrão e Faixas', url: '/configuracoes/faixas' },
+        ],
+      },
     ],
   },
 ]
@@ -160,8 +170,44 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">
                     <SidebarMenu>
-                      {group.items.map((item) => {
+                      {group.items.map((item: any) => {
                         const ItemIcon = item.icon
+
+                        if (item.subItems) {
+                          return (
+                            <Collapsible key={item.title} className="group/sub" defaultOpen>
+                              <SidebarMenuItem>
+                                <CollapsibleTrigger asChild>
+                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full">
+                                    <div className="flex items-center gap-2">
+                                      {ItemIcon && <ItemIcon />}
+                                      <span>{item.title}</span>
+                                    </div>
+                                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/sub:rotate-90" />
+                                  </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <SidebarMenuSub className="ml-10 border-l border-sidebar-border pr-0 mr-0 mt-1">
+                                    {item.subItems.map((sub: any) => (
+                                      <SidebarMenuSubItem key={sub.title}>
+                                        <SidebarMenuSubButton
+                                          asChild
+                                          isActive={location.pathname === sub.url}
+                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold py-1.5 h-auto"
+                                        >
+                                          <Link to={sub.url}>
+                                            <span>{sub.title}</span>
+                                          </Link>
+                                        </SidebarMenuSubButton>
+                                      </SidebarMenuSubItem>
+                                    ))}
+                                  </SidebarMenuSub>
+                                </CollapsibleContent>
+                              </SidebarMenuItem>
+                            </Collapsible>
+                          )
+                        }
+
                         return (
                           <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
