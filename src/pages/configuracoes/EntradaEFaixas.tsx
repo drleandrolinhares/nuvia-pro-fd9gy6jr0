@@ -48,17 +48,7 @@ export default function EntradaEFaixas() {
 
       if (faixasError) throw faixasError
 
-      if (!faixasData || faixasData.length === 0) {
-        // Mock data requested by the user
-        setFaixas([
-          { id: 'mock-1', valor_minimo: 1000, valor_maximo: 2999.99, max_parcelas: 12 },
-          { id: 'mock-2', valor_minimo: 3000, valor_maximo: 4999.99, max_parcelas: 12 },
-          { id: 'mock-3', valor_minimo: 5000, valor_maximo: 6999.99, max_parcelas: 20 },
-          { id: 'mock-4', valor_minimo: 7000, valor_maximo: 8999.99, max_parcelas: 20 },
-        ])
-      } else {
-        setFaixas(faixasData)
-      }
+      setFaixas(faixasData || [])
     } catch (error: any) {
       toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
     } finally {
@@ -116,9 +106,7 @@ export default function EntradaEFaixas() {
       // Save Faixas
       const { data: existingFaixas } = await supabase.from('faixas_valores_parcelas').select('id')
       const existingIds = existingFaixas?.map((f) => f.id) || []
-      const activeIds = faixas
-        .filter((f) => !f.id.startsWith('mock-') && !f.id.startsWith('new-'))
-        .map((f) => f.id)
+      const activeIds = faixas.filter((f) => !f.id.startsWith('new-')).map((f) => f.id)
       const toDelete = existingIds.filter((id) => !activeIds.includes(id))
 
       if (toDelete.length > 0) {
@@ -135,7 +123,7 @@ export default function EntradaEFaixas() {
           max_parcelas: Number(item.max_parcelas),
         }
 
-        if (item.id.startsWith('mock-') || item.id.startsWith('new-')) {
+        if (item.id.startsWith('new-')) {
           const { error } = await supabase.from('faixas_valores_parcelas').insert(payload)
           if (error) throw error
         } else {
@@ -165,7 +153,7 @@ export default function EntradaEFaixas() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-4xl w-full">
+    <div className="flex flex-col gap-6 p-6 max-w-4xl w-full mx-auto animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
           Entrada Padrão e Faixas de Valores
@@ -219,6 +207,13 @@ export default function EntradaEFaixas() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {faixas.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-slate-500 font-medium">
+                    Nenhuma faixa de valor cadastrada.
+                  </TableCell>
+                </TableRow>
+              )}
               {faixas.map((item, idx) => (
                 <TableRow key={item.id} className="hover:bg-slate-50/50">
                   <TableCell>
