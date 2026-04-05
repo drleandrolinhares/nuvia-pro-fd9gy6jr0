@@ -43,7 +43,29 @@ export function CriativosDentistaModal({
   const [loadingAdd, setLoadingAdd] = useState(false)
   const [descricao, setDescricao] = useState('')
   const [dataCriacao, setDataCriacao] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [metaMensal, setMetaMensal] = useState<number>(dentista.metaMensalCriativos || 0)
+  const [savingMeta, setSavingMeta] = useState(false)
   const { toast } = useToast()
+
+  useEffect(() => {
+    setMetaMensal(dentista.metaMensalCriativos || 0)
+  }, [dentista.metaMensalCriativos])
+
+  const handleUpdateMeta = async () => {
+    setSavingMeta(true)
+    const { error } = await supabase
+      .from('dentistas_avaliadores')
+      .update({ meta_mensal_criativos: metaMensal })
+      .eq('id', dentista.id)
+
+    setSavingMeta(false)
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Sucesso', description: 'Meta atualizada com sucesso.' })
+      onSuccess()
+    }
+  }
 
   const fetchCriativos = async () => {
     setLoading(true)
@@ -108,7 +130,7 @@ export function CriativosDentistaModal({
     }
   }
 
-  const meta = dentista.metaMensalCriativos || 0
+  const meta = metaMensal || 0
   const percent = meta > 0 ? Math.min(100, Math.round((criativos.length / meta) * 100)) : 0
   let colorClass = 'bg-red-500'
   if (percent >= 100) colorClass = 'bg-emerald-500'
@@ -129,14 +151,41 @@ export function CriativosDentistaModal({
 
         <div className="py-2">
           {/* Progress */}
-          <div className="space-y-2 mb-6">
-            <div className="flex justify-between text-sm font-medium">
-              <span className="text-muted-foreground">Meta Mensal: {meta} vídeos</span>
-              <span>
-                Realizado: {criativos.length} ({percent}%)
-              </span>
+          <div className="space-y-3 mb-6 p-4 border rounded-lg bg-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-muted-foreground">Meta Mensal (Vídeos)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    className="w-24 h-9"
+                    value={metaMensal || ''}
+                    onChange={(e) => setMetaMensal(Number(e.target.value) || 0)}
+                    min={0}
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-9"
+                    onClick={handleUpdateMeta}
+                    disabled={savingMeta || metaMensal === (dentista.metaMensalCriativos || 0)}
+                  >
+                    {savingMeta && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+                    Atualizar
+                  </Button>
+                </div>
+              </div>
+              <div className="text-right flex flex-col gap-1">
+                <span className="text-sm text-muted-foreground">Progresso</span>
+                <span className="text-lg font-bold">
+                  {criativos.length} / {meta}{' '}
+                  <span className="text-sm font-medium text-muted-foreground ml-1">
+                    ({percent}%)
+                  </span>
+                </span>
+              </div>
             </div>
-            <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-secondary rounded-full h-3 overflow-hidden mt-2">
               <div
                 className={cn('h-full transition-all duration-500', colorClass)}
                 style={{ width: `${percent}%` }}

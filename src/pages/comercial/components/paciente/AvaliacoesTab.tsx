@@ -69,6 +69,9 @@ export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
     try {
       setSaving(true)
       const payload = {
+        data_avaliacao: editAvaliacao.data_avaliacao
+          ? editAvaliacao.data_avaliacao.substring(0, 10)
+          : format(new Date(), 'yyyy-MM-dd'),
         valor_orcamento: Number(editAvaliacao.valor_orcamento) || 0,
         status: editAvaliacao.status || 'avaliacao_realizada',
         dentista_avaliador_id: editAvaliacao.dentista_avaliador_id || null,
@@ -201,6 +204,20 @@ export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
             </DialogHeader>
             {editAvaliacao && (
               <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Data da Avaliação</Label>
+                  <Input
+                    type="date"
+                    value={
+                      editAvaliacao.data_avaliacao
+                        ? editAvaliacao.data_avaliacao.substring(0, 10)
+                        : format(new Date(), 'yyyy-MM-dd')
+                    }
+                    onChange={(e) =>
+                      setEditAvaliacao({ ...editAvaliacao, data_avaliacao: e.target.value })
+                    }
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Valor do Orçamento (R$)</Label>
                   <Input

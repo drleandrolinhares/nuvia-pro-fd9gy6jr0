@@ -177,14 +177,48 @@ export function VendasRankingDentistas() {
                       <TableCell>{formatCurrency(item.ticketOportunidade)}</TableCell>
                       <TableCell>{formatCurrency(item.ticketConversao)}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          className="h-8 px-2 text-primary hover:bg-primary/10 hover:text-primary"
-                          onClick={() => setModalCriativos({ isOpen: true, dentista: item })}
-                        >
-                          <Video className="w-4 h-4 mr-2" />
-                          {item.criativos}
-                        </Button>
+                        <div className="flex flex-col gap-1.5 min-w-[120px] max-w-[150px]">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-medium">
+                              {item.criativos} / {item.metaMensalCriativos || 0}
+                            </span>
+                            <span
+                              className={cn(
+                                'font-bold',
+                                item.metaMensalCriativos > 0 &&
+                                  item.criativos >= item.metaMensalCriativos
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-primary',
+                              )}
+                            >
+                              {item.metaMensalCriativos > 0
+                                ? Math.round((item.criativos / item.metaMensalCriativos) * 100)
+                                : 0}
+                              %
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className={cn(
+                                'h-full transition-all',
+                                item.metaMensalCriativos > 0 &&
+                                  item.criativos >= item.metaMensalCriativos
+                                  ? 'bg-emerald-500'
+                                  : 'bg-primary',
+                              )}
+                              style={{
+                                width: `${Math.min(100, item.metaMensalCriativos > 0 ? (item.criativos / item.metaMensalCriativos) * 100 : 0)}%`,
+                              }}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            className="h-7 w-full text-xs mt-1 bg-muted/50 hover:bg-primary/10 hover:text-primary"
+                            onClick={() => setModalCriativos({ isOpen: true, dentista: item })}
+                          >
+                            <Video className="w-3.5 h-3.5 mr-2" /> Gerenciar
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
