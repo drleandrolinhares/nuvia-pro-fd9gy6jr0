@@ -9,27 +9,33 @@ import { Loader2, Save } from 'lucide-react'
 const DEFAULT_DESCONTOS = [
   {
     faixa_numero: 1,
-    titulo: 'À VISTA (FAIXA 1)',
-    percentual_desconto: 15,
-    descricao: 'PAGAMENTO ÚNICO',
+    titulo: 'FAIXA 1',
+    percentual_desconto: 5,
+    descricao: '2X a 5X',
   },
   {
     faixa_numero: 2,
-    titulo: 'FAIXA 2 (2X-5X)',
-    percentual_desconto: 5,
-    descricao: 'PRIMEIRO GRUPO',
+    titulo: 'FAIXA 2',
+    percentual_desconto: 3,
+    descricao: '6X a 10X',
   },
   {
     faixa_numero: 3,
-    titulo: 'FAIXA 3 (6X-10X)',
-    percentual_desconto: 3,
-    descricao: 'SEGUNDO GRUPO',
+    titulo: 'FAIXA 3',
+    percentual_desconto: 0,
+    descricao: '11X a 20X',
   },
   {
     faixa_numero: 4,
-    titulo: 'FAIXA 4 (11X-20X)',
+    titulo: 'FAIXA 4',
     percentual_desconto: 0,
-    descricao: 'PARCELAS RESTANTES',
+    descricao: '21X a 30X',
+  },
+  {
+    faixa_numero: 5,
+    titulo: 'FAIXA 5',
+    percentual_desconto: 0,
+    descricao: '31X+',
   },
 ]
 
@@ -45,7 +51,7 @@ export default function DescontosPorPrazo() {
       const { data, error } = await supabase
         .from('descontos_por_prazo')
         .select('*')
-        .in('faixa_numero', [1, 2, 3, 4])
+        .in('faixa_numero', [1, 2, 3, 4, 5])
         .order('faixa_numero', { ascending: true })
 
       if (error) throw error
@@ -119,7 +125,7 @@ export default function DescontosPorPrazo() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-6xl mx-auto w-full animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Descontos por Prazo</h1>
         <p className="text-slate-500 mt-2">
@@ -129,7 +135,7 @@ export default function DescontosPorPrazo() {
 
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-slate-800">DESCONTOS POR PRAZO</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {descontos.map((item) => (
             <Card key={item.id} className="border-slate-200 shadow-sm bg-white overflow-hidden">
               <CardHeader className="bg-slate-950 pb-4">
@@ -152,7 +158,7 @@ export default function DescontosPorPrazo() {
                     %
                   </span>
                 </div>
-                <p className="text-xs font-semibold text-slate-500 text-center uppercase tracking-wider mt-2">
+                <p className="text-sm font-semibold text-slate-600 text-center mt-2">
                   {item.descricao}
                 </p>
               </CardContent>

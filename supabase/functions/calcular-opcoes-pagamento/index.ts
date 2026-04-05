@@ -64,11 +64,12 @@ Deno.serve(async (req: Request) => {
     const opcoes_parcelamento = []
 
     for (let i = 1; i <= max_parcelas; i++) {
-      let faixa_numero = 1
-      if (i === 1) faixa_numero = 1
-      else if (i >= 2 && i <= 5) faixa_numero = 2
-      else if (i >= 6 && i <= 10) faixa_numero = 3
-      else if (i >= 11) faixa_numero = 4
+      let faixa_numero = 0
+      if (i >= 2 && i <= 5) faixa_numero = 1
+      else if (i >= 6 && i <= 10) faixa_numero = 2
+      else if (i >= 11 && i <= 20) faixa_numero = 3
+      else if (i >= 21 && i <= 30) faixa_numero = 4
+      else if (i >= 31) faixa_numero = 5
 
       const descontoObj = descontos?.find((d) => d.faixa_numero === faixa_numero)
       const percentual_desconto = descontoObj ? Number(descontoObj.percentual_desconto) : 0
