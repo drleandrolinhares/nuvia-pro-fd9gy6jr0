@@ -1,12 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -33,7 +27,6 @@ Deno.serve(async (req: Request) => {
     const valor_entrada = (valorTratamentoNum * percentualEntradaNum) / 100
     const valor_restante = valorTratamentoNum - valor_entrada
 
-    // Fetch value ranges to determine max installments
     const { data: faixas, error: faixasError } = await supabaseClient
       .from('faixas_valores_parcelas')
       .select('*')
@@ -62,7 +55,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Fetch discounts
     const { data: descontos, error: descontosError } = await supabaseClient
       .from('descontos_por_prazo')
       .select('*')
@@ -72,11 +64,14 @@ Deno.serve(async (req: Request) => {
     const opcoes_parcelamento = []
 
     for (let i = 1; i <= max_parcelas; i++) {
-      let faixa_numero = 4
-      if (i === 1) faixa_numero = 1
-      else if (i >= 2 && i <= 5) faixa_numero = 2
-      else if (i >= 6 && i <= 9) faixa_numero = 3
-      else faixa_numero = 4
+      let faixa_numero = 0
+      if (i === 1) faixa_numero = 0
+      else if (i >= 2 && i <= 4) faixa_numero = 1
+      else if (i >= 5 && i <= 8) faixa_numero = 2
+      else if (i >= 9 && i <= 12) faixa_numero = 3
+      else if (i >= 13 && i <= 20) faixa_numero = 4
+      else if (i >= 21 && i <= 24) faixa_numero = 5
+      else faixa_numero = 5
 
       const descontoObj = descontos?.find((d) => d.faixa_numero === faixa_numero)
       const percentual_desconto = descontoObj ? Number(descontoObj.percentual_desconto) : 0

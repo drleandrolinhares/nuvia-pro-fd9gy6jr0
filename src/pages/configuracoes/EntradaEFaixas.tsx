@@ -22,6 +22,7 @@ interface ConfigNegociacao {
 
 interface FaixaParcela {
   id?: string
+  faixa_numero?: number
   valor_minimo: number
   valor_maximo: number
   max_parcelas: number
@@ -92,14 +93,17 @@ export default function EntradaEFaixas() {
   }
 
   const saveFaixa = async (faixa: FaixaParcela, index: number) => {
+    const payload = {
+      faixa_numero: faixa.faixa_numero,
+      valor_minimo: faixa.valor_minimo,
+      valor_maximo: faixa.valor_maximo,
+      max_parcelas: faixa.max_parcelas,
+    }
+
     if (faixa.id) {
       const { error } = await supabase
         .from('faixas_valores_parcelas')
-        .update({
-          valor_minimo: faixa.valor_minimo,
-          valor_maximo: faixa.valor_maximo,
-          max_parcelas: faixa.max_parcelas,
-        })
+        .update(payload)
         .eq('id', faixa.id)
       if (error) {
         toast({
@@ -112,11 +116,7 @@ export default function EntradaEFaixas() {
     } else {
       const { data, error } = await supabase
         .from('faixas_valores_parcelas')
-        .insert({
-          valor_minimo: faixa.valor_minimo,
-          valor_maximo: faixa.valor_maximo,
-          max_parcelas: faixa.max_parcelas,
-        })
+        .insert(payload)
         .select()
         .single()
 
@@ -211,7 +211,15 @@ export default function EntradaEFaixas() {
               </CardTitle>
               <Button
                 onClick={() =>
-                  setFaixas([...faixas, { valor_minimo: 0, valor_maximo: 0, max_parcelas: 1 }])
+                  setFaixas([
+                    ...faixas,
+                    {
+                      faixa_numero: faixas.length + 1,
+                      valor_minimo: 0,
+                      valor_maximo: 0,
+                      max_parcelas: 1,
+                    },
+                  ])
                 }
                 variant="outline"
                 className="gap-2"
@@ -224,6 +232,7 @@ export default function EntradaEFaixas() {
                 <Table>
                   <TableHeader className="bg-slate-50">
                     <TableRow>
+                      <TableHead className="w-[80px] font-semibold text-slate-600">FAIXA</TableHead>
                       <TableHead className="font-semibold text-slate-600">
                         VALOR MÍNIMO (R$)
                       </TableHead>
@@ -239,13 +248,22 @@ export default function EntradaEFaixas() {
                   <TableBody>
                     {faixas.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                        <TableCell colSpan={5} className="text-center py-6 text-slate-500">
                           Nenhuma faixa configurada.
                         </TableCell>
                       </TableRow>
                     ) : (
                       faixas.map((faixa, index) => (
                         <TableRow key={faixa.id || index}>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={faixa.faixa_numero || ''}
+                              onChange={(e) =>
+                                updateFaixa(index, 'faixa_numero', Number(e.target.value))
+                              }
+                            />
+                          </TableCell>
                           <TableCell>
                             <Input
                               type="number"

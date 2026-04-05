@@ -18,10 +18,12 @@ export default function DescontosPorPrazo() {
   const { toast } = useToast()
 
   const [faixas, setFaixas] = useState<Desconto[]>([
-    { faixa_numero: 1, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 2, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 3, percentual_desconto: 0, descricao: '' },
-    { faixa_numero: 4, percentual_desconto: 0, descricao: '' },
+    { faixa_numero: 0, percentual_desconto: 0, descricao: 'Somente à vista' },
+    { faixa_numero: 1, percentual_desconto: 0, descricao: 'Até 4 parcelas' },
+    { faixa_numero: 2, percentual_desconto: 0, descricao: 'Até 8 parcelas' },
+    { faixa_numero: 3, percentual_desconto: 0, descricao: 'Até 12 parcelas' },
+    { faixa_numero: 4, percentual_desconto: 0, descricao: 'Até 20 parcelas' },
+    { faixa_numero: 5, percentual_desconto: 0, descricao: 'Até 24 parcelas' },
   ])
   const [loading, setLoading] = useState(true)
 
@@ -80,7 +82,7 @@ export default function DescontosPorPrazo() {
   }
 
   const getTitle = (numero: number) => {
-    if (numero === 1) return 'À VISTA (FAIXA 1)'
+    if (numero === 0) return 'À VISTA (FAIXA 0)'
     return `FAIXA ${numero}`
   }
 
@@ -106,7 +108,7 @@ export default function DescontosPorPrazo() {
           Carregando descontos...
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {faixas.map((faixa) => (
             <Card
               key={faixa.faixa_numero}
