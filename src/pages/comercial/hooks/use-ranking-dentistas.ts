@@ -11,11 +11,15 @@ export interface RankingDentista {
   ticketOportunidade: number
   ticketConversao: number
   criativos: number
+  metaMensalCriativos: number
 }
 
 export function useRankingDentistas(periodo: string) {
   const [ranking, setRanking] = useState<RankingDentista[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const refetch = () => setRefreshTrigger((prev) => prev + 1)
 
   useEffect(() => {
     let isMounted = true
@@ -53,7 +57,7 @@ export function useRankingDentistas(periodo: string) {
 
         const { data: dentistas } = await supabase
           .from('dentistas_avaliadores')
-          .select('id, nome')
+          .select('id, nome, meta_mensal_criativos')
           .eq('status', 'ativo')
         if (!dentistas) return
 
@@ -117,6 +121,7 @@ export function useRankingDentistas(periodo: string) {
             ticketOportunidade,
             ticketConversao,
             criativos: crs.length,
+            metaMensalCriativos: d.meta_mensal_criativos || 0,
           }
         })
 
@@ -135,7 +140,7 @@ export function useRankingDentistas(periodo: string) {
     return () => {
       isMounted = false
     }
-  }, [periodo])
+  }, [periodo, refreshTrigger])
 
-  return { ranking, loading }
+  return { ranking, loading, refetch }
 }

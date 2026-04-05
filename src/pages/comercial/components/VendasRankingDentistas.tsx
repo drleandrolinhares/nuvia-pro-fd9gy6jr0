@@ -15,14 +15,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useRankingDentistas } from '../hooks/use-ranking-dentistas'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown } from 'lucide-react'
+import { useRankingDentistas, RankingDentista } from '../hooks/use-ranking-dentistas'
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { CriativosDentistaModal } from './CriativosDentistaModal'
 
 export function VendasRankingDentistas() {
   const [periodo, setPeriodo] = useState('mes_atual')
-  const { ranking, loading } = useRankingDentistas(periodo)
+  const { ranking, loading, refetch } = useRankingDentistas(periodo)
+
+  const [modalCriativos, setModalCriativos] = useState<{
+    isOpen: boolean
+    dentista: RankingDentista | null
+  }>({
+    isOpen: false,
+    dentista: null,
+  })
 
   const [sortColumn, setSortColumn] = useState<keyof (typeof ranking)[0]>('conversao')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -167,7 +176,16 @@ export function VendasRankingDentistas() {
                       </TableCell>
                       <TableCell>{formatCurrency(item.ticketOportunidade)}</TableCell>
                       <TableCell>{formatCurrency(item.ticketConversao)}</TableCell>
-                      <TableCell>{item.criativos}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          className="h-8 px-2 text-primary hover:bg-primary/10 hover:text-primary"
+                          onClick={() => setModalCriativos({ isOpen: true, dentista: item })}
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          {item.criativos}
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )
                 })
@@ -176,6 +194,15 @@ export function VendasRankingDentistas() {
           </Table>
         </div>
       </CardContent>
+
+      {modalCriativos.dentista && (
+        <CriativosDentistaModal
+          isOpen={modalCriativos.isOpen}
+          onClose={() => setModalCriativos((prev) => ({ ...prev, isOpen: false }))}
+          dentista={modalCriativos.dentista}
+          onSuccess={refetch}
+        />
+      )}
     </Card>
   )
 }
