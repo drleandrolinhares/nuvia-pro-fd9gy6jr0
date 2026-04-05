@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Shield, Save, Plus, Trash2 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -14,313 +9,271 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-interface ConfigNegociacao {
-  id?: string
-  percentual_entrada_padrao: number
-}
-
-interface FaixaParcela {
-  id?: string
-  faixa_numero?: number
-  valor_minimo: number
-  valor_maximo: number
-  max_parcelas: number
-}
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
+import { Loader2, Save } from 'lucide-react'
 
 export default function EntradaEFaixas() {
-  const { toast } = useToast()
-  const [config, setConfig] = useState<ConfigNegociacao>({ percentual_entrada_padrao: 0 })
-  const [faixas, setFaixas] = useState<FaixaParcela[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingConfig, setSavingConfig] = useState(false)
+  const [savingFaixas, setSavingFaixas] = useState(false)
+  const [configuracao, setConfiguracao] = useState<any>(null)
+  const [faixas, setFaixas] = useState<any[]>([])
+  const { toast } = useToast()
 
   const loadData = async () => {
-    setLoading(true)
-    const { data: cfg } = await supabase
-      .from('configuracoes_negociacao')
-      .select('*')
-      .limit(1)
-      .single()
+    try {
+      setLoading(true)
 
-    if (cfg) {
-      setConfig(cfg)
+      const { data: configData, error: configError } = await supabase
+        .from('configuracoes_negociacao')
+        .select('*')
+        .limit(1)
+        .maybeSingle()
+
+      if (configError) throw configError
+
+      if (!configData) {
+        setConfiguracao({ id: 'new', percentual_entrada_padrao: 0 })
+      } else {
+        setConfiguracao(configData)
+      }
+
+      const { data: faixasData, error: faixasError } = await supabase
+        .from('faixas_valores_parcelas')
+        .select('*')
+        .order('faixa_numero', { ascending: true })
+
+      if (faixasError) throw faixasError
+
+      if (!faixasData || faixasData.length === 0) {
+        const defaultFaixas = Array.from({ length: 6 }).map((_, i) => ({
+          id: `new-${i}`,
+          faixa_numero: i,
+          valor_minimo: 0,
+          valor_maximo: 0,
+          max_parcelas: 1,
+        }))
+        setFaixas(defaultFaixas)
+      } else {
+        setFaixas(faixasData)
+      }
+    } catch (error: any) {
+      toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
     }
-
-    const { data: fx } = await supabase
-      .from('faixas_valores_parcelas')
-      .select('*')
-      .order('valor_minimo', { ascending: true })
-
-    if (fx) {
-      setFaixas(fx)
-    }
-    setLoading(false)
   }
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const saveConfig = async () => {
-    if (config.id) {
-      const { error } = await supabase
-        .from('configuracoes_negociacao')
-        .update({ percentual_entrada_padrao: config.percentual_entrada_padrao })
-        .eq('id', config.id)
-      if (error) {
-        toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-        return
-      }
-    } else {
-      const { data, error } = await supabase
-        .from('configuracoes_negociacao')
-        .insert({ percentual_entrada_padrao: config.percentual_entrada_padrao })
-        .select()
-        .single()
-      if (error) {
-        toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-        return
-      }
-      if (data) setConfig(data)
-    }
-    toast({ title: 'Entrada padrão salva com sucesso' })
+  const handleConfigChange = (value: string) => {
+    setConfiguracao({ ...configuracao, percentual_entrada_padrao: value })
   }
 
-  const updateFaixa = (index: number, field: keyof FaixaParcela, value: any) => {
-    const nf = [...faixas]
-    nf[index] = { ...nf[index], [field]: value }
-    setFaixas(nf)
+  const handleFaixaChange = (index: number, field: string, value: any) => {
+    const newFaixas = [...faixas]
+    newFaixas[index][field] = value
+    setFaixas(newFaixas)
   }
 
-  const saveFaixa = async (faixa: FaixaParcela, index: number) => {
-    const payload = {
-      faixa_numero: faixa.faixa_numero,
-      valor_minimo: faixa.valor_minimo,
-      valor_maximo: faixa.valor_maximo,
-      max_parcelas: faixa.max_parcelas,
-    }
-
-    if (faixa.id) {
-      const { error } = await supabase
-        .from('faixas_valores_parcelas')
-        .update(payload)
-        .eq('id', faixa.id)
-      if (error) {
-        toast({
-          title: 'Erro ao salvar faixa',
-          description: error.message,
-          variant: 'destructive',
+  const handleSaveConfig = async () => {
+    try {
+      setSavingConfig(true)
+      if (configuracao.id === 'new') {
+        const { error } = await supabase.from('configuracoes_negociacao').insert({
+          percentual_entrada_padrao: Number(configuracao.percentual_entrada_padrao),
         })
-        return
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('configuracoes_negociacao')
+          .update({
+            percentual_entrada_padrao: Number(configuracao.percentual_entrada_padrao),
+            atualizado_em: new Date().toISOString(),
+          })
+          .eq('id', configuracao.id)
+        if (error) throw error
       }
-    } else {
-      const { data, error } = await supabase
-        .from('faixas_valores_parcelas')
-        .insert(payload)
-        .select()
-        .single()
-
-      if (error) {
-        toast({
-          title: 'Erro ao criar faixa',
-          description: error.message,
-          variant: 'destructive',
-        })
-        return
-      }
-
-      if (data) {
-        const nf = [...faixas]
-        nf[index] = data
-        setFaixas(nf)
-      }
-    }
-    toast({ title: 'Faixa salva com sucesso' })
-  }
-
-  const removeFaixa = async (id?: string, index?: number) => {
-    if (id) {
-      const { error } = await supabase.from('faixas_valores_parcelas').delete().eq('id', id)
-      if (error) {
-        toast({
-          title: 'Erro ao remover faixa',
-          description: error.message,
-          variant: 'destructive',
-        })
-        return
-      }
-      toast({ title: 'Faixa removida' })
+      toast({ title: 'Sucesso', description: 'Entrada padrão salva com sucesso!' })
       loadData()
-    } else if (index !== undefined) {
-      const nf = [...faixas]
-      nf.splice(index, 1)
-      setFaixas(nf)
+    } catch (error: any) {
+      toast({ title: 'Erro ao salvar config', description: error.message, variant: 'destructive' })
+    } finally {
+      setSavingConfig(false)
     }
+  }
+
+  const handleSaveFaixas = async () => {
+    try {
+      setSavingFaixas(true)
+      for (const item of faixas) {
+        if (item.id.startsWith('new-')) {
+          const { error } = await supabase.from('faixas_valores_parcelas').insert({
+            faixa_numero: item.faixa_numero,
+            valor_minimo: Number(item.valor_minimo),
+            valor_maximo: Number(item.valor_maximo),
+            max_parcelas: Number(item.max_parcelas),
+          })
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('faixas_valores_parcelas')
+            .update({
+              faixa_numero: item.faixa_numero,
+              valor_minimo: Number(item.valor_minimo),
+              valor_maximo: Number(item.valor_maximo),
+              max_parcelas: Number(item.max_parcelas),
+            })
+            .eq('id', item.id)
+          if (error) throw error
+        }
+      }
+      toast({ title: 'Sucesso', description: 'Faixas salvas com sucesso!' })
+      loadData()
+    } catch (error: any) {
+      toast({ title: 'Erro ao salvar faixas', description: error.message, variant: 'destructive' })
+    } finally {
+      setSavingFaixas(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-amber-100 text-amber-600 rounded-lg">
-          <Shield className="w-6 h-6" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Entrada Padrão e Faixas de Valores</h1>
-          <p className="text-slate-500">
-            Configure o percentual de entrada e os limites de parcelamento.
-          </p>
-        </div>
+    <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto w-full">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          Entrada Padrão e Faixas
+        </h1>
+        <p className="text-slate-500 mt-2">
+          Configure a entrada padrão e os limites de valores e parcelas para cada faixa.
+        </p>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center p-12 text-slate-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mr-3" />
-          Carregando configurações...
-        </div>
-      ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
-                ENTRADA PADRÃO
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-end gap-4">
-              <div className="space-y-2 w-64">
-                <Label className="text-xs font-semibold text-slate-600">
-                  PERCENTUAL DE ENTRADA (%)
-                </Label>
+      <Card className="border-slate-200 shadow-sm max-w-md">
+        <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
+          <CardTitle className="text-lg text-slate-800">Entrada Padrão</CardTitle>
+          <CardDescription>Defina a porcentagem de entrada mínima em boleto</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-end gap-4">
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Percentual de Entrada (%)
+              </label>
+              <div className="relative">
                 <Input
                   type="number"
-                  value={config.percentual_entrada_padrao}
-                  onChange={(e) =>
-                    setConfig({ ...config, percentual_entrada_padrao: Number(e.target.value) })
-                  }
+                  value={configuracao?.percentual_entrada_padrao || 0}
+                  onChange={(e) => handleConfigChange(e.target.value)}
+                  className="bg-white font-medium"
+                  step="0.01"
+                  min="0"
+                  max="100"
                 />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                  %
+                </span>
               </div>
-              <Button onClick={saveConfig} className="bg-amber-500 hover:bg-amber-600 text-white">
-                <Save className="w-4 h-4 mr-2" /> Salvar Entrada
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+            <Button
+              onClick={handleSaveConfig}
+              disabled={savingConfig}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
+            >
+              {savingConfig ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-sm text-slate-500 font-bold tracking-wider">
-                FAIXAS DE VALORES E MÁXIMO DE PARCELAS
-              </CardTitle>
-              <Button
-                onClick={() =>
-                  setFaixas([
-                    ...faixas,
-                    {
-                      faixa_numero: faixas.length + 1,
-                      valor_minimo: 0,
-                      valor_maximo: 0,
-                      max_parcelas: 1,
-                    },
-                  ])
-                }
-                variant="outline"
-                className="gap-2"
-              >
-                <Plus className="w-4 h-4" /> NOVA FAIXA
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md">
-                <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow>
-                      <TableHead className="w-[80px] font-semibold text-slate-600">FAIXA</TableHead>
-                      <TableHead className="font-semibold text-slate-600">
-                        VALOR MÍNIMO (R$)
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-600">
-                        VALOR MÁXIMO (R$)
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-600">MÁX. PARCELAS</TableHead>
-                      <TableHead className="w-[120px] text-right font-semibold text-slate-600">
-                        AÇÕES
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {faixas.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-slate-500">
-                          Nenhuma faixa configurada.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      faixas.map((faixa, index) => (
-                        <TableRow key={faixa.id || index}>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={faixa.faixa_numero || ''}
-                              onChange={(e) =>
-                                updateFaixa(index, 'faixa_numero', Number(e.target.value))
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={faixa.valor_minimo}
-                              onChange={(e) =>
-                                updateFaixa(index, 'valor_minimo', Number(e.target.value))
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={faixa.valor_maximo}
-                              onChange={(e) =>
-                                updateFaixa(index, 'valor_maximo', Number(e.target.value))
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={faixa.max_parcelas}
-                              onChange={(e) =>
-                                updateFaixa(index, 'max_parcelas', Number(e.target.value))
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            <Button
-                              onClick={() => saveFaixa(faixa, index)}
-                              size="icon"
-                              variant="ghost"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8"
-                              title="Salvar Faixa"
-                            >
-                              <Save className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => removeFaixa(faixa.id, index)}
-                              size="icon"
-                              variant="ghost"
-                              className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                              title="Remover Faixa"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg text-slate-800">Faixas de Valores e Parcelas</CardTitle>
+              <CardDescription>
+                Determine o limite de parcelas baseado no valor do tratamento
+              </CardDescription>
+            </div>
+            <Button
+              onClick={handleSaveFaixas}
+              disabled={savingFaixas}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
+            >
+              {savingFaixas ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar Faixas
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50">
+              <TableRow>
+                <TableHead className="w-24 text-center font-semibold">Faixa</TableHead>
+                <TableHead className="font-semibold text-right">Valor Mínimo (R$)</TableHead>
+                <TableHead className="font-semibold text-right">Valor Máximo (R$)</TableHead>
+                <TableHead className="w-40 font-semibold text-center">Máx. Parcelas</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {faixas.map((item, idx) => (
+                <TableRow key={item.id} className="hover:bg-slate-50/50">
+                  <TableCell className="text-center font-medium text-slate-700">
+                    {item.faixa_numero}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.valor_minimo || 0}
+                      onChange={(e) => handleFaixaChange(idx, 'valor_minimo', e.target.value)}
+                      className="bg-white text-right"
+                      min="0"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.valor_maximo || 0}
+                      onChange={(e) => handleFaixaChange(idx, 'valor_maximo', e.target.value)}
+                      className="bg-white text-right"
+                      min="0"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.max_parcelas || 1}
+                      onChange={(e) => handleFaixaChange(idx, 'max_parcelas', e.target.value)}
+                      className="bg-white text-center"
+                      min="1"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }
