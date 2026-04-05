@@ -2531,6 +2531,48 @@ export const Constants = {
 //     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION ativar_cascata_dentista_avaliador()
+//   CREATE OR REPLACE FUNCTION public.ativar_cascata_dentista_avaliador()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_cargo_nome text;
+//   BEGIN
+//     -- Executa a verificação apenas se o usuário possuir um cargo vinculado
+//     IF NEW.cargo_id IS NOT NULL THEN
+//       SELECT nome INTO v_cargo_nome FROM public.cargos WHERE id = NEW.cargo_id;
+//
+//       -- Se o cargo for 'Dentista Avaliador', sincroniza com a tabela dentistas_avaliadores
+//       IF v_cargo_nome = 'Dentista Avaliador' THEN
+//         IF NOT EXISTS (SELECT 1 FROM public.dentistas_avaliadores WHERE usuario_id = NEW.id) THEN
+//           INSERT INTO public.dentistas_avaliadores (usuario_id, nome, email, status)
+//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//         ELSE
+//           UPDATE public.dentistas_avaliadores
+//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//           WHERE usuario_id = NEW.id;
+//         END IF;
+//       END IF;
+//
+//       -- Sincroniza também CRC Comercial por segurança, caso seja esse o cargo
+//       IF v_cargo_nome IN ('CRC', 'CRC Comercial') THEN
+//         IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
+//           INSERT INTO public.crc_comercial (usuario_id, nome, email, status)
+//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//         ELSE
+//           UPDATE public.crc_comercial
+//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//           WHERE usuario_id = NEW.id;
+//         END IF;
+//       END IF;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION has_permission(text)
 //   CREATE OR REPLACE FUNCTION public.has_permission(permission_name text)
 //    RETURNS boolean
@@ -2782,6 +2824,9 @@ export const Constants = {
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: saida_produtos
 //   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
+// Table: usuarios
+//   trg_ativar_cascata_dentista_avaliador_insert: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_insert AFTER INSERT ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
+//   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 
 // --- INDEXES ---
 // Table: avaliacoes

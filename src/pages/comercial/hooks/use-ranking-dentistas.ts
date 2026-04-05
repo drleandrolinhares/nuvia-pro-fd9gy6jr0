@@ -22,6 +22,36 @@ export function useRankingDentistas(periodo: string) {
   const refetch = () => setRefreshTrigger((prev) => prev + 1)
 
   useEffect(() => {
+    const channel = supabase
+      .channel('ranking_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () => {
+        setRefreshTrigger((prev) => prev + 1)
+      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'vendas_concretizadas' },
+        () => {
+          setRefreshTrigger((prev) => prev + 1)
+        },
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'criativos_gerados' }, () => {
+        setRefreshTrigger((prev) => prev + 1)
+      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dentistas_avaliadores' },
+        () => {
+          setRefreshTrigger((prev) => prev + 1)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
     let isMounted = true
 
     async function fetchRanking() {
