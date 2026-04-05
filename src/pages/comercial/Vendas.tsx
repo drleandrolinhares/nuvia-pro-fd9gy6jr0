@@ -30,6 +30,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -48,16 +49,23 @@ export default function Vendas() {
   const [dentistas, setDentistas] = useState<any[]>([])
   const [crcs, setCrcs] = useState<any[]>([])
 
-  const [formData, setFormData] = useState({
+  const [isCreatingPaciente, setIsCreatingPaciente] = useState(false)
+
+  const initialFormState = {
     paciente_id: '',
+    novo_paciente_nome: '',
+    telefone: '',
+    data_avaliacao: format(new Date(), 'yyyy-MM-dd'),
     dentista_avaliador_id: '',
     crc_comercial_id: '',
     valor_orcamento: '',
     tipo_tratamento: '',
+    observacoes: '',
     status: 'avaliacao_realizada',
     temperatura_lead: 'morno',
-    proxima_data_contato: '',
-  })
+  }
+
+  const [formData, setFormData] = useState(initialFormState)
 
   const fetchAvaliacoes = async () => {
     setLoading(true)
@@ -101,7 +109,7 @@ export default function Vendas() {
   const fetchDependencies = async () => {
     try {
       const [pacientesRes, dentistasRes, crcsRes] = await Promise.all([
-        supabase.from('pacientes').select('id, nome'),
+        supabase.from('pacientes').select('id, nome, telefone').order('nome'),
         supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
         supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
       ])
@@ -119,40 +127,59 @@ export default function Vendas() {
     fetchDependencies()
   }, [statusFilter, tempFilter, search])
 
+  const handlePacienteChange = (val: string) => {
+    const p = pacientes.find((x) => x.id === val)
+    setFormData({
+      ...formData,
+      paciente_id: val,
+      telefone: p?.telefone || '',
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
+      let currentPacienteId = formData.paciente_id
+
+      if (isCreatingPaciente) {
+        if (!formData.novo_paciente_nome) throw new Error('Nome do paciente é obrigatório')
+        const { data: newPaciente, error: pacError } = await supabase
+          .from('pacientes')
+          .insert({
+            nome: formData.novo_paciente_nome,
+            telefone: formData.telefone,
+          })
+          .select('id')
+          .single()
+
+        if (pacError) throw pacError
+        currentPacienteId = newPaciente.id
+      } else {
+        if (!currentPacienteId) throw new Error('Selecione um paciente ou crie um novo')
+      }
+
       const payload: any = {
-        paciente_id: formData.paciente_id,
+        paciente_id: currentPacienteId,
+        dentista_avaliador_id: formData.dentista_avaliador_id,
+        crc_comercial_id: formData.crc_comercial_id,
+        data_avaliacao: formData.data_avaliacao,
+        valor_orcamento: Number(formData.valor_orcamento),
+        tipo_tratamento: formData.tipo_tratamento,
+        observacoes: formData.observacoes,
         status: formData.status,
         temperatura_lead: formData.temperatura_lead,
       }
 
-      if (formData.dentista_avaliador_id)
-        payload.dentista_avaliador_id = formData.dentista_avaliador_id
-      if (formData.crc_comercial_id) payload.crc_comercial_id = formData.crc_comercial_id
-      if (formData.valor_orcamento) payload.valor_orcamento = Number(formData.valor_orcamento)
-      if (formData.tipo_tratamento) payload.tipo_tratamento = formData.tipo_tratamento
-      if (formData.proxima_data_contato)
-        payload.proxima_data_contato = formData.proxima_data_contato
-
       const { error } = await supabase.from('avaliacoes').insert(payload)
       if (error) throw error
 
-      toast({ title: 'Sucesso', description: 'Oportunidade cadastrada com sucesso!' })
+      toast({ title: 'Sucesso', description: 'Avaliação cadastrada com sucesso!' })
       setIsModalOpen(false)
       fetchAvaliacoes()
-      setFormData({
-        paciente_id: '',
-        dentista_avaliador_id: '',
-        crc_comercial_id: '',
-        valor_orcamento: '',
-        tipo_tratamento: '',
-        status: 'avaliacao_realizada',
-        temperatura_lead: 'morno',
-        proxima_data_contato: '',
-      })
+      fetchDependencies()
+      setFormData(initialFormState)
+      setIsCreatingPaciente(false)
     } catch (err: any) {
       toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' })
     } finally {
@@ -164,49 +191,119 @@ export default function Vendas() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Gestão de Vendas</h2>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog
+          open={isModalOpen}
+          onOpenChange={(open) => {
+            setIsModalOpen(open)
+            if (!open) {
+              setFormData(initialFormState)
+              setIsCreatingPaciente(false)
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Nova Oportunidade
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>Nova Oportunidade</DialogTitle>
+                <DialogTitle>Nova Avaliação</DialogTitle>
                 <DialogDescription>
                   Registre uma nova avaliação ou oportunidade comercial.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label>Paciente</Label>
-                  <Select
-                    value={formData.paciente_id}
-                    onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o paciente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pacientes.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>
+                    Paciente <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    {!isCreatingPaciente ? (
+                      <Select
+                        value={formData.paciente_id}
+                        onValueChange={handlePacienteChange}
+                        required
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Selecione o paciente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pacientes.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder="Nome do novo paciente"
+                        value={formData.novo_paciente_nome}
+                        onChange={(e) =>
+                          setFormData({ ...formData, novo_paciente_nome: e.target.value })
+                        }
+                        required
+                        className="flex-1"
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsCreatingPaciente(!isCreatingPaciente)
+                        setFormData({
+                          ...formData,
+                          paciente_id: '',
+                          novo_paciente_nome: '',
+                          telefone: '',
+                        })
+                      }}
+                    >
+                      {isCreatingPaciente ? 'Cancelar' : 'Novo Paciente'}
+                    </Button>
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label>Avaliador</Label>
+                    <Label>
+                      Telefone <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="tel"
+                      placeholder="Ex: (11) 99999-9999"
+                      value={formData.telefone}
+                      onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>
+                      Data da Avaliação <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="date"
+                      value={formData.data_avaliacao}
+                      onChange={(e) => setFormData({ ...formData, data_avaliacao: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>
+                      Dentista Avaliador <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.dentista_avaliador_id}
                       onValueChange={(v) => setFormData({ ...formData, dentista_avaliador_id: v })}
+                      required
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Opcional" />
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
                         {dentistas.map((d) => (
@@ -218,13 +315,16 @@ export default function Vendas() {
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label>CRC</Label>
+                    <Label>
+                      CRC Responsável <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.crc_comercial_id}
                       onValueChange={(v) => setFormData({ ...formData, crc_comercial_id: v })}
+                      required
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Opcional" />
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
                         {crcs.map((c) => (
@@ -236,74 +336,57 @@ export default function Vendas() {
                     </Select>
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label>Valor Orçamento</Label>
+                    <Label>
+                      Valor do Orçamento <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       type="number"
                       step="0.01"
+                      min="0"
                       placeholder="Ex: 5000.00"
                       value={formData.valor_orcamento}
                       onChange={(e) =>
                         setFormData({ ...formData, valor_orcamento: e.target.value })
                       }
+                      required
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Tratamento</Label>
-                    <Input
-                      placeholder="Ex: Implante"
+                    <Label>
+                      Tipo de Tratamento <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
                       value={formData.tipo_tratamento}
-                      onChange={(e) =>
-                        setFormData({ ...formData, tipo_tratamento: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(v) => setFormData({ ...formData, status: v })}
+                      onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
+                      required
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="avaliacao_realizada">Avaliação Realizada</SelectItem>
-                        <SelectItem value="em_negociacao">Em Negociação</SelectItem>
-                        <SelectItem value="follow_up">Follow Up</SelectItem>
-                        <SelectItem value="venda_concretizada">Venda Concretizada</SelectItem>
-                        <SelectItem value="perdido">Perdido</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Temperatura</Label>
-                    <Select
-                      value={formData.temperatura_lead}
-                      onValueChange={(v) => setFormData({ ...formData, temperatura_lead: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="quente">Quente</SelectItem>
-                        <SelectItem value="morno">Morno</SelectItem>
-                        <SelectItem value="frio">Frio</SelectItem>
+                        <SelectItem value="ortodontia">Ortodontia</SelectItem>
+                        <SelectItem value="implante">Implante</SelectItem>
+                        <SelectItem value="protese">Prótese</SelectItem>
+                        <SelectItem value="estetica">Estética</SelectItem>
+                        <SelectItem value="outro">Outro</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
                 <div className="grid gap-2">
-                  <Label>Próximo Contato</Label>
-                  <Input
-                    type="date"
-                    value={formData.proxima_data_contato}
-                    onChange={(e) =>
-                      setFormData({ ...formData, proxima_data_contato: e.target.value })
-                    }
+                  <Label>
+                    Observações <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    placeholder="Descreva os detalhes da avaliação..."
+                    value={formData.observacoes}
+                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                    required
+                    rows={3}
                   />
                 </div>
               </div>
@@ -375,17 +458,18 @@ export default function Vendas() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Paciente</TableHead>
-                    <TableHead>Data</TableHead>
+                    <TableHead>Data Avaliação</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Temperatura</TableHead>
                     <TableHead>Próximo Contato</TableHead>
+                    <TableHead>Responsável</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {avaliacoes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                         Nenhuma oportunidade encontrada.
                       </TableCell>
                     </TableRow>
@@ -430,6 +514,11 @@ export default function Vendas() {
                           {av.proxima_data_contato
                             ? format(new Date(av.proxima_data_contato), 'dd/MM/yyyy')
                             : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
+                          </span>
                         </TableCell>
                       </TableRow>
                     ))
