@@ -115,6 +115,16 @@ export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
   const formatBRL = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
 
+  const formatarData = (dataStr: string | null) => {
+    if (!dataStr) return '-'
+    const str = dataStr.substring(0, 10)
+    const partes = str.split('-')
+    if (partes.length === 3) {
+      return `${partes[2]}/${partes[1]}/${partes[0]}`
+    }
+    return str
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -151,9 +161,7 @@ export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
               ) : (
                 avaliacoes.map((a) => (
                   <TableRow key={a.id}>
-                    <TableCell>
-                      {a.data_avaliacao ? format(new Date(a.data_avaliacao), 'dd/MM/yyyy') : '-'}
-                    </TableCell>
+                    <TableCell>{formatarData(a.data_avaliacao)}</TableCell>
                     <TableCell className="font-medium">
                       {a.valor_orcamento ? formatBRL(a.valor_orcamento) : '-'}
                     </TableCell>
