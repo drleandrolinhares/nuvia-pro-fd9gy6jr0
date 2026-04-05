@@ -543,6 +543,7 @@ export type Database = {
       faixas_valores_parcelas: {
         Row: {
           criado_em: string
+          faixa_numero: number | null
           id: string
           max_parcelas: number
           valor_maximo: number
@@ -550,6 +551,7 @@ export type Database = {
         }
         Insert: {
           criado_em?: string
+          faixa_numero?: number | null
           id?: string
           max_parcelas?: number
           valor_maximo: number
@@ -557,6 +559,7 @@ export type Database = {
         }
         Update: {
           criado_em?: string
+          faixa_numero?: number | null
           id?: string
           max_parcelas?: number
           valor_maximo?: number
@@ -1262,6 +1265,7 @@ export const Constants = {
 //   valor_maximo: numeric (not null)
 //   max_parcelas: integer (not null, default: 1)
 //   criado_em: timestamp with time zone (not null, default: now())
+//   faixa_numero: integer (nullable)
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1390,7 +1394,7 @@ export const Constants = {
 // Table: configuracoes_negociacao
 //   PRIMARY KEY configuracoes_negociacao_pkey: PRIMARY KEY (id)
 // Table: descontos_por_prazo
-//   CHECK descontos_por_prazo_faixa_numero_check: CHECK (((faixa_numero >= 1) AND (faixa_numero <= 4)))
+//   CHECK descontos_por_prazo_faixa_numero_check: CHECK (((faixa_numero >= 0) AND (faixa_numero <= 5)))
 //   PRIMARY KEY descontos_por_prazo_pkey: PRIMARY KEY (id)
 // Table: diametros_implante
 //   UNIQUE diametros_implante_nome_key: UNIQUE (nome)
