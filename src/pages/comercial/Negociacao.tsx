@@ -3,7 +3,6 @@ import { Handshake, Calculator, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -45,6 +44,46 @@ export default function Negociacao() {
     fetchConfig()
   }, [])
 
+  useEffect(() => {
+    const simular = async () => {
+      if (!valorTratamentoStr) {
+        setResultado(null)
+        return
+      }
+      const valorNumerico = parseFloat(
+        valorTratamentoStr.replace('R$', '').replace(/\./g, '').replace(',', '.'),
+      )
+      if (isNaN(valorNumerico) || valorNumerico <= 0) {
+        setResultado(null)
+        return
+      }
+
+      setLoading(true)
+      try {
+        const { data, error } = await supabase.functions.invoke('calcular-opcoes-pagamento', {
+          body: {
+            valor_tratamento: valorNumerico,
+            percentual_entrada_padrao: parseFloat(percentualEntrada) || 0,
+          },
+        })
+        if (error) throw error
+        setResultado(data)
+      } catch (err) {
+        console.error('Erro ao simular:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timer = setTimeout(() => {
+      if (!loadingConfig) {
+        simular()
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [valorTratamentoStr, percentualEntrada, loadingConfig])
+
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '')
     if (value) {
@@ -54,30 +93,6 @@ export default function Negociacao() {
       })
     }
     setValorTratamentoStr(value)
-  }
-
-  const handleSimular = async () => {
-    if (!valorTratamentoStr) return
-    const valorNumerico = parseFloat(
-      valorTratamentoStr.replace('R$', '').replace(/\./g, '').replace(',', '.'),
-    )
-    if (isNaN(valorNumerico) || valorNumerico <= 0) return
-
-    setLoading(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('calcular-opcoes-pagamento', {
-        body: {
-          valor_tratamento: valorNumerico,
-          percentual_entrada_padrao: parseFloat(percentualEntrada) || 0,
-        },
-      })
-      if (error) throw error
-      setResultado(data)
-    } catch (err) {
-      console.error('Erro ao simular:', err)
-    } finally {
-      setLoading(false)
-    }
   }
 
   const formatCurrency = (val: number) =>
@@ -97,8 +112,9 @@ export default function Negociacao() {
       <div className="grid gap-6 md:grid-cols-2 items-start">
         <Card className="bg-white border-slate-200 shadow-sm">
           <CardHeader className="pb-6 border-b border-slate-100">
-            <CardTitle className="text-base font-bold text-slate-700 tracking-wider">
+            <CardTitle className="text-base font-bold text-slate-700 tracking-wider flex items-center justify-between">
               DADOS DA NEGOCIAÇÃO
+              {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -135,18 +151,6 @@ export default function Negociacao() {
                 className="text-lg h-12 bg-slate-50 border-slate-200 font-medium focus-visible:bg-white disabled:opacity-50"
               />
             </div>
-            <Button
-              className="w-full h-12 text-base font-bold bg-slate-900 hover:bg-slate-800 transition-colors"
-              onClick={handleSimular}
-              disabled={loading || !valorTratamentoStr}
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <Calculator className="w-5 h-5 mr-2" />
-              )}
-              {loading ? 'Calculando...' : 'Calcular Opções'}
-            </Button>
           </CardContent>
         </Card>
 
@@ -171,11 +175,19 @@ export default function Negociacao() {
                 <CardTitle className="text-base font-bold text-slate-700 tracking-wider">
                   OPÇÕES DE PAGAMENTO
                 </CardTitle>
-                <div className="text-sm text-slate-500 font-medium">
-                  Entrada:{' '}
-                  <span className="text-slate-800 font-bold">
-                    {formatCurrency(resultado.valor_entrada)}
-                  </span>
+                <div className="flex flex-col items-end text-sm text-slate-500 font-medium space-y-1">
+                  <div>
+                    Entrada:{' '}
+                    <span className="text-slate-800 font-bold">
+                      {formatCurrency(resultado.valor_entrada)}
+                    </span>
+                  </div>
+                  <div>
+                    Restante:{' '}
+                    <span className="text-slate-800 font-bold">
+                      {formatCurrency(resultado.valor_restante)}
+                    </span>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0 flex-1">
@@ -207,7 +219,7 @@ export default function Negociacao() {
                         </div>
                         <div className="text-right">
                           <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            Total
+                            Total c/ Desconto
                           </div>
                           <div className="text-sm font-bold text-slate-700">
                             {formatCurrency(op.valor_total_com_desconto)}
