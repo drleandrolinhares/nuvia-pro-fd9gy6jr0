@@ -25,12 +25,12 @@ export const faturamentoService = {
         .from('comissoes_dentista')
         .select(`
           *, 
-          vendas_concretizadas(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
+          vendas_concretizadas!inner(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
           dentistas_avaliadores!inner(usuario_id)
         `)
         .eq('dentistas_avaliadores.usuario_id', profissional_id)
-        .gte('data_calculo', inicio)
-        .lte('data_calculo', fim)
+        .gte('vendas_concretizadas.data_concretizacao', inicio)
+        .lte('vendas_concretizadas.data_concretizacao', fim)
         .neq('status_pagamento', 'em_aberto')
       if (error) throw error
       return data
@@ -39,12 +39,12 @@ export const faturamentoService = {
         .from('comissoes_crc')
         .select(`
           *, 
-          vendas_concretizadas(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
+          vendas_concretizadas!inner(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
           crc_comercial!inner(usuario_id)
         `)
         .eq('crc_comercial.usuario_id', profissional_id)
-        .gte('data_calculo', inicio)
-        .lte('data_calculo', fim)
+        .gte('vendas_concretizadas.data_concretizacao', inicio)
+        .lte('vendas_concretizadas.data_concretizacao', fim)
         .neq('status_pagamento', 'em_aberto')
       if (error) throw error
       return data
@@ -55,18 +55,20 @@ export const faturamentoService = {
     // 1. Obter comissoes do periodo
     const { data: cDentista, error: errD } = await supabase
       .from('comissoes_dentista')
-      .select('*, dentistas_avaliadores!inner(usuario_id)')
-      .gte('data_calculo', inicio)
-      .lte('data_calculo', fim)
+      .select(
+        '*, vendas_concretizadas!inner(data_concretizacao), dentistas_avaliadores!inner(usuario_id)',
+      )
+      .gte('vendas_concretizadas.data_concretizacao', inicio)
+      .lte('vendas_concretizadas.data_concretizacao', fim)
       .eq('status_pagamento', 'em_aberto')
 
     if (errD) throw errD
 
     const { data: cCrc, error: errC } = await supabase
       .from('comissoes_crc')
-      .select('*, crc_comercial!inner(usuario_id)')
-      .gte('data_calculo', inicio)
-      .lte('data_calculo', fim)
+      .select('*, vendas_concretizadas!inner(data_concretizacao), crc_comercial!inner(usuario_id)')
+      .gte('vendas_concretizadas.data_concretizacao', inicio)
+      .lte('vendas_concretizadas.data_concretizacao', fim)
       .eq('status_pagamento', 'em_aberto')
 
     if (errC) throw errC
@@ -86,6 +88,8 @@ export const faturamentoService = {
       }
     >()
 
+    let totalGeral = 0
+
     for (const c of cDentista || []) {
       const uId = c.dentistas_avaliadores?.usuario_id
       if (!uId) continue
@@ -99,7 +103,9 @@ export const faturamentoService = {
         })
       }
       const f = faturasToCreate.get(key)!
-      f.valor_total_comissao += Number(c.valor_comissao || 0)
+      const valor = Number(c.valor_comissao || 0)
+      f.valor_total_comissao += valor
+      totalGeral += valor
       f.comissoesIds.push(c.id)
     }
 
@@ -116,7 +122,9 @@ export const faturamentoService = {
         })
       }
       const f = faturasToCreate.get(key)!
-      f.valor_total_comissao += Number(c.valor_comissao || 0)
+      const valor = Number(c.valor_comissao || 0)
+      f.valor_total_comissao += valor
+      totalGeral += valor
       f.comissoesIds.push(c.id)
     }
 
@@ -169,7 +177,11 @@ export const faturamentoService = {
       await supabase.from('comissoes_crc').update({ status_pagamento: 'faturado' }).in('id', crcIds)
     }
 
-    return faturamento
+    return {
+      faturamento,
+      profissionaisCount: faturasToCreate.size,
+      totalGeral,
+    }
   },
 
   async pagarFatura(faturaId: string, formaPagamento: string, dataPagamento: string) {

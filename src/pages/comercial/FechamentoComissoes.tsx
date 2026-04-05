@@ -100,8 +100,11 @@ export default function FechamentoComissoes() {
 
     setFaturando(true)
     try {
-      await faturamentoService.faturar(inicio, fim, prevista)
-      toast({ title: 'Sucesso', description: 'Faturamento gerado com sucesso!' })
+      const res = await faturamentoService.faturar(inicio, fim, prevista)
+      toast({
+        title: 'Faturamento Concluído',
+        description: `${res.profissionaisCount} profissionais faturados, total de ${formatCurrency(res.totalGeral)}.`,
+      })
       setInicio('')
       setFim('')
       setPrevista('')
