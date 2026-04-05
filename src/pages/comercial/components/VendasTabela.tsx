@@ -82,6 +82,13 @@ export function VendasTabela({
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
+  const formatarDataLocal = (dataStr: string | null) => {
+    if (!dataStr) return '-'
+    const [year, month, day] = dataStr.substring(0, 10).split('-')
+    if (year && month && day) return `${day}/${month}/${year}`
+    return dataStr
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -123,9 +130,7 @@ export function VendasTabela({
                   }}
                 >
                   <TableCell className="font-medium">{av.pacientes?.nome || 'N/A'}</TableCell>
-                  <TableCell>
-                    {av.data_avaliacao ? format(new Date(av.data_avaliacao), 'dd/MM/yyyy') : '-'}
-                  </TableCell>
+                  <TableCell>{formatarDataLocal(av.data_avaliacao)}</TableCell>
                   <TableCell>{formatCurrency(getMaiorValor(av))}</TableCell>
                   <TableCell>
                     <Badge
@@ -152,11 +157,7 @@ export function VendasTabela({
                       {av.temperatura_lead}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {av.proxima_data_contato
-                      ? format(new Date(av.proxima_data_contato), 'dd/MM/yyyy')
-                      : '-'}
-                  </TableCell>
+                  <TableCell>{formatarDataLocal(av.proxima_data_contato)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
                   </TableCell>

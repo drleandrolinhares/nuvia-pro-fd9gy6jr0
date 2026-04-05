@@ -117,6 +117,13 @@ export function OrcamentosTab({ pacienteId }: { pacienteId: string }) {
   const formatBRL = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
 
+  const formatarDataLocal = (dataStr: string | null) => {
+    if (!dataStr) return '-'
+    const [year, month, day] = dataStr.substring(0, 10).split('-')
+    if (year && month && day) return `${day}/${month}/${year}`
+    return dataStr
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -153,9 +160,7 @@ export function OrcamentosTab({ pacienteId }: { pacienteId: string }) {
               ) : (
                 orcamentos.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell>
-                      {o.data_orcamento ? format(new Date(o.data_orcamento), 'dd/MM/yyyy') : '-'}
-                    </TableCell>
+                    <TableCell>{formatarDataLocal(o.data_orcamento)}</TableCell>
                     <TableCell className="font-medium">{formatBRL(o.valor)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">
@@ -213,7 +218,7 @@ export function OrcamentosTab({ pacienteId }: { pacienteId: string }) {
                         <SelectItem key={av.id} value={av.id}>
                           Avaliação de{' '}
                           {av.data_avaliacao
-                            ? format(new Date(av.data_avaliacao), 'dd/MM/yyyy')
+                            ? formatarDataLocal(av.data_avaliacao)
                             : 'Data Indefinida'}
                           {av.valor_orcamento ? ` - ${formatBRL(av.valor_orcamento)}` : ''}
                         </SelectItem>
