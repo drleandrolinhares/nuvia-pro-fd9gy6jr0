@@ -71,11 +71,37 @@ Deno.serve(async (req: Request) => {
 
     for (let i = 1; i <= max_parcelas; i++) {
       let faixa_numero = 0
-      if (i >= 2 && i <= 5) faixa_numero = 1
-      else if (i >= 6 && i <= 10) faixa_numero = 2
-      else if (i >= 11 && i <= 20) faixa_numero = 3
-      else if (i >= 21 && i <= 30) faixa_numero = 4
-      else if (i >= 31) faixa_numero = 5
+      if (i === 1) {
+        faixa_numero = 0
+      } else {
+        if (descontos) {
+          for (const d of descontos) {
+            if (d.faixa_numero === 0) continue
+            const desc = d.descricao || ''
+            const matchRange = desc.match(/(\d+)\s*[xX]?\s*(?:a|-|até|ate|e)\s*(\d+)\s*[xX]?/i)
+            if (matchRange) {
+              if (i >= parseInt(matchRange[1]) && i <= parseInt(matchRange[2])) {
+                faixa_numero = d.faixa_numero
+                break
+              }
+            } else {
+              const matchPlus = desc.match(/(\d+)\s*[xX]?\+/i)
+              if (matchPlus && i >= parseInt(matchPlus[1])) {
+                faixa_numero = d.faixa_numero
+                break
+              }
+            }
+          }
+        }
+
+        if (faixa_numero === 0) {
+          if (i >= 2 && i <= 5) faixa_numero = 1
+          else if (i >= 6 && i <= 10) faixa_numero = 2
+          else if (i >= 11 && i <= 20) faixa_numero = 3
+          else if (i >= 21 && i <= 30) faixa_numero = 4
+          else if (i >= 31) faixa_numero = 5
+        }
+      }
 
       const descontoObj = descontos?.find((d) => d.faixa_numero === faixa_numero)
       const percentual_desconto = descontoObj ? Number(descontoObj.percentual_desconto) : 0

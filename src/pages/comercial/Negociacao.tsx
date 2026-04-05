@@ -95,8 +95,8 @@ export default function Negociacao() {
   }
 
   const getNomeFaixa = (num: number, desc?: string | null) => {
-    if (desc) return desc
     if (num === 0) return 'À VISTA'
+    if (desc) return `FAIXA ${num} (${desc})`
     if (num === 1) return 'FAIXA 1 (2X-5X)'
     if (num === 2) return 'FAIXA 2 (6X-10X)'
     if (num === 3) return 'FAIXA 3 (11X-20X)'
@@ -118,7 +118,9 @@ export default function Negociacao() {
       2: 'md:grid-cols-2',
       3: 'md:grid-cols-3',
       4: 'md:grid-cols-4',
-    }[Math.max(1, Math.min(4, faixasExibir.length))] || 'md:grid-cols-4'
+      5: 'md:grid-cols-5',
+      6: 'md:grid-cols-6',
+    }[Math.max(1, Math.min(6, faixasExibir.length))] || 'md:grid-cols-4'
 
   return (
     <div className="flex-1 p-4 md:p-8 space-y-8 bg-slate-50 min-h-full">

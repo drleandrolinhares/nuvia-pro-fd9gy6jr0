@@ -8,6 +8,12 @@ import { Loader2, Save } from 'lucide-react'
 
 const DEFAULT_DESCONTOS = [
   {
+    faixa_numero: 0,
+    titulo: 'À VISTA',
+    percentual_desconto: 15,
+    descricao: 'Pagamento Único',
+  },
+  {
     faixa_numero: 1,
     titulo: 'FAIXA 1',
     percentual_desconto: 5,
@@ -51,7 +57,7 @@ export default function DescontosPorPrazo() {
       const { data, error } = await supabase
         .from('descontos_por_prazo')
         .select('*')
-        .in('faixa_numero', [1, 2, 3, 4, 5])
+        .in('faixa_numero', [0, 1, 2, 3, 4, 5])
         .order('faixa_numero', { ascending: true })
 
       if (error) throw error
@@ -59,7 +65,12 @@ export default function DescontosPorPrazo() {
       const mergedData = DEFAULT_DESCONTOS.map((def) => {
         const found = data?.find((d) => d.faixa_numero === def.faixa_numero)
         if (found) {
-          return { ...def, id: found.id, percentual_desconto: found.percentual_desconto }
+          return {
+            ...def,
+            id: found.id,
+            percentual_desconto: found.percentual_desconto,
+            descricao: found.descricao || def.descricao,
+          }
         }
         return { ...def, id: `new-${def.faixa_numero}` }
       })
@@ -82,6 +93,12 @@ export default function DescontosPorPrazo() {
       descontos.map((d) =>
         d.faixa_numero === faixa_numero ? { ...d, percentual_desconto: Number(value) } : d,
       ),
+    )
+  }
+
+  const handleDescricaoChange = (faixa_numero: number, value: string) => {
+    setDescontos(
+      descontos.map((d) => (d.faixa_numero === faixa_numero ? { ...d, descricao: value } : d)),
     )
   }
 
@@ -135,15 +152,18 @@ export default function DescontosPorPrazo() {
 
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-slate-800">DESCONTOS POR PRAZO</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {descontos.map((item) => (
-            <Card key={item.id} className="border-slate-200 shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-950 pb-4">
+            <Card
+              key={item.id}
+              className="border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col"
+            >
+              <CardHeader className="bg-slate-950 pb-4 shrink-0">
                 <CardTitle className="text-sm font-bold text-white text-center tracking-wider">
                   {item.titulo}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6 flex flex-col items-center gap-2">
+              <CardContent className="pt-6 flex flex-col items-center flex-1">
                 <div className="relative w-full max-w-[120px]">
                   <Input
                     type="number"
@@ -158,9 +178,20 @@ export default function DescontosPorPrazo() {
                     %
                   </span>
                 </div>
-                <p className="text-sm font-semibold text-slate-600 text-center mt-2">
-                  {item.descricao}
-                </p>
+                <div className="mt-auto pt-4 w-full">
+                  {item.faixa_numero === 0 ? (
+                    <p className="text-sm font-semibold text-slate-600 text-center h-10 flex items-center justify-center">
+                      {item.descricao}
+                    </p>
+                  ) : (
+                    <Input
+                      value={item.descricao}
+                      onChange={(e) => handleDescricaoChange(item.faixa_numero, e.target.value)}
+                      className="text-center text-sm font-semibold text-slate-700 h-10 border-slate-300 w-full"
+                      placeholder="Ex: 2X a 5X"
+                    />
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
