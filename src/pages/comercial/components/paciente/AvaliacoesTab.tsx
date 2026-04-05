@@ -32,7 +32,13 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 
-export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
+export function AvaliacoesTab({
+  pacienteId,
+  onUpdate,
+}: {
+  pacienteId: string
+  onUpdate?: () => void
+}) {
   const { toast } = useToast()
   const [avaliacoes, setAvaliacoes] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
@@ -93,6 +99,7 @@ export function AvaliacoesTab({ pacienteId }: { pacienteId: string }) {
 
       setEditAvaliacao(null)
       fetchDados()
+      if (onUpdate) onUpdate()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     } finally {

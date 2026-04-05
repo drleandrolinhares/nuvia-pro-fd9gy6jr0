@@ -15,6 +15,7 @@ export function PacienteDashboard({ id }: { id: string }) {
   const navigate = useNavigate()
   const [paciente, setPaciente] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     supabase
@@ -26,9 +27,13 @@ export function PacienteDashboard({ id }: { id: string }) {
         setPaciente(data)
         setLoading(false)
       })
-  }, [id])
+  }, [id, refreshKey])
 
-  if (loading) {
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1)
+  }
+
+  if (loading && !paciente) {
     return (
       <div className="flex-1 p-8 space-y-4">
         <Skeleton className="h-12 w-1/3" />
@@ -53,7 +58,7 @@ export function PacienteDashboard({ id }: { id: string }) {
         <h2 className="text-3xl font-bold tracking-tight">Ficha do Paciente</h2>
       </div>
 
-      <PacienteHeader paciente={paciente} onUpdate={setPaciente} />
+      <PacienteHeader key={`header-${refreshKey}`} paciente={paciente} onUpdate={setPaciente} />
 
       <Tabs defaultValue="avaliacoes" className="w-full space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b rounded-none h-12 p-0">
@@ -91,7 +96,7 @@ export function PacienteDashboard({ id }: { id: string }) {
 
         <div className="pt-4">
           <TabsContent value="avaliacoes" className="m-0">
-            <AvaliacoesTab pacienteId={id} />
+            <AvaliacoesTab pacienteId={id} onUpdate={handleRefresh} />
           </TabsContent>
           <TabsContent value="orcamentos" className="m-0">
             <OrcamentosTab pacienteId={id} />

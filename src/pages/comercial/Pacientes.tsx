@@ -15,6 +15,16 @@ import {
 } from '@/components/ui/table'
 import { Search } from 'lucide-react'
 
+function formatarDataLocal(dataStr: string | null) {
+  if (!dataStr) return '-'
+  const str = dataStr.substring(0, 10)
+  const partes = str.split('-')
+  if (partes.length === 3) {
+    return `${partes[2]}/${partes[1]}/${partes[0]}`
+  }
+  return str
+}
+
 export default function Pacientes() {
   const [searchParams] = useSearchParams()
   const id = searchParams.get('id')
@@ -98,11 +108,7 @@ function PacientesList() {
                       <TableCell className="font-medium">{p.nome}</TableCell>
                       <TableCell>{p.telefone || '-'}</TableCell>
                       <TableCell>{p.email || '-'}</TableCell>
-                      <TableCell>
-                        {p.data_cadastro
-                          ? new Date(p.data_cadastro).toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
+                      <TableCell>{formatarDataLocal(p.data_cadastro)}</TableCell>
                     </TableRow>
                   ))
                 )}
