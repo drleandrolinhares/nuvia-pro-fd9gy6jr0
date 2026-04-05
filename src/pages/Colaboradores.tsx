@@ -310,6 +310,14 @@ export default function Colaboradores() {
           </Table>
         </div>
       </div>
+
+      <ColaboradorFormSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        cargos={cargos}
+        usuario={editingUsuario}
+        onSuccess={load}
+      />
     </div>
   )
 }

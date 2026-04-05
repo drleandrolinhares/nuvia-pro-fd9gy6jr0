@@ -2556,6 +2556,18 @@ export const Constants = {
 //         END IF;
 //       END IF;
 //
+//       -- Se o cargo for 'Dentista', sincroniza com a tabela dentistas
+//       IF v_cargo_nome = 'Dentista' THEN
+//         IF NOT EXISTS (SELECT 1 FROM public.dentistas WHERE usuario_id = NEW.id) THEN
+//           INSERT INTO public.dentistas (usuario_id, nome, email, status)
+//           VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
+//         ELSE
+//           UPDATE public.dentistas
+//           SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
+//           WHERE usuario_id = NEW.id;
+//         END IF;
+//       END IF;
+//
 //       -- Sincroniza também CRC Comercial por segurança, caso seja esse o cargo
 //       IF v_cargo_nome IN ('CRC', 'CRC Comercial') THEN
 //         IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
