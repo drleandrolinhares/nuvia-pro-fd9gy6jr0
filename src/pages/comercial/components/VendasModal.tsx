@@ -232,7 +232,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {(crcsList.length > 0 ? crcsList : crcs).map((c) => (
+                    {crcsList.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.nome}
                       </SelectItem>
