@@ -289,6 +289,7 @@ export type Database = {
           data_calculo: string | null
           id: string
           percentual_faixa: number | null
+          status_pagamento: string | null
           valor_comissao: number | null
           venda_id: string
         }
@@ -298,6 +299,7 @@ export type Database = {
           data_calculo?: string | null
           id?: string
           percentual_faixa?: number | null
+          status_pagamento?: string | null
           valor_comissao?: number | null
           venda_id: string
         }
@@ -307,6 +309,7 @@ export type Database = {
           data_calculo?: string | null
           id?: string
           percentual_faixa?: number | null
+          status_pagamento?: string | null
           valor_comissao?: number | null
           venda_id?: string
         }
@@ -334,6 +337,7 @@ export type Database = {
           dentista_avaliador_id: string
           id: string
           percentual_faixa: number | null
+          status_pagamento: string | null
           valor_comissao: number | null
           venda_id: string
         }
@@ -343,6 +347,7 @@ export type Database = {
           dentista_avaliador_id: string
           id?: string
           percentual_faixa?: number | null
+          status_pagamento?: string | null
           valor_comissao?: number | null
           venda_id: string
         }
@@ -352,6 +357,7 @@ export type Database = {
           dentista_avaliador_id?: string
           id?: string
           percentual_faixa?: number | null
+          status_pagamento?: string | null
           valor_comissao?: number | null
           venda_id?: string
         }
@@ -1810,6 +1816,7 @@ export const Constants = {
 //   valor_comissao: numeric (nullable)
 //   data_calculo: date (nullable, default: CURRENT_DATE)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   status_pagamento: text (nullable, default: 'em_aberto'::text)
 // Table: comissoes_dentista
 //   id: uuid (not null, default: gen_random_uuid())
 //   venda_id: uuid (not null)
@@ -1818,6 +1825,7 @@ export const Constants = {
 //   valor_comissao: numeric (nullable)
 //   data_calculo: date (nullable, default: CURRENT_DATE)
 //   criado_em: timestamp with time zone (nullable, default: now())
+//   status_pagamento: text (nullable, default: 'em_aberto'::text)
 // Table: compra_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   compra_id: uuid (not null)
