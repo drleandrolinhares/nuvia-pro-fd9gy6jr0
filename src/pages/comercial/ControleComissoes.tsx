@@ -37,8 +37,6 @@ export default function ControleComissoes() {
 
       if (isAdminCheck || dentista || crc) {
         setActiveTab('minhas')
-      } else if (isAdminCheck) {
-        setActiveTab('dentista')
       }
     }
     checkRoles()
