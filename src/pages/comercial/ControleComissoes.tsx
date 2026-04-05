@@ -9,17 +9,17 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
 export default function ControleComissoes() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [dentistaId, setDentistaId] = useState<string | null>(null)
   const [crcId, setCrcId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string | undefined>()
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !profile) return
     const checkRoles = async () => {
-      const { data: adminCheck } = await supabase.rpc('is_admin')
-      setIsAdmin(!!adminCheck)
+      const isAdminCheck = profile.role === 'admin'
+      setIsAdmin(isAdminCheck)
 
       const { data: dentista } = await supabase
         .from('dentistas_avaliadores')
@@ -35,14 +35,14 @@ export default function ControleComissoes() {
         .maybeSingle()
       if (crc) setCrcId(crc.id)
 
-      if (!!adminCheck || dentista || crc) {
+      if (isAdminCheck || dentista || crc) {
         setActiveTab('minhas')
-      } else {
+      } else if (isAdminCheck) {
         setActiveTab('dentista')
       }
     }
     checkRoles()
-  }, [user])
+  }, [user, profile])
 
   const showMinhasComissoes = isAdmin || dentistaId || crcId
 

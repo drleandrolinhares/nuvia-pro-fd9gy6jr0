@@ -59,6 +59,7 @@ const navData = [
   {
     title: 'OPERACIONAL',
     icon: Activity,
+    showRole: ['admin'],
     items: [
       { title: 'SAC', url: '/operacional/sac', icon: MessageSquare },
       { title: 'Rotina Diária', url: '/operacional/rotina', icon: Clock },
@@ -69,29 +70,57 @@ const navData = [
   {
     title: 'COMERCIAL',
     icon: Briefcase,
-    showRole: ['admin', 'crc_comercial'],
+    showRole: ['admin', 'crc_comercial', 'dentista_avaliador', 'visualizacao'],
     items: [
-      { title: 'Gestão de Vendas', url: '/comercial/vendas', icon: FileBarChart },
-      { title: 'Controle de Comissões', url: '/comercial/comissoes', icon: Landmark },
+      {
+        title: 'Gestão de Vendas',
+        url: '/comercial/vendas',
+        icon: FileBarChart,
+        showRole: ['admin', 'crc_comercial', 'visualizacao'],
+      },
+      {
+        title: 'Controle de Comissões',
+        url: '/comercial/comissoes',
+        icon: Landmark,
+        showRole: ['admin', 'crc_comercial', 'dentista_avaliador'],
+      },
       {
         title: 'Fechamento de Comissões',
         url: '/comercial/fechamento-comissoes',
         icon: ShieldCheck,
+        showRole: ['admin'],
       },
-      { title: 'Pacientes', url: '/comercial/pacientes', icon: Users },
-      { title: 'Relatórios Comerciais', url: '/comercial/relatorios', icon: FileText },
-      { title: 'Negociação', url: '/comercial/negociacao', icon: Handshake },
+      {
+        title: 'Pacientes',
+        url: '/comercial/pacientes',
+        icon: Users,
+        showRole: ['admin', 'crc_comercial', 'visualizacao'],
+      },
+      {
+        title: 'Relatórios Comerciais',
+        url: '/comercial/relatorios',
+        icon: FileText,
+        showRole: ['admin', 'visualizacao'],
+      },
+      {
+        title: 'Negociação',
+        url: '/comercial/negociacao',
+        icon: Handshake,
+        showRole: ['admin', 'crc_comercial'],
+      },
     ],
   },
   {
     title: 'FINANCEIRO',
     icon: ShieldCheck,
     defaultOpen: true,
+    showRole: ['admin'],
     items: [{ title: 'Estoque', url: '/estoque', icon: Package }],
   },
   {
     title: 'CONFIGURAÇÕES',
     icon: Shield,
+    showRole: ['admin'],
     items: [
       { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database },
       { title: 'Parâmetros Gerais', url: '/configuracoes', icon: SlidersHorizontal },
@@ -137,24 +166,33 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2">
         {navData.map((group: any) => {
-          if (group.showRole && (!profile?.role || !group.showRole.includes(profile.role))) {
+          const role = profile?.role || 'visualizacao'
+
+          if (group.showRole && !group.showRole.includes(role) && role !== 'admin') {
             return null
           }
 
-          const SingleItemIcon = group.items[0]?.icon
+          const filteredItems = group.items.filter((item: any) => {
+            if (item.showRole && !item.showRole.includes(role) && role !== 'admin') return false
+            return true
+          })
 
-          return group.items.length === 1 && !group.icon ? (
+          if (filteredItems.length === 0) return null
+
+          const SingleItemIcon = filteredItems[0]?.icon
+
+          return filteredItems.length === 1 && !group.icon ? (
             <SidebarGroup key={group.title} className="py-2">
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
-                    isActive={location.pathname === group.items[0].url}
+                    isActive={location.pathname === filteredItems[0].url}
                     className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground font-semibold"
                   >
-                    <Link to={group.items[0].url}>
+                    <Link to={filteredItems[0].url}>
                       {SingleItemIcon && <SingleItemIcon />}
-                      <span>{group.items[0].title}</span>
+                      <span>{filteredItems[0].title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -182,7 +220,7 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">
                     <SidebarMenu>
-                      {group.items.map((item: any) => {
+                      {filteredItems.map((item: any) => {
                         const ItemIcon = item.icon
 
                         if (item.subItems) {

@@ -37,11 +37,12 @@ import {
 } from '@/components/ui/select'
 import { Loader2, DollarSign, CalendarIcon, FileText } from 'lucide-react'
 import { faturamentoService } from '@/services/faturamento'
-import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function FechamentoComissoes() {
   const { toast } = useToast()
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
   const [loading, setLoading] = useState(true)
   const [faturas, setFaturas] = useState<any[]>([])
 
@@ -62,14 +63,8 @@ export default function FechamentoComissoes() {
   const [statusFiltro, setStatusFiltro] = useState<string>('todas')
 
   useEffect(() => {
-    checkAccess()
     loadFaturas()
   }, [])
-
-  const checkAccess = async () => {
-    const { data } = await supabase.rpc('is_admin')
-    setIsAdmin(!!data)
-  }
 
   const loadFaturas = async () => {
     setLoading(true)

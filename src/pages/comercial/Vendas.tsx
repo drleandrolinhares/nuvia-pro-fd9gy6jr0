@@ -10,9 +10,12 @@ import { VendasKPIs } from './components/VendasKPIs'
 import { VendasRankingDentistas } from './components/VendasRankingDentistas'
 import { useVendasKPIs } from './hooks/use-vendas-kpis'
 import { Avaliacao, VendasFiltersState } from './types'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Vendas() {
   const { toast } = useToast()
+  const { profile } = useAuth()
+  const canEdit = profile?.role === 'admin' || profile?.role === 'crc_comercial'
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
   const [loading, setLoading] = useState(true)
   const [dentistas, setDentistas] = useState<any[]>([])
@@ -146,7 +149,7 @@ export default function Vendas() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Gestão de Vendas</h2>
-        <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />
+        {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
       </div>
 
       <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />

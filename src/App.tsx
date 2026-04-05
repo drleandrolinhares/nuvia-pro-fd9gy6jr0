@@ -24,6 +24,21 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
 
+const ProtectedRoute = ({
+  allowedRoles,
+  children,
+}: {
+  allowedRoles: string[]
+  children: React.ReactNode
+}) => {
+  const { profile, loading } = useAuth()
+  if (loading) return null
+  const userRole = profile?.role || 'visualizacao'
+  if (userRole === 'admin') return <>{children}</>
+  if (!allowedRoles.includes(userRole)) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 const AppRoutes = () => {
   const { user, loading } = useAuth()
 
@@ -49,33 +64,165 @@ const AppRoutes = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/estoque" element={<Estoque />} />
-        <Route path="/configuracoes" element={<Configuracoes />} />
-        <Route path="/colaboradores" element={<Colaboradores />} />
-        <Route path="/fornecedores" element={<Fornecedores />} />
         <Route path="/perfil" element={<Perfil />} />
-        <Route path="/admin/cadastros" element={<CadastrosBasicos />} />
-        <Route path="/admin/registro" element={<RegistroUsuarios />} />
 
-        <Route path="/configuracoes/descontos" element={<DescontosPorPrazo />} />
-        <Route path="/configuracoes/faixas" element={<EntradaEFaixas />} />
+        {/* Admin only routes */}
+        <Route
+          path="/estoque"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Estoque />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Configuracoes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/colaboradores"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Colaboradores />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fornecedores"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Fornecedores />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/cadastros"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <CadastrosBasicos />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/registro"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <RegistroUsuarios />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/descontos"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <DescontosPorPrazo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/faixas"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <EntradaEFaixas />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Operacional Routes */}
-        <Route path="/operacional/sac" element={<Placeholder />} />
-        <Route path="/operacional/rotina" element={<Placeholder />} />
-        <Route path="/operacional/performance" element={<Placeholder />} />
-        <Route path="/operacional/comunicados" element={<Placeholder />} />
+        <Route
+          path="/operacional/sac"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/rotina"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/performance"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/comunicados"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Comercial Routes */}
-        <Route path="/comercial/vendas" element={<Vendas />} />
-        <Route path="/comercial/negociacao" element={<Negociacao />} />
-        <Route path="/comercial/comissoes" element={<ControleComissoes />} />
-        <Route path="/comercial/fechamento-comissoes" element={<FechamentoComissoes />} />
-        <Route path="/comercial/pacientes" element={<Pacientes />} />
-        <Route path="/comercial/relatorios" element={<Placeholder />} />
-        <Route path="/comercial/fiscal" element={<Placeholder />} />
-
-        {/* Financeiro Routes */}
+        <Route
+          path="/comercial/vendas"
+          element={
+            <ProtectedRoute allowedRoles={['crc_comercial', 'visualizacao']}>
+              <Vendas />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/negociacao"
+          element={
+            <ProtectedRoute allowedRoles={['crc_comercial']}>
+              <Negociacao />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/comissoes"
+          element={
+            <ProtectedRoute allowedRoles={['crc_comercial', 'dentista_avaliador']}>
+              <ControleComissoes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/fechamento-comissoes"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <FechamentoComissoes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/pacientes"
+          element={
+            <ProtectedRoute allowedRoles={['crc_comercial', 'visualizacao']}>
+              <Pacientes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/relatorios"
+          element={
+            <ProtectedRoute allowedRoles={['visualizacao']}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/fiscal"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Placeholder />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
