@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Sheet,
@@ -48,6 +48,9 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
     resolver: zodResolver(colaboradorSchema),
     defaultValues: { status: 'ativo' },
   })
+
+  const watchCargo = useWatch({ control, name: 'cargo_id' })
+  const selectedCargo = cargos?.find((c: any) => c.id === watchCargo)
 
   useEffect(() => {
     if (!isOpen) return
@@ -157,30 +160,61 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
               </TabsContent>
 
               <TabsContent value="prof" className="space-y-4 mt-4">
-                <Field label="Cargo *" error={errors.cargo_id}>
-                  <Controller
-                    name="cargo_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o cargo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cargos.map((c: any) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.nome} {c.setor ? `(${c.setor})` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Cargo *" error={errors.cargo_id}>
+                    <Controller
+                      name="cargo_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o cargo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cargos?.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </Field>
+                  <Field label="Setor">
+                    <Input
+                      value={selectedCargo?.setor || ''}
+                      readOnly
+                      className="bg-muted text-muted-foreground"
+                      placeholder="Automático pelo cargo"
+                    />
+                  </Field>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Data de Admissão" error={errors.data_admissao}>
                     <Input type="date" {...register('data_admissao')} />
                   </Field>
+                  <Field label="Status *" error={errors.status}>
+                    <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ativo">Ativo</SelectItem>
+                            <SelectItem value="inativo">Inativo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Salário" error={errors.salario}>
                     <Input type="number" step="0.01" {...register('salario')} />
                   </Field>
