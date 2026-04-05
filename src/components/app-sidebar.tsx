@@ -69,10 +69,18 @@ const navData = [
   {
     title: 'COMERCIAL',
     icon: Briefcase,
+    showRole: ['admin', 'crc_comercial'],
     items: [
       { title: 'Gestão de Vendas', url: '/comercial/vendas', icon: FileBarChart },
+      { title: 'Controle de Comissões', url: '/comercial/comissoes', icon: Landmark },
+      {
+        title: 'Fechamento de Comissões',
+        url: '/comercial/fechamento-comissoes',
+        icon: ShieldCheck,
+      },
+      { title: 'Pacientes', url: '/comercial/pacientes', icon: Users },
+      { title: 'Relatórios Comerciais', url: '/comercial/relatorios', icon: FileText },
       { title: 'Negociação', url: '/comercial/negociacao', icon: Handshake },
-      { title: 'Gestão Fiscal', url: '/comercial/fiscal', icon: Landmark },
     ],
   },
   {
@@ -104,7 +112,7 @@ const navData = [
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
 
   const handleLogout = async () => {
     await signOut()
@@ -128,7 +136,11 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        {navData.map((group) => {
+        {navData.map((group: any) => {
+          if (group.showRole && (!profile?.role || !group.showRole.includes(profile.role))) {
+            return null
+          }
+
           const SingleItemIcon = group.items[0]?.icon
 
           return group.items.length === 1 && !group.icon ? (

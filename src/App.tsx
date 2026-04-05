@@ -66,6 +66,10 @@ const AppRoutes = () => {
         {/* Comercial Routes */}
         <Route path="/comercial/vendas" element={<Vendas />} />
         <Route path="/comercial/negociacao" element={<Negociacao />} />
+        <Route path="/comercial/comissoes" element={<Placeholder />} />
+        <Route path="/comercial/fechamento-comissoes" element={<Placeholder />} />
+        <Route path="/comercial/pacientes" element={<Placeholder />} />
+        <Route path="/comercial/relatorios" element={<Placeholder />} />
         <Route path="/comercial/fiscal" element={<Placeholder />} />
 
         {/* Financeiro Routes */}
