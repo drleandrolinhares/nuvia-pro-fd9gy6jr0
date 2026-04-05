@@ -12,6 +12,7 @@ import Fornecedores from './pages/Fornecedores'
 import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
 import Placeholder from './pages/Placeholder'
+import Negociacao from './pages/comercial/Negociacao'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -55,7 +56,7 @@ const AppRoutes = () => {
 
         {/* Comercial Routes */}
         <Route path="/comercial/vendas" element={<Placeholder />} />
-        <Route path="/comercial/negociacao" element={<Placeholder />} />
+        <Route path="/comercial/negociacao" element={<Negociacao />} />
         <Route path="/comercial/fiscal" element={<Placeholder />} />
 
         {/* Financeiro Routes */}
