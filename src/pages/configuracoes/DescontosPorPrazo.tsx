@@ -1,18 +1,37 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Save } from 'lucide-react'
+
+const DEFAULT_DESCONTOS = [
+  {
+    faixa_numero: 1,
+    titulo: 'À VISTA (FAIXA 1)',
+    percentual_desconto: 15,
+    descricao: 'PAGAMENTO ÚNICO',
+  },
+  {
+    faixa_numero: 2,
+    titulo: 'FAIXA 2 (2X-5X)',
+    percentual_desconto: 5,
+    descricao: 'PRIMEIRO GRUPO',
+  },
+  {
+    faixa_numero: 3,
+    titulo: 'FAIXA 3 (6X-10X)',
+    percentual_desconto: 3,
+    descricao: 'SEGUNDO GRUPO',
+  },
+  {
+    faixa_numero: 4,
+    titulo: 'FAIXA 4 (11X-20X)',
+    percentual_desconto: 0,
+    descricao: 'PARCELAS RESTANTES',
+  },
+]
 
 export default function DescontosPorPrazo() {
   const [loading, setLoading] = useState(true)
@@ -26,23 +45,23 @@ export default function DescontosPorPrazo() {
       const { data, error } = await supabase
         .from('descontos_por_prazo')
         .select('*')
+        .in('faixa_numero', [1, 2, 3, 4])
         .order('faixa_numero', { ascending: true })
 
       if (error) throw error
 
-      if (!data || data.length === 0) {
-        const defaultData = Array.from({ length: 6 }).map((_, i) => ({
-          id: `new-${i}`,
-          faixa_numero: i,
-          percentual_desconto: 0,
-          descricao: `Faixa ${i}`,
-        }))
-        setDescontos(defaultData)
-      } else {
-        setDescontos(data)
-      }
+      const mergedData = DEFAULT_DESCONTOS.map((def) => {
+        const found = data?.find((d) => d.faixa_numero === def.faixa_numero)
+        if (found) {
+          return { ...def, id: found.id, percentual_desconto: found.percentual_desconto }
+        }
+        return { ...def, id: `new-${def.faixa_numero}` }
+      })
+
+      setDescontos(mergedData)
     } catch (error: any) {
       toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
+      setDescontos(DEFAULT_DESCONTOS.map((def) => ({ ...def, id: `new-${def.faixa_numero}` })))
     } finally {
       setLoading(false)
     }
@@ -52,10 +71,12 @@ export default function DescontosPorPrazo() {
     loadData()
   }, [])
 
-  const handleChange = (index: number, field: string, value: any) => {
-    const newDescontos = [...descontos]
-    newDescontos[index][field] = value
-    setDescontos(newDescontos)
+  const handleChange = (faixa_numero: number, value: string) => {
+    setDescontos(
+      descontos.map((d) =>
+        d.faixa_numero === faixa_numero ? { ...d, percentual_desconto: Number(value) } : d,
+      ),
+    )
   }
 
   const handleSave = async () => {
@@ -73,7 +94,6 @@ export default function DescontosPorPrazo() {
           const { error } = await supabase
             .from('descontos_por_prazo')
             .update({
-              faixa_numero: item.faixa_numero,
               percentual_desconto: Number(item.percentual_desconto),
               descricao: item.descricao,
             })
@@ -99,7 +119,7 @@ export default function DescontosPorPrazo() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+    <div className="flex flex-col gap-6 p-6 max-w-6xl mx-auto w-full animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Descontos por Prazo</h1>
         <p className="text-slate-500 mt-2">
@@ -107,72 +127,60 @@ export default function DescontosPorPrazo() {
         </p>
       </div>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg text-slate-800">Tabela de Descontos</CardTitle>
-              <CardDescription>Gerencie os descontos da Faixa 0 até a Faixa 5</CardDescription>
-            </div>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Salvar Alterações
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow>
-                <TableHead className="w-24 text-center font-semibold">Faixa</TableHead>
-                <TableHead className="font-semibold">Descrição</TableHead>
-                <TableHead className="w-48 text-right font-semibold">Desconto (%)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {descontos.map((item, idx) => (
-                <TableRow key={item.id} className="hover:bg-slate-50/50">
-                  <TableCell className="text-center font-medium text-slate-700">
-                    {item.faixa_numero}
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={item.descricao || ''}
-                      onChange={(e) => handleChange(idx, 'descricao', e.target.value)}
-                      className="bg-white"
-                      placeholder={`Descrição da faixa ${item.faixa_numero}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={item.percentual_desconto || 0}
-                        onChange={(e) => handleChange(idx, 'percentual_desconto', e.target.value)}
-                        className="bg-white text-right pr-8 font-medium"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                        %
-                      </span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-slate-800">DESCONTOS POR PRAZO</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {descontos.map((item) => (
+            <Card key={item.id} className="border-slate-200 shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-950 pb-4">
+                <CardTitle className="text-sm font-bold text-white text-center tracking-wider">
+                  {item.titulo}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 flex flex-col items-center gap-2">
+                <div className="relative w-full max-w-[120px]">
+                  <Input
+                    type="number"
+                    value={item.percentual_desconto}
+                    onChange={(e) => handleChange(item.faixa_numero, e.target.value)}
+                    className="text-center text-2xl font-bold h-14 pr-8 text-amber-500 border-slate-300"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                    %
+                  </span>
+                </div>
+                <p className="text-xs font-semibold text-slate-500 text-center uppercase tracking-wider mt-2">
+                  {item.descricao}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          size="lg"
+          className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              SALVANDO...
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5 mr-2" />
+              SALVAR
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
