@@ -105,6 +105,12 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         currentPacienteId = data.id
       } else if (!currentPacienteId) throw new Error('Selecione um paciente')
 
+      if (!formData.data_avaliacao) throw new Error('Data de avaliação é obrigatória')
+      if (!formData.dentista_avaliador_id) throw new Error('Selecione o Dentista Avaliador')
+      if (!formData.crc_comercial_id) throw new Error('Selecione o CRC Comercial')
+      if (!formData.valor_orcamento) throw new Error('Informe o valor do tratamento')
+      if (!formData.tipo_tratamento) throw new Error('Selecione o tipo de tratamento')
+
       const { error } = await supabase.from('avaliacoes').insert({
         paciente_id: currentPacienteId,
         dentista_avaliador_id: formData.dentista_avaliador_id,
