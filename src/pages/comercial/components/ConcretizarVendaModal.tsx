@@ -95,7 +95,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
     setSaving(true)
 
     try {
-      // 1. Criar a venda concretizada
       const { data: venda, error: vendaError } = await supabase
         .from('vendas_concretizadas')
         .insert({
@@ -113,7 +112,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
       if (vendaError) throw vendaError
 
-      // 2. Registrar comissão do Dentista
       if (avaliacao.dentista_avaliador_id) {
         const { error: dentistaError } = await supabase.from('comissoes_dentista').insert({
           venda_id: venda.id,
@@ -126,7 +124,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
         if (dentistaError) throw dentistaError
       }
 
-      // 3. Registrar comissão do CRC
       if (crcParticipou && avaliacao.crc_comercial_id) {
         const { error: crcError } = await supabase.from('comissoes_crc').insert({
           venda_id: venda.id,
@@ -139,7 +136,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
         if (crcError) throw crcError
       }
 
-      // 4. Atualizar o status da avaliação
       await supabase
         .from('avaliacoes')
         .update({ status: 'venda_concretizada' })
@@ -177,11 +173,11 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                 <Input
                   required
                   readOnly
-                  disabled
                   type="number"
                   step="0.01"
                   min="0"
                   value={valorTotalStr}
+                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed"
                 />
               </div>
               <div className="grid gap-2">
@@ -203,30 +199,28 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   type="number"
                   step="0.01"
                   min="0"
+                  max={valorTotal}
                   value={valorEntradaStr}
                   onChange={(e) => setValorEntradaStr(e.target.value)}
                   placeholder="Ex: 5000.00"
-                  className="bg-white dark:bg-slate-950"
+                  className="bg-white dark:bg-slate-950 border-2 border-blue-500"
                 />
               </div>
               <div className="grid gap-2">
                 <Label>Percentual de Entrada (%)</Label>
                 <Input
-                  required
-                  readOnly
-                  disabled
                   type="number"
+                  readOnly
                   step="0.01"
                   min="0"
                   max="100"
                   value={percentualEntrada.toFixed(2)}
-                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-medium text-slate-500"
+                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-medium text-slate-600"
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
-              {' '}
               <Switch
                 id="crc-participou"
                 checked={crcParticipou}
