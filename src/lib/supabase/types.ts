@@ -9,6 +9,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      avaliacoes: {
+        Row: {
+          atualizado_em: string | null
+          crc_comercial_id: string | null
+          criado_em: string | null
+          data_avaliacao: string | null
+          dentista_avaliador_id: string | null
+          id: string
+          observacoes: string | null
+          paciente_id: string
+          proxima_data_contato: string | null
+          status: string | null
+          temperatura_lead: string | null
+          tipo_tratamento: string | null
+          valor_orcamento: number | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          crc_comercial_id?: string | null
+          criado_em?: string | null
+          data_avaliacao?: string | null
+          dentista_avaliador_id?: string | null
+          id?: string
+          observacoes?: string | null
+          paciente_id: string
+          proxima_data_contato?: string | null
+          status?: string | null
+          temperatura_lead?: string | null
+          tipo_tratamento?: string | null
+          valor_orcamento?: number | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          crc_comercial_id?: string | null
+          criado_em?: string | null
+          data_avaliacao?: string | null
+          dentista_avaliador_id?: string | null
+          id?: string
+          observacoes?: string | null
+          paciente_id?: string
+          proxima_data_contato?: string | null
+          status?: string | null
+          temperatura_lead?: string | null
+          tipo_tratamento?: string | null
+          valor_orcamento?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'avaliacoes_crc_comercial_id_fkey'
+            columns: ['crc_comercial_id']
+            isOneToOne: false
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'avaliacoes_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
+            isOneToOne: false
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'avaliacoes_paciente_id_fkey'
+            columns: ['paciente_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       campo_configuracao: {
         Row: {
           ativo: boolean | null
@@ -212,6 +282,96 @@ export type Database = {
           },
         ]
       }
+      comissoes_crc: {
+        Row: {
+          crc_comercial_id: string
+          criado_em: string | null
+          data_calculo: string | null
+          id: string
+          percentual_faixa: number | null
+          valor_comissao: number | null
+          venda_id: string
+        }
+        Insert: {
+          crc_comercial_id: string
+          criado_em?: string | null
+          data_calculo?: string | null
+          id?: string
+          percentual_faixa?: number | null
+          valor_comissao?: number | null
+          venda_id: string
+        }
+        Update: {
+          crc_comercial_id?: string
+          criado_em?: string | null
+          data_calculo?: string | null
+          id?: string
+          percentual_faixa?: number | null
+          valor_comissao?: number | null
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comissoes_crc_crc_comercial_id_fkey'
+            columns: ['crc_comercial_id']
+            isOneToOne: false
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comissoes_crc_venda_id_fkey'
+            columns: ['venda_id']
+            isOneToOne: false
+            referencedRelation: 'vendas_concretizadas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      comissoes_dentista: {
+        Row: {
+          criado_em: string | null
+          data_calculo: string | null
+          dentista_avaliador_id: string
+          id: string
+          percentual_faixa: number | null
+          valor_comissao: number | null
+          venda_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          data_calculo?: string | null
+          dentista_avaliador_id: string
+          id?: string
+          percentual_faixa?: number | null
+          valor_comissao?: number | null
+          venda_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          data_calculo?: string | null
+          dentista_avaliador_id?: string
+          id?: string
+          percentual_faixa?: number | null
+          valor_comissao?: number | null
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comissoes_dentista_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
+            isOneToOne: false
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comissoes_dentista_venda_id_fkey'
+            columns: ['venda_id']
+            isOneToOne: false
+            referencedRelation: 'vendas_concretizadas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       compra_itens: {
         Row: {
           compra_id: string
@@ -353,6 +513,168 @@ export type Database = {
           percentual_entrada_padrao?: number
         }
         Relationships: []
+      }
+      contatos_follow_up: {
+        Row: {
+          avaliacao_id: string
+          canal: string | null
+          criado_em: string | null
+          data_contato: string | null
+          id: string
+          observacoes: string | null
+          responsavel_id: string | null
+          resultado: string | null
+          resumo_conversa: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          canal?: string | null
+          criado_em?: string | null
+          data_contato?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          resultado?: string | null
+          resumo_conversa?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          canal?: string | null
+          criado_em?: string | null
+          data_contato?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          resultado?: string | null
+          resumo_conversa?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'contatos_follow_up_avaliacao_id_fkey'
+            columns: ['avaliacao_id']
+            isOneToOne: false
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'contatos_follow_up_responsavel_id_fkey'
+            columns: ['responsavel_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      crc_comercial: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          id: string
+          nome: string
+          status: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'crc_comercial_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      criativos_gerados: {
+        Row: {
+          criado_em: string | null
+          data_criacao: string | null
+          dentista_avaliador_id: string
+          descricao_video: string | null
+          id: string
+          mes_referencia: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          data_criacao?: string | null
+          dentista_avaliador_id: string
+          descricao_video?: string | null
+          id?: string
+          mes_referencia?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          data_criacao?: string | null
+          dentista_avaliador_id?: string
+          descricao_video?: string | null
+          id?: string
+          mes_referencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'criativos_gerados_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
+            isOneToOne: false
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      dentistas_avaliadores: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          especialidade: string | null
+          id: string
+          meta_mensal_criativos: number | null
+          nome: string
+          status: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          especialidade?: string | null
+          id?: string
+          meta_mensal_criativos?: number | null
+          nome: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          especialidade?: string | null
+          id?: string
+          meta_mensal_criativos?: number | null
+          nome?: string
+          status?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'dentistas_avaliadores_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
       }
       descontos_por_prazo: {
         Row: {
@@ -567,6 +889,90 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamento_comissoes: {
+        Row: {
+          criado_em: string | null
+          data_faturamento: string | null
+          data_pagamento_prevista: string | null
+          id: string
+          periodo_fim: string | null
+          periodo_inicio: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          data_faturamento?: string | null
+          data_pagamento_prevista?: string | null
+          id?: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          data_faturamento?: string | null
+          data_pagamento_prevista?: string | null
+          id?: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+        }
+        Relationships: []
+      }
+      faturas_comissoes: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          data_pagamento: string | null
+          faturamento_id: string
+          forma_pagamento: string | null
+          id: string
+          observacao_pagamento: string | null
+          profissional_id: string
+          status_pagamento: string | null
+          tipo_profissional: string | null
+          valor_total_comissao: number | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_pagamento?: string | null
+          faturamento_id: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao_pagamento?: string | null
+          profissional_id: string
+          status_pagamento?: string | null
+          tipo_profissional?: string | null
+          valor_total_comissao?: number | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_pagamento?: string | null
+          faturamento_id?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao_pagamento?: string | null
+          profissional_id?: string
+          status_pagamento?: string | null
+          tipo_profissional?: string | null
+          valor_total_comissao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'faturas_comissoes_faturamento_id_fkey'
+            columns: ['faturamento_id']
+            isOneToOne: false
+            referencedRelation: 'faturamento_comissoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'faturas_comissoes_profissional_id_fkey'
+            columns: ['profissional_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           cnpj: string | null
@@ -672,6 +1078,74 @@ export type Database = {
           data_criacao?: string | null
           id?: string
           nome?: string
+        }
+        Relationships: []
+      }
+      orcamentos: {
+        Row: {
+          avaliacao_id: string
+          criado_em: string | null
+          data_orcamento: string | null
+          id: string
+          ordem: number | null
+          status: string | null
+          valor: number
+        }
+        Insert: {
+          avaliacao_id: string
+          criado_em?: string | null
+          data_orcamento?: string | null
+          id?: string
+          ordem?: number | null
+          status?: string | null
+          valor: number
+        }
+        Update: {
+          avaliacao_id?: string
+          criado_em?: string | null
+          data_orcamento?: string | null
+          id?: string
+          ordem?: number | null
+          status?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'orcamentos_avaliacao_id_fkey'
+            columns: ['avaliacao_id']
+            isOneToOne: false
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pacientes: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          data_cadastro: string | null
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_cadastro?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_cadastro?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
         }
         Relationships: []
       }
@@ -825,6 +1299,66 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      referencias_comissao_crc: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          faixa_entrada_maxima: number | null
+          faixa_entrada_minima: number | null
+          id: string
+          percentual_comissao: number | null
+          status: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          faixa_entrada_maxima?: number | null
+          faixa_entrada_minima?: number | null
+          id?: string
+          percentual_comissao?: number | null
+          status?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          faixa_entrada_maxima?: number | null
+          faixa_entrada_minima?: number | null
+          id?: string
+          percentual_comissao?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      referencias_comissao_dentista: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          faixa_entrada_maxima: number | null
+          faixa_entrada_minima: number | null
+          id: string
+          percentual_comissao: number | null
+          status: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          faixa_entrada_maxima?: number | null
+          faixa_entrada_minima?: number | null
+          id?: string
+          percentual_comissao?: number | null
+          status?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          faixa_entrada_maxima?: number | null
+          faixa_entrada_minima?: number | null
+          id?: string
+          percentual_comissao?: number | null
+          status?: string | null
+        }
+        Relationships: []
       }
       saida_produtos: {
         Row: {
@@ -1002,6 +1536,70 @@ export type Database = {
           },
         ]
       }
+      vendas_concretizadas: {
+        Row: {
+          atualizado_em: string | null
+          avaliacao_id: string
+          crc_comercial_id: string | null
+          crc_participou: boolean | null
+          criado_em: string | null
+          data_concretizacao: string | null
+          dentista_avaliador_id: string | null
+          id: string
+          percentual_entrada: number | null
+          valor_entrada: number | null
+          valor_total_tratamento: number
+        }
+        Insert: {
+          atualizado_em?: string | null
+          avaliacao_id: string
+          crc_comercial_id?: string | null
+          crc_participou?: boolean | null
+          criado_em?: string | null
+          data_concretizacao?: string | null
+          dentista_avaliador_id?: string | null
+          id?: string
+          percentual_entrada?: number | null
+          valor_entrada?: number | null
+          valor_total_tratamento: number
+        }
+        Update: {
+          atualizado_em?: string | null
+          avaliacao_id?: string
+          crc_comercial_id?: string | null
+          crc_participou?: boolean | null
+          criado_em?: string | null
+          data_concretizacao?: string | null
+          dentista_avaliador_id?: string | null
+          id?: string
+          percentual_entrada?: number | null
+          valor_entrada?: number | null
+          valor_total_tratamento?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vendas_concretizadas_avaliacao_id_fkey'
+            columns: ['avaliacao_id']
+            isOneToOne: false
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_concretizadas_crc_comercial_id_fkey'
+            columns: ['crc_comercial_id']
+            isOneToOne: false
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_concretizadas_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
+            isOneToOne: false
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1152,6 +1750,20 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: avaliacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   paciente_id: uuid (not null)
+//   dentista_avaliador_id: uuid (nullable)
+//   crc_comercial_id: uuid (nullable)
+//   data_avaliacao: date (nullable, default: CURRENT_DATE)
+//   valor_orcamento: numeric (nullable)
+//   tipo_tratamento: text (nullable)
+//   status: text (nullable, default: 'avaliacao_realizada'::text)
+//   temperatura_lead: text (nullable, default: 'morno'::text)
+//   proxima_data_contato: date (nullable)
+//   observacoes: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: campo_configuracao
 //   id: uuid (not null, default: gen_random_uuid())
 //   especialidade_id: uuid (nullable)
@@ -1190,6 +1802,22 @@ export const Constants = {
 //   pis: text (nullable)
 //   dependentes: integer (nullable, default: 0)
 //   beneficiario_emergencia: text (nullable)
+// Table: comissoes_crc
+//   id: uuid (not null, default: gen_random_uuid())
+//   venda_id: uuid (not null)
+//   crc_comercial_id: uuid (not null)
+//   percentual_faixa: numeric (nullable)
+//   valor_comissao: numeric (nullable)
+//   data_calculo: date (nullable, default: CURRENT_DATE)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: comissoes_dentista
+//   id: uuid (not null, default: gen_random_uuid())
+//   venda_id: uuid (not null)
+//   dentista_avaliador_id: uuid (not null)
+//   percentual_faixa: numeric (nullable)
+//   valor_comissao: numeric (nullable)
+//   data_calculo: date (nullable, default: CURRENT_DATE)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: compra_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   compra_id: uuid (not null)
@@ -1219,6 +1847,39 @@ export const Constants = {
 //   percentual_entrada_padrao: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: contatos_follow_up
+//   id: uuid (not null, default: gen_random_uuid())
+//   avaliacao_id: uuid (not null)
+//   data_contato: timestamp with time zone (nullable, default: now())
+//   responsavel_id: uuid (nullable)
+//   canal: text (nullable)
+//   resumo_conversa: text (nullable)
+//   resultado: text (nullable)
+//   observacoes: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: crc_comercial
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   nome: text (not null)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: criativos_gerados
+//   id: uuid (not null, default: gen_random_uuid())
+//   dentista_avaliador_id: uuid (not null)
+//   data_criacao: date (nullable, default: CURRENT_DATE)
+//   descricao_video: text (nullable)
+//   mes_referencia: date (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: dentistas_avaliadores
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   nome: text (not null)
+//   especialidade: text (nullable)
+//   meta_mensal_criativos: integer (nullable, default: 0)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: descontos_por_prazo
 //   id: uuid (not null, default: gen_random_uuid())
 //   faixa_numero: integer (not null)
@@ -1266,6 +1927,25 @@ export const Constants = {
 //   max_parcelas: integer (not null, default: 1)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   faixa_numero: integer (nullable)
+// Table: faturamento_comissoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   periodo_inicio: date (nullable)
+//   periodo_fim: date (nullable)
+//   data_faturamento: date (nullable, default: CURRENT_DATE)
+//   data_pagamento_prevista: date (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: faturas_comissoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   faturamento_id: uuid (not null)
+//   profissional_id: uuid (not null)
+//   tipo_profissional: text (nullable)
+//   valor_total_comissao: numeric (nullable)
+//   status_pagamento: text (nullable, default: 'em_aberto'::text)
+//   data_pagamento: date (nullable)
+//   forma_pagamento: text (nullable)
+//   observacao_pagamento: text (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1291,6 +1971,22 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: orcamentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   avaliacao_id: uuid (not null)
+//   valor: numeric (not null)
+//   data_orcamento: date (nullable, default: CURRENT_DATE)
+//   status: text (nullable, default: 'ativo'::text)
+//   ordem: integer (nullable, default: 1)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: pacientes
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   telefone: text (nullable)
+//   email: text (nullable)
+//   data_cadastro: date (nullable, default: CURRENT_DATE)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1323,6 +2019,22 @@ export const Constants = {
 //   embalagem_id: uuid (nullable)
 //   sala_id: uuid (nullable)
 //   referencia_consumo: referencia_consumo_enum (nullable, default: 'qtd_comprada'::referencia_consumo_enum)
+// Table: referencias_comissao_crc
+//   id: uuid (not null, default: gen_random_uuid())
+//   faixa_entrada_minima: numeric (nullable)
+//   faixa_entrada_maxima: numeric (nullable)
+//   percentual_comissao: numeric (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: referencias_comissao_dentista
+//   id: uuid (not null, default: gen_random_uuid())
+//   faixa_entrada_minima: numeric (nullable)
+//   faixa_entrada_maxima: numeric (nullable)
+//   percentual_comissao: numeric (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -1359,8 +2071,25 @@ export const Constants = {
 //   salario: numeric (nullable)
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
+// Table: vendas_concretizadas
+//   id: uuid (not null, default: gen_random_uuid())
+//   avaliacao_id: uuid (not null)
+//   data_concretizacao: date (nullable, default: CURRENT_DATE)
+//   valor_total_tratamento: numeric (not null)
+//   valor_entrada: numeric (nullable)
+//   percentual_entrada: numeric (nullable)
+//   dentista_avaliador_id: uuid (nullable)
+//   crc_participou: boolean (nullable, default: false)
+//   crc_comercial_id: uuid (nullable)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 
 // --- CONSTRAINTS ---
+// Table: avaliacoes
+//   FOREIGN KEY avaliacoes_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
+//   FOREIGN KEY avaliacoes_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   FOREIGN KEY avaliacoes_paciente_id_fkey: FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
 // Table: campo_configuracao
 //   FOREIGN KEY campo_configuracao_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   UNIQUE campo_configuracao_especialidade_id_campo_id_key: UNIQUE (especialidade_id, campo_id)
@@ -1382,6 +2111,14 @@ export const Constants = {
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: comissoes_crc
+//   FOREIGN KEY comissoes_crc_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE CASCADE
+//   PRIMARY KEY comissoes_crc_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY comissoes_crc_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas_concretizadas(id) ON DELETE CASCADE
+// Table: comissoes_dentista
+//   FOREIGN KEY comissoes_dentista_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE CASCADE
+//   PRIMARY KEY comissoes_dentista_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY comissoes_dentista_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas_concretizadas(id) ON DELETE CASCADE
 // Table: compra_itens
 //   FOREIGN KEY compra_itens_compra_id_fkey: FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE
 //   PRIMARY KEY compra_itens_pkey: PRIMARY KEY (id)
@@ -1393,6 +2130,19 @@ export const Constants = {
 //   FOREIGN KEY compras_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
 // Table: configuracoes_negociacao
 //   PRIMARY KEY configuracoes_negociacao_pkey: PRIMARY KEY (id)
+// Table: contatos_follow_up
+//   FOREIGN KEY contatos_follow_up_avaliacao_id_fkey: FOREIGN KEY (avaliacao_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
+//   PRIMARY KEY contatos_follow_up_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY contatos_follow_up_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: crc_comercial
+//   PRIMARY KEY crc_comercial_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY crc_comercial_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: criativos_gerados
+//   FOREIGN KEY criativos_gerados_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE CASCADE
+//   PRIMARY KEY criativos_gerados_pkey: PRIMARY KEY (id)
+// Table: dentistas_avaliadores
+//   PRIMARY KEY dentistas_avaliadores_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY dentistas_avaliadores_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: descontos_por_prazo
 //   CHECK descontos_por_prazo_faixa_numero_check: CHECK (((faixa_numero >= 0) AND (faixa_numero <= 5)))
 //   PRIMARY KEY descontos_por_prazo_pkey: PRIMARY KEY (id)
@@ -1415,6 +2165,12 @@ export const Constants = {
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
 // Table: faixas_valores_parcelas
 //   PRIMARY KEY faixas_valores_parcelas_pkey: PRIMARY KEY (id)
+// Table: faturamento_comissoes
+//   PRIMARY KEY faturamento_comissoes_pkey: PRIMARY KEY (id)
+// Table: faturas_comissoes
+//   FOREIGN KEY faturas_comissoes_faturamento_id_fkey: FOREIGN KEY (faturamento_id) REFERENCES faturamento_comissoes(id) ON DELETE CASCADE
+//   PRIMARY KEY faturas_comissoes_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY faturas_comissoes_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: fornecedores
 //   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
 // Table: historico_compras
@@ -1424,6 +2180,11 @@ export const Constants = {
 // Table: marcas_implante
 //   UNIQUE marcas_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY marcas_implante_pkey: PRIMARY KEY (id)
+// Table: orcamentos
+//   FOREIGN KEY orcamentos_avaliacao_id_fkey: FOREIGN KEY (avaliacao_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
+//   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
+// Table: pacientes
+//   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
@@ -1437,6 +2198,10 @@ export const Constants = {
 //   FOREIGN KEY produtos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE SET NULL
 //   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY produtos_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
+// Table: referencias_comissao_crc
+//   PRIMARY KEY referencias_comissao_crc_pkey: PRIMARY KEY (id)
+// Table: referencias_comissao_dentista
+//   PRIMARY KEY referencias_comissao_dentista_pkey: PRIMARY KEY (id)
 // Table: saida_produtos
 //   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
@@ -1457,8 +2222,17 @@ export const Constants = {
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+// Table: vendas_concretizadas
+//   FOREIGN KEY vendas_concretizadas_avaliacao_id_fkey: FOREIGN KEY (avaliacao_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
+//   FOREIGN KEY vendas_concretizadas_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
+//   FOREIGN KEY vendas_concretizadas_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   PRIMARY KEY vendas_concretizadas_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: avaliacoes
+//   Policy "avaliacoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: campo_configuracao
 //   Policy "campo_configuracao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -1490,6 +2264,14 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
 //   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (usuario_id = auth.uid())
+// Table: comissoes_crc
+//   Policy "comissoes_crc_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: comissoes_dentista
+//   Policy "comissoes_dentista_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: compra_itens
 //   Policy "compra_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1512,6 +2294,22 @@ export const Constants = {
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: configuracoes_negociacao
 //   Policy "configuracoes_negociacao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: contatos_follow_up
+//   Policy "contatos_follow_up_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: crc_comercial
+//   Policy "crc_comercial_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: criativos_gerados
+//   Policy "criativos_gerados_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: dentistas_avaliadores
+//   Policy "dentistas_avaliadores_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: descontos_por_prazo
@@ -1552,6 +2350,14 @@ export const Constants = {
 //   Policy "faixas_valores_parcelas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: faturamento_comissoes
+//   Policy "faturamento_comissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: faturas_comissoes
+//   Policy "faturas_comissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: fornecedores
 //   Policy "fornecedores_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1577,6 +2383,14 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "marcas_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: orcamentos
+//   Policy "orcamentos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: pacientes
+//   Policy "pacientes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: permissoes
 //   Policy "permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -1596,6 +2410,14 @@ export const Constants = {
 //   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text) OR has_permission('Editar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text) OR has_permission('Editar Estoque'::text))
+// Table: referencias_comissao_crc
+//   Policy "referencias_comissao_crc_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: referencias_comissao_dentista
+//   Policy "referencias_comissao_dentista_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: saida_produtos
 //   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -1630,6 +2452,10 @@ export const Constants = {
 //     USING: true
 //   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
+// Table: vendas_concretizadas
+//   Policy "vendas_concretizadas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION has_permission(text)
@@ -1885,26 +2711,47 @@ export const Constants = {
 //   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 
 // --- INDEXES ---
+// Table: avaliacoes
+//   CREATE INDEX avaliacoes_crc_comercial_id_idx ON public.avaliacoes USING btree (crc_comercial_id)
+//   CREATE INDEX avaliacoes_dentista_avaliador_id_idx ON public.avaliacoes USING btree (dentista_avaliador_id)
+//   CREATE INDEX avaliacoes_paciente_id_idx ON public.avaliacoes USING btree (paciente_id)
+//   CREATE INDEX avaliacoes_status_idx ON public.avaliacoes USING btree (status)
 // Table: campo_configuracao
 //   CREATE UNIQUE INDEX campo_configuracao_especialidade_id_campo_id_key ON public.campo_configuracao USING btree (especialidade_id, campo_id)
 // Table: campo_opcoes
 //   CREATE INDEX campo_opcoes_campo_id_idx ON public.campo_opcoes USING btree (campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
+// Table: comissoes_crc
+//   CREATE INDEX comissoes_crc_crc_comercial_id_idx ON public.comissoes_crc USING btree (crc_comercial_id)
+//   CREATE INDEX comissoes_crc_venda_id_idx ON public.comissoes_crc USING btree (venda_id)
+// Table: comissoes_dentista
+//   CREATE INDEX comissoes_dentista_dentista_avaliador_id_idx ON public.comissoes_dentista USING btree (dentista_avaliador_id)
+//   CREATE INDEX comissoes_dentista_venda_id_idx ON public.comissoes_dentista USING btree (venda_id)
 // Table: compra_itens
 //   CREATE INDEX compra_itens_compra_id_idx ON public.compra_itens USING btree (compra_id)
 //   CREATE INDEX compra_itens_produto_id_idx ON public.compra_itens USING btree (produto_id)
 //   CREATE INDEX compra_itens_sala_id_idx ON public.compra_itens USING btree (sala_id)
 // Table: compras
 //   CREATE INDEX compras_fornecedor_id_idx ON public.compras USING btree (fornecedor_id)
+// Table: contatos_follow_up
+//   CREATE INDEX contatos_follow_up_avaliacao_id_idx ON public.contatos_follow_up USING btree (avaliacao_id)
+// Table: criativos_gerados
+//   CREATE INDEX criativos_gerados_dentista_avaliador_id_idx ON public.criativos_gerados USING btree (dentista_avaliador_id)
 // Table: diametros_implante
 //   CREATE UNIQUE INDEX diametros_implante_nome_key ON public.diametros_implante USING btree (nome)
 // Table: embalagens
 //   CREATE UNIQUE INDEX embalagens_nome_key ON public.embalagens USING btree (nome)
 // Table: especialidades
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
+// Table: faturas_comissoes
+//   CREATE INDEX faturas_comissoes_faturamento_id_idx ON public.faturas_comissoes USING btree (faturamento_id)
+//   CREATE INDEX faturas_comissoes_profissional_id_idx ON public.faturas_comissoes USING btree (profissional_id)
 // Table: marcas_implante
 //   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
+// Table: orcamentos
+//   CREATE INDEX orcamentos_avaliacao_id_idx ON public.orcamentos USING btree (avaliacao_id)
+//   CREATE INDEX orcamentos_status_idx ON public.orcamentos USING btree (status)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: produto_campos_valores
@@ -1915,3 +2762,7 @@ export const Constants = {
 //   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
+// Table: vendas_concretizadas
+//   CREATE INDEX vendas_concretizadas_avaliacao_id_idx ON public.vendas_concretizadas USING btree (avaliacao_id)
+//   CREATE INDEX vendas_concretizadas_crc_comercial_id_idx ON public.vendas_concretizadas USING btree (crc_comercial_id)
+//   CREATE INDEX vendas_concretizadas_dentista_avaliador_id_idx ON public.vendas_concretizadas USING btree (dentista_avaliador_id)

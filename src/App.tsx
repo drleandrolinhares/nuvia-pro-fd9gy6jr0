@@ -11,6 +11,7 @@ import Colaboradores from './pages/Colaboradores'
 import Fornecedores from './pages/Fornecedores'
 import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
+import RegistroUsuarios from './pages/admin/RegistroUsuarios'
 import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
@@ -44,12 +45,14 @@ const AppRoutes = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/fornecedores" element={<Fornecedores />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/admin/cadastros" element={<CadastrosBasicos />} />
+        <Route path="/admin/registro" element={<RegistroUsuarios />} />
 
         <Route path="/configuracoes/descontos" element={<DescontosPorPrazo />} />
         <Route path="/configuracoes/faixas" element={<EntradaEFaixas />} />

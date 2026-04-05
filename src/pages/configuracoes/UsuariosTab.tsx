@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Link } from 'react-router-dom'
 
 export function UsuariosTab() {
   const { usuarios, loading } = useConfigData()
@@ -45,8 +46,10 @@ export function UsuariosTab() {
               Gerencie os colaboradores, acessos e detalhes administrativos.
             </CardDescription>
           </div>
-          <Button size="sm" className="uppercase tracking-wider text-xs font-bold">
-            <UserPlus className="size-4 mr-2" /> Novo Colaborador
+          <Button size="sm" className="uppercase tracking-wider text-xs font-bold" asChild>
+            <Link to="/admin/registro">
+              <UserPlus className="size-4 mr-2" /> Novo Colaborador
+            </Link>
           </Button>
         </CardHeader>
         <CardContent>
