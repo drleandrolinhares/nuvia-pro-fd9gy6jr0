@@ -15,6 +15,7 @@ import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
 import Negociacao from './pages/comercial/Negociacao'
+import Vendas from './pages/comercial/Vendas'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -60,7 +61,7 @@ const AppRoutes = () => {
         <Route path="/operacional/comunicados" element={<Placeholder />} />
 
         {/* Comercial Routes */}
-        <Route path="/comercial/vendas" element={<Placeholder />} />
+        <Route path="/comercial/vendas" element={<Vendas />} />
         <Route path="/comercial/negociacao" element={<Negociacao />} />
         <Route path="/comercial/fiscal" element={<Placeholder />} />
 
