@@ -96,10 +96,12 @@ export default function Negociacao() {
 
   const getNomeFaixa = (num: number, desc?: string | null) => {
     if (desc) return desc
-    if (num === 1) return 'À VISTA'
-    if (num === 2) return 'FAIXA 2 (2X-5X)'
-    if (num === 3) return 'FAIXA 3 (6X-10X)'
-    if (num === 4) return 'FAIXA 4 (11X+)'
+    if (num === 0) return 'À VISTA'
+    if (num === 1) return 'FAIXA 1 (2X-5X)'
+    if (num === 2) return 'FAIXA 2 (6X-10X)'
+    if (num === 3) return 'FAIXA 3 (11X-20X)'
+    if (num === 4) return 'FAIXA 4 (21X-30X)'
+    if (num === 5) return 'FAIXA 5 (31X+)'
     return `FAIXA ${num}`
   }
 
@@ -293,61 +295,139 @@ export default function Negociacao() {
                   )}
                   {resultado && !calculando && (
                     <>
-                      <TableRow className="hover:bg-slate-50/50 transition-colors bg-blue-50/50">
-                        <TableCell className="font-semibold text-slate-900 pl-6 py-4">
+                      {/* À VISTA */}
+                      {resultado.opcoes_parcelamento
+                        .filter((op: any) => op.parcelas === 1)
+                        .map((op: any) => (
+                          <TableRow
+                            key="a-vista"
+                            className="bg-blue-900 hover:bg-blue-800 transition-colors border-b-0"
+                          >
+                            <TableCell className="font-semibold text-white pl-6 py-4">
+                              À VISTA
+                            </TableCell>
+                            <TableCell className="text-center py-4">
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-800 text-white font-bold border-blue-700 shadow-sm px-3 py-1"
+                              >
+                                1x
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right py-4 font-medium text-white">
+                              {formatCurrency(op.valor_parcela)}
+                            </TableCell>
+                            <TableCell className="text-right pr-6 py-4">
+                              <span className="font-black px-2.5 py-1 rounded-md text-blue-100 bg-blue-800/50 border border-blue-700/50">
+                                {op.percentual_desconto}%
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+
+                      {/* ENTRADA */}
+                      <TableRow className="bg-slate-200 hover:bg-slate-300/80 transition-colors border-b-slate-300">
+                        <TableCell className="font-semibold text-slate-800 pl-6 py-4">
                           ENTRADA
                         </TableCell>
                         <TableCell className="text-center py-4">
                           <Badge
                             variant="outline"
-                            className="bg-white text-slate-700 font-bold border-slate-200 shadow-sm px-3 py-1"
+                            className="bg-slate-100 text-slate-700 font-bold border-slate-300 shadow-sm px-3 py-1"
                           >
                             À vista
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right py-4 font-medium text-slate-900">
+                        <TableCell className="text-right py-4 font-medium text-slate-800">
                           {formatCurrency(resultado.valor_entrada)}
                         </TableCell>
                         <TableCell className="text-right pr-6 py-4">
-                          <span className="font-black px-2.5 py-1 rounded-md text-slate-500 bg-slate-100">
+                          <span className="font-black px-2.5 py-1 rounded-md text-slate-500 bg-slate-100 border border-slate-300/50">
                             0%
                           </span>
                         </TableCell>
                       </TableRow>
 
-                      {resultado.opcoes_parcelamento.map((op: any) => (
-                        <TableRow
-                          key={op.parcelas}
-                          className="hover:bg-slate-50/50 transition-colors"
-                        >
-                          <TableCell className="font-semibold text-slate-900 pl-6 py-4">
-                            {op.parcelas === 1 ? 'À VISTA' : 'PARCELAMENTO'}
-                          </TableCell>
-                          <TableCell className="text-center py-4">
-                            <Badge
-                              variant="outline"
-                              className="bg-white text-slate-700 font-bold border-slate-200 shadow-sm px-3 py-1"
-                            >
-                              {op.parcelas}x
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right py-4 font-medium text-slate-900">
-                            {formatCurrency(op.valor_parcela)}
-                            {op.parcelas > 1 && (
-                              <div className="text-[10px] text-slate-500 mt-1">
-                                Total parc.: {formatCurrency(op.valor_parcela * op.parcelas)}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right pr-6 py-4">
-                            <span
-                              className={`font-black px-2.5 py-1 rounded-md ${op.percentual_desconto === 0 ? 'text-slate-500 bg-slate-100' : 'text-amber-700 bg-amber-100/50 border border-amber-200/50'}`}
-                            >
-                              {op.percentual_desconto}%
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {/* PARCELAMENTO */}
+                      {resultado.opcoes_parcelamento
+                        .filter((op: any) => op.parcelas > 1)
+                        .map((op: any) => {
+                          let rowClass = 'hover:bg-slate-50/50 transition-colors '
+                          let badgeClass =
+                            'bg-white text-slate-700 font-bold border-slate-200 shadow-sm px-3 py-1'
+                          let textClass = 'text-slate-900'
+                          let discountClass =
+                            op.percentual_desconto === 0
+                              ? 'text-slate-500 bg-slate-100'
+                              : 'text-slate-700 bg-slate-100 border border-slate-200'
+
+                          if (op.faixa_aplicada === 1) {
+                            // 2X-5X VERDE
+                            rowClass += 'bg-emerald-50/50'
+                            badgeClass =
+                              'bg-emerald-100 text-emerald-800 border-emerald-200 shadow-sm px-3 py-1'
+                            textClass = 'text-emerald-900'
+                            discountClass =
+                              'text-emerald-700 bg-emerald-100/50 border border-emerald-200/50'
+                          } else if (op.faixa_aplicada === 2) {
+                            // 6X-10X LARANJA
+                            rowClass += 'bg-orange-50/50'
+                            badgeClass =
+                              'bg-orange-100 text-orange-800 border-orange-200 shadow-sm px-3 py-1'
+                            textClass = 'text-orange-900'
+                            discountClass =
+                              'text-orange-700 bg-orange-100/50 border border-orange-200/50'
+                          } else if (op.faixa_aplicada === 3) {
+                            // 11X-20X VERMELHA
+                            rowClass += 'bg-red-50/50'
+                            badgeClass =
+                              'bg-red-100 text-red-800 border-red-200 shadow-sm px-3 py-1'
+                            textClass = 'text-red-900'
+                            discountClass = 'text-red-700 bg-red-100/50 border border-red-200/50'
+                          } else if (op.faixa_aplicada === 4) {
+                            // 21X-30X ROXA
+                            rowClass += 'bg-purple-50/50'
+                            badgeClass =
+                              'bg-purple-100 text-purple-800 border-purple-200 shadow-sm px-3 py-1'
+                            textClass = 'text-purple-900'
+                            discountClass =
+                              'text-purple-700 bg-purple-100/50 border border-purple-200/50'
+                          } else if (op.faixa_aplicada === 5) {
+                            // 31X+ CINZA
+                            rowClass += 'bg-slate-100/50'
+                            badgeClass =
+                              'bg-slate-200 text-slate-800 border-slate-300 shadow-sm px-3 py-1'
+                            textClass = 'text-slate-900'
+                            discountClass =
+                              'text-slate-700 bg-slate-200/50 border border-slate-300/50'
+                          }
+
+                          return (
+                            <TableRow key={op.parcelas} className={rowClass}>
+                              <TableCell className={`font-semibold pl-6 py-4 ${textClass}`}>
+                                PARCELAMENTO
+                              </TableCell>
+                              <TableCell className="text-center py-4">
+                                <Badge variant="outline" className={badgeClass}>
+                                  {op.parcelas}x
+                                </Badge>
+                              </TableCell>
+                              <TableCell className={`text-right py-4 font-medium ${textClass}`}>
+                                {formatCurrency(op.valor_parcela)}
+                                <div className="text-[10px] opacity-70 mt-1">
+                                  Total parc.: {formatCurrency(op.valor_parcela * op.parcelas)}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right pr-6 py-4">
+                                <span
+                                  className={`font-black px-2.5 py-1 rounded-md ${discountClass}`}
+                                >
+                                  {op.percentual_desconto}%
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                     </>
                   )}
                 </TableBody>

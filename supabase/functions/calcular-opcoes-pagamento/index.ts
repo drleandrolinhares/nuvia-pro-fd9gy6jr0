@@ -74,19 +74,33 @@ Deno.serve(async (req: Request) => {
       const descontoObj = descontos?.find((d) => d.faixa_numero === faixa_numero)
       const percentual_desconto = descontoObj ? Number(descontoObj.percentual_desconto) : 0
 
-      const valor_desconto = (valor_restante * percentual_desconto) / 100
-      const valor_final_restante = valor_restante - valor_desconto
-      const valor_parcela = valor_final_restante / i
+      if (i === 1) {
+        const valor_desconto = (valorTratamentoNum * percentual_desconto) / 100
+        const valor_parcela = valorTratamentoNum - valor_desconto
+        opcoes_parcelamento.push({
+          parcelas: 1,
+          faixa_aplicada: 0,
+          percentual_desconto,
+          valor_desconto,
+          valor_final_restante: 0,
+          valor_parcela,
+          valor_final_com_desconto: valor_parcela,
+        })
+      } else {
+        const valor_desconto = (valor_restante * percentual_desconto) / 100
+        const valor_final_restante = valor_restante - valor_desconto
+        const valor_parcela = valor_final_restante / i
 
-      opcoes_parcelamento.push({
-        parcelas: i,
-        faixa_aplicada: faixa_numero,
-        percentual_desconto,
-        valor_desconto,
-        valor_final_restante,
-        valor_parcela,
-        valor_final_com_desconto: valor_entrada + valor_final_restante,
-      })
+        opcoes_parcelamento.push({
+          parcelas: i,
+          faixa_aplicada: faixa_numero,
+          percentual_desconto,
+          valor_desconto,
+          valor_final_restante,
+          valor_parcela,
+          valor_final_com_desconto: valor_entrada + valor_final_restante,
+        })
+      }
     }
 
     return new Response(
