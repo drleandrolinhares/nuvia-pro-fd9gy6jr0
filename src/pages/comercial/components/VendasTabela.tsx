@@ -1,0 +1,213 @@
+import { format } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
+import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, FileText } from 'lucide-react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { Avaliacao } from '../types'
+import { cn } from '@/lib/utils'
+
+interface Props {
+  avaliacoes: Avaliacao[]
+  loading: boolean
+  sortColumn: string
+  sortDirection: 'asc' | 'desc'
+  onSort: (col: string) => void
+  page: number
+  totalCount: number
+  itemsPerPage: number
+  setPage: React.Dispatch<React.SetStateAction<number>>
+}
+
+export function VendasTabela({
+  avaliacoes,
+  loading,
+  sortColumn,
+  sortDirection,
+  onSort,
+  page,
+  totalCount,
+  itemsPerPage,
+  setPage,
+}: Props) {
+  const navigate = useNavigate()
+
+  const getMaiorValor = (av: Avaliacao) => {
+    const maxOrcamentos = av.orcamentos?.length
+      ? Math.max(...av.orcamentos.map((o) => Number(o.valor)))
+      : 0
+    return Math.max(Number(av.valor_orcamento || 0), maxOrcamentos)
+  }
+
+  const SortableHead = ({ column, children }: { column: string; children: React.ReactNode }) => {
+    const isActive = sortColumn === column
+    return (
+      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => onSort(column)}>
+        <div className="flex items-center gap-1">
+          {children}
+          {isActive ? (
+            sortDirection === 'asc' ? (
+              <ArrowUp className="w-3 h-3" />
+            ) : (
+              <ArrowDown className="w-3 h-3" />
+            )
+          ) : (
+            <ArrowUpDown className="w-3 h-3 text-muted-foreground opacity-50" />
+          )}
+        </div>
+      </TableHead>
+    )
+  }
+
+  const formatCurrency = (val: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Paciente</TableHead>
+              <SortableHead column="data_avaliacao">Data</SortableHead>
+              <SortableHead column="valor_orcamento">Valor</SortableHead>
+              <SortableHead column="status">Status</SortableHead>
+              <SortableHead column="temperatura_lead">Temperatura</SortableHead>
+              <SortableHead column="proxima_data_contato">Próx. Contato</SortableHead>
+              <TableHead>Responsável</TableHead>
+              <TableHead className="w-[80px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            ) : avaliacoes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  Nenhuma oportunidade encontrada.
+                </TableCell>
+              </TableRow>
+            ) : (
+              avaliacoes.map((av) => (
+                <TableRow
+                  key={av.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest('.actions-cell')) {
+                      navigate(`/comercial/pacientes?id=${av.paciente_id}`)
+                    }
+                  }}
+                >
+                  <TableCell className="font-medium">{av.pacientes?.nome || 'N/A'}</TableCell>
+                  <TableCell>
+                    {av.data_avaliacao ? format(new Date(av.data_avaliacao), 'dd/MM/yyyy') : '-'}
+                  </TableCell>
+                  <TableCell>{formatCurrency(getMaiorValor(av))}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'capitalize',
+                        av.status === 'venda_concretizada' && 'bg-green-500/10 text-green-500',
+                      )}
+                    >
+                      {av.status?.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        av.temperatura_lead === 'quente'
+                          ? 'text-red-500 border-red-500 bg-red-500/10'
+                          : av.temperatura_lead === 'morno'
+                            ? 'text-amber-500 border-amber-500 bg-amber-500/10'
+                            : 'text-blue-500 border-blue-500 bg-blue-500/10',
+                      )}
+                    >
+                      {av.temperatura_lead}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {av.proxima_data_contato
+                      ? format(new Date(av.proxima_data_contato), 'dd/MM/yyyy')
+                      : '-'}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
+                  </TableCell>
+                  <TableCell className="actions-cell" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/comercial/pacientes?id=${av.paciente_id}`)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" /> Ver Ficha
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          <PaginationItem>
+            <span className="text-sm text-muted-foreground px-4">
+              Página {page} de {Math.max(1, Math.ceil(totalCount / itemsPerPage))}
+            </span>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / itemsPerPage), p + 1))}
+              className={
+                page >= Math.ceil(totalCount / itemsPerPage)
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  )
+}

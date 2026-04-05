@@ -1,0 +1,280 @@
+import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
+import { Loader2, Plus } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useToast } from '@/components/ui/use-toast'
+import { supabase } from '@/lib/supabase/client'
+
+interface Props {
+  dentistas: any[]
+  crcs: any[]
+  onSuccess: () => void
+}
+
+const initialForm = {
+  paciente_id: '',
+  novo_paciente_nome: '',
+  telefone: '',
+  data_avaliacao: format(new Date(), 'yyyy-MM-dd'),
+  dentista_avaliador_id: '',
+  crc_comercial_id: '',
+  valor_orcamento: '',
+  tipo_tratamento: '',
+  observacoes: '',
+  status: 'avaliacao_realizada',
+  temperatura_lead: 'morno',
+}
+
+export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
+  const { toast } = useToast()
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [pacientes, setPacientes] = useState<any[]>([])
+  const [isCreating, setIsCreating] = useState(false)
+  const [formData, setFormData] = useState(initialForm)
+
+  useEffect(() => {
+    if (open) {
+      supabase
+        .from('pacientes')
+        .select('id, nome, telefone')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setPacientes(data)
+        })
+    } else {
+      setFormData(initialForm)
+      setIsCreating(false)
+    }
+  }, [open])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      let currentPacienteId = formData.paciente_id
+
+      if (isCreating) {
+        if (!formData.novo_paciente_nome) throw new Error('Nome do paciente obrigatório')
+        const { data, error } = await supabase
+          .from('pacientes')
+          .insert({
+            nome: formData.novo_paciente_nome,
+            telefone: formData.telefone,
+          })
+          .select('id')
+          .single()
+        if (error) throw error
+        currentPacienteId = data.id
+      } else if (!currentPacienteId) throw new Error('Selecione um paciente')
+
+      const { error } = await supabase.from('avaliacoes').insert({
+        paciente_id: currentPacienteId,
+        dentista_avaliador_id: formData.dentista_avaliador_id,
+        crc_comercial_id: formData.crc_comercial_id,
+        data_avaliacao: formData.data_avaliacao,
+        valor_orcamento: Number(formData.valor_orcamento),
+        tipo_tratamento: formData.tipo_tratamento,
+        observacoes: formData.observacoes,
+        status: formData.status,
+        temperatura_lead: formData.temperatura_lead,
+      })
+
+      if (error) throw error
+      toast({ title: 'Sucesso', description: 'Avaliação cadastrada!' })
+      setOpen(false)
+      onSuccess()
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> Nova Oportunidade
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Nova Avaliação</DialogTitle>
+            <DialogDescription>Registre uma nova oportunidade.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Paciente *</Label>
+              <div className="flex gap-2">
+                {!isCreating ? (
+                  <Select
+                    value={formData.paciente_id}
+                    onValueChange={(v) => {
+                      const p = pacientes.find((x) => x.id === v)
+                      setFormData({ ...formData, paciente_id: v, telefone: p?.telefone || '' })
+                    }}
+                    required
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pacientes.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    placeholder="Nome do paciente"
+                    value={formData.novo_paciente_nome}
+                    onChange={(e) =>
+                      setFormData({ ...formData, novo_paciente_nome: e.target.value })
+                    }
+                    required
+                    className="flex-1"
+                  />
+                )}
+                <Button type="button" variant="outline" onClick={() => setIsCreating(!isCreating)}>
+                  {isCreating ? 'Cancelar' : 'Novo'}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Telefone *</Label>
+                <Input
+                  required
+                  type="tel"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Data *</Label>
+                <Input
+                  required
+                  type="date"
+                  value={formData.data_avaliacao}
+                  onChange={(e) => setFormData({ ...formData, data_avaliacao: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Dentista *</Label>
+                <Select
+                  value={formData.dentista_avaliador_id}
+                  onValueChange={(v) => setFormData({ ...formData, dentista_avaliador_id: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dentistas.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>CRC *</Label>
+                <Select
+                  value={formData.crc_comercial_id}
+                  onValueChange={(v) => setFormData({ ...formData, crc_comercial_id: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {crcs.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Valor *</Label>
+                <Input
+                  required
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.valor_orcamento}
+                  onChange={(e) => setFormData({ ...formData, valor_orcamento: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Tratamento *</Label>
+                <Select
+                  value={formData.tipo_tratamento}
+                  onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ortodontia">Ortodontia</SelectItem>
+                    <SelectItem value="implante">Implante</SelectItem>
+                    <SelectItem value="protese">Prótese</SelectItem>
+                    <SelectItem value="estetica">Estética</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Observações</Label>
+              <Textarea
+                required
+                value={formData.observacoes}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

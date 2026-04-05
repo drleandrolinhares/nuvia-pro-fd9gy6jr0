@@ -1,189 +1,139 @@
-import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
-import { Filter, Plus, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, parseISO, format } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
+import { VendasFiltros } from './components/VendasFiltros'
+import { VendasTabela } from './components/VendasTabela'
+import { VendasModal } from './components/VendasModal'
+import { Avaliacao, VendasFiltersState } from './types'
 
 export default function Vendas() {
   const { toast } = useToast()
-  const [avaliacoes, setAvaliacoes] = useState<any[]>([])
+  const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
   const [loading, setLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-
-  const [statusFilter, setStatusFilter] = useState('todos')
-  const [tempFilter, setTempFilter] = useState('todas')
-  const [search, setSearch] = useState('')
-
-  const [pacientes, setPacientes] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
   const [crcs, setCrcs] = useState<any[]>([])
 
-  const [isCreatingPaciente, setIsCreatingPaciente] = useState(false)
+  const [filters, setFilters] = useState<VendasFiltersState>({
+    periodo: 'todos',
+    dataInicio: '',
+    dataFim: '',
+    status: 'todos',
+    temperatura: 'todas',
+    dentista: 'todos',
+    crc: 'todos',
+    tratamento: 'todos',
+    valorRange: [0, 100000],
+    search: '',
+  })
 
-  const initialFormState = {
-    paciente_id: '',
-    novo_paciente_nome: '',
-    telefone: '',
-    data_avaliacao: format(new Date(), 'yyyy-MM-dd'),
-    dentista_avaliador_id: '',
-    crc_comercial_id: '',
-    valor_orcamento: '',
-    tipo_tratamento: '',
-    observacoes: '',
-    status: 'avaliacao_realizada',
-    temperatura_lead: 'morno',
-  }
+  const [debouncedValorRange, setDebouncedValorRange] = useState(filters.valorRange)
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 10
+  const [totalCount, setTotalCount] = useState(0)
+  const [sortColumn, setSortColumn] = useState('data_avaliacao')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  const [formData, setFormData] = useState(initialFormState)
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValorRange(filters.valorRange), 500)
+    return () => clearTimeout(handler)
+  }, [filters.valorRange])
 
-  const fetchAvaliacoes = async () => {
+  useEffect(() => {
+    Promise.all([
+      supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
+      supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
+    ]).then(([d, c]) => {
+      if (d.data) setDentistas(d.data)
+      if (c.data) setCrcs(c.data)
+    })
+  }, [])
+
+  const fetchAvaliacoes = useCallback(async () => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('avaliacoes')
-        .select(`
-          *,
-          pacientes (nome),
-          dentistas_avaliadores (nome),
-          crc_comercial (nome)
-        `)
-        .order('criado_em', { ascending: false })
+      let query = supabase.from('avaliacoes').select(
+        `
+        id, paciente_id, data_avaliacao, valor_orcamento, status, temperatura_lead, 
+        proxima_data_contato, tipo_tratamento,
+        pacientes!inner (id, nome), dentistas_avaliadores (id, nome), crc_comercial (id, nome),
+        orcamentos (valor)
+      `,
+        { count: 'exact' },
+      )
 
-      if (statusFilter !== 'todos') {
-        query = query.eq('status', statusFilter)
+      if (filters.search) query = query.ilike('pacientes.nome', `%${filters.search}%`)
+      if (filters.status !== 'todos') query = query.eq('status', filters.status)
+      if (filters.temperatura !== 'todas') query = query.eq('temperatura_lead', filters.temperatura)
+      if (filters.dentista !== 'todos') query = query.eq('dentista_avaliador_id', filters.dentista)
+      if (filters.crc !== 'todos') query = query.eq('crc_comercial_id', filters.crc)
+      if (filters.tratamento !== 'todos') query = query.eq('tipo_tratamento', filters.tratamento)
+
+      let sd, ed
+      const today = new Date()
+      switch (filters.periodo) {
+        case 'hoje':
+          sd = startOfDay(today)
+          ed = endOfDay(today)
+          break
+        case 'ontem':
+          sd = startOfDay(subDays(today, 1))
+          ed = endOfDay(subDays(today, 1))
+          break
+        case 'ultimos_7':
+          sd = startOfDay(subDays(today, 7))
+          ed = endOfDay(today)
+          break
+        case 'ultimos_15':
+          sd = startOfDay(subDays(today, 15))
+          ed = endOfDay(today)
+          break
+        case 'mes_atual':
+          sd = startOfMonth(today)
+          ed = endOfMonth(today)
+          break
+        case 'personalizado':
+          if (filters.dataInicio) sd = startOfDay(parseISO(filters.dataInicio))
+          if (filters.dataFim) ed = endOfDay(parseISO(filters.dataFim))
+          break
       }
-      if (tempFilter !== 'todas') {
-        query = query.eq('temperatura_lead', tempFilter)
+      if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
+      if (ed) query = query.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
+
+      query = query
+        .gte('valor_orcamento', debouncedValorRange[0])
+        .lte('valor_orcamento', debouncedValorRange[1])
+
+      const from = (page - 1) * itemsPerPage
+      const to = from + itemsPerPage - 1
+      query = query.range(from, to)
+
+      if (sortColumn && sortColumn !== 'pacientes.nome') {
+        query = query.order(sortColumn, { ascending: sortDirection === 'asc' })
       }
 
-      const { data, error } = await query
-
+      const { data, error, count } = await query
       if (error) throw error
 
-      let filteredData = data || []
-      if (search) {
-        filteredData = filteredData.filter((item: any) =>
-          item.pacientes?.nome?.toLowerCase().includes(search.toLowerCase()),
-        )
-      }
-
-      setAvaliacoes(filteredData)
+      setAvaliacoes(data as any)
+      setTotalCount(count || 0)
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }
-
-  const fetchDependencies = async () => {
-    try {
-      const [pacientesRes, dentistasRes, crcsRes] = await Promise.all([
-        supabase.from('pacientes').select('id, nome, telefone').order('nome'),
-        supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
-        supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
-      ])
-
-      if (pacientesRes.data) setPacientes(pacientesRes.data)
-      if (dentistasRes.data) setDentistas(dentistasRes.data)
-      if (crcsRes.data) setCrcs(crcsRes.data)
-    } catch (err) {
-      console.error(err)
-    }
-  }
+  }, [filters, debouncedValorRange, page, sortColumn, sortDirection, itemsPerPage, toast])
 
   useEffect(() => {
     fetchAvaliacoes()
-    fetchDependencies()
-  }, [statusFilter, tempFilter, search])
+  }, [fetchAvaliacoes])
 
-  const handlePacienteChange = (val: string) => {
-    const p = pacientes.find((x) => x.id === val)
-    setFormData({
-      ...formData,
-      paciente_id: val,
-      telefone: p?.telefone || '',
-    })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      let currentPacienteId = formData.paciente_id
-
-      if (isCreatingPaciente) {
-        if (!formData.novo_paciente_nome) throw new Error('Nome do paciente é obrigatório')
-        const { data: newPaciente, error: pacError } = await supabase
-          .from('pacientes')
-          .insert({
-            nome: formData.novo_paciente_nome,
-            telefone: formData.telefone,
-          })
-          .select('id')
-          .single()
-
-        if (pacError) throw pacError
-        currentPacienteId = newPaciente.id
-      } else {
-        if (!currentPacienteId) throw new Error('Selecione um paciente ou crie um novo')
-      }
-
-      const payload: any = {
-        paciente_id: currentPacienteId,
-        dentista_avaliador_id: formData.dentista_avaliador_id,
-        crc_comercial_id: formData.crc_comercial_id,
-        data_avaliacao: formData.data_avaliacao,
-        valor_orcamento: Number(formData.valor_orcamento),
-        tipo_tratamento: formData.tipo_tratamento,
-        observacoes: formData.observacoes,
-        status: formData.status,
-        temperatura_lead: formData.temperatura_lead,
-      }
-
-      const { error } = await supabase.from('avaliacoes').insert(payload)
-      if (error) throw error
-
-      toast({ title: 'Sucesso', description: 'Avaliação cadastrada com sucesso!' })
-      setIsModalOpen(false)
-      fetchAvaliacoes()
-      fetchDependencies()
-      setFormData(initialFormState)
-      setIsCreatingPaciente(false)
-    } catch (err: any) {
-      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' })
-    } finally {
-      setSaving(false)
+  const handleSort = (col: string) => {
+    if (sortColumn === col) setSortDirection((p) => (p === 'asc' ? 'desc' : 'asc'))
+    else {
+      setSortColumn(col)
+      setSortDirection('asc')
     }
   }
 
@@ -191,342 +141,34 @@ export default function Vendas() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Gestão de Vendas</h2>
-        <Dialog
-          open={isModalOpen}
-          onOpenChange={(open) => {
-            setIsModalOpen(open)
-            if (!open) {
-              setFormData(initialFormState)
-              setIsCreatingPaciente(false)
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Nova Oportunidade
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>Nova Avaliação</DialogTitle>
-                <DialogDescription>
-                  Registre uma nova avaliação ou oportunidade comercial.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>
-                    Paciente <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    {!isCreatingPaciente ? (
-                      <Select
-                        value={formData.paciente_id}
-                        onValueChange={handlePacienteChange}
-                        required
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Selecione o paciente" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pacientes.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        placeholder="Nome do novo paciente"
-                        value={formData.novo_paciente_nome}
-                        onChange={(e) =>
-                          setFormData({ ...formData, novo_paciente_nome: e.target.value })
-                        }
-                        required
-                        className="flex-1"
-                      />
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsCreatingPaciente(!isCreatingPaciente)
-                        setFormData({
-                          ...formData,
-                          paciente_id: '',
-                          novo_paciente_nome: '',
-                          telefone: '',
-                        })
-                      }}
-                    >
-                      {isCreatingPaciente ? 'Cancelar' : 'Novo Paciente'}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>
-                      Telefone <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      type="tel"
-                      placeholder="Ex: (11) 99999-9999"
-                      value={formData.telefone}
-                      onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>
-                      Data da Avaliação <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      type="date"
-                      value={formData.data_avaliacao}
-                      onChange={(e) => setFormData({ ...formData, data_avaliacao: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>
-                      Dentista Avaliador <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.dentista_avaliador_id}
-                      onValueChange={(v) => setFormData({ ...formData, dentista_avaliador_id: v })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {dentistas.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>
-                      CRC Responsável <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.crc_comercial_id}
-                      onValueChange={(v) => setFormData({ ...formData, crc_comercial_id: v })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {crcs.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>
-                      Valor do Orçamento <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Ex: 5000.00"
-                      value={formData.valor_orcamento}
-                      onChange={(e) =>
-                        setFormData({ ...formData, valor_orcamento: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>
-                      Tipo de Tratamento <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.tipo_tratamento}
-                      onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ortodontia">Ortodontia</SelectItem>
-                        <SelectItem value="implante">Implante</SelectItem>
-                        <SelectItem value="protese">Prótese</SelectItem>
-                        <SelectItem value="estetica">Estética</SelectItem>
-                        <SelectItem value="outro">Outro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>
-                    Observações <span className="text-red-500">*</span>
-                  </Label>
-                  <Textarea
-                    placeholder="Descreva os detalhes da avaliação..."
-                    value={formData.observacoes}
-                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                    required
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Salvar
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div>
-              <CardTitle>Oportunidades Comerciais</CardTitle>
-              <CardDescription>
-                Acompanhamento de avaliações e negociações em andamento.
-              </CardDescription>
-            </div>
-            <div className="flex gap-2 items-center flex-wrap">
-              <Input
-                placeholder="Buscar paciente..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-[200px]"
-              />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos Status</SelectItem>
-                  <SelectItem value="avaliacao_realizada">Avaliação Realizada</SelectItem>
-                  <SelectItem value="em_negociacao">Em Negociação</SelectItem>
-                  <SelectItem value="follow_up">Follow Up</SelectItem>
-                  <SelectItem value="venda_concretizada">Venda Concretizada</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={tempFilter} onValueChange={setTempFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Temperatura" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas</SelectItem>
-                  <SelectItem value="quente">Quente</SelectItem>
-                  <SelectItem value="morno">Morno</SelectItem>
-                  <SelectItem value="frio">Frio</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <CardTitle>Oportunidades Comerciais</CardTitle>
+          <CardDescription>
+            Acompanhamento de avaliações e negociações em andamento.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Data Avaliação</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Temperatura</TableHead>
-                    <TableHead>Próximo Contato</TableHead>
-                    <TableHead>Responsável</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {avaliacoes.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        Nenhuma oportunidade encontrada.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    avaliacoes.map((av) => (
-                      <TableRow key={av.id}>
-                        <TableCell className="font-medium">{av.pacientes?.nome || 'N/A'}</TableCell>
-                        <TableCell>
-                          {av.data_avaliacao
-                            ? format(new Date(av.data_avaliacao), 'dd/MM/yyyy')
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(av.valor_orcamento || 0)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={av.status === 'venda_concretizada' ? 'default' : 'secondary'}
-                            className="capitalize"
-                          >
-                            {av.status?.replace('_', ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              av.temperatura_lead === 'quente'
-                                ? 'text-red-500 border-red-500'
-                                : av.temperatura_lead === 'morno'
-                                  ? 'text-amber-500 border-amber-500'
-                                  : 'text-blue-500 border-blue-500'
-                            }
-                          >
-                            {av.temperatura_lead}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {av.proxima_data_contato
-                            ? format(new Date(av.proxima_data_contato), 'dd/MM/yyyy')
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <VendasFiltros
+            filters={filters}
+            setFilters={setFilters}
+            dentistas={dentistas}
+            crcs={crcs}
+          />
+          <VendasTabela
+            avaliacoes={avaliacoes}
+            loading={loading}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            page={page}
+            totalCount={totalCount}
+            itemsPerPage={itemsPerPage}
+            setPage={setPage}
+          />
         </CardContent>
       </Card>
     </div>
