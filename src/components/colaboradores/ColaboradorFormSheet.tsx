@@ -161,7 +161,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
 
               <TabsContent value="prof" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Cargo *" error={errors.cargo_id}>
+                  <Field label="Cargo Principal *" error={errors.cargo_id}>
                     <Controller
                       name="cargo_id"
                       control={control}
@@ -181,7 +181,34 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                       )}
                     />
                   </Field>
-                  <Field label="Setor">
+                  <Field label="Cargo Secundário" error={errors.cargo_secundario_id}>
+                    <Controller
+                      name="cargo_secundario_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value || 'none'}
+                          onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione (opcional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum</SelectItem>
+                            {cargos?.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Setor Principal">
                     <Input
                       value={selectedCargo?.setor || ''}
                       readOnly
@@ -189,12 +216,12 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                       placeholder="Automático pelo cargo"
                     />
                   </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Data de Admissão" error={errors.data_admissao}>
                     <Input type="date" {...register('data_admissao')} />
                   </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Status *" error={errors.status}>
                     <Controller
                       name="status"
@@ -212,9 +239,6 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                       )}
                     />
                   </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Salário" error={errors.salario}>
                     <Input type="number" step="0.01" {...register('salario')} />
                   </Field>

@@ -135,7 +135,10 @@ export default function Colaboradores() {
       u.nome.toLowerCase().includes(search.toLowerCase()) || (u.cpf && u.cpf.includes(search))
     const userStatus = u.status || 'ativo'
     const matchStatus = statusFilter === 'todos' || userStatus === statusFilter
-    const matchCargo = cargoFilter === 'todos' || u.cargo_id === cargoFilter
+    const matchCargo =
+      cargoFilter === 'todos' ||
+      u.cargo_id === cargoFilter ||
+      (u as any).cargo_secundario_id === cargoFilter
     return matchSearch && matchStatus && matchCargo
   })
 
@@ -236,7 +239,17 @@ export default function Colaboradores() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{usuario.cargo?.nome || 'Não definido'}</div>
-                        <div className="text-xs text-muted-foreground">
+                        {(usuario as any).cargo_secundario_id &&
+                          cargos.find((c) => c.id === (usuario as any).cargo_secundario_id) && (
+                            <div className="text-[11px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">
+                              +{' '}
+                              {
+                                cargos.find((c) => c.id === (usuario as any).cargo_secundario_id)
+                                  ?.nome
+                              }
+                            </div>
+                          )}
+                        <div className="text-xs text-muted-foreground mt-0.5">
                           {usuario.cargo?.setor || '-'}
                         </div>
                       </TableCell>

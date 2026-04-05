@@ -21,95 +21,80 @@ Deno.serve(async (req: Request) => {
         throw new Error('Record não encontrado no payload do webhook')
       }
 
-      const { id: usuario_id, nome, email, cargo_id, status } = record
+      const { id: usuario_id, nome, email, cargo_id, cargo_secundario_id, status } = record
 
-      if (cargo_id) {
-        // Busca os detalhes do cargo para verificar o nome
-        const { data: cargo, error: cargoError } = await supabaseClient
+      let isDentistaAvaliador = false
+      let isDentista = false
+      let isCrc = false
+
+      const checkCargo = async (id: string | null | undefined) => {
+        if (!id) return
+        const { data: cargo, error } = await supabaseClient
           .from('cargos')
           .select('nome')
-          .eq('id', cargo_id)
+          .eq('id', id)
           .single()
+        if (!error && cargo) {
+          if (cargo.nome === 'Dentista Avaliador') isDentistaAvaliador = true
+          if (cargo.nome === 'Dentista') isDentista = true
+          if (cargo.nome === 'CRC' || cargo.nome === 'CRC Comercial') isCrc = true
+        }
+      }
 
-        if (cargoError) throw cargoError
+      await checkCargo(cargo_id)
+      await checkCargo(cargo_secundario_id)
 
-        if (cargo && cargo.nome === 'Dentista Avaliador') {
-          // Verifica se o dentista avaliador já existe na tabela destino
-          const { data: existing } = await supabaseClient
+      if (isDentistaAvaliador) {
+        const { data: existing } = await supabaseClient
+          .from('dentistas_avaliadores')
+          .select('id')
+          .eq('usuario_id', usuario_id)
+          .maybeSingle()
+        if (!existing) {
+          await supabaseClient
             .from('dentistas_avaliadores')
-            .select('id')
+            .insert({ usuario_id, nome, email, status: status || 'ativo' })
+        } else {
+          await supabaseClient
+            .from('dentistas_avaliadores')
+            .update({ nome, email, status: status || 'ativo' })
             .eq('usuario_id', usuario_id)
-            .maybeSingle()
-
-          if (!existing) {
-            await supabaseClient.from('dentistas_avaliadores').insert({
-              usuario_id,
-              nome,
-              email,
-              status: status || 'ativo',
-            })
-          } else {
-            await supabaseClient
-              .from('dentistas_avaliadores')
-              .update({
-                nome,
-                email,
-                status: status || 'ativo',
-              })
-              .eq('usuario_id', usuario_id)
-          }
         }
+      }
 
-        if (cargo && cargo.nome === 'Dentista') {
-          const { data: existing } = await supabaseClient
+      if (isDentista) {
+        const { data: existing } = await supabaseClient
+          .from('dentistas')
+          .select('id')
+          .eq('usuario_id', usuario_id)
+          .maybeSingle()
+        if (!existing) {
+          await supabaseClient
             .from('dentistas')
-            .select('id')
+            .insert({ usuario_id, nome, email, status: status || 'ativo' })
+        } else {
+          await supabaseClient
+            .from('dentistas')
+            .update({ nome, email, status: status || 'ativo' })
             .eq('usuario_id', usuario_id)
-            .maybeSingle()
-
-          if (!existing) {
-            await supabaseClient.from('dentistas').insert({
-              usuario_id,
-              nome,
-              email,
-              status: status || 'ativo',
-            })
-          } else {
-            await supabaseClient
-              .from('dentistas')
-              .update({
-                nome,
-                email,
-                status: status || 'ativo',
-              })
-              .eq('usuario_id', usuario_id)
-          }
         }
+      }
 
-        if (cargo && (cargo.nome === 'CRC' || cargo.nome === 'CRC Comercial')) {
-          const { data: existing } = await supabaseClient
+      if (isCrc) {
+        const { data: existing } = await supabaseClient
+          .from('crc_comercial')
+          .select('id')
+          .eq('usuario_id', usuario_id)
+          .maybeSingle()
+        if (!existing) {
+          await supabaseClient
             .from('crc_comercial')
-            .select('id')
+            .insert({ usuario_id, nome, email, status: status || 'ativo' })
+        } else {
+          await supabaseClient
+            .from('crc_comercial')
+            .update({ nome, email, status: status || 'ativo' })
             .eq('usuario_id', usuario_id)
-            .maybeSingle()
-
-          if (!existing) {
-            await supabaseClient.from('crc_comercial').insert({
-              usuario_id,
-              nome,
-              email,
-              status: status || 'ativo',
-            })
-          } else {
-            await supabaseClient
-              .from('crc_comercial')
-              .update({
-                nome,
-                email,
-                status: status || 'ativo',
-              })
-              .eq('usuario_id', usuario_id)
-          }
         }
       }
     }

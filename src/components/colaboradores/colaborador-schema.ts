@@ -17,6 +17,7 @@ export const colaboradorSchema = z
     telefone: z.string().optional(),
     endereco: z.string().optional(),
     cargo_id: z.string().min(1, 'Cargo é obrigatório'),
+    cargo_secundario_id: z.string().nullable().optional(),
     data_admissao: z.string().optional(),
     salario: z.coerce.number().optional(),
     status: z.string().optional(),
