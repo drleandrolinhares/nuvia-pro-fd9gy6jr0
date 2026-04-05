@@ -18,6 +18,7 @@ import Placeholder from './pages/Placeholder'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
+import ControleComissoes from './pages/comercial/ControleComissoes'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -67,7 +68,7 @@ const AppRoutes = () => {
         {/* Comercial Routes */}
         <Route path="/comercial/vendas" element={<Vendas />} />
         <Route path="/comercial/negociacao" element={<Negociacao />} />
-        <Route path="/comercial/comissoes" element={<Placeholder />} />
+        <Route path="/comercial/comissoes" element={<ControleComissoes />} />
         <Route path="/comercial/fechamento-comissoes" element={<Placeholder />} />
         <Route path="/comercial/pacientes" element={<Pacientes />} />
         <Route path="/comercial/relatorios" element={<Placeholder />} />
