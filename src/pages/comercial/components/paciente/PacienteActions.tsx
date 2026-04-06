@@ -27,16 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { format } from 'date-fns'
-import {
-  Edit,
-  DollarSign,
-  Phone,
-  Calendar,
-  Thermometer,
-  CheckCircle,
-  XCircle,
-  Loader2,
-} from 'lucide-react'
+import { Edit, DollarSign, Phone, Calendar, Thermometer, XCircle, Loader2 } from 'lucide-react'
 
 export function PacienteActions({
   pacienteId,
@@ -71,7 +62,6 @@ export function PacienteActions({
   const [openAddOrc, setOpenAddOrc] = useState(false)
   const [openContato, setOpenContato] = useState(false)
   const [openFollowUp, setOpenFollowUp] = useState(false)
-  const [openConcretizar, setOpenConcretizar] = useState(false)
   const [openPerdido, setOpenPerdido] = useState(false)
 
   // Form States
@@ -88,7 +78,6 @@ export function PacienteActions({
     responsavel: profile?.id || '',
     obs: '',
   })
-  const [formVenda, setFormVenda] = useState({ valor_total: '', percentual: '0', entrada: '0' })
   const [motivoPerdido, setMotivoPerdido] = useState('')
 
   useEffect(() => {
@@ -125,28 +114,6 @@ export function PacienteActions({
       })
     }
   }, [openEditAval, avaliacao])
-
-  useEffect(() => {
-    if (openConcretizar && avaliacao) {
-      setFormVenda({
-        valor_total: avaliacao.valor_orcamento?.toString() || '',
-        percentual: '30',
-        entrada: ((avaliacao.valor_orcamento || 0) * 0.3).toFixed(2),
-      })
-    }
-  }, [openConcretizar, avaliacao])
-
-  const handlePercentualChange = (pct: string) => {
-    const vTotal = Number(formVenda.valor_total) || 0
-    const p = Number(pct) || 0
-    setFormVenda({ ...formVenda, percentual: pct, entrada: ((vTotal * p) / 100).toFixed(2) })
-  }
-
-  const handleValorTotalChange = (val: string) => {
-    const vTotal = Number(val) || 0
-    const p = Number(formVenda.percentual) || 0
-    setFormVenda({ ...formVenda, valor_total: val, entrada: ((vTotal * p) / 100).toFixed(2) })
-  }
 
   const execUpdate = () => {
     fetchAvaliacao()
@@ -234,31 +201,6 @@ export function PacienteActions({
     execUpdate()
   }
 
-  const handleConcretizar = async () => {
-    setLoading(true)
-    const { error } = await supabase.from('vendas_concretizadas').insert({
-      avaliacao_id: avaliacao.id,
-      valor_total_tratamento: Number(formVenda.valor_total),
-      percentual_entrada: Number(formVenda.percentual),
-      valor_entrada: Number(formVenda.entrada),
-      dentista_avaliador_id: avaliacao.dentista_avaliador_id,
-      crc_comercial_id: avaliacao.crc_comercial_id,
-      crc_participou: !!avaliacao.crc_comercial_id,
-    })
-    if (!error) {
-      await supabase
-        .from('avaliacoes')
-        .update({ status: 'venda_concretizada' })
-        .eq('id', avaliacao.id)
-      toast({ title: 'Parabéns!', description: 'Venda concretizada com sucesso.' })
-      setOpenConcretizar(false)
-      execUpdate()
-    } else {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    }
-    setLoading(false)
-  }
-
   const handlePerdido = async () => {
     setLoading(true)
     const novoObs = avaliacao.observacoes
@@ -310,13 +252,6 @@ export function PacienteActions({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          className="bg-green-600 hover:bg-green-700 text-white"
-          size="sm"
-          onClick={() => setOpenConcretizar(true)}
-        >
-          <CheckCircle className="w-4 h-4 mr-2" /> Concretizar Venda
-        </Button>
         <Button variant="destructive" size="sm" onClick={() => setOpenPerdido(true)}>
           <XCircle className="w-4 h-4 mr-2" /> Marcar Perdido
         </Button>
@@ -595,53 +530,6 @@ export function PacienteActions({
             </Button>
             <Button onClick={handleSaveFollowUp} disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 6. Concretizar Venda */}
-      <Dialog open={openConcretizar} onOpenChange={setOpenConcretizar}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Concretizar Venda</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Valor Total do Tratamento</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formVenda.valor_total}
-                onChange={(e) => handleValorTotalChange(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Percentual de Entrada (%)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={formVenda.percentual}
-                  onChange={(e) => handlePercentualChange(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Valor da Entrada</Label>
-                <Input type="number" step="0.01" value={formVenda.entrada} disabled />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenConcretizar(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleConcretizar}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={loading}
-            >
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Confirmar Venda
             </Button>
           </DialogFooter>
         </DialogContent>

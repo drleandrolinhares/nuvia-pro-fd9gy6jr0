@@ -255,7 +255,6 @@ export function AvaliacoesTab({
                     <SelectContent>
                       <SelectItem value="avaliacao_realizada">Avaliação Realizada</SelectItem>
                       <SelectItem value="orcamento_pendente">Orçamento Pendente</SelectItem>
-                      <SelectItem value="venda_concretizada">Venda Concretizada</SelectItem>
                       <SelectItem value="cancelada">Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
