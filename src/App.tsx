@@ -208,14 +208,6 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/comercial/relatorios"
-          element={
-            <ProtectedRoute allowedRoles={['visualizacao']}>
-              <Placeholder />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/comercial/fiscal"
           element={
             <ProtectedRoute allowedRoles={[]}>

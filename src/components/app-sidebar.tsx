@@ -97,12 +97,6 @@ const navData = [
         showRole: ['admin', 'crc_comercial', 'visualizacao'],
       },
       {
-        title: 'Relatórios Comerciais',
-        url: '/comercial/relatorios',
-        icon: FileText,
-        showRole: ['admin', 'visualizacao'],
-      },
-      {
         title: 'Negociação',
         url: '/comercial/negociacao',
         icon: Handshake,

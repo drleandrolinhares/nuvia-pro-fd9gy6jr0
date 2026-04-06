@@ -7,9 +7,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { VendasFiltros } from './components/VendasFiltros'
 import { VendasTabela } from './components/VendasTabela'
 import { VendasModal } from './components/VendasModal'
-import { VendasKPIs } from './components/VendasKPIs'
 import { VendasRankingDentistas } from './components/VendasRankingDentistas'
-import { useVendasKPIs } from './hooks/use-vendas-kpis'
 import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -41,8 +39,6 @@ export default function Vendas() {
   const [totalCount, setTotalCount] = useState(0)
   const [sortColumn, setSortColumn] = useState('data_avaliacao')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-
-  const { kpis, trends, loading: kpisLoading } = useVendasKPIs(filters, debouncedValorRange)
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValorRange(filters.valorRange), 500)
@@ -153,14 +149,8 @@ export default function Vendas() {
         {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
       </div>
 
-      <Tabs defaultValue="kpis" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[600px]">
-          <TabsTrigger
-            value="kpis"
-            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
-          >
-            Gestão de Vendas
-          </TabsTrigger>
+      <Tabs defaultValue="oportunidades" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[400px]">
           <TabsTrigger
             value="ranking"
             className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
@@ -174,10 +164,6 @@ export default function Vendas() {
             Oportunidades Comerciais
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="kpis" className="space-y-4 outline-none">
-          <VendasKPIs kpis={kpis} trends={trends} loading={kpisLoading} />
-        </TabsContent>
 
         <TabsContent value="ranking" className="space-y-4 outline-none">
           <VendasRankingDentistas />
