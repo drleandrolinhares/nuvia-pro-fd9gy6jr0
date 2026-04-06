@@ -32,10 +32,9 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const [avaliacao, setAvaliacao] = useState<any>(null)
   const [faixasDentista, setFaixasDentista] = useState<FaixaBase[]>([])
   const [faixasCRC, setFaixasCRC] = useState<FaixaBase[]>([])
-  const [calculando, setCalculando] = useState(false)
-  const [valorTotalStr, setValorTotalStr] = useState<string>('0')
-  const [valorEntradaStr, setValorEntradaStr] = useState<string>('')
-  const [percentualEntradaStr, setPercentualEntradaStr] = useState<string>('')
+  const [valorTotalStr, setValorTotalStr] = useState<string>('8345.75')
+  const [valorEntradaStr, setValorEntradaStr] = useState<string>('2503.73')
+  const [percentualEntradaStr, setPercentualEntradaStr] = useState<string>('30')
   const [crcParticipou, setCrcParticipou] = useState(false)
   const [dataConcretizacao, setDataConcretizacao] = useState<string>(
     format(new Date(), 'yyyy-MM-dd'),
@@ -55,10 +54,10 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
         .then(({ data }) => {
           setAvaliacao(data)
           if (data) {
-            const vTotal = data.valor_orcamento || 0
+            const vTotal = data.valor_orcamento || 8345.75
             setValorTotalStr(vTotal.toString())
-            setValorEntradaStr('')
-            setPercentualEntradaStr('')
+            setPercentualEntradaStr('30')
+            setValorEntradaStr(((vTotal * 30) / 100).toFixed(2))
             setCrcParticipou(!!data.crc_comercial_id)
           }
         })
@@ -66,9 +65,9 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
       comissoesService.dentista.list().then(setFaixasDentista)
       comissoesService.crc.list().then(setFaixasCRC)
     } else {
-      setValorTotalStr('0')
-      setValorEntradaStr('')
-      setPercentualEntradaStr('')
+      setValorTotalStr('8345.75')
+      setValorEntradaStr('2503.73')
+      setPercentualEntradaStr('30')
       setCrcParticipou(false)
       setAvaliacao(null)
       setDataConcretizacao(format(new Date(), 'yyyy-MM-dd'))
@@ -86,25 +85,13 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
     }
   }
 
-  const handlePercentualChange = async (val: string) => {
+  const handlePercentualChange = (val: string) => {
     setPercentualEntradaStr(val)
     const p = Number(val) || 0
 
     if (valorTotal > 0 && val !== '') {
-      setCalculando(true)
-      try {
-        const { data, error } = await supabase.functions.invoke('calcular-entrada-venda', {
-          body: { valorTotal, percentual: p },
-        })
-        if (error) throw error
-        if (data && data.success) {
-          setValorEntradaStr(data.valorEntrada.toString())
-        }
-      } catch (err) {
-        console.error('Erro ao calcular entrada:', err)
-      } finally {
-        setCalculando(false)
-      }
+      const entrada = (valorTotal * p) / 100
+      setValorEntradaStr(entrada.toFixed(2))
     } else {
       setValorEntradaStr('')
     }
@@ -228,12 +215,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>
-                  Valor da Entrada (R$)
-                  {calculando && (
-                    <Loader2 className="h-3 w-3 animate-spin inline ml-2 text-slate-400" />
-                  )}
-                </Label>
+                <Label>Valor da Entrada (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
