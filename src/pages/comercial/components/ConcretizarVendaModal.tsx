@@ -193,11 +193,11 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="dialog-description">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Concretizar Venda</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="dialog-description">
               Informe os valores para calcular as comissões e registrar o fechamento.
             </DialogDescription>
           </DialogHeader>
@@ -237,8 +237,6 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                 <Input
                   type="number"
                   step="0.01"
-                  min="0"
-                  max={valorTotal}
                   value={valorEntradaStr}
                   onChange={(e) => handleValorEntradaChange(e.target.value)}
                   placeholder="Ex: 5000.00"
