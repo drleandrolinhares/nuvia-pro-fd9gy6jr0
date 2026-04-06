@@ -2,6 +2,7 @@
   "_versions": {
     "create-user": 1,
     "calcular-opcoes-pagamento": 6,
-    "ativar_cascata_dentista_avaliador": 3
+    "ativar_cascata_dentista_avaliador": 3,
+    "calcular-entrada-venda": 3
   }
 }

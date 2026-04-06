@@ -32,8 +32,10 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
   const [avaliacao, setAvaliacao] = useState<any>(null)
   const [faixasDentista, setFaixasDentista] = useState<FaixaBase[]>([])
   const [faixasCRC, setFaixasCRC] = useState<FaixaBase[]>([])
+  const [calculando, setCalculando] = useState(false)
   const [valorTotalStr, setValorTotalStr] = useState<string>('0')
   const [valorEntradaStr, setValorEntradaStr] = useState<string>('')
+  const [percentualEntradaStr, setPercentualEntradaStr] = useState<string>('')
   const [crcParticipou, setCrcParticipou] = useState(false)
   const [dataConcretizacao, setDataConcretizacao] = useState<string>(
     format(new Date(), 'yyyy-MM-dd'),
@@ -41,7 +43,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
   const valorTotal = Number(valorTotalStr) || 0
   const valorEntrada = Number(valorEntradaStr) || 0
-  const percentualEntrada = valorTotal > 0 ? (valorEntrada / valorTotal) * 100 : 0
+  const percentualEntrada = Number(percentualEntradaStr) || 0
 
   useEffect(() => {
     if (open && avaliacaoId) {
@@ -56,6 +58,7 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
             const vTotal = data.valor_orcamento || 0
             setValorTotalStr(vTotal.toString())
             setValorEntradaStr('')
+            setPercentualEntradaStr('')
             setCrcParticipou(!!data.crc_comercial_id)
           }
         })
@@ -65,11 +68,47 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
     } else {
       setValorTotalStr('0')
       setValorEntradaStr('')
+      setPercentualEntradaStr('')
       setCrcParticipou(false)
       setAvaliacao(null)
       setDataConcretizacao(format(new Date(), 'yyyy-MM-dd'))
     }
   }, [open, avaliacaoId])
+
+  const handleValorEntradaChange = (val: string) => {
+    setValorEntradaStr(val)
+    const v = Number(val) || 0
+    if (valorTotal > 0 && val !== '') {
+      const p = (v / valorTotal) * 100
+      setPercentualEntradaStr(p.toFixed(2))
+    } else {
+      setPercentualEntradaStr('')
+    }
+  }
+
+  const handlePercentualChange = async (val: string) => {
+    setPercentualEntradaStr(val)
+    const p = Number(val) || 0
+
+    if (valorTotal > 0 && val !== '') {
+      setCalculando(true)
+      try {
+        const { data, error } = await supabase.functions.invoke('calcular-entrada-venda', {
+          body: { valorTotal, percentual: p },
+        })
+        if (error) throw error
+        if (data && data.success) {
+          setValorEntradaStr(data.valorEntrada.toString())
+        }
+      } catch (err) {
+        console.error('Erro ao calcular entrada:', err)
+      } finally {
+        setCalculando(false)
+      }
+    } else {
+      setValorEntradaStr('')
+    }
+  }
 
   const getComissao = (faixas: FaixaBase[], percentual: number) => {
     const faixa = faixas.find((f) => {
@@ -189,14 +228,19 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Valor da Entrada (R$)</Label>
+                <Label>
+                  Valor da Entrada (R$)
+                  {calculando && (
+                    <Loader2 className="h-3 w-3 animate-spin inline ml-2 text-slate-400" />
+                  )}
+                </Label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   max={valorTotal}
                   value={valorEntradaStr}
-                  onChange={(e) => setValorEntradaStr(e.target.value)}
+                  onChange={(e) => handleValorEntradaChange(e.target.value)}
                   placeholder="Ex: 5000.00"
                   className="bg-white dark:bg-slate-950"
                 />
@@ -208,9 +252,9 @@ export function ConcretizarVendaModal({ avaliacaoId, open, onOpenChange, onSucce
                   step="0.01"
                   min="0"
                   max="100"
-                  value={percentualEntrada.toFixed(2)}
-                  readOnly
-                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-medium text-slate-600"
+                  value={percentualEntradaStr}
+                  onChange={(e) => handlePercentualChange(e.target.value)}
+                  className="bg-white dark:bg-slate-950"
                 />
               </div>
             </div>
