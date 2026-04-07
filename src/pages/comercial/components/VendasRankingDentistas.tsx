@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useRankingDentistas, RankingDentista } from '../hooks/use-ranking-dentistas'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown, Video } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown, Video, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CriativosDentistaModal } from './CriativosDentistaModal'
@@ -97,7 +97,7 @@ export function VendasRankingDentistas() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
         <div className="space-y-1">
           <CardTitle>Ranking de Dentistas Avaliadores</CardTitle>
           <CardDescription>Performance de vendas e conversão da equipe clínica.</CardDescription>
@@ -116,8 +116,38 @@ export function VendasRankingDentistas() {
           </SelectContent>
         </Select>
       </CardHeader>
+
+      {!loading && sortedRanking.length > 0 && (
+        <div className="px-2 sm:px-6 pb-2">
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+            {sortedRanking.map((dentista) => (
+              <Card
+                key={dentista.id}
+                className="min-w-[280px] shrink-0 snap-start border-l-4 border-l-primary shadow-sm bg-primary/5"
+              >
+                <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-xs font-bold text-primary uppercase">
+                    {periodo === 'mes_atual' ? 'Mês Atual' : 'Período'}
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="font-bold text-base truncate" title={dentista.nome}>
+                    {dentista.nome}
+                  </div>
+                  <div className="text-2xl text-primary font-black mt-1">
+                    {formatCurrency(dentista.valorTotalConversao)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Fechamento Total</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       <CardContent className="px-2 sm:px-6">
-        <div className="rounded-md border mt-4 overflow-x-auto">
+        <div className="rounded-md border overflow-x-auto">
           <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
-import { startOfMonth, startOfYear, startOfQuarter } from 'date-fns'
-import { Loader2 } from 'lucide-react'
+import { startOfMonth, startOfYear, startOfQuarter, format } from 'date-fns'
+import { Loader2, DollarSign } from 'lucide-react'
 
 export function RelatorioComissoes({
   isAdmin,
@@ -43,113 +43,67 @@ export function RelatorioComissoes({
       let dataInicio = startOfMonth(new Date())
       if (periodo === 'trimestre') dataInicio = startOfQuarter(new Date())
       if (periodo === 'ano') dataInicio = startOfYear(new Date())
+      const inicioStr = format(dataInicio, 'yyyy-MM-dd')
 
-      const inicioStr = dataInicio.toISOString()
-
-      // Fetch dentista
-      let queryDentista = supabase
-        .from('comissoes_dentista')
-        .select(`
-        id, data_calculo, percentual_faixa, valor_comissao, status_pagamento,
-        dentista_avaliador_id, dentistas_avaliadores(nome),
-        vendas_concretizadas(data_concretizacao, valor_total_tratamento, avaliacoes(pacientes(nome)))
-      `)
-        .gte('data_calculo', inicioStr)
-
-      if (!isAdmin && dentistaId) {
-        queryDentista = queryDentista.eq('dentista_avaliador_id', dentistaId)
-      } else if (!isAdmin && !dentistaId) {
-        queryDentista = queryDentista.eq('id', '00000000-0000-0000-0000-000000000000') // impossible
-      }
-
-      // Fetch crc
-      let queryCrc = supabase
-        .from('comissoes_crc')
-        .select(`
-        id, data_calculo, percentual_faixa, valor_comissao, status_pagamento,
-        crc_comercial_id, crc_comercial(nome),
-        vendas_concretizadas(data_concretizacao, valor_total_tratamento, avaliacoes(pacientes(nome)))
-      `)
-        .gte('data_calculo', inicioStr)
-
-      if (!isAdmin && crcId) {
-        queryCrc = queryCrc.eq('crc_comercial_id', crcId)
-      } else if (!isAdmin && !crcId) {
-        queryCrc = queryCrc.eq('id', '00000000-0000-0000-0000-000000000000')
-      }
-
-      const [resDentista, resCrc] = await Promise.all([queryDentista, queryCrc])
+      const [resVendas, resDentistas, resCrcs, resFaixasDentista, resFaixasCrc] = await Promise.all(
+        [
+          supabase.from('vendas_confirmadas').select('*').gte('data_fechamento', inicioStr),
+          supabase.from('dentistas_avaliadores').select('id, nome'),
+          supabase.from('crc_comercial').select('id, nome'),
+          supabase.from('referencias_comissao_dentista').select('*'),
+          supabase.from('referencias_comissao_crc').select('*'),
+        ],
+      )
 
       const formatado: any[] = []
-
-      if (resDentista.data) {
-        for (const item of resDentista.data as any[]) {
-          const dentistaNome = Array.isArray(item.dentistas_avaliadores)
-            ? item.dentistas_avaliadores[0]?.nome
-            : item.dentistas_avaliadores?.nome
-          const venda = Array.isArray(item.vendas_concretizadas)
-            ? item.vendas_concretizadas[0]
-            : item.vendas_concretizadas
-          const avaliacao = venda?.avaliacoes
-            ? Array.isArray(venda.avaliacoes)
-              ? venda.avaliacoes[0]
-              : venda.avaliacoes
-            : null
-          const pacienteNome = avaliacao?.pacientes
-            ? Array.isArray(avaliacao.pacientes)
-              ? avaliacao.pacientes[0]?.nome
-              : avaliacao.pacientes?.nome
-            : 'N/A'
-
-          formatado.push({
-            id: item.id,
-            tipo: 'Dentista Avaliador',
-            profissional: dentistaNome || 'N/A',
-            data: venda?.data_concretizacao || item.data_calculo,
-            paciente: pacienteNome,
-            valor_venda: venda?.valor_total_tratamento || 0,
-            percentual: item.percentual_faixa || 0,
-            valor_comissao: item.valor_comissao || 0,
-            status: item.status_pagamento || 'em_aberto',
-          })
-        }
+      const getPercentual = (faixas: any[], perc: number) => {
+        const f = faixas.find(
+          (x) => perc >= (x.faixa_entrada_minima || 0) && perc <= (x.faixa_entrada_maxima || 100),
+        )
+        return f?.percentual_comissao || 0
       }
 
-      if (resCrc.data) {
-        for (const item of resCrc.data as any[]) {
-          const crcNome = Array.isArray(item.crc_comercial)
-            ? item.crc_comercial[0]?.nome
-            : item.crc_comercial?.nome
-          const venda = Array.isArray(item.vendas_concretizadas)
-            ? item.vendas_concretizadas[0]
-            : item.vendas_concretizadas
-          const avaliacao = venda?.avaliacoes
-            ? Array.isArray(venda.avaliacoes)
-              ? venda.avaliacoes[0]
-              : venda.avaliacoes
-            : null
-          const pacienteNome = avaliacao?.pacientes
-            ? Array.isArray(avaliacao.pacientes)
-              ? avaliacao.pacientes[0]?.nome
-              : avaliacao.pacientes?.nome
-            : 'N/A'
+      const isCrcUser = !isAdmin && crcId && !dentistaId
+      const isDentistaUser = !isAdmin && dentistaId && !crcId
 
-          formatado.push({
-            id: item.id,
-            tipo: 'CRC Comercial',
-            profissional: crcNome || 'N/A',
-            data: venda?.data_concretizacao || item.data_calculo,
-            paciente: pacienteNome,
-            valor_venda: venda?.valor_total_tratamento || 0,
-            percentual: item.percentual_faixa || 0,
-            valor_comissao: item.valor_comissao || 0,
-            status: item.status_pagamento || 'em_aberto',
-          })
+      for (const v of resVendas.data || []) {
+        if (v.dentista_avaliador && !isCrcUser) {
+          if (isAdmin || dentistaId === v.dentista_avaliador) {
+            const perc = getPercentual(resFaixasDentista.data || [], v.percentual_entrada)
+            formatado.push({
+              id: `dentista-${v.id}`,
+              tipo: 'Dentista Avaliador',
+              profissionalId: v.dentista_avaliador,
+              profissional:
+                resDentistas.data?.find((d) => d.id === v.dentista_avaliador)?.nome || 'N/A',
+              data: v.data_fechamento,
+              paciente: v.paciente_nome,
+              valor_venda: v.valor_tratamento,
+              percentual: perc,
+              valor_comissao: (v.valor_tratamento * perc) / 100,
+              status: 'em_aberto',
+            })
+          }
+        }
+        if (v.crc && !isDentistaUser) {
+          if (isAdmin || crcId === v.crc) {
+            const perc = getPercentual(resFaixasCrc.data || [], v.percentual_entrada)
+            formatado.push({
+              id: `crc-${v.id}`,
+              tipo: 'CRC Comercial',
+              profissionalId: v.crc,
+              profissional: resCrcs.data?.find((c) => c.id === v.crc)?.nome || 'N/A',
+              data: v.data_fechamento,
+              paciente: v.paciente_nome,
+              valor_venda: v.valor_tratamento,
+              percentual: perc,
+              valor_comissao: (v.valor_tratamento * perc) / 100,
+              status: 'em_aberto',
+            })
+          }
         }
       }
-
-      formatado.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-      setDados(formatado)
+      setDados(formatado.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()))
     } catch (e) {
       console.error(e)
     } finally {
@@ -157,17 +111,39 @@ export function RelatorioComissoes({
     }
   }
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
-  }
+  const resumoAvaliadores = useMemo(() => {
+    const res = new Map<
+      string,
+      { nome: string; totalVendas: number; totalComissao: number; qtde: number }
+    >()
+    dados
+      .filter((d) => d.tipo === 'Dentista Avaliador')
+      .forEach((d) => {
+        const c = res.get(d.profissionalId) || {
+          nome: d.profissional,
+          totalVendas: 0,
+          totalComissao: 0,
+          qtde: 0,
+        }
+        c.totalVendas += d.valor_venda
+        c.totalComissao += d.valor_comissao
+        c.qtde += 1
+        res.set(d.profissionalId, c)
+      })
+    return Array.from(res.values()).sort((a, b) => b.totalComissao - a.totalComissao)
+  }, [dados])
 
-  const totalGerado = dados.reduce((acc, curr) => acc + curr.valor_comissao, 0)
-  const totalPago = dados
-    .filter((d) => d.status === 'pago')
-    .reduce((acc, curr) => acc + curr.valor_comissao, 0)
-  const totalEmAberto = dados
-    .filter((d) => d.status === 'em_aberto')
-    .reduce((acc, curr) => acc + curr.valor_comissao, 0)
+  const formatCurrency = (v: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  const [tG, tP, tA] = dados.reduce(
+    (acc, curr) => {
+      acc[0] += curr.valor_comissao
+      if (curr.status === 'pago') acc[1] += curr.valor_comissao
+      else acc[2] += curr.valor_comissao
+      return acc
+    },
+    [0, 0, 0],
+  )
 
   return (
     <div className="space-y-6">
@@ -180,45 +156,65 @@ export function RelatorioComissoes({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {formatCurrency(totalGerado)}
+              {formatCurrency(tG)}
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+        <Card className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-600 dark:text-green-500">
-              Comissões Pagas
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-green-600">Comissões Pagas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-              {formatCurrency(totalPago)}
-            </div>
+            <div className="text-2xl font-bold text-green-700">{formatCurrency(tP)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+        <Card className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-500">
-              Em Aberto
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-amber-600">Em Aberto</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">
-              {formatCurrency(totalEmAberto)}
-            </div>
+            <div className="text-2xl font-bold text-amber-700">{formatCurrency(tA)}</div>
           </CardContent>
         </Card>
       </div>
 
+      {isAdmin && resumoAvaliadores.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">
+            Resumo por Dentista Avaliador
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {resumoAvaliadores.map((r) => (
+              <Card key={r.nome} className="bg-primary/5 border-primary/20 shadow-sm">
+                <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-bold text-primary uppercase">
+                    {r.nome}
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4 space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Vendas ({r.qtde}):</span>
+                    <span className="font-semibold">{formatCurrency(r.totalVendas)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold">
+                    <span className="text-primary">Comissão Gerada:</span>
+                    <span className="text-primary">{formatCurrency(r.totalComissao)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <CardTitle>Histórico de Comissões</CardTitle>
-          </div>
+          <CardTitle>Histórico de Comissões</CardTitle>
           <div className="w-full md:w-48">
             <Select value={periodo} onValueChange={setPeriodo}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o período" />
+                <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="mes">Mês Atual</SelectItem>
@@ -234,14 +230,14 @@ export function RelatorioComissoes({
               <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>
                     {isAdmin && <TableHead>Profissional</TableHead>}
                     <TableHead>Paciente</TableHead>
-                    <TableHead className="text-right">Valor Venda</TableHead>
+                    <TableHead className="text-right">Venda</TableHead>
                     <TableHead className="text-right">%</TableHead>
                     <TableHead className="text-right">Comissão</TableHead>
                     <TableHead>Status</TableHead>
@@ -268,15 +264,8 @@ export function RelatorioComissoes({
                         {formatCurrency(row.valor_comissao)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            row.status === 'pago'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                          }
-                        >
-                          {row.status === 'pago' ? 'Pago' : 'Em Aberto'}
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                          Em Aberto
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -287,7 +276,7 @@ export function RelatorioComissoes({
                         colSpan={isAdmin ? 7 : 6}
                         className="text-center py-6 text-muted-foreground"
                       >
-                        Nenhuma comissão encontrada no período.
+                        Nenhuma comissão encontrada.
                       </TableCell>
                     </TableRow>
                   )}

@@ -10,6 +10,7 @@ export interface RankingDentista {
   conversao: number
   ticketOportunidade: number
   ticketConversao: number
+  valorTotalConversao: number
   criativos: number
   metaMensalCriativos: number
 }
@@ -146,6 +147,7 @@ export function useRankingDentistas(periodo: string) {
             conversao,
             ticketOportunidade,
             ticketConversao,
+            valorTotalConversao,
             criativos: crs.length,
             metaMensalCriativos: d.meta_mensal_criativos || 0,
           }
