@@ -62,7 +62,10 @@ export function VendasTabela({
   const SortableHead = ({ column, children }: { column: string; children: React.ReactNode }) => {
     const isActive = sortColumn === column
     return (
-      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => onSort(column)}>
+      <TableHead
+        className="cursor-pointer hover:bg-white/10 text-white"
+        onClick={() => onSort(column)}
+      >
         <div className="flex items-center gap-1">
           {children}
           {isActive ? (
@@ -72,7 +75,7 @@ export function VendasTabela({
               <ArrowDown className="w-3 h-3" />
             )
           ) : (
-            <ArrowUpDown className="w-3 h-3 text-muted-foreground opacity-50" />
+            <ArrowUpDown className="w-3 h-3 opacity-50" />
           )}
         </div>
       </TableHead>
@@ -93,16 +96,16 @@ export function VendasTabela({
     <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Paciente</TableHead>
+          <TableHeader className="bg-[#1e3a5f]">
+            <TableRow className="hover:bg-[#1e3a5f]">
+              <TableHead className="text-white">Paciente</TableHead>
               <SortableHead column="data_avaliacao">Data</SortableHead>
               <SortableHead column="valor_orcamento">Valor</SortableHead>
               <SortableHead column="status">Status</SortableHead>
               <SortableHead column="temperatura_lead">Temperatura</SortableHead>
               <SortableHead column="proxima_data_contato">Próx. Contato</SortableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead className="w-[80px]">Ações</TableHead>
+              <TableHead className="text-white">Responsável</TableHead>
+              <TableHead className="w-[80px] text-white">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -122,7 +125,7 @@ export function VendasTabela({
               avaliacoes.map((av) => (
                 <TableRow
                   key={av.id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="cursor-pointer even:bg-[#f5f5f5] odd:bg-white dark:even:bg-slate-800/50 dark:odd:bg-transparent hover:bg-muted/50 transition-colors"
                   onClick={(e) => {
                     if (!(e.target as HTMLElement).closest('.actions-cell')) {
                       navigate(`/comercial/pacientes?id=${av.paciente_id}`)
