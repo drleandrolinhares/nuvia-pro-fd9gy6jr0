@@ -15,14 +15,17 @@ export type Database = {
           crc_comercial_id: string | null
           criado_em: string | null
           data_avaliacao: string | null
+          data_fechamento: string | null
           dentista_avaliador_id: string | null
           id: string
           observacoes: string | null
+          observacoes_fechamento: string | null
           paciente_id: string
           proxima_data_contato: string | null
           status: string | null
           temperatura_lead: string | null
           tipo_tratamento: string | null
+          valor_entrada: number | null
           valor_orcamento: number | null
         }
         Insert: {
@@ -30,14 +33,17 @@ export type Database = {
           crc_comercial_id?: string | null
           criado_em?: string | null
           data_avaliacao?: string | null
+          data_fechamento?: string | null
           dentista_avaliador_id?: string | null
           id?: string
           observacoes?: string | null
+          observacoes_fechamento?: string | null
           paciente_id: string
           proxima_data_contato?: string | null
           status?: string | null
           temperatura_lead?: string | null
           tipo_tratamento?: string | null
+          valor_entrada?: number | null
           valor_orcamento?: number | null
         }
         Update: {
@@ -45,14 +51,17 @@ export type Database = {
           crc_comercial_id?: string | null
           criado_em?: string | null
           data_avaliacao?: string | null
+          data_fechamento?: string | null
           dentista_avaliador_id?: string | null
           id?: string
           observacoes?: string | null
+          observacoes_fechamento?: string | null
           paciente_id?: string
           proxima_data_contato?: string | null
           status?: string | null
           temperatura_lead?: string | null
           tipo_tratamento?: string | null
+          valor_entrada?: number | null
           valor_orcamento?: number | null
         }
         Relationships: [
@@ -1670,6 +1679,9 @@ export const Constants = {
 //   observacoes: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+//   data_fechamento: date (nullable)
+//   valor_entrada: numeric (nullable)
+//   observacoes_fechamento: text (nullable)
 // Table: campo_configuracao
 //   id: uuid (not null, default: gen_random_uuid())
 //   especialidade_id: uuid (nullable)

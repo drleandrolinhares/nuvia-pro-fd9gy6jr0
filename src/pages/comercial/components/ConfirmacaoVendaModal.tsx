@@ -33,19 +33,39 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 
-const formSchema = z.object({
-  paciente_nome: z.string().min(1, 'Nome do paciente é obrigatório'),
-  paciente_telefone: z.string().optional().nullable(),
-  data_avaliacao: z.string().optional().nullable(),
-  dentista_avaliador_id: z.string().optional().nullable(),
-  crc_comercial_id: z.string().optional().nullable(),
-  valor_orcamento: z.coerce.number().min(0, 'Valor não pode ser negativo'),
-  tipo_tratamento: z.string().optional().nullable(),
-  observacoes: z.string().optional().nullable(),
-  data_fechamento: z.string().min(1, 'Data de fechamento é obrigatória'),
-  valor_entrada: z.coerce.number().min(0, 'Valor não pode ser negativo'),
-  observacoes_fechamento: z.string().optional().nullable(),
-})
+const formSchema = z
+  .object({
+    paciente_nome: z.string().min(1, 'Nome do paciente é obrigatório'),
+    paciente_telefone: z.string().optional().nullable(),
+    data_avaliacao: z.string().optional().nullable(),
+    dentista_avaliador_id: z.string().optional().nullable(),
+    crc_comercial_id: z.string().optional().nullable(),
+    valor_orcamento: z.coerce.number().min(0, 'Valor não pode ser negativo'),
+    tipo_tratamento: z.string().optional().nullable(),
+    observacoes: z.string().optional().nullable(),
+    data_fechamento: z.string().min(1, 'Data de fechamento é obrigatória'),
+    valor_entrada: z.coerce.number().min(0, 'Valor não pode ser negativo'),
+    observacoes_fechamento: z.string().optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.valor_entrada > data.valor_orcamento) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Valor da entrada não pode ser maior que o valor do tratamento',
+        path: ['valor_entrada'],
+      })
+    }
+
+    if (data.data_fechamento && data.data_avaliacao) {
+      if (data.data_fechamento < data.data_avaliacao) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Data de fechamento não pode ser anterior à data da avaliação',
+          path: ['data_fechamento'],
+        })
+      }
+    }
+  })
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -62,6 +82,7 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       paciente_nome: '',
       paciente_telefone: '',
@@ -405,8 +426,8 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
           <Button
             type="submit"
             form="venda-form"
-            disabled={loading}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            disabled={loading || !form.formState.isValid}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
