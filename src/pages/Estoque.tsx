@@ -39,6 +39,7 @@ import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
 import { VisualizarProdutoModal } from '@/components/estoque/VisualizarProdutoModal'
 import { EditarProdutoModal } from '@/components/estoque/EditarProdutoModal'
 import { PackagePlus, PackageMinus } from 'lucide-react'
+import { useCache } from '@/hooks/use-cache'
 import { supabase } from '@/lib/supabase/client'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
 import {
@@ -69,6 +70,7 @@ export default function Estoque() {
   const [canEdit, setCanEdit] = useState(false)
   const [activeTab, setActiveTab] = useState('produtos')
   const { toast } = useToast()
+  const { dataVersion, invalidateCache } = useCache()
 
   useEffect(() => {
     const checkPermission = async () => {
@@ -106,28 +108,32 @@ export default function Estoque() {
 
   useEffect(() => {
     loadData()
-  }, [toast])
+  }, [toast, dataVersion])
 
   useEffect(() => {
     const channel = supabase
       .channel('estoque-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => loadData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () =>
+        invalidateCache(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () =>
+        invalidateCache(),
+      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'compra_itens' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entrada_produtos' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saida_produtos' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [invalidateCache])
 
   const handleDelete = async () => {
     if (!produtoExcluir) return
@@ -146,7 +152,7 @@ export default function Estoque() {
         title: 'Produto excluído',
         description: 'O produto foi removido com sucesso.',
       })
-      loadData()
+      invalidateCache()
     }
 
     setIsDeleting(false)
@@ -652,13 +658,13 @@ export default function Estoque() {
             open={modalEntradaOpen}
             onOpenChange={setModalEntradaOpen}
             produtos={produtos}
-            onSuccess={loadData}
+            onSuccess={invalidateCache}
           />
           <SaidaProdutoModal
             open={modalSaidaOpen}
             onOpenChange={setModalSaidaOpen}
             produtos={produtos}
-            onSuccess={loadData}
+            onSuccess={invalidateCache}
           />
           <VisualizarProdutoModal
             open={!!produtoVisualizar}
@@ -669,7 +675,7 @@ export default function Estoque() {
             open={!!produtoEditar}
             onOpenChange={(open) => !open && setProdutoEditar(null)}
             produto={produtoEditar}
-            onSuccess={loadData}
+            onSuccess={invalidateCache}
           />
           <AlertDialog
             open={!!produtoExcluir}

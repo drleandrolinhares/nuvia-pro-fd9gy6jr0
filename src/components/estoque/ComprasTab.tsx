@@ -19,6 +19,7 @@ import { VisualizarCompraModal } from './VisualizarCompraModal'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
+import { useCache } from '@/hooks/use-cache'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ export function ComprasTab() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const { toast } = useToast()
+  const { dataVersion, invalidateCache } = useCache()
 
   const checkAdmin = async () => {
     const { data: admin } = await supabase.rpc('is_admin')
@@ -68,18 +70,20 @@ export function ComprasTab() {
   useEffect(() => {
     loadData()
     checkAdmin()
-  }, [])
+  }, [dataVersion])
 
   useEffect(() => {
     const channel = supabase
       .channel('compras-tab-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () =>
+        invalidateCache(),
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [invalidateCache])
 
   const handleDelete = async () => {
     if (!compraExcluir) return
@@ -89,7 +93,7 @@ export function ComprasTab() {
       toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
     } else {
       toast({ title: 'Sucesso', description: 'Compra excluída com sucesso.' })
-      loadData()
+      invalidateCache()
     }
     setIsDeleting(false)
     setCompraExcluir(null)
@@ -106,6 +110,7 @@ export function ComprasTab() {
       toast({ title: 'Erro ao finalizar', description: error.message, variant: 'destructive' })
     } else {
       toast({ title: 'Sucesso', description: 'Compra finalizada com sucesso.' })
+      invalidateCache()
     }
   }
 
@@ -268,7 +273,7 @@ export function ComprasTab() {
         open={modalFormOpen}
         onOpenChange={setModalFormOpen}
         compra={compraEditar}
-        onSuccess={loadData}
+        onSuccess={invalidateCache}
       />
 
       <VisualizarCompraModal

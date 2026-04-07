@@ -13,10 +13,12 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
+import { useCache } from '@/hooks/use-cache'
 
 const Index = () => {
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
+  const { dataVersion, invalidateCache } = useCache()
 
   const loadData = async () => {
     setLoading(true)
@@ -29,28 +31,32 @@ const Index = () => {
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [dataVersion])
 
   useEffect(() => {
     const channel = supabase
       .channel('dashboard-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => loadData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () =>
+        invalidateCache(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () =>
+        invalidateCache(),
+      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'compra_itens' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entrada_produtos' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saida_produtos' }, () =>
-        loadData(),
+        invalidateCache(),
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [invalidateCache])
 
   const produtosDashboard = useMemo(() => {
     return produtos
