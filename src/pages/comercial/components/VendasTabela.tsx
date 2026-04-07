@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, FileText, Check } from 'lucide-react'
-import { ConfirmacaoPagamentoModal } from './ConfirmacaoPagamentoModal'
+import { ConfirmacaoVendaModal } from './ConfirmacaoVendaModal'
 import {
   Table,
   TableBody,
@@ -237,7 +237,7 @@ export function VendasTabela({
       </Pagination>
 
       {avaliacaoSelecionada && (
-        <ConfirmacaoPagamentoModal
+        <ConfirmacaoVendaModal
           isOpen={pagamentoModalOpen}
           onClose={() => {
             setPagamentoModalOpen(false)
