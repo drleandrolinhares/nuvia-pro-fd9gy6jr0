@@ -11,7 +11,17 @@ import {
 } from '@/components/ui/table'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { FileText, Search } from 'lucide-react'
+import { FileText, Search, Undo2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -21,6 +31,9 @@ export function VendasConcretizadasLista() {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
   const { toast } = useToast()
+  const [revertDialogOpen, setRevertDialogOpen] = useState(false)
+  const [vendaToRevert, setVendaToRevert] = useState<any>(null)
+  const [reverting, setReverting] = useState(false)
 
   useEffect(() => {
     fetchVendas()
@@ -63,6 +76,40 @@ export function VendasConcretizadasLista() {
     const [year, month, day] = dataStr.substring(0, 10).split('-')
     if (year && month && day) return `${day}/${month}/${year}`
     return dataStr
+  }
+
+  const handleRevertVenda = async () => {
+    if (!vendaToRevert) return
+    setReverting(true)
+    try {
+      const { error: delError } = await supabase
+        .from('vendas_confirmadas')
+        .delete()
+        .eq('id', vendaToRevert.id)
+
+      if (delError) throw delError
+
+      if (vendaToRevert.oportunidade_id) {
+        const { error: updError } = await supabase
+          .from('avaliacoes')
+          .update({ status: 'avaliacao_realizada' })
+          .eq('id', vendaToRevert.oportunidade_id)
+
+        if (updError) throw updError
+      }
+
+      toast({
+        title: 'Venda revertida com sucesso',
+        description: 'A oportunidade voltou para a aba de Oportunidades Comerciais.',
+      })
+      setRevertDialogOpen(false)
+      setVendaToRevert(null)
+      fetchVendas()
+    } catch (err: any) {
+      toast({ title: 'Erro ao reverter venda', description: err.message, variant: 'destructive' })
+    } finally {
+      setReverting(false)
+    }
   }
 
   const filteredVendas = vendas.filter(
@@ -138,18 +185,34 @@ export function VendasConcretizadasLista() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        onClick={() => {
-                          const pId = venda.avaliacoes?.paciente_id
-                          if (pId) navigate(`/comercial/pacientes?id=${pId}`)
-                        }}
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Ver Ficha
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          title="Ver Ficha"
+                          onClick={() => {
+                            const pId = venda.avaliacoes?.paciente_id
+                            if (pId) navigate(`/comercial/pacientes?id=${pId}`)
+                          }}
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span className="hidden sm:inline ml-2">Ficha</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          title="Reverter Venda"
+                          onClick={() => {
+                            setVendaToRevert(venda)
+                            setRevertDialogOpen(true)
+                          }}
+                        >
+                          <Undo2 className="w-4 h-4" />
+                          <span className="hidden sm:inline ml-2">Reverter</span>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -158,6 +221,38 @@ export function VendasConcretizadasLista() {
           </Table>
         </div>
       </CardContent>
+
+      <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza que deseja reverter esta venda?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá o registro de venda confirmada do paciente{' '}
+              <strong className="text-slate-800">{vendaToRevert?.paciente_nome}</strong> e a
+              oportunidade voltará para a lista de negociações em aberto.
+              <br />
+              <br />
+              <span className="text-amber-600 font-medium">
+                Aviso: Isto não altera nenhum cálculo do fluxo original, apenas retrocede o status
+                da oportunidade.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reverting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleRevertVenda()
+              }}
+              disabled={reverting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {reverting ? 'Revertendo...' : 'Sim, reverter venda'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
