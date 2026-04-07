@@ -107,6 +107,27 @@ export default function Estoque() {
     loadData()
   }, [toast])
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('estoque-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compra_itens' }, () =>
+        loadData(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'entrada_produtos' }, () =>
+        loadData(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saida_produtos' }, () =>
+        loadData(),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   const handleDelete = async () => {
     if (!produtoExcluir) return
 
