@@ -173,20 +173,24 @@ export function VendasTabela({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-500/50 dark:hover:bg-green-950/30 dark:text-green-500"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setAvaliacaoSelecionada(av)
-                          setPagamentoModalOpen(true)
-                        }}
-                        title="Finalizar Venda"
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Finalizar Venda</span>
-                      </Button>
+                      {av.status !== 'Fechada em Comercial' &&
+                        av.status !== 'Fechada em Avaliação' &&
+                        av.status !== 'venda_concretizada' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-500/50 dark:hover:bg-green-950/30 dark:text-green-500"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setAvaliacaoSelecionada(av)
+                              setPagamentoModalOpen(true)
+                            }}
+                            title="Finalizar Venda"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Finalizar Venda</span>
+                          </Button>
+                        )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">

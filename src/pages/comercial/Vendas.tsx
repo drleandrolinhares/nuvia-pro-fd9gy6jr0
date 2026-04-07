@@ -8,6 +8,7 @@ import { VendasFiltros } from './components/VendasFiltros'
 import { VendasTabela } from './components/VendasTabela'
 import { VendasModal } from './components/VendasModal'
 import { VendasRankingDentistas } from './components/VendasRankingDentistas'
+import { VendasConcretizadasLista } from './components/VendasConcretizadasLista'
 import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -69,7 +70,17 @@ export default function Vendas() {
       )
 
       if (filters.search) query = query.ilike('pacientes.nome', `%${filters.search}%`)
-      if (filters.status !== 'todos') query = query.eq('status', filters.status)
+      if (filters.status !== 'todos') {
+        query = query.eq('status', filters.status)
+      } else {
+        // Remove as vendas já concretizadas da visualização padrão de oportunidades,
+        // pois elas agora possuem uma aba própria. Mantemos a lógica existente intacta.
+        query = query
+          .not('status', 'eq', 'Fechada em Comercial')
+          .not('status', 'eq', 'Fechada em Avaliação')
+          .not('status', 'eq', 'venda_concretizada')
+      }
+
       if (filters.temperatura !== 'todas') query = query.eq('temperatura_lead', filters.temperatura)
       if (filters.dentista !== 'todos') query = query.eq('dentista_avaliador_id', filters.dentista)
       if (filters.crc !== 'todos') query = query.eq('crc_comercial_id', filters.crc)
@@ -150,7 +161,7 @@ export default function Vendas() {
       </div>
 
       <Tabs defaultValue="oportunidades" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[400px]">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[600px]">
           <TabsTrigger
             value="ranking"
             className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
@@ -162,6 +173,12 @@ export default function Vendas() {
             className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
           >
             Oportunidades Comerciais
+          </TabsTrigger>
+          <TabsTrigger
+            value="concretizadas"
+            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
+          >
+            Vendas Concretizadas
           </TabsTrigger>
         </TabsList>
 
@@ -197,6 +214,10 @@ export default function Vendas() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="concretizadas" className="space-y-4 outline-none">
+          <VendasConcretizadasLista />
         </TabsContent>
       </Tabs>
     </div>

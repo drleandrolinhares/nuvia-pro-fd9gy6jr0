@@ -1515,6 +1515,85 @@ export type Database = {
           },
         ]
       }
+      vendas_confirmadas: {
+        Row: {
+          atualizado_em: string
+          crc: string | null
+          criado_em: string
+          data_fechamento: string
+          data_original: string | null
+          dentista_avaliador: string | null
+          id: string
+          observacoes: string | null
+          observacoes_fechamento: string | null
+          oportunidade_id: string
+          paciente_nome: string
+          percentual_entrada: number
+          telefone: string | null
+          tratamento: string | null
+          valor_entrada: number
+          valor_tratamento: number
+        }
+        Insert: {
+          atualizado_em?: string
+          crc?: string | null
+          criado_em?: string
+          data_fechamento: string
+          data_original?: string | null
+          dentista_avaliador?: string | null
+          id?: string
+          observacoes?: string | null
+          observacoes_fechamento?: string | null
+          oportunidade_id: string
+          paciente_nome: string
+          percentual_entrada: number
+          telefone?: string | null
+          tratamento?: string | null
+          valor_entrada: number
+          valor_tratamento: number
+        }
+        Update: {
+          atualizado_em?: string
+          crc?: string | null
+          criado_em?: string
+          data_fechamento?: string
+          data_original?: string | null
+          dentista_avaliador?: string | null
+          id?: string
+          observacoes?: string | null
+          observacoes_fechamento?: string | null
+          oportunidade_id?: string
+          paciente_nome?: string
+          percentual_entrada?: number
+          telefone?: string | null
+          tratamento?: string | null
+          valor_entrada?: number
+          valor_tratamento?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vendas_confirmadas_crc_fkey'
+            columns: ['crc']
+            isOneToOne: false
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_confirmadas_dentista_avaliador_fkey'
+            columns: ['dentista_avaliador']
+            isOneToOne: false
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_confirmadas_oportunidade_id_fkey'
+            columns: ['oportunidade_id']
+            isOneToOne: false
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1986,6 +2065,23 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   cargo_secundario_id: uuid (nullable)
 //   avatar_url: text (nullable)
+// Table: vendas_confirmadas
+//   id: uuid (not null, default: gen_random_uuid())
+//   oportunidade_id: uuid (not null)
+//   paciente_nome: text (not null)
+//   telefone: text (nullable)
+//   data_original: date (nullable)
+//   dentista_avaliador: uuid (nullable)
+//   crc: uuid (nullable)
+//   valor_tratamento: numeric (not null)
+//   tratamento: text (nullable)
+//   observacoes: text (nullable)
+//   data_fechamento: date (not null)
+//   valor_entrada: numeric (not null)
+//   percentual_entrada: numeric (not null)
+//   observacoes_fechamento: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
 // Table: avaliacoes
@@ -2121,6 +2217,11 @@ export const Constants = {
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+// Table: vendas_confirmadas
+//   FOREIGN KEY vendas_confirmadas_crc_fkey: FOREIGN KEY (crc) REFERENCES crc_comercial(id) ON DELETE SET NULL
+//   FOREIGN KEY vendas_confirmadas_dentista_avaliador_fkey: FOREIGN KEY (dentista_avaliador) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   FOREIGN KEY vendas_confirmadas_oportunidade_id_fkey: FOREIGN KEY (oportunidade_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
+//   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: avaliacoes
@@ -2342,6 +2443,10 @@ export const Constants = {
 //     USING: true
 //   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
+// Table: vendas_confirmadas
+//   Policy "vendas_confirmadas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION ativar_cascata_dentista_avaliador()
@@ -2700,3 +2805,5 @@ export const Constants = {
 //   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
+// Table: vendas_confirmadas
+//   CREATE INDEX vendas_confirmadas_oportunidade_id_idx ON public.vendas_confirmadas USING btree (oportunidade_id)
