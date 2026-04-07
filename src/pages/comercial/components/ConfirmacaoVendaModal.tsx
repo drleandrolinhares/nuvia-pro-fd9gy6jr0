@@ -434,7 +434,7 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
             ) : (
               <Check className="h-4 w-4 mr-2" />
             )}
-            Confirmar Venda
+            Confirmar Pagamento
           </Button>
         </DialogFooter>
       </DialogContent>
