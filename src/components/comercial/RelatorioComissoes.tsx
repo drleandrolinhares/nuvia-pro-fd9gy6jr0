@@ -133,6 +133,28 @@ export function RelatorioComissoes({
     return Array.from(res.values()).sort((a, b) => b.totalComissao - a.totalComissao)
   }, [dados])
 
+  const resumoCrc = useMemo(() => {
+    const res = new Map<
+      string,
+      { nome: string; totalVendas: number; totalComissao: number; qtde: number }
+    >()
+    dados
+      .filter((d) => d.tipo === 'CRC Comercial')
+      .forEach((d) => {
+        const c = res.get(d.profissionalId) || {
+          nome: d.profissional,
+          totalVendas: 0,
+          totalComissao: 0,
+          qtde: 0,
+        }
+        c.totalVendas += d.valor_venda
+        c.totalComissao += d.valor_comissao
+        c.qtde += 1
+        res.set(d.profissionalId, c)
+      })
+    return Array.from(res.values()).sort((a, b) => b.totalComissao - a.totalComissao)
+  }, [dados])
+
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
   const [tG, tP, tA] = dados.reduce(
@@ -178,33 +200,74 @@ export function RelatorioComissoes({
         </Card>
       </div>
 
-      {isAdmin && resumoAvaliadores.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">
-            Resumo por Dentista Avaliador
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {resumoAvaliadores.map((r) => (
-              <Card key={r.nome} className="bg-primary/5 border-primary/20 shadow-sm">
-                <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-bold text-primary uppercase">
-                    {r.nome}
-                  </CardTitle>
-                  <DollarSign className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent className="px-4 pb-4 space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Vendas ({r.qtde}):</span>
-                    <span className="font-semibold">{formatCurrency(r.totalVendas)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-bold">
-                    <span className="text-primary">Comissão Gerada:</span>
-                    <span className="text-primary">{formatCurrency(r.totalComissao)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      {isAdmin && (resumoAvaliadores.length > 0 || resumoCrc.length > 0) && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+          {resumoAvaliadores.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">
+                Resumo por Dentista Avaliador
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {resumoAvaliadores.map((r) => (
+                  <Card key={r.nome} className="bg-primary/5 border-primary/20 shadow-sm">
+                    <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
+                      <CardTitle className="text-sm font-bold text-primary uppercase">
+                        {r.nome}
+                      </CardTitle>
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Vendas ({r.qtde}):</span>
+                        <span className="font-semibold">{formatCurrency(r.totalVendas)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold">
+                        <span className="text-primary">Comissão Gerada:</span>
+                        <span className="text-primary">{formatCurrency(r.totalComissao)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {resumoCrc.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">
+                Resumo por CRC Comercial
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {resumoCrc.map((r) => (
+                  <Card
+                    key={r.nome}
+                    className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900 shadow-sm"
+                  >
+                    <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
+                      <CardTitle className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase">
+                        {r.nome}
+                      </CardTitle>
+                      <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Vendas ({r.qtde}):</span>
+                        <span className="font-semibold">{formatCurrency(r.totalVendas)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold">
+                        <span className="text-emerald-700 dark:text-emerald-400">
+                          Comissão Gerada:
+                        </span>
+                        <span className="text-emerald-700 dark:text-emerald-400">
+                          {formatCurrency(r.totalComissao)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
