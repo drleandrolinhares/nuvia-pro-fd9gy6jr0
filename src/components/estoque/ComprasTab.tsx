@@ -11,9 +11,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, Eye, Edit, Trash2, Loader2 } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { Compra, fetchCompras, deleteCompra } from '@/services/compras'
+import { Compra, fetchCompras, deleteCompra, finalizarCompra } from '@/services/compras'
 import { CompraFormModal } from './CompraFormModal'
 import { VisualizarCompraModal } from './VisualizarCompraModal'
 import { format, parseISO } from 'date-fns'
@@ -93,6 +93,20 @@ export function ComprasTab() {
     }
     setIsDeleting(false)
     setCompraExcluir(null)
+  }
+
+  const handleFinalizar = async (compraId: string) => {
+    // Optimistic update
+    setCompras((prev) => prev.map((c) => (c.id === compraId ? { ...c, status: 'Finalizada' } : c)))
+
+    const { error } = await finalizarCompra(compraId)
+    if (error) {
+      // Revert on error
+      setCompras((prev) => prev.map((c) => (c.id === compraId ? { ...c, status: 'Rascunho' } : c)))
+      toast({ title: 'Erro ao finalizar', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Sucesso', description: 'Compra finalizada com sucesso.' })
+    }
   }
 
   const handleOpenEdit = (compra: Compra) => {
@@ -211,6 +225,17 @@ export function ComprasTab() {
                         </Button>
                         {isAdmin && (
                           <>
+                            {compra.status?.toLowerCase() === 'rascunho' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleFinalizar(compra.id)}
+                                title="Finalizar Compra"
+                                className="h-8 w-8 text-slate-500 hover:text-emerald-600 hover:bg-emerald-100"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
