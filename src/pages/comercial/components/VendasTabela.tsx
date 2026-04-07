@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
-import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, FileText } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, FileText, Check } from 'lucide-react'
+import { ConfirmacaoPagamentoModal } from './ConfirmacaoPagamentoModal'
 import {
   Table,
   TableBody,
@@ -51,6 +53,8 @@ export function VendasTabela({
   setPage,
 }: Props) {
   const navigate = useNavigate()
+  const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false)
+  const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<Avaliacao | null>(null)
 
   const getMaiorValor = (av: Avaliacao) => {
     const maxOrcamentos = av.orcamentos?.length
@@ -105,7 +109,7 @@ export function VendasTabela({
               <SortableHead column="temperatura_lead">Temperatura</SortableHead>
               <SortableHead column="proxima_data_contato">Próx. Contato</SortableHead>
               <TableHead className="text-white">Responsável</TableHead>
-              <TableHead className="w-[80px] text-white">Ações</TableHead>
+              <TableHead className="w-[140px] text-white text-right pr-4">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -164,22 +168,41 @@ export function VendasTabela({
                   <TableCell className="text-sm text-muted-foreground">
                     {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
                   </TableCell>
-                  <TableCell className="actions-cell" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => navigate(`/comercial/pacientes?id=${av.paciente_id}`)}
-                        >
-                          <FileText className="mr-2 h-4 w-4" /> Ver Ficha
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell
+                    className="actions-cell text-right pr-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-500/50 dark:hover:bg-green-950/30 dark:text-green-500"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setAvaliacaoSelecionada(av)
+                          setPagamentoModalOpen(true)
+                        }}
+                        title="Finalizar Venda"
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Finalizar</span>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/comercial/pacientes?id=${av.paciente_id}`)}
+                          >
+                            <FileText className="mr-2 h-4 w-4" /> Ver Ficha
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -212,6 +235,17 @@ export function VendasTabela({
           </PaginationItem>
         </PaginationContent>
       </Pagination>
+
+      {avaliacaoSelecionada && (
+        <ConfirmacaoPagamentoModal
+          isOpen={pagamentoModalOpen}
+          onClose={() => {
+            setPagamentoModalOpen(false)
+            setAvaliacaoSelecionada(null)
+          }}
+          avaliacao={avaliacaoSelecionada}
+        />
+      )}
     </div>
   )
 }
