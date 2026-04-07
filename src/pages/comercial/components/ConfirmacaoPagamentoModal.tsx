@@ -76,7 +76,7 @@ export function ConfirmacaoPagamentoModal({ isOpen, onClose, avaliacao, onSucces
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Confirmação de Pagamento</DialogTitle>
+          <DialogTitle>Confirmação de Venda</DialogTitle>
           <DialogDescription>
             Confirme os dados abaixo para registrar o fechamento da venda.
           </DialogDescription>
@@ -139,7 +139,7 @@ export function ConfirmacaoPagamentoModal({ isOpen, onClose, avaliacao, onSucces
               className="bg-green-600 hover:bg-green-700 text-white"
               disabled={loading}
             >
-              {loading ? 'Processando...' : 'Confirmar Pagamento'}
+              {loading ? 'Processando...' : 'Confirmar Venda'}
             </Button>
           </DialogFooter>
         </form>

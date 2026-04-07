@@ -185,7 +185,7 @@ export function VendasTabela({
                         title="Finalizar Venda"
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Finalizar</span>
+                        <span className="hidden sm:inline">Finalizar Venda</span>
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
