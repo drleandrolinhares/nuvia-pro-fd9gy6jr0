@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import {
   Dialog,
   DialogContent,
@@ -10,13 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Avaliacao } from '../types'
 
@@ -24,25 +18,46 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   avaliacao: Avaliacao
+  onSuccess?: () => void
 }
 
-export function ConfirmacaoPagamentoModal({ isOpen, onClose, avaliacao }: Props) {
+export function ConfirmacaoPagamentoModal({ isOpen, onClose, avaliacao, onSuccess }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [dataFechamento, setDataFechamento] = useState(() => new Date().toISOString().split('T')[0])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    // Mocking the structure for saving the state of the sale later.
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const { error } = await supabase
+        .from('avaliacoes')
+        .update({ status: 'venda_concretizada' })
+        .eq('id', avaliacao.id)
+
+      if (error) throw error
+
       toast({
         title: 'Sucesso',
-        description: 'Confirmação de pagamento registrada (Estrutura base).',
+        description: 'Venda finalizada com sucesso.',
       })
       onClose()
-    }, 1000)
+
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        window.location.reload()
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao finalizar venda.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getMaiorValor = (av: Avaliacao) => {
@@ -63,36 +78,56 @@ export function ConfirmacaoPagamentoModal({ isOpen, onClose, avaliacao }: Props)
         <DialogHeader>
           <DialogTitle>Confirmação de Pagamento</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para registrar o pagamento e finalizar a venda do paciente{' '}
-            <strong>{avaliacao.pacientes?.nome || 'N/A'}</strong>.
+            Confirme os dados abaixo para registrar o fechamento da venda.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="valor">Valor Pago</Label>
-            <Input id="valor" defaultValue={formatCurrency(valorSugerido)} placeholder="R$ 0,00" />
+            <Label>Nome do Paciente</Label>
+            <Input
+              value={avaliacao.pacientes?.nome || 'N/A'}
+              readOnly
+              className="bg-muted cursor-not-allowed"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
-            <Select defaultValue="pix">
-              <SelectTrigger id="forma_pagamento">
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                <SelectItem value="boleto">Boleto</SelectItem>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Dentista Avaliador</Label>
+            <Input
+              value={avaliacao.dentistas_avaliadores?.nome || 'N/A'}
+              readOnly
+              className="bg-muted cursor-not-allowed"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações (Opcional)</Label>
-            <Input id="observacoes" placeholder="Detalhes do pagamento, número do recibo..." />
+            <Label>Especialidade/Tratamento</Label>
+            <Input
+              value={avaliacao.tipo_tratamento || 'Não informado'}
+              readOnly
+              className="bg-muted cursor-not-allowed"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Valor do Tratamento</Label>
+            <Input
+              value={formatCurrency(valorSugerido)}
+              readOnly
+              className="bg-muted cursor-not-allowed"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="data_fechamento">Data do Fechamento</Label>
+            <Input
+              id="data_fechamento"
+              type="date"
+              value={dataFechamento}
+              onChange={(e) => setDataFechamento(e.target.value)}
+              required
+            />
           </div>
 
           <DialogFooter className="pt-4">
