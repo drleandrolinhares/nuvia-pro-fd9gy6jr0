@@ -40,6 +40,7 @@ import { VisualizarProdutoModal } from '@/components/estoque/VisualizarProdutoMo
 import { EditarProdutoModal } from '@/components/estoque/EditarProdutoModal'
 import { PackagePlus, PackageMinus } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import { SyncIndicator } from '@/components/ui/sync-indicator'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -244,12 +245,22 @@ export default function Estoque() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Gestão de Estoque</h1>
-          <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
-            Controle de Materiais e Insumos Financeiros
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
+        <div className="absolute top-4 right-4 z-10 md:static md:top-auto md:right-auto md:hidden">
+          <SyncIndicator isSyncing={loading} className="bg-slate-800 border-slate-700" />
+        </div>
+        <div className="flex items-start gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white pr-24 sm:pr-0">
+              Gestão de Estoque
+            </h1>
+            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
+              Controle de Materiais e Insumos Financeiros
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <SyncIndicator isSyncing={loading} className="bg-slate-800 border-slate-700" />
+          </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
           {canManage && activeTab === 'produtos' && (

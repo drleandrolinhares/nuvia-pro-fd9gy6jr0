@@ -18,6 +18,7 @@ import { CompraFormModal } from './CompraFormModal'
 import { VisualizarCompraModal } from './VisualizarCompraModal'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
+import { SyncIndicator } from '@/components/ui/sync-indicator'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +68,17 @@ export function ComprasTab() {
   useEffect(() => {
     loadData()
     checkAdmin()
+  }, [])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('compras-tab-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => loadData())
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const handleDelete = async () => {
@@ -119,16 +131,19 @@ export function ComprasTab() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button
-            onClick={() => {
-              setCompraEditar(null)
-              setModalFormOpen(true)
-            }}
-            className="w-full sm:w-auto bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Compra
-          </Button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <SyncIndicator isSyncing={loading} />
+            <Button
+              onClick={() => {
+                setCompraEditar(null)
+                setModalFormOpen(true)
+              }}
+              className="flex-1 sm:flex-none bg-[#1a2a4a] hover:bg-[#1a2a4a]/90 text-[#d4af37] font-bold"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Compra
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

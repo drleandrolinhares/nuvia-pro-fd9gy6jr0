@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
+import { SyncIndicator } from '@/components/ui/sync-indicator'
 
 const Index = () => {
   const [produtos, setProdutos] = useState<Produto[]>([])
@@ -91,9 +92,12 @@ const Index = () => {
   }, [produtosDashboard])
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8 animate-fade-in-up relative">
+      <div className="absolute top-0 right-0 z-10">
+        <SyncIndicator isSyncing={loading} />
+      </div>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase pr-24 sm:pr-0">
           Dashboard Nuvia
         </h1>
         <p className="text-muted-foreground uppercase text-sm font-medium tracking-wider mt-1">
