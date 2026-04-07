@@ -67,16 +67,18 @@ export function VendasRankingDentistas() {
   const SortableHead = ({
     label,
     column,
+    className,
   }: {
     label: string
     column: keyof (typeof ranking)[0]
+    className?: string
   }) => {
     return (
-      <TableHead>
+      <TableHead className={className}>
         <Button
           variant="ghost"
           onClick={() => handleSort(column)}
-          className="h-8 px-2 flex items-center hover:bg-transparent -ml-2 font-semibold"
+          className="h-8 px-2 flex items-center hover:bg-transparent -ml-2 font-semibold whitespace-nowrap"
         >
           {label}
           {sortColumn === column ? (
@@ -95,7 +97,7 @@ export function VendasRankingDentistas() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-1">
           <CardTitle>Ranking de Dentistas Avaliadores</CardTitle>
           <CardDescription>Performance de vendas e conversão da equipe clínica.</CardDescription>
@@ -114,19 +116,23 @@ export function VendasRankingDentistas() {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
-        <div className="rounded-md border mt-4">
-          <Table>
+      <CardContent className="px-2 sm:px-6">
+        <div className="rounded-md border mt-4 overflow-x-auto">
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px] text-center">Posição</TableHead>
-                <SortableHead label="Nome do Dentista" column="nome" />
+                <TableHead className="w-[80px] text-center whitespace-nowrap">Posição</TableHead>
+                <SortableHead label="Nome do Dentista" column="nome" className="min-w-[180px]" />
                 <SortableHead label="Nº de Avaliações" column="avaliacoes" />
                 <SortableHead label="Nº de Fechamentos" column="fechamentos" />
                 <SortableHead label="% de Conversão" column="conversao" />
                 <SortableHead label="T.M. Oportunidade" column="ticketOportunidade" />
                 <SortableHead label="T.M. Conversão" column="ticketConversao" />
-                <SortableHead label="Criativos Gerados" column="criativos" />
+                <SortableHead
+                  label="Criativos Gerados"
+                  column="criativos"
+                  className="min-w-[160px]"
+                />
               </TableRow>
             </TableHeader>
             <TableBody>

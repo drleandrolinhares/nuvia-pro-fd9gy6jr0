@@ -27,13 +27,9 @@ export function useRankingDentistas(periodo: string) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () => {
         setRefreshTrigger((prev) => prev + 1)
       })
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'vendas_concretizadas' },
-        () => {
-          setRefreshTrigger((prev) => prev + 1)
-        },
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () => {
+        setRefreshTrigger((prev) => prev + 1)
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'criativos_gerados' }, () => {
         setRefreshTrigger((prev) => prev + 1)
       })
@@ -102,12 +98,12 @@ export function useRankingDentistas(periodo: string) {
         const { data: avaliacoes } = await avaliacoesQuery
 
         let vendasQuery = supabase
-          .from('vendas_concretizadas')
-          .select('id, dentista_avaliador_id, valor_total_tratamento, data_concretizacao')
+          .from('vendas_confirmadas')
+          .select('id, dentista_avaliador, valor_tratamento, data_fechamento')
         if (dateFilterStr) {
           vendasQuery = vendasQuery
-            .gte('data_concretizacao', dateFilterStr.start)
-            .lte('data_concretizacao', dateFilterStr.end)
+            .gte('data_fechamento', dateFilterStr.start)
+            .lte('data_fechamento', dateFilterStr.end)
         }
         const { data: vendas } = await vendasQuery
 
@@ -123,7 +119,7 @@ export function useRankingDentistas(periodo: string) {
 
         const dados: RankingDentista[] = dentistas.map((d) => {
           const avs = avaliacoes?.filter((a) => a.dentista_avaliador_id === d.id) || []
-          const vds = vendas?.filter((v) => v.dentista_avaliador_id === d.id) || []
+          const vds = vendas?.filter((v) => v.dentista_avaliador === d.id) || []
           const crs = criativos?.filter((c) => c.dentista_avaliador_id === d.id) || []
 
           const qtdAvaliacoes = avs.length
@@ -137,7 +133,7 @@ export function useRankingDentistas(periodo: string) {
           const ticketOportunidade = qtdAvaliacoes > 0 ? valorTotalOportunidade / qtdAvaliacoes : 0
 
           const valorTotalConversao = vds.reduce(
-            (acc, curr) => acc + (curr.valor_total_tratamento || 0),
+            (acc, curr) => acc + (curr.valor_tratamento || 0),
             0,
           )
           const ticketConversao = qtdFechamentos > 0 ? valorTotalConversao / qtdFechamentos : 0

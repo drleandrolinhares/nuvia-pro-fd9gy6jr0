@@ -161,13 +161,7 @@ export default function Vendas() {
       </div>
 
       <Tabs defaultValue="oportunidades" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[600px]">
-          <TabsTrigger
-            value="ranking"
-            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
-          >
-            Ranking de Avaliadores
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10 gap-2 sm:gap-0 bg-transparent sm:bg-muted p-0 sm:p-1 max-w-[800px]">
           <TabsTrigger
             value="oportunidades"
             className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
@@ -180,11 +174,13 @@ export default function Vendas() {
           >
             Vendas Concretizadas
           </TabsTrigger>
+          <TabsTrigger
+            value="ranking"
+            className="data-[state=active]:bg-background shadow-sm sm:shadow-none border sm:border-0 h-10 sm:h-8"
+          >
+            Ranking de Avaliadores
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="ranking" className="space-y-4 outline-none">
-          <VendasRankingDentistas />
-        </TabsContent>
 
         <TabsContent value="oportunidades" className="space-y-4 outline-none">
           <Card>
@@ -218,6 +214,10 @@ export default function Vendas() {
 
         <TabsContent value="concretizadas" className="space-y-4 outline-none">
           <VendasConcretizadasLista onRevertSuccess={fetchAvaliacoes} />
+        </TabsContent>
+
+        <TabsContent value="ranking" className="space-y-4 outline-none">
+          <VendasRankingDentistas />
         </TabsContent>
       </Tabs>
     </div>
