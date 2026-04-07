@@ -152,20 +152,56 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
         if (pacError) throw pacError
       }
 
-      // 2. Atualizar Avaliação (Fechamento)
+      // 2. Inserir em vendas_confirmadas
+      const { error: vcError } = await supabase.from('vendas_confirmadas' as any).insert({
+        oportunidade_id: avaliacao.id,
+        paciente_nome: data.paciente_nome,
+        telefone: data.paciente_telefone || null,
+        data_original: data.data_avaliacao || null,
+        dentista_avaliador:
+          data.dentista_avaliador_id && data.dentista_avaliador_id !== 'nenhum'
+            ? data.dentista_avaliador_id
+            : null,
+        crc:
+          data.crc_comercial_id && data.crc_comercial_id !== 'nenhum'
+            ? data.crc_comercial_id
+            : null,
+        valor_tratamento: data.valor_orcamento,
+        tratamento: data.tipo_tratamento || null,
+        observacoes: data.observacoes || null,
+        data_fechamento: data.data_fechamento,
+        valor_entrada: data.valor_entrada,
+        percentual_entrada: percentualEntrada,
+        observacoes_fechamento: data.observacoes_fechamento || null,
+      })
+
+      if (vcError) throw vcError
+
+      // 3. Atualizar Avaliação (Fechamento)
+      const novoStatus =
+        data.crc_comercial_id && data.crc_comercial_id !== 'nenhum'
+          ? 'Fechada em Comercial'
+          : 'Fechada em Avaliação'
+
       const { error: avError } = await supabase
         .from('avaliacoes')
         .update({
           data_avaliacao: data.data_avaliacao || null,
-          dentista_avaliador_id: data.dentista_avaliador_id || null,
-          crc_comercial_id: data.crc_comercial_id || null,
+          dentista_avaliador_id:
+            data.dentista_avaliador_id && data.dentista_avaliador_id !== 'nenhum'
+              ? data.dentista_avaliador_id
+              : null,
+          crc_comercial_id:
+            data.crc_comercial_id && data.crc_comercial_id !== 'nenhum'
+              ? data.crc_comercial_id
+              : null,
           valor_orcamento: data.valor_orcamento,
           tipo_tratamento: data.tipo_tratamento || null,
           observacoes: data.observacoes || null,
           data_fechamento: data.data_fechamento || null,
           valor_entrada: data.valor_entrada,
           observacoes_fechamento: data.observacoes_fechamento || null,
-          status: 'venda_concretizada',
+          status: novoStatus,
         })
         .eq('id', avaliacao.id)
 
