@@ -25,7 +25,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 
-export function VendasConcretizadasLista() {
+interface Props {
+  onRevertSuccess?: () => void
+}
+
+export function VendasConcretizadasLista({ onRevertSuccess }: Props = {}) {
   const [vendas, setVendas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -105,6 +109,9 @@ export function VendasConcretizadasLista() {
       setRevertDialogOpen(false)
       setVendaToRevert(null)
       fetchVendas()
+      if (onRevertSuccess) {
+        onRevertSuccess()
+      }
     } catch (err: any) {
       toast({ title: 'Erro ao reverter venda', description: err.message, variant: 'destructive' })
     } finally {

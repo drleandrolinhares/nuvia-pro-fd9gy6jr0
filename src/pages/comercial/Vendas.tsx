@@ -217,7 +217,7 @@ export default function Vendas() {
         </TabsContent>
 
         <TabsContent value="concretizadas" className="space-y-4 outline-none">
-          <VendasConcretizadasLista />
+          <VendasConcretizadasLista onRevertSuccess={fetchAvaliacoes} />
         </TabsContent>
       </Tabs>
     </div>
