@@ -36,7 +36,8 @@ const ProtectedRoute = ({
   if (loading) return null
   const userRole = profile?.role || 'visualizacao'
   if (userRole === 'admin') return <>{children}</>
-  if (!allowedRoles.includes(userRole)) return <Navigate to="/" replace />
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole))
+    return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -171,7 +172,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/vendas"
           element={
-            <ProtectedRoute allowedRoles={['crc_comercial', 'visualizacao']}>
+            <ProtectedRoute allowedRoles={[]}>
               <Vendas />
             </ProtectedRoute>
           }
@@ -179,7 +180,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/negociacao"
           element={
-            <ProtectedRoute allowedRoles={['crc_comercial']}>
+            <ProtectedRoute allowedRoles={[]}>
               <Negociacao />
             </ProtectedRoute>
           }
@@ -187,7 +188,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/comissoes"
           element={
-            <ProtectedRoute allowedRoles={['crc_comercial', 'dentista_avaliador']}>
+            <ProtectedRoute allowedRoles={[]}>
               <ControleComissoes />
             </ProtectedRoute>
           }
@@ -203,7 +204,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/pacientes"
           element={
-            <ProtectedRoute allowedRoles={['crc_comercial', 'visualizacao']}>
+            <ProtectedRoute allowedRoles={[]}>
               <Pacientes />
             </ProtectedRoute>
           }

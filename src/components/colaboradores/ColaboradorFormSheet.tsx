@@ -36,6 +36,7 @@ const Field = ({ label, error, children }: any) => (
 export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario, onSuccess }: any) {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('pessoal')
   const isEdit = !!usuario
 
   const {
@@ -54,6 +55,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
 
   useEffect(() => {
     if (!isOpen) return
+    setActiveTab('pessoal')
     if (isEdit) {
       setLoading(true)
       getColaboradorDetalhes(usuario.id)
@@ -101,6 +103,28 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
     }
   }
 
+  const onError = (formErrors: any) => {
+    const errorKeys = Object.keys(formErrors)
+    if (errorKeys.length > 0) {
+      toast.error('Existem campos com erros ou não preenchidos. Verifique o formulário.')
+
+      const profFields = ['cargo_id', 'status', 'salario', 'data_admissao', 'cargo_secundario_id']
+      const bancoFields = ['banco', 'agencia', 'conta', 'pix', 'ctps', 'pis']
+      const emergFields = ['emergencia_nome', 'emergencia_telefone', 'emergencia_parentesco']
+
+      const firstError = errorKeys[0]
+      if (profFields.includes(firstError)) {
+        setActiveTab('prof')
+      } else if (bancoFields.includes(firstError)) {
+        setActiveTab('banco')
+      } else if (emergFields.includes(firstError)) {
+        setActiveTab('emerg')
+      } else {
+        setActiveTab('pessoal')
+      }
+    }
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="sm:max-w-[600px] w-full overflow-y-auto">
@@ -114,8 +138,8 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
             <Loader2 className="animate-spin w-8 h-8 text-primary" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Tabs defaultValue="pessoal">
+          <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="pessoal">Pessoal</TabsTrigger>
                 <TabsTrigger value="prof">Profissional</TabsTrigger>

@@ -50,6 +50,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 
 const navData = [
   {
@@ -70,37 +72,36 @@ const navData = [
   {
     title: 'COMERCIAL',
     icon: Briefcase,
-    showRole: ['admin', 'crc_comercial', 'dentista_avaliador', 'visualizacao'],
     items: [
       {
         title: 'Gestão de Vendas',
         url: '/comercial/vendas',
         icon: FileBarChart,
-        showRole: ['admin', 'crc_comercial', 'visualizacao'],
+        permission: 'Acessar Gestão de Vendas',
       },
       {
         title: 'Controle de Comissões',
         url: '/comercial/comissoes',
         icon: Landmark,
-        showRole: ['admin', 'crc_comercial', 'dentista_avaliador'],
+        permission: 'Acessar Controle de Comissões',
       },
       {
         title: 'Fechamento de Comissões',
         url: '/comercial/fechamento-comissoes',
         icon: ShieldCheck,
-        showRole: ['admin'],
+        permission: 'Acessar Fechamento de Comissões',
       },
       {
         title: 'Pacientes',
         url: '/comercial/pacientes',
         icon: Users,
-        showRole: ['admin', 'crc_comercial', 'visualizacao'],
+        permission: 'Acessar Pacientes',
       },
       {
         title: 'Negociação',
         url: '/comercial/negociacao',
         icon: Handshake,
-        showRole: ['admin', 'crc_comercial'],
+        permission: 'Acessar Negociações',
       },
     ],
   },
@@ -136,6 +137,50 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
+  const [permissions, setPermissions] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    const fetchPerms = async () => {
+      try {
+        const { data: userPerms } = await supabase
+          .from('usuario_permissoes')
+          .select('permissoes(nome)')
+          .eq('usuario_id', user.id)
+
+        const { data: userCargo } = await supabase
+          .from('usuarios')
+          .select('cargo_id, cargo_secundario_id')
+          .eq('id', user.id)
+          .single()
+
+        let cargoPerms: any[] = []
+        if (userCargo) {
+          const cargos = [userCargo.cargo_id, userCargo.cargo_secundario_id].filter(Boolean)
+          if (cargos.length > 0) {
+            const { data: cPerms } = await supabase
+              .from('cargo_permissoes')
+              .select('permissoes(nome)')
+              .in('cargo_id', cargos)
+            if (cPerms) cargoPerms = cPerms
+          }
+        }
+
+        const permSet = new Set<string>()
+        userPerms?.forEach((up: any) => {
+          if (up.permissoes?.nome) permSet.add(up.permissoes.nome)
+        })
+        cargoPerms?.forEach((cp: any) => {
+          if (cp.permissoes?.nome) permSet.add(cp.permissoes.nome)
+        })
+
+        setPermissions(Array.from(permSet))
+      } catch (error) {
+        console.error('Erro ao buscar permissoes', error)
+      }
+    }
+    fetchPerms()
+  }, [user])
 
   const handleLogout = async () => {
     await signOut()
@@ -167,7 +212,11 @@ export function AppSidebar() {
           }
 
           const filteredItems = group.items.filter((item: any) => {
-            if (item.showRole && !item.showRole.includes(role) && role !== 'admin') return false
+            if (role === 'admin') return true
+            if (item.permission) {
+              return permissions.includes(item.permission)
+            }
+            if (item.showRole && !item.showRole.includes(role)) return false
             return true
           })
 
