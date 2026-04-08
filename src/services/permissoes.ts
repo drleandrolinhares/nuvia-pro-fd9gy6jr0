@@ -42,7 +42,9 @@ export async function getPermissoes() {
 export async function getUsuariosComPermissoes() {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nome, email, cargo:cargos(nome), usuario_permissoes(permissao_id)')
+    .select(
+      'id, nome, email, cargo:cargos!usuarios_cargo_id_fkey(nome), usuario_permissoes(permissao_id)',
+    )
     .order('nome')
   if (error) throw error
   return data as unknown as UsuarioComPermissoes[]

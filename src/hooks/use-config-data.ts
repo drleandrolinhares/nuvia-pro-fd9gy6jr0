@@ -13,7 +13,9 @@ export function useConfigData() {
     setLoading(true)
     try {
       const [uRes, cRes, pRes] = await Promise.all([
-        supabase.from('usuarios').select('*, cargos(nome), colaboradores_detalhes(*)'),
+        supabase
+          .from('usuarios')
+          .select('*, cargos!usuarios_cargo_id_fkey(nome), colaboradores_detalhes(*)'),
         supabase.from('cargos').select('*, cargo_permissoes(permissao_id)'),
         supabase.from('permissoes').select('*'),
       ])
