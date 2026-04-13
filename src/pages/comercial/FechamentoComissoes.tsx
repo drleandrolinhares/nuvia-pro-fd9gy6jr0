@@ -74,7 +74,9 @@ export default function FechamentoComissoes() {
       let data = []
       try {
         data = (await faturamentoService.getFaturas()) || []
-      } catch (e) {}
+      } catch (e) {
+        // fallback em caso de erro no serviço legado
+      }
 
       // Se falhar ou estiver vazio (caso das faturas individuais), busca direto
       if (!data || data.length === 0) {
@@ -140,7 +142,9 @@ export default function FechamentoComissoes() {
       let data = []
       try {
         data = (await faturamentoService.getFaturaDetalhes(fatura)) || []
-      } catch (e) {}
+      } catch (e) {
+        // fallback em caso de erro no serviço legado
+      }
 
       if (!data || data.length === 0) {
         const { data: vendas } = await supabase
@@ -209,7 +213,9 @@ export default function FechamentoComissoes() {
           dataPagamento,
           observacaoPagamento,
         )
-      } catch (e) {}
+      } catch (e) {
+        // ignorar erro legado
+      }
 
       toast({ title: 'Sucesso', description: 'Fatura marcada como paga com sucesso!' })
       setSelectedFatura(null)
