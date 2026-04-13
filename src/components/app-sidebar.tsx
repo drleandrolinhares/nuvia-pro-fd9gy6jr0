@@ -86,12 +86,6 @@ const navData = [
         permission: 'Acessar Controle de Comissões',
       },
       {
-        title: 'Fechamento de Comissões',
-        url: '/comercial/fechamento-comissoes',
-        icon: ShieldCheck,
-        permission: 'Acessar Fechamento de Comissões',
-      },
-      {
         title: 'Pacientes',
         url: '/comercial/pacientes',
         icon: Users,

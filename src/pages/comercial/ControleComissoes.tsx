@@ -7,6 +7,7 @@ import { comissoesService } from '@/services/comissoes'
 import { useAuth } from '@/hooks/use-auth'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import FechamentoComissoes from './FechamentoComissoes'
 
 export default function ControleComissoes() {
   const { user, profile } = useAuth()
@@ -47,7 +48,7 @@ export default function ControleComissoes() {
   if (!activeTab) return null
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-6xl animate-fade-in">
+    <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="p-3 bg-amber-500/10 rounded-lg">
           <Landmark className="w-6 h-6 text-amber-500" />
@@ -64,7 +65,7 @@ export default function ControleComissoes() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 mb-6 h-auto">
+        <TabsList className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-4 mb-6 h-auto">
           {showMinhasComissoes && (
             <TabsTrigger value="minhas" className="py-2">
               {isAdmin ? 'Relatório Geral' : 'Minhas Comissões'}
@@ -78,6 +79,11 @@ export default function ControleComissoes() {
           {isAdmin && (
             <TabsTrigger value="crc" className="py-2">
               CRC Comercial
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="fechamento" className="py-2">
+              Fechamento
             </TabsTrigger>
           )}
         </TabsList>
@@ -118,6 +124,10 @@ export default function ControleComissoes() {
                   <FaixasManager service={comissoesService.crc} />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="fechamento" className="mt-0">
+              <FechamentoComissoes />
             </TabsContent>
           </>
         )}

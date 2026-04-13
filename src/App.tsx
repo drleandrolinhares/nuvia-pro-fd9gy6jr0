@@ -20,7 +20,6 @@ import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
-import FechamentoComissoes from './pages/comercial/FechamentoComissoes'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -190,14 +189,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]}>
               <ControleComissoes />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/comercial/fechamento-comissoes"
-          element={
-            <ProtectedRoute allowedRoles={[]}>
-              <FechamentoComissoes />
             </ProtectedRoute>
           }
         />
