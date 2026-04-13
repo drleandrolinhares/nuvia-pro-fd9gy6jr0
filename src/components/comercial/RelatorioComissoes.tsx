@@ -16,6 +16,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import { startOfMonth, startOfYear, startOfQuarter, format } from 'date-fns'
 import { Loader2, DollarSign } from 'lucide-react'
@@ -32,6 +42,11 @@ export function RelatorioComissoes({
   const [periodo, setPeriodo] = useState('mes')
   const [dados, setDados] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  const [fecharModalOpen, setFecharModalOpen] = useState(false)
+  const [vendaToClose, setVendaToClose] = useState<any>(null)
+  const [fechando, setFechando] = useState(false)
 
   useEffect(() => {
     fetchDados()
@@ -47,9 +62,12 @@ export function RelatorioComissoes({
 
       const [resVendas, resDentistas, resCrcs, resFaixasDentista, resFaixasCrc] = await Promise.all(
         [
-          supabase.from('vendas_confirmadas').select('*').gte('data_fechamento', inicioStr),
-          supabase.from('dentistas_avaliadores').select('id, nome'),
-          supabase.from('crc_comercial').select('id, nome'),
+          supabase
+            .from('vendas_confirmadas')
+            .select('*, faturas_comissoes(status_pagamento)')
+            .gte('data_fechamento', inicioStr),
+          supabase.from('dentistas_avaliadores').select('id, nome, usuario_id'),
+          supabase.from('crc_comercial').select('id, nome, usuario_id'),
           supabase.from('referencias_comissao_dentista').select('*'),
           supabase.from('referencias_comissao_crc').select('*'),
         ],
@@ -67,38 +85,49 @@ export function RelatorioComissoes({
       const isDentistaUser = !isAdmin && dentistaId && !crcId
 
       for (const v of resVendas.data || []) {
+        const statusFatura = v.faturas_comissoes?.status_pagamento
+        let statusStr = 'em_aberto'
+        if (v.fatura_comissao_id) {
+          statusStr = statusFatura === 'pago' ? 'pago' : 'aguardando_pagamento'
+        }
+
         if (v.dentista_avaliador && !isCrcUser) {
           if (isAdmin || dentistaId === v.dentista_avaliador) {
             const perc = getPercentual(resFaixasDentista.data || [], v.percentual_entrada)
+            const dentista = resDentistas.data?.find((d) => d.id === v.dentista_avaliador)
             formatado.push({
               id: `dentista-${v.id}`,
+              vendaId: v.id,
               tipo: 'Dentista Avaliador',
-              profissionalId: v.dentista_avaliador,
-              profissional:
-                resDentistas.data?.find((d) => d.id === v.dentista_avaliador)?.nome || 'N/A',
+              profissionalId: dentista?.usuario_id,
+              profissionalOriginalId: v.dentista_avaliador,
+              profissional: dentista?.nome || 'N/A',
               data: v.data_fechamento,
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
-              status: 'em_aberto',
+              status: statusStr,
             })
           }
         }
         if (v.crc && !isDentistaUser) {
           if (isAdmin || crcId === v.crc) {
             const perc = getPercentual(resFaixasCrc.data || [], v.percentual_entrada)
+            const crc = resCrcs.data?.find((c) => c.id === v.crc)
             formatado.push({
               id: `crc-${v.id}`,
+              vendaId: v.id,
               tipo: 'CRC Comercial',
-              profissionalId: v.crc,
-              profissional: resCrcs.data?.find((c) => c.id === v.crc)?.nome || 'N/A',
+              profissionalId: crc?.usuario_id,
+              profissionalOriginalId: v.crc,
+              profissional: crc?.nome || 'N/A',
               data: v.data_fechamento,
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
-              status: 'em_aberto',
+              status: statusStr,
             })
           }
         }
@@ -157,6 +186,74 @@ export function RelatorioComissoes({
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  const handleFecharFaturaClick = (row: any) => {
+    setVendaToClose(row)
+    setFecharModalOpen(true)
+  }
+
+  const confirmFecharFatura = async () => {
+    if (!vendaToClose) return
+    if (!vendaToClose.profissionalId) {
+      toast({
+        title: 'Erro',
+        description: 'O profissional não possui um usuário vinculado no sistema.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setFechando(true)
+    try {
+      const { data: faturamento, error: errFat } = await supabase
+        .from('faturamento_comissoes')
+        .insert({
+          periodo_inicio: vendaToClose.data,
+          periodo_fim: vendaToClose.data,
+          data_faturamento: new Date().toISOString().split('T')[0],
+          data_pagamento_prevista: new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single()
+      if (errFat) throw errFat
+
+      const { data: fatura, error: errFatura } = await supabase
+        .from('faturas_comissoes')
+        .insert({
+          faturamento_id: faturamento.id,
+          profissional_id: vendaToClose.profissionalId,
+          tipo_profissional: vendaToClose.tipo,
+          valor_total_comissao: vendaToClose.valor_comissao,
+          status_pagamento: 'em_aberto',
+        })
+        .select()
+        .single()
+      if (errFatura) throw errFatura
+
+      const { error: errVenda } = await supabase
+        .from('vendas_confirmadas')
+        .update({
+          fatura_comissao_id: fatura.id,
+          status_comissao: 'faturado',
+          percentual_comissao: vendaToClose.percentual,
+          valor_comissao: vendaToClose.valor_comissao,
+        })
+        .eq('id', vendaToClose.vendaId)
+      if (errVenda) throw errVenda
+
+      toast({
+        title: 'Fatura Fechada',
+        description: 'A comissão foi enviada para fechamento com sucesso.',
+      })
+      setFecharModalOpen(false)
+      setVendaToClose(null)
+      fetchDados()
+    } catch (e: any) {
+      toast({ title: 'Erro ao fechar fatura', description: e.message, variant: 'destructive' })
+    } finally {
+      setFechando(false)
+    }
+  }
+
   const [tG, tP, tA] = dados.reduce(
     (acc, curr) => {
       acc[0] += curr.valor_comissao
@@ -304,6 +401,7 @@ export function RelatorioComissoes({
                     <TableHead className="text-right">%</TableHead>
                     <TableHead className="text-right">Comissão</TableHead>
                     <TableHead>Status</TableHead>
+                    {isAdmin && <TableHead className="text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -327,16 +425,43 @@ export function RelatorioComissoes({
                         {formatCurrency(row.valor_comissao)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                          Em Aberto
+                        <Badge
+                          variant="secondary"
+                          className={
+                            row.status === 'pago'
+                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                              : row.status === 'aguardando_pagamento'
+                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                          }
+                        >
+                          {row.status === 'pago'
+                            ? 'Pago'
+                            : row.status === 'aguardando_pagamento'
+                              ? 'Aguardando Pagamento'
+                              : 'Em Aberto'}
                         </Badge>
                       </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-right">
+                          {row.status === 'em_aberto' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() => handleFecharFaturaClick(row)}
+                            >
+                              Fechar Fatura
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                   {dados.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={isAdmin ? 7 : 6}
+                        colSpan={isAdmin ? 8 : 6}
                         className="text-center py-6 text-muted-foreground"
                       >
                         Nenhuma comissão encontrada.
@@ -349,6 +474,64 @@ export function RelatorioComissoes({
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={fecharModalOpen} onOpenChange={setFecharModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Fechamento de Fatura</DialogTitle>
+            <DialogDescription>
+              Verifique os dados abaixo antes de fechar a fatura desta comissão individual.
+            </DialogDescription>
+          </DialogHeader>
+          {vendaToClose && (
+            <div className="space-y-4 py-4">
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-muted-foreground">Profissional:</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {vendaToClose.profissional}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-muted-foreground">Paciente:</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {vendaToClose.paciente}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-muted-foreground">Valor da Venda:</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {formatCurrency(vendaToClose.valor_venda)}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-muted-foreground">% Comissão:</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {vendaToClose.percentual}%
+                </span>
+              </div>
+              <div className="flex justify-between font-bold text-lg pt-2">
+                <span className="text-slate-900 dark:text-slate-100">Total a Pagar:</span>
+                <span className="text-emerald-600 dark:text-emerald-500">
+                  {formatCurrency(vendaToClose.valor_comissao)}
+                </span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFecharModalOpen(false)} disabled={fechando}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmFecharFatura}
+              disabled={fechando}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {fechando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Confirmar Fechamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
