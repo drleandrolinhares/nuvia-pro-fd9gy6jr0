@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { saveColaborador, getColaboradorDetalhes } from '@/services/usuarios'
+import { supabase } from '@/lib/supabase/client'
 import { colaboradorSchema, ColaboradorFormData } from './colaborador-schema'
 
 const Field = ({ label, error, children }: any) => (
@@ -37,6 +38,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('pessoal')
+  const [showPassword, setShowPassword] = useState(false)
   const isEdit = !!usuario
 
   const {
@@ -93,6 +95,14 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
         }),
       }
       await saveColaborador(payload, isEdit)
+
+      if (isEdit && data.password && data.password.trim() !== '') {
+        const { error: pwError } = await supabase.functions.invoke('update-user-password', {
+          body: { userId: usuario.id, password: data.password },
+        })
+        if (pwError) throw new Error(pwError.message || 'Erro ao atualizar a senha')
+      }
+
       toast.success(`Colaborador ${isEdit ? 'atualizado' : 'cadastrado'} com sucesso!`)
       onSuccess()
       onClose()
@@ -156,15 +166,29 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                     <Input type="email" disabled={isEdit} {...register('email')} />
                   </Field>
                   <Field
-                    label={isEdit ? 'Senha (não alterável aqui)' : 'Senha Temporária *'}
+                    label={isEdit ? 'Nova Senha (opcional)' : 'Senha Temporária *'}
                     error={errors.password}
                   >
-                    <Input
-                      type="password"
-                      {...register('password')}
-                      disabled={isEdit}
-                      placeholder={isEdit ? '***' : ''}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        {...register('password')}
+                        placeholder={isEdit ? 'Digite para alterar a senha' : ''}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </Field>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
