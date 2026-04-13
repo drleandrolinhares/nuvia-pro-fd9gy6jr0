@@ -65,25 +65,20 @@ export default function ControleComissoes() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-4 mb-6 h-auto">
+        <TabsList className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-3 mb-6 h-auto">
           {showMinhasComissoes && (
             <TabsTrigger value="minhas" className="py-2">
               {isAdmin ? 'Relatório Geral' : 'Minhas Comissões'}
             </TabsTrigger>
           )}
           {isAdmin && (
-            <TabsTrigger value="dentista" className="py-2">
-              Dentista Avaliador
-            </TabsTrigger>
-          )}
-          {isAdmin && (
-            <TabsTrigger value="crc" className="py-2">
-              CRC Comercial
-            </TabsTrigger>
-          )}
-          {isAdmin && (
             <TabsTrigger value="fechamento" className="py-2">
               Fechamento
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="configuracoes" className="py-2">
+              Configurações
             </TabsTrigger>
           )}
         </TabsList>
@@ -96,38 +91,57 @@ export default function ControleComissoes() {
 
         {isAdmin && (
           <>
-            <TabsContent value="dentista" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Referências - Dentista Avaliador</CardTitle>
-                  <CardDescription>
-                    Configure as faixas de comissionamento baseadas no percentual de entrada
-                    recebido do paciente.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <FaixasManager service={comissoesService.dentista} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="crc" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Referências - CRC Comercial</CardTitle>
-                  <CardDescription>
-                    Configure as faixas de comissionamento para a equipe de Relacionamento
-                    Comercial.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <FaixasManager service={comissoesService.crc} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="fechamento" className="mt-0">
               <FechamentoComissoes />
+            </TabsContent>
+
+            <TabsContent value="configuracoes" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Configurações de Comissões</CardTitle>
+                  <CardDescription>
+                    Gerencie as faixas e regras de comissionamento para a equipe comercial.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="dentista" className="w-full">
+                    <TabsList className="w-full grid grid-cols-1 md:grid-cols-2 mb-6 h-auto">
+                      <TabsTrigger value="dentista" className="py-2">
+                        Dentista Avaliador
+                      </TabsTrigger>
+                      <TabsTrigger value="crc" className="py-2">
+                        CRC Comercial
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dentista" className="mt-0 space-y-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                          Referências - Dentista Avaliador
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Configure as faixas de comissionamento baseadas no percentual de entrada
+                          recebido do paciente.
+                        </p>
+                      </div>
+                      <FaixasManager service={comissoesService.dentista} />
+                    </TabsContent>
+
+                    <TabsContent value="crc" className="mt-0 space-y-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                          Referências - CRC Comercial
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Configure as faixas de comissionamento para a equipe de Relacionamento
+                          Comercial.
+                        </p>
+                      </div>
+                      <FaixasManager service={comissoesService.crc} />
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
             </TabsContent>
           </>
         )}
