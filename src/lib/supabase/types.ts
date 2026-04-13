@@ -1523,14 +1523,18 @@ export type Database = {
           data_fechamento: string
           data_original: string | null
           dentista_avaliador: string | null
+          fatura_comissao_id: string | null
           id: string
           observacoes: string | null
           observacoes_fechamento: string | null
           oportunidade_id: string
           paciente_nome: string
+          percentual_comissao: number | null
           percentual_entrada: number
+          status_comissao: string | null
           telefone: string | null
           tratamento: string | null
+          valor_comissao: number | null
           valor_entrada: number
           valor_tratamento: number
         }
@@ -1541,14 +1545,18 @@ export type Database = {
           data_fechamento: string
           data_original?: string | null
           dentista_avaliador?: string | null
+          fatura_comissao_id?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
           oportunidade_id: string
           paciente_nome: string
+          percentual_comissao?: number | null
           percentual_entrada: number
+          status_comissao?: string | null
           telefone?: string | null
           tratamento?: string | null
+          valor_comissao?: number | null
           valor_entrada: number
           valor_tratamento: number
         }
@@ -1559,14 +1567,18 @@ export type Database = {
           data_fechamento?: string
           data_original?: string | null
           dentista_avaliador?: string | null
+          fatura_comissao_id?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
           oportunidade_id?: string
           paciente_nome?: string
+          percentual_comissao?: number | null
           percentual_entrada?: number
+          status_comissao?: string | null
           telefone?: string | null
           tratamento?: string | null
+          valor_comissao?: number | null
           valor_entrada?: number
           valor_tratamento?: number
         }
@@ -1583,6 +1595,13 @@ export type Database = {
             columns: ['dentista_avaliador']
             isOneToOne: false
             referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_confirmadas_fatura_comissao_id_fkey'
+            columns: ['fatura_comissao_id']
+            isOneToOne: false
+            referencedRelation: 'faturas_comissoes'
             referencedColumns: ['id']
           },
           {
@@ -2082,6 +2101,10 @@ export const Constants = {
 //   observacoes_fechamento: text (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   fatura_comissao_id: uuid (nullable)
+//   status_comissao: text (nullable, default: 'em_aberto'::text)
+//   percentual_comissao: numeric (nullable)
+//   valor_comissao: numeric (nullable)
 
 // --- CONSTRAINTS ---
 // Table: avaliacoes
@@ -2220,6 +2243,7 @@ export const Constants = {
 // Table: vendas_confirmadas
 //   FOREIGN KEY vendas_confirmadas_crc_fkey: FOREIGN KEY (crc) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_dentista_avaliador_fkey: FOREIGN KEY (dentista_avaliador) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   FOREIGN KEY vendas_confirmadas_fatura_comissao_id_fkey: FOREIGN KEY (fatura_comissao_id) REFERENCES faturas_comissoes(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_oportunidade_id_fkey: FOREIGN KEY (oportunidade_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
 //   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
 

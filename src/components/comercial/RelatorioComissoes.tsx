@@ -27,8 +27,9 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
-import { startOfMonth, startOfYear, startOfQuarter, format } from 'date-fns'
-import { Loader2, DollarSign } from 'lucide-react'
+import { startOfMonth, endOfMonth, format, subMonths, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { Loader2, DollarSign, CalendarIcon } from 'lucide-react'
 
 export function RelatorioComissoes({
   isAdmin,
@@ -39,33 +40,44 @@ export function RelatorioComissoes({
   dentistaId: string | null
   crcId: string | null
 }) {
-  const [periodo, setPeriodo] = useState('mes')
-  const [dados, setDados] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
+  const mesesOptions = useMemo(() => {
+    return Array.from({ length: 12 }).map((_, i) => {
+      const d = subMonths(new Date(), i)
+      return {
+        value: format(d, 'yyyy-MM'),
+        label: format(d, 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+      }
+    })
+  }, [])
+
+  const [mesCompetencia, setMesCompetencia] = useState(format(new Date(), 'yyyy-MM'))
+  const [dados, setDados] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
   const [fecharModalOpen, setFecharModalOpen] = useState(false)
-  const [vendaToClose, setVendaToClose] = useState<any>(null)
+  const [profToClose, setProfToClose] = useState<any>(null)
   const [fechando, setFechando] = useState(false)
 
   useEffect(() => {
     fetchDados()
-  }, [periodo, isAdmin, dentistaId, crcId])
+  }, [mesCompetencia, isAdmin, dentistaId, crcId])
 
   const fetchDados = async () => {
     setLoading(true)
     try {
-      let dataInicio = startOfMonth(new Date())
-      if (periodo === 'trimestre') dataInicio = startOfQuarter(new Date())
-      if (periodo === 'ano') dataInicio = startOfYear(new Date())
-      const inicioStr = format(dataInicio, 'yyyy-MM-dd')
+      const dataInicio = parseISO(`${mesCompetencia}-01`)
+      const inicioStr = format(startOfMonth(dataInicio), 'yyyy-MM-dd')
+      const fimStr = format(endOfMonth(dataInicio), 'yyyy-MM-dd')
 
       const [resVendas, resDentistas, resCrcs, resFaixasDentista, resFaixasCrc] = await Promise.all(
         [
           supabase
             .from('vendas_confirmadas')
             .select('*, faturas_comissoes(status_pagamento)')
-            .gte('data_fechamento', inicioStr),
+            .gte('data_fechamento', inicioStr)
+            .lte('data_fechamento', fimStr),
           supabase.from('dentistas_avaliadores').select('id, nome, usuario_id'),
           supabase.from('crc_comercial').select('id, nome, usuario_id'),
           supabase.from('referencias_comissao_dentista').select('*'),
@@ -141,44 +153,54 @@ export function RelatorioComissoes({
   }
 
   const resumoAvaliadores = useMemo(() => {
-    const res = new Map<
-      string,
-      { nome: string; totalVendas: number; totalComissao: number; qtde: number }
-    >()
+    const res = new Map<string, any>()
     dados
       .filter((d) => d.tipo === 'Dentista Avaliador')
       .forEach((d) => {
         const c = res.get(d.profissionalId) || {
+          profissionalId: d.profissionalId,
+          tipo: d.tipo,
           nome: d.profissional,
           totalVendas: 0,
           totalComissao: 0,
           qtde: 0,
+          vendasAbertas: [],
+          totalComissaoAberta: 0,
         }
         c.totalVendas += d.valor_venda
         c.totalComissao += d.valor_comissao
         c.qtde += 1
+        if (d.status === 'em_aberto') {
+          c.vendasAbertas.push(d)
+          c.totalComissaoAberta += d.valor_comissao
+        }
         res.set(d.profissionalId, c)
       })
     return Array.from(res.values()).sort((a, b) => b.totalComissao - a.totalComissao)
   }, [dados])
 
   const resumoCrc = useMemo(() => {
-    const res = new Map<
-      string,
-      { nome: string; totalVendas: number; totalComissao: number; qtde: number }
-    >()
+    const res = new Map<string, any>()
     dados
       .filter((d) => d.tipo === 'CRC Comercial')
       .forEach((d) => {
         const c = res.get(d.profissionalId) || {
+          profissionalId: d.profissionalId,
+          tipo: d.tipo,
           nome: d.profissional,
           totalVendas: 0,
           totalComissao: 0,
           qtde: 0,
+          vendasAbertas: [],
+          totalComissaoAberta: 0,
         }
         c.totalVendas += d.valor_venda
         c.totalComissao += d.valor_comissao
         c.qtde += 1
+        if (d.status === 'em_aberto') {
+          c.vendasAbertas.push(d)
+          c.totalComissaoAberta += d.valor_comissao
+        }
         res.set(d.profissionalId, c)
       })
     return Array.from(res.values()).sort((a, b) => b.totalComissao - a.totalComissao)
@@ -186,14 +208,15 @@ export function RelatorioComissoes({
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-  const handleFecharFaturaClick = (row: any) => {
-    setVendaToClose(row)
+
+  const handleFecharFaturaProfissional = (prof: any) => {
+    setProfToClose(prof)
     setFecharModalOpen(true)
   }
 
   const confirmFecharFatura = async () => {
-    if (!vendaToClose) return
-    if (!vendaToClose.profissionalId) {
+    if (!profToClose) return
+    if (!profToClose.profissionalId) {
       toast({
         title: 'Erro',
         description: 'O profissional não possui um usuário vinculado no sistema.',
@@ -204,13 +227,18 @@ export function RelatorioComissoes({
 
     setFechando(true)
     try {
+      const dataInicio = parseISO(`${mesCompetencia}-01`)
+      const inicioStr = format(startOfMonth(dataInicio), 'yyyy-MM-dd')
+      const fimStr = format(endOfMonth(dataInicio), 'yyyy-MM-dd')
+      const dataFaturamento = format(new Date(), 'yyyy-MM-dd')
+
       const { data: faturamento, error: errFat } = await supabase
         .from('faturamento_comissoes')
         .insert({
-          periodo_inicio: vendaToClose.data,
-          periodo_fim: vendaToClose.data,
-          data_faturamento: new Date().toISOString().split('T')[0],
-          data_pagamento_prevista: new Date().toISOString().split('T')[0],
+          periodo_inicio: inicioStr,
+          periodo_fim: fimStr,
+          data_faturamento: dataFaturamento,
+          data_pagamento_prevista: dataFaturamento,
         })
         .select()
         .single()
@@ -220,32 +248,34 @@ export function RelatorioComissoes({
         .from('faturas_comissoes')
         .insert({
           faturamento_id: faturamento.id,
-          profissional_id: vendaToClose.profissionalId,
-          tipo_profissional: vendaToClose.tipo,
-          valor_total_comissao: vendaToClose.valor_comissao,
+          profissional_id: profToClose.profissionalId,
+          tipo_profissional: profToClose.tipo,
+          valor_total_comissao: profToClose.totalComissaoAberta,
           status_pagamento: 'em_aberto',
         })
         .select()
         .single()
       if (errFatura) throw errFatura
 
-      const { error: errVenda } = await supabase
-        .from('vendas_confirmadas')
-        .update({
-          fatura_comissao_id: fatura.id,
-          status_comissao: 'faturado',
-          percentual_comissao: vendaToClose.percentual,
-          valor_comissao: vendaToClose.valor_comissao,
-        })
-        .eq('id', vendaToClose.vendaId)
-      if (errVenda) throw errVenda
+      for (const v of profToClose.vendasAbertas) {
+        const { error: errVenda } = await supabase
+          .from('vendas_confirmadas')
+          .update({
+            fatura_comissao_id: fatura.id,
+            status_comissao: 'faturado',
+            percentual_comissao: v.percentual,
+            valor_comissao: v.valor_comissao,
+          })
+          .eq('id', v.vendaId)
+        if (errVenda) throw errVenda
+      }
 
       toast({
         title: 'Fatura Fechada',
-        description: 'A comissão foi enviada para fechamento com sucesso.',
+        description: 'As comissões foram enviadas para fechamento com sucesso.',
       })
       setFecharModalOpen(false)
-      setVendaToClose(null)
+      setProfToClose(null)
       fetchDados()
     } catch (e: any) {
       toast({ title: 'Erro ao fechar fatura', description: e.message, variant: 'destructive' })
@@ -264,13 +294,43 @@ export function RelatorioComissoes({
     [0, 0, 0],
   )
 
+  const competenciaLabel = mesesOptions.find((m) => m.value === mesCompetencia)?.label
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-slate-100 rounded-lg">
+            <CalendarIcon className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-800">Competência</h2>
+            <p className="text-xs text-slate-500">
+              Selecione o mês para visualizar e fechar faturas
+            </p>
+          </div>
+        </div>
+        <div className="w-full sm:w-64">
+          <Select value={mesCompetencia} onValueChange={setMesCompetencia}>
+            <SelectTrigger className="bg-white font-medium">
+              <SelectValue placeholder="Mês de Competência" />
+            </SelectTrigger>
+            <SelectContent>
+              {mesesOptions.map((m) => (
+                <SelectItem key={m.value} value={m.value}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-50 dark:bg-slate-900">
+        <Card className="bg-slate-50 dark:bg-slate-900 border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">
-              Total Gerado (Período)
+              Total Gerado ({competenciaLabel})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -308,10 +368,10 @@ export function RelatorioComissoes({
                 {resumoAvaliadores.map((r) => (
                   <Card key={r.nome} className="bg-primary/5 border-primary/20 shadow-sm">
                     <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-bold text-primary uppercase">
+                      <CardTitle className="text-sm font-bold text-primary uppercase line-clamp-1">
                         {r.nome}
                       </CardTitle>
-                      <DollarSign className="h-4 w-4 text-primary" />
+                      <DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 space-y-1.5">
                       <div className="flex justify-between text-sm">
@@ -322,6 +382,23 @@ export function RelatorioComissoes({
                         <span className="text-primary">Comissão Gerada:</span>
                         <span className="text-primary">{formatCurrency(r.totalComissao)}</span>
                       </div>
+                      {isAdmin && r.vendasAbertas.length > 0 && (
+                        <div className="pt-3 border-t border-primary/10 mt-3 space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-amber-600 font-medium">Em Aberto:</span>
+                            <span className="text-amber-600 font-bold">
+                              {formatCurrency(r.totalComissaoAberta)}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
+                            onClick={() => handleFecharFaturaProfissional(r)}
+                          >
+                            Fechar Fatura do Mês
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -341,10 +418,10 @@ export function RelatorioComissoes({
                     className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900 shadow-sm"
                   >
                     <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase">
+                      <CardTitle className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase line-clamp-1">
                         {r.nome}
                       </CardTitle>
-                      <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+                      <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 space-y-1.5">
                       <div className="flex justify-between text-sm">
@@ -359,6 +436,23 @@ export function RelatorioComissoes({
                           {formatCurrency(r.totalComissao)}
                         </span>
                       </div>
+                      {isAdmin && r.vendasAbertas.length > 0 && (
+                        <div className="pt-3 border-t border-emerald-200/50 mt-3 space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-amber-600 font-medium">Em Aberto:</span>
+                            <span className="text-amber-600 font-bold">
+                              {formatCurrency(r.totalComissaoAberta)}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
+                            onClick={() => handleFecharFaturaProfissional(r)}
+                          >
+                            Fechar Fatura do Mês
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -369,20 +463,8 @@ export function RelatorioComissoes({
       )}
 
       <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <CardTitle>Histórico de Comissões</CardTitle>
-          <div className="w-full md:w-48">
-            <Select value={periodo} onValueChange={setPeriodo}>
-              <SelectTrigger>
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mes">Mês Atual</SelectItem>
-                <SelectItem value="trimestre">Neste Trimestre</SelectItem>
-                <SelectItem value="ano">Neste Ano</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <CardHeader>
+          <CardTitle>Histórico de Comissões ({competenciaLabel})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -394,14 +476,13 @@ export function RelatorioComissoes({
               <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
+                    <TableHead>Data Venda</TableHead>
                     {isAdmin && <TableHead>Profissional</TableHead>}
                     <TableHead>Paciente</TableHead>
-                    <TableHead className="text-right">Venda</TableHead>
-                    <TableHead className="text-right">%</TableHead>
+                    <TableHead className="text-right">Valor Venda</TableHead>
+                    <TableHead className="text-right">% Comis.</TableHead>
                     <TableHead className="text-right">Comissão</TableHead>
                     <TableHead>Status</TableHead>
-                    {isAdmin && <TableHead className="text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -442,29 +523,15 @@ export function RelatorioComissoes({
                               : 'Em Aberto'}
                         </Badge>
                       </TableCell>
-                      {isAdmin && (
-                        <TableCell className="text-right">
-                          {row.status === 'em_aberto' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8"
-                              onClick={() => handleFecharFaturaClick(row)}
-                            >
-                              Fechar Fatura
-                            </Button>
-                          )}
-                        </TableCell>
-                      )}
                     </TableRow>
                   ))}
                   {dados.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={isAdmin ? 8 : 6}
+                        colSpan={isAdmin ? 7 : 6}
                         className="text-center py-6 text-muted-foreground"
                       >
-                        Nenhuma comissão encontrada.
+                        Nenhuma comissão encontrada para o período selecionado.
                       </TableCell>
                     </TableRow>
                   )}
@@ -476,57 +543,105 @@ export function RelatorioComissoes({
       </Card>
 
       <Dialog open={fecharModalOpen} onOpenChange={setFecharModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Fechamento de Fatura</DialogTitle>
-            <DialogDescription>
-              Verifique os dados abaixo antes de fechar a fatura desta comissão individual.
-            </DialogDescription>
-          </DialogHeader>
-          {vendaToClose && (
-            <div className="space-y-4 py-4">
-              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="text-muted-foreground">Profissional:</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {vendaToClose.profissional}
-                </span>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+          <div className="p-6 pb-4">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Conferência de Fatura Mensal</DialogTitle>
+              <DialogDescription className="text-base text-slate-600">
+                Revise as comissões consolidadas antes de enviar para pagamento.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          {profToClose && (
+            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-50 rounded-xl border border-slate-100">
+                <div>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+                    Profissional
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">{profToClose.nome}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+                    Competência
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">{competenciaLabel}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+                    Qtd. Vendas
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {profToClose.vendasAbertas.length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+                    Total a Pagar
+                  </p>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {formatCurrency(profToClose.totalComissaoAberta)}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="text-muted-foreground">Paciente:</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {vendaToClose.paciente}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="text-muted-foreground">Valor da Venda:</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {formatCurrency(vendaToClose.valor_venda)}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="text-muted-foreground">% Comissão:</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {vendaToClose.percentual}%
-                </span>
-              </div>
-              <div className="flex justify-between font-bold text-lg pt-2">
-                <span className="text-slate-900 dark:text-slate-100">Total a Pagar:</span>
-                <span className="text-emerald-600 dark:text-emerald-500">
-                  {formatCurrency(vendaToClose.valor_comissao)}
-                </span>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  Detalhamento das Vendas
+                </h3>
+                <div className="rounded-lg border border-slate-200 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50/80">
+                        <TableHead className="font-semibold text-slate-700">Data</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Paciente</TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">
+                          Valor Venda
+                        </TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">
+                          % Comis.
+                        </TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">
+                          Valor Comis.
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {profToClose.vendasAbertas.map((v: any) => (
+                        <TableRow key={v.id} className="hover:bg-slate-50">
+                          <TableCell className="text-slate-600">
+                            {new Date(v.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                          </TableCell>
+                          <TableCell className="font-medium text-slate-700">{v.paciente}</TableCell>
+                          <TableCell className="text-right text-slate-600">
+                            {formatCurrency(v.valor_venda)}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-600">
+                            {v.percentual}%
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-emerald-600">
+                            {formatCurrency(v.valor_comissao)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
+
+          <DialogFooter className="p-6 pt-4 border-t bg-slate-50 mt-auto">
             <Button variant="outline" onClick={() => setFecharModalOpen(false)} disabled={fechando}>
               Cancelar
             </Button>
             <Button
               onClick={confirmFecharFatura}
               disabled={fechando}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-sm"
             >
-              {fechando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {fechando ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
               Confirmar Fechamento
             </Button>
           </DialogFooter>

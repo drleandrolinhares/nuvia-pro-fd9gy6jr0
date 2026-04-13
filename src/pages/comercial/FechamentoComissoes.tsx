@@ -1,12 +1,5 @@
-import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
+import { useState, useEffect, useMemo } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,10 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, DollarSign, CalendarIcon, FileText } from 'lucide-react'
+import { Loader2, DollarSign, FileText } from 'lucide-react'
 import { faturamentoService } from '@/services/faturamento'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
+import { startOfMonth, endOfMonth, format, subMonths, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 export default function FechamentoComissoes() {
   const { toast } = useToast()
@@ -47,13 +42,19 @@ export default function FechamentoComissoes() {
   const [loading, setLoading] = useState(true)
   const [faturas, setFaturas] = useState<any[]>([])
 
-  // Form de Faturamento
-  const [inicio, setInicio] = useState('')
-  const [fim, setFim] = useState('')
-  const [prevista, setPrevista] = useState('')
-  const [faturando, setFaturando] = useState(false)
+  const mesesOptions = useMemo(() => {
+    return Array.from({ length: 12 }).map((_, i) => {
+      const d = subMonths(new Date(), i)
+      return {
+        value: format(d, 'yyyy-MM'),
+        label: format(d, 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+      }
+    })
+  }, [])
 
-  // Detalhes do Modal
+  const [mesFiltro, setMesFiltro] = useState('todos')
+  const [statusFiltro, setStatusFiltro] = useState<string>('todas')
+
   const [selectedFatura, setSelectedFatura] = useState<any>(null)
   const [detalhes, setDetalhes] = useState<any[]>([])
   const [loadingDetalhes, setLoadingDetalhes] = useState(false)
@@ -61,73 +62,36 @@ export default function FechamentoComissoes() {
   const [dataPagamento, setDataPagamento] = useState('')
   const [observacaoPagamento, setObservacaoPagamento] = useState('')
   const [pagando, setPagando] = useState(false)
-  const [statusFiltro, setStatusFiltro] = useState<string>('todas')
 
   useEffect(() => {
     loadFaturas()
-  }, [])
+  }, [mesFiltro])
 
   const loadFaturas = async () => {
     setLoading(true)
     try {
-      // Tenta usar o serviço legado para compatibilidade
-      let data = []
-      try {
-        data = (await faturamentoService.getFaturas()) || []
-      } catch (e) {
-        // fallback em caso de erro no serviço legado
+      let query = supabase
+        .from('faturas_comissoes')
+        .select('*, faturamento_comissoes!inner(*), usuarios(nome)')
+        .order('criado_em', { ascending: false })
+
+      if (mesFiltro !== 'todos') {
+        const dataInicio = parseISO(`${mesFiltro}-01`)
+        const inicioStr = format(startOfMonth(dataInicio), 'yyyy-MM-dd')
+        const fimStr = format(endOfMonth(dataInicio), 'yyyy-MM-dd')
+        query = query
+          .gte('faturamento_comissoes.periodo_inicio', inicioStr)
+          .lte('faturamento_comissoes.periodo_inicio', fimStr)
       }
 
-      // Se falhar ou estiver vazio (caso das faturas individuais), busca direto
-      if (!data || data.length === 0) {
-        const res = await supabase
-          .from('faturas_comissoes')
-          .select('*, faturamento_comissoes(*), usuarios(nome)')
-          .order('criado_em', { ascending: false })
-        if (res.data) data = res.data
-      }
+      const res = await query
+      if (res.error) throw res.error
 
-      setFaturas(data || [])
+      setFaturas(res.data || [])
     } catch (error: any) {
       toast({ title: 'Erro ao buscar faturas', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleFaturar = async () => {
-    if (!inicio || !fim || !prevista) {
-      toast({
-        title: 'Atenção',
-        description: 'Preencha todos os campos de período.',
-        variant: 'destructive',
-      })
-      return
-    }
-    if (new Date(inicio) > new Date(fim)) {
-      toast({
-        title: 'Atenção',
-        description: 'Data de início não pode ser maior que o fim.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setFaturando(true)
-    try {
-      const res = await faturamentoService.faturar(inicio, fim, prevista)
-      toast({
-        title: 'Faturamento Concluído',
-        description: `${res.profissionaisCount} profissionais faturados, total de ${formatCurrency(res.totalGeral)}.`,
-      })
-      setInicio('')
-      setFim('')
-      setPrevista('')
-      loadFaturas()
-    } catch (error: any) {
-      toast({ title: 'Erro ao faturar', description: error.message, variant: 'destructive' })
-    } finally {
-      setFaturando(false)
     }
   }
 
@@ -227,78 +191,57 @@ export default function FechamentoComissoes() {
     }
   }
 
-  const faturasFiltradas = faturas.filter(
-    (f) => statusFiltro === 'todas' || f.status_pagamento === statusFiltro,
-  )
+  const faturasFinais = faturas.filter((f) => {
+    const statusMatch = statusFiltro === 'todas' || f.status_pagamento === statusFiltro
+    return statusMatch
+  })
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
+
   const formatDate = (val: string) => {
     if (!val) return '-'
     const [y, m, d] = val.split('-')
     return `${d}/${m}/${y}`
   }
 
+  const getCompetenciaLabel = (inicioStr: string) => {
+    if (!inicioStr) return '-'
+    const date = parseISO(inicioStr)
+    return format(date, 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase())
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {isAdmin && (
-        <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <CalendarIcon className="h-5 w-5 text-amber-500" />
-              Configuração de Período
-            </CardTitle>
-            <CardDescription>
-              Defina o período de vendas concluídas para gerar o fechamento consolidado.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label>Período de Aquisição (Início)</Label>
-                <Input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Período de Aquisição (Fim)</Label>
-                <Input type="date" value={fim} onChange={(e) => setFim(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Data Prevista de Pagamento</Label>
-                <Input type="date" value={prevista} onChange={(e) => setPrevista(e.target.value)} />
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end bg-slate-50/50 pt-4 border-t border-slate-100">
-            <Button
-              onClick={handleFaturar}
-              disabled={faturando}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
-            >
-              {faturando ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4 mr-2" />
-              )}
-              FATURAR PERÍODO
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-
       <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-lg">Faturas Geradas</CardTitle>
-            <CardDescription>Histórico de todos os faturamentos de comissões.</CardDescription>
+            <CardTitle className="text-lg">Controle de Pagamentos</CardTitle>
+            <CardDescription>
+              Gerencie as faturas consolidadas prontas para pagamento.
+            </CardDescription>
           </div>
-          <div className="w-48">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <Select value={mesFiltro} onValueChange={setMesFiltro}>
+              <SelectTrigger className="bg-white w-full sm:w-56">
+                <SelectValue placeholder="Competência" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as Competências</SelectItem>
+                {mesesOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-white w-full sm:w-48">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todas">Todas as Faturas</SelectItem>
-                <SelectItem value="em_aberto">Em Aberto</SelectItem>
+                <SelectItem value="todas">Todos os Status</SelectItem>
+                <SelectItem value="em_aberto">Aguardando Pagamento</SelectItem>
                 <SelectItem value="pago">Pagas</SelectItem>
               </SelectContent>
             </Select>
@@ -309,9 +252,9 @@ export default function FechamentoComissoes() {
             <div className="flex justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
-          ) : faturasFiltradas.length === 0 ? (
+          ) : faturasFinais.length === 0 ? (
             <div className="text-center p-8 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-              Nenhuma fatura encontrada para o filtro selecionado.
+              Nenhuma fatura encontrada para os filtros selecionados.
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">
@@ -319,15 +262,15 @@ export default function FechamentoComissoes() {
                 <TableHeader>
                   <TableRow className="bg-slate-50">
                     <TableHead>Profissional</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Período Faturado</TableHead>
-                    <TableHead className="text-right">Total Comissão</TableHead>
+                    <TableHead>Competência</TableHead>
+                    <TableHead>Período Base</TableHead>
+                    <TableHead className="text-right">Total a Pagar</TableHead>
                     <TableHead>Pagamento</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {faturasFiltradas.map((f: any) => (
+                  {faturasFinais.map((f: any) => (
                     <TableRow
                       key={f.id}
                       className="cursor-pointer hover:bg-slate-50/80 transition-colors"
@@ -336,12 +279,14 @@ export default function FechamentoComissoes() {
                       <TableCell className="font-medium">
                         {f.usuarios?.nome || 'Desconhecido'}
                       </TableCell>
-                      <TableCell className="text-slate-600">{f.tipo_profissional}</TableCell>
-                      <TableCell className="text-slate-600">
+                      <TableCell className="text-slate-600 font-medium capitalize">
+                        {getCompetenciaLabel(f.faturamento_comissoes?.periodo_inicio)}
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-sm">
                         {formatDate(f.faturamento_comissoes?.periodo_inicio)} a{' '}
                         {formatDate(f.faturamento_comissoes?.periodo_fim)}
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-emerald-600">
+                      <TableCell className="text-right font-bold text-emerald-600">
                         {formatCurrency(f.valor_total_comissao)}
                       </TableCell>
                       <TableCell>
@@ -364,7 +309,7 @@ export default function FechamentoComissoes() {
                               : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                           }
                         >
-                          {f.status_pagamento === 'pago' ? 'Pago' : 'Em Aberto'}
+                          {f.status_pagamento === 'pago' ? 'Pago' : 'Aguardando'}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -380,7 +325,7 @@ export default function FechamentoComissoes() {
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
           <div className="p-6 pb-4">
             <DialogHeader>
-              <DialogTitle className="text-xl">Detalhes da Fatura</DialogTitle>
+              <DialogTitle className="text-xl">Detalhes da Fatura Consolidada</DialogTitle>
               <DialogDescription className="text-base text-slate-600">
                 <span className="font-semibold text-slate-900">
                   {selectedFatura?.usuarios?.nome}
@@ -394,16 +339,15 @@ export default function FechamentoComissoes() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-50 rounded-xl border border-slate-100">
               <div>
                 <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-                  Período Referência
+                  Competência
                 </p>
-                <p className="text-sm font-semibold text-slate-900">
-                  {formatDate(selectedFatura?.faturamento_comissoes?.periodo_inicio)} a{' '}
-                  {formatDate(selectedFatura?.faturamento_comissoes?.periodo_fim)}
+                <p className="text-sm font-semibold text-slate-900 capitalize">
+                  {getCompetenciaLabel(selectedFatura?.faturamento_comissoes?.periodo_inicio)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-                  Vencimento
+                  Vencimento Previsto
                 </p>
                 <p className="text-sm font-semibold text-slate-900">
                   {formatDate(selectedFatura?.faturamento_comissoes?.data_pagamento_prevista)}
@@ -411,7 +355,7 @@ export default function FechamentoComissoes() {
               </div>
               <div>
                 <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-                  Total a Receber
+                  Total a Pagar
                 </p>
                 <p className="text-xl font-bold text-emerald-600">
                   {formatCurrency(selectedFatura?.valor_total_comissao)}
@@ -429,7 +373,7 @@ export default function FechamentoComissoes() {
                       : 'bg-amber-100 text-amber-800'
                   }
                 >
-                  {selectedFatura?.status_pagamento === 'pago' ? 'Pago' : 'Em Aberto'}
+                  {selectedFatura?.status_pagamento === 'pago' ? 'Pago' : 'Aguardando Pagamento'}
                 </Badge>
               </div>
             </div>
@@ -437,7 +381,7 @@ export default function FechamentoComissoes() {
             <div>
               <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-slate-400" />
-                Comissões Incluídas
+                Detalhamento das Vendas
               </h3>
               {loadingDetalhes ? (
                 <div className="flex justify-center py-8">
@@ -445,7 +389,7 @@ export default function FechamentoComissoes() {
                 </div>
               ) : detalhes.length === 0 ? (
                 <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                  Nenhuma comissão correspondente encontrada para esta fatura.
+                  Nenhuma comissão detalhada encontrada para esta fatura.
                 </div>
               ) : (
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
@@ -493,7 +437,9 @@ export default function FechamentoComissoes() {
 
             {isAdmin && selectedFatura?.status_pagamento === 'em_aberto' && (
               <div className="pt-6 mt-6 border-t border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Registrar Pagamento</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                  Registrar Efetivação do Pagamento
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start bg-slate-50 p-5 rounded-xl border border-slate-200">
                   <div className="space-y-4">
                     <div className="space-y-2">
