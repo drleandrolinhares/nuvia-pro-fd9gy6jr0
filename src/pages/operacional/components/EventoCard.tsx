@@ -47,6 +47,7 @@ export function EventoCard({
   index,
   dataInstancia,
   isArquivado,
+  canModify,
   onEdit,
   onDelete,
 }: {
@@ -54,6 +55,7 @@ export function EventoCard({
   index: number
   dataInstancia?: Date
   isArquivado?: boolean
+  canModify?: boolean
   onEdit: (e: Compromisso) => void
   onDelete: (id: string) => void
 }) {
@@ -145,24 +147,26 @@ export function EventoCard({
               )}
             </div>
           </div>
-          <div className="flex gap-1.5 opacity-40 hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-full"
-              onClick={() => onEdit(evento)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-full"
-              onClick={() => onDelete(evento.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {canModify && (
+            <div className="flex gap-1.5 opacity-40 hover:opacity-100 transition-opacity">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-full"
+                onClick={() => onEdit(evento)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-full"
+                onClick={() => onDelete(evento.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
         {evento.descricao && (
           <p

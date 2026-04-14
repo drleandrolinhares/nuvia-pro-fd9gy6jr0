@@ -412,6 +412,59 @@ export type Database = {
           },
         ]
       }
+      compromissos: {
+        Row: {
+          arquivado: boolean
+          atualizado_em: string
+          criado_em: string
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          eh_dia_inteiro: boolean
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
+          usuario_id: string
+        }
+        Insert: {
+          arquivado?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          eh_dia_inteiro?: boolean
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
+          usuario_id: string
+        }
+        Update: {
+          arquivado?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          eh_dia_inteiro?: boolean
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          tipo_compromisso?: Database['public']['Enums']['tipo_compromisso_enum']
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'compromissos_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       configuracoes_negociacao: {
         Row: {
           atualizado_em: string
@@ -1515,6 +1568,55 @@ export type Database = {
           },
         ]
       }
+      usuarios_compromissos: {
+        Row: {
+          compromisso_id: string
+          criado_em: string
+          id: string
+          permissao: Database['public']['Enums']['permissao_compromisso_enum']
+          usuario_criador_id: string
+          usuario_destinatario_id: string
+        }
+        Insert: {
+          compromisso_id: string
+          criado_em?: string
+          id?: string
+          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
+          usuario_criador_id: string
+          usuario_destinatario_id: string
+        }
+        Update: {
+          compromisso_id?: string
+          criado_em?: string
+          id?: string
+          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
+          usuario_criador_id?: string
+          usuario_destinatario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'usuarios_compromissos_compromisso_id_fkey'
+            columns: ['compromisso_id']
+            isOneToOne: false
+            referencedRelation: 'compromissos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'usuarios_compromissos_usuario_criador_id_fkey'
+            columns: ['usuario_criador_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'usuarios_compromissos_usuario_destinatario_id_fkey'
+            columns: ['usuario_destinatario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       vendas_confirmadas: {
         Row: {
           atualizado_em: string
@@ -1622,7 +1724,17 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
+      permissao_compromisso_enum: 'visualizar' | 'editar' | 'deletar'
       referencia_consumo_enum: 'qtd_comprada' | 'itens_embalagem'
+      tipo_compromisso_enum:
+        | 'consulta'
+        | 'viagem_pessoal'
+        | 'viagem_trabalho'
+        | 'reuniao'
+        | 'congresso'
+        | 'folga_ferias'
+        | 'treinamento'
+        | 'atendimento_externo'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1748,7 +1860,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      permissao_compromisso_enum: ['visualizar', 'editar', 'deletar'],
       referencia_consumo_enum: ['qtd_comprada', 'itens_embalagem'],
+      tipo_compromisso_enum: [
+        'consulta',
+        'viagem_pessoal',
+        'viagem_trabalho',
+        'reuniao',
+        'congresso',
+        'folga_ferias',
+        'treinamento',
+        'atendimento_externo',
+      ],
     },
   },
 } as const
@@ -1842,6 +1965,19 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   data_criacao: timestamp with time zone (nullable, default: now())
 //   sala_id: uuid (nullable)
+// Table: compromissos
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   tipo_compromisso: tipo_compromisso_enum (not null)
+//   data_inicio: date (not null)
+//   data_fim: date (not null)
+//   hora_inicio: time without time zone (nullable)
+//   hora_fim: time without time zone (nullable)
+//   eh_dia_inteiro: boolean (not null, default: false)
+//   descricao: text (nullable)
+//   arquivado: boolean (not null, default: false)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: configuracoes_negociacao
 //   id: uuid (not null, default: gen_random_uuid())
 //   percentual_entrada_padrao: numeric (not null, default: 0)
@@ -2084,6 +2220,13 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   cargo_secundario_id: uuid (nullable)
 //   avatar_url: text (nullable)
+// Table: usuarios_compromissos
+//   id: uuid (not null, default: gen_random_uuid())
+//   compromisso_id: uuid (not null)
+//   usuario_criador_id: uuid (not null)
+//   usuario_destinatario_id: uuid (not null)
+//   permissao: permissao_compromisso_enum (not null, default: 'visualizar'::permissao_compromisso_enum)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: vendas_confirmadas
 //   id: uuid (not null, default: gen_random_uuid())
 //   oportunidade_id: uuid (not null)
@@ -2142,6 +2285,9 @@ export const Constants = {
 //   FOREIGN KEY compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY compras_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY compras_sala_id_fkey: FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
+// Table: compromissos
+//   PRIMARY KEY compromissos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY compromissos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: configuracoes_negociacao
 //   PRIMARY KEY configuracoes_negociacao_pkey: PRIMARY KEY (id)
 // Table: contatos_follow_up
@@ -2240,6 +2386,11 @@ export const Constants = {
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+// Table: usuarios_compromissos
+//   FOREIGN KEY usuarios_compromissos_compromisso_id_fkey: FOREIGN KEY (compromisso_id) REFERENCES compromissos(id) ON DELETE CASCADE
+//   PRIMARY KEY usuarios_compromissos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY usuarios_compromissos_usuario_criador_id_fkey: FOREIGN KEY (usuario_criador_id) REFERENCES usuarios(id) ON DELETE CASCADE
+//   FOREIGN KEY usuarios_compromissos_usuario_destinatario_id_fkey: FOREIGN KEY (usuario_destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: vendas_confirmadas
 //   FOREIGN KEY vendas_confirmadas_crc_fkey: FOREIGN KEY (crc) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_dentista_avaliador_fkey: FOREIGN KEY (dentista_avaliador) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
@@ -2303,6 +2454,10 @@ export const Constants = {
 //   Policy "compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: compromissos
+//   Policy "compromissos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: configuracoes_negociacao
 //   Policy "configuracoes_negociacao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2467,6 +2622,10 @@ export const Constants = {
 //     USING: true
 //   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((id = auth.uid()) OR is_admin() OR has_permission('Gerenciar Colaboradores'::text))
+// Table: usuarios_compromissos
+//   Policy "usuarios_compromissos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: vendas_confirmadas
 //   Policy "vendas_confirmadas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true

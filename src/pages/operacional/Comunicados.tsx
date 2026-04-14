@@ -13,6 +13,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Archive, Loader2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { EventoCard } from './components/EventoCard'
 import { EventoModal } from './components/EventoModal'
 import {
@@ -40,7 +50,9 @@ export default function Comunicados() {
   const [selectedUser, setSelectedUser] = useState<string>('todos')
 
   const { toast } = useToast()
-  const { user } = useAuth()
+  const { user, profile } = useAuth() as any
+
+  const [eventoParaDeletar, setEventoParaDeletar] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -73,13 +85,20 @@ export default function Comunicados() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setEventoParaDeletar(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!eventoParaDeletar) return
     try {
-      await deleteCompromisso(id)
-      setEventos((prev) => prev.filter((e) => e.id !== id))
+      await deleteCompromisso(eventoParaDeletar)
+      setEventos((prev) => prev.filter((e) => e.id !== eventoParaDeletar))
       toast({ title: 'Sucesso', description: 'Compromisso removido.' })
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setEventoParaDeletar(null)
     }
   }
 
@@ -162,6 +181,9 @@ export default function Comunicados() {
     })
     return dates
   }, [eventos])
+
+  const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'gestor'
+  const currentUserId = user?.id
 
   if (loading) {
     return (
@@ -254,8 +276,9 @@ export default function Comunicados() {
                   index={i}
                   dataInstancia={ev.dataInstancia}
                   isArquivado={activeTab === 'arquivados'}
+                  canModify={isAdminOrManager || ev.usuario_id === currentUserId}
                   onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onDelete={handleDeleteClick}
                 />
               ))
             )}
@@ -278,6 +301,29 @@ export default function Comunicados() {
         evento={eventoEditando}
         usuarios={usuarios}
       />
+
+      <AlertDialog
+        open={!!eventoParaDeletar}
+        onOpenChange={(open) => !open && setEventoParaDeletar(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir compromisso</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este compromisso? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
