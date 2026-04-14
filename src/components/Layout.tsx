@@ -7,10 +7,10 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="bg-background flex flex-col min-h-screen">
+      <SidebarInset className="bg-background flex flex-col h-dvh w-full overflow-hidden">
         <AppHeader />
-        <main className="flex-1 p-4 md:p-8 overflow-auto">
-          <div className="mx-auto max-w-7xl w-full">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+          <div className="mx-auto max-w-7xl w-full pb-16">
             <Outlet />
           </div>
         </main>
