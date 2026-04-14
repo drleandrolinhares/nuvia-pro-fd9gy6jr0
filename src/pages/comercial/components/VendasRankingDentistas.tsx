@@ -20,10 +20,25 @@ import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown, Video, DollarSign } from 'luci
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CriativosDentistaModal } from './CriativosDentistaModal'
+import { format, subMonths } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 export function VendasRankingDentistas() {
   const [periodo, setPeriodo] = useState('mes_atual')
   const { ranking, loading, refetch } = useRankingDentistas(periodo)
+
+  const monthOptions = useMemo(() => {
+    const options = []
+    const now = new Date()
+    for (let i = 0; i < 12; i++) {
+      const date = subMonths(now, i)
+      options.push({
+        value: format(date, 'yyyy-MM'),
+        label: format(date, 'MMMM/yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+      })
+    }
+    return options
+  }, [])
 
   const [modalCriativos, setModalCriativos] = useState<{
     isOpen: boolean
@@ -33,7 +48,7 @@ export function VendasRankingDentistas() {
     dentista: null,
   })
 
-  const [sortColumn, setSortColumn] = useState<keyof (typeof ranking)[0]>('conversao')
+  const [sortColumn, setSortColumn] = useState<keyof (typeof ranking)[0]>('valorTotalConversao')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const handleSort = (col: keyof (typeof ranking)[0]) => {
@@ -113,6 +128,11 @@ export function VendasRankingDentistas() {
             <SelectItem value="ultimos_15">Últimos 15 dias</SelectItem>
             <SelectItem value="mes_atual">Mês Atual</SelectItem>
             <SelectItem value="todos">Todos</SelectItem>
+            {monthOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </CardHeader>
@@ -127,7 +147,11 @@ export function VendasRankingDentistas() {
               >
                 <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-xs font-bold text-primary uppercase">
-                    {periodo === 'mes_atual' ? 'Mês Atual' : 'Período'}
+                    {periodo === 'mes_atual'
+                      ? 'Mês Atual'
+                      : periodo.match(/^\d{4}-\d{2}$/)
+                        ? 'Mês Específico'
+                        : 'Período'}
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-primary" />
                 </CardHeader>

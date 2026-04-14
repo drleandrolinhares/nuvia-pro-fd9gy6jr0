@@ -24,7 +24,7 @@ export default function Vendas() {
   const [crcs, setCrcs] = useState<any[]>([])
 
   const [filters, setFilters] = useState<VendasFiltersState>({
-    periodo: 'todos',
+    periodo: 'mes_atual',
     dataInicio: '',
     dataFim: '',
     status: 'todos',
@@ -116,6 +116,13 @@ export default function Vendas() {
         case 'personalizado':
           if (filters.dataInicio) sd = startOfDay(parseISO(filters.dataInicio))
           if (filters.dataFim) ed = endOfDay(parseISO(filters.dataFim))
+          break
+        default:
+          if (filters.periodo && filters.periodo.match(/^\d{4}-\d{2}$/)) {
+            const parsedDate = parseISO(`${filters.periodo}-01`)
+            sd = startOfMonth(parsedDate)
+            ed = endOfMonth(parsedDate)
+          }
           break
       }
       if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))

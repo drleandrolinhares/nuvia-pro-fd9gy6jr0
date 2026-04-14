@@ -9,6 +9,9 @@ import {
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { VendasFiltersState } from '../types'
+import { format, subMonths } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { useMemo } from 'react'
 
 interface Props {
   filters: VendasFiltersState
@@ -21,6 +24,19 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
   const updateFilter = (key: keyof VendasFiltersState, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
+
+  const monthOptions = useMemo(() => {
+    const options = []
+    const now = new Date()
+    for (let i = 0; i < 12; i++) {
+      const date = subMonths(now, i)
+      options.push({
+        value: format(date, 'yyyy-MM'),
+        label: format(date, 'MMMM/yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+      })
+    }
+    return options
+  }, [])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-muted/20 p-4 rounded-lg border">
@@ -46,6 +62,11 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
             <SelectItem value="ultimos_15">Últimos 15 dias</SelectItem>
             <SelectItem value="mes_atual">Mês Atual</SelectItem>
             <SelectItem value="personalizado">Personalizado</SelectItem>
+            {monthOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {filters.periodo === 'personalizado' && (

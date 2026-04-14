@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, format } from 'date-fns'
+import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, format, parseISO } from 'date-fns'
 
 export interface RankingDentista {
   id: string
@@ -76,6 +76,13 @@ export function useRankingDentistas(periodo: string) {
           case 'mes_atual':
             sd = startOfMonth(today)
             ed = endOfMonth(today)
+            break
+          default:
+            if (periodo.match(/^\d{4}-\d{2}$/)) {
+              const parsedDate = parseISO(`${periodo}-01`)
+              sd = startOfMonth(parsedDate)
+              ed = endOfMonth(parsedDate)
+            }
             break
         }
 
