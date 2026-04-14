@@ -9,10 +9,27 @@ interface UserProfile {
   role: string | null
 }
 
+const normalizePermissionToKey = (name: string): string => {
+  const lowerName = name.toLowerCase()
+  if (lowerName.includes('estoque')) return 'financeiro_estoque'
+  if (lowerName.includes('sac')) return 'operacional_sac'
+  if (lowerName.includes('rotina')) return 'operacional_rotina'
+  if (lowerName.includes('performance')) return 'operacional_performance'
+  if (lowerName.includes('comunicados')) return 'operacional_comunicados'
+  if (lowerName.includes('vendas')) return 'comercial_vendas'
+  if (lowerName.includes('comissões') || lowerName.includes('comissoes'))
+    return 'comercial_comissoes'
+  if (lowerName.includes('pacientes')) return 'comercial_pacientes'
+  if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
+    return 'comercial_negociacao'
+  return lowerName.replace(/\s+/g, '_')
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
   profile: UserProfile | null
+  permissions: string[]
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -30,24 +47,69 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [permissions, setPermissions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
 
-    const fetchProfile = async (userId: string) => {
+    const fetchUserData = async (userId: string) => {
       try {
-        const { data, error } = await supabase
-          .from('usuarios')
-          .select('*')
-          .eq('id', userId)
-          .single()
+        const [profileRes, permsRes, cargoRes] = await Promise.all([
+          supabase.from('usuarios').select('*').eq('id', userId).single(),
+          supabase.from('usuario_permissoes').select('permissoes(nome)').eq('usuario_id', userId),
+          supabase
+            .from('usuarios')
+            .select('cargo_id, cargo_secundario_id')
+            .eq('id', userId)
+            .single(),
+        ])
 
-        if (error) throw error
-        if (isMounted) setProfile(data)
+        let newProfile = null
+        let newPermissions: string[] = []
+
+        if (!profileRes.error && profileRes.data) {
+          newProfile = profileRes.data
+        }
+
+        const permSet = new Set<string>()
+        const addPerm = (nome: string) => {
+          permSet.add(nome)
+          permSet.add(normalizePermissionToKey(nome))
+        }
+
+        if (permsRes.data) {
+          permsRes.data.forEach((up: any) => {
+            if (up.permissoes?.nome) addPerm(up.permissoes.nome)
+          })
+        }
+
+        if (cargoRes.data) {
+          const cargos = [cargoRes.data.cargo_id, cargoRes.data.cargo_secundario_id].filter(Boolean)
+          if (cargos.length > 0) {
+            const { data: cPerms } = await supabase
+              .from('cargo_permissoes')
+              .select('permissoes(nome)')
+              .in('cargo_id', cargos)
+
+            if (cPerms) {
+              cPerms.forEach((cp: any) => {
+                if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
+              })
+            }
+          }
+        }
+
+        if (isMounted) {
+          setProfile(newProfile)
+          setPermissions(Array.from(permSet))
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error)
-        if (isMounted) setProfile(null)
+        console.error('Error fetching user data:', error)
+        if (isMounted) {
+          setProfile(null)
+          setPermissions([])
+        }
       }
     }
 
@@ -57,12 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => {
+        fetchUserData(session.user.id).finally(() => {
           if (isMounted) setLoading(false)
         })
       } else {
         if (isMounted) {
           setProfile(null)
+          setPermissions([])
           setLoading(false)
         }
       }
@@ -72,12 +135,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => {
+        fetchUserData(session.user.id).finally(() => {
           if (isMounted) setLoading(false)
         })
       } else {
         if (isMounted) {
           setProfile(null)
+          setPermissions([])
           setLoading(false)
         }
       }
@@ -100,7 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, profile, permissions, signIn, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   )

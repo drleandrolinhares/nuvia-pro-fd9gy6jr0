@@ -50,24 +50,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/use-auth'
-import { supabase } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-
-const normalizePermissionToKey = (name: string): string => {
-  const lowerName = name.toLowerCase()
-  if (lowerName.includes('estoque')) return 'financeiro_estoque'
-  if (lowerName.includes('sac')) return 'operacional_sac'
-  if (lowerName.includes('rotina')) return 'operacional_rotina'
-  if (lowerName.includes('performance')) return 'operacional_performance'
-  if (lowerName.includes('comunicados')) return 'operacional_comunicados'
-  if (lowerName.includes('vendas')) return 'comercial_vendas'
-  if (lowerName.includes('comissões') || lowerName.includes('comissoes'))
-    return 'comercial_comissoes'
-  if (lowerName.includes('pacientes')) return 'comercial_pacientes'
-  if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
-    return 'comercial_negociacao'
-  return lowerName.replace(/\s+/g, '_')
-}
 
 const navData = [
   {
@@ -171,57 +153,7 @@ const navData = [
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, profile, signOut } = useAuth()
-  const [permissions, setPermissions] = useState<string[]>([])
-
-  useEffect(() => {
-    if (!user) return
-    const fetchPerms = async () => {
-      try {
-        const { data: userPerms } = await supabase
-          .from('usuario_permissoes')
-          .select('permissoes(nome)')
-          .eq('usuario_id', user.id)
-
-        const { data: userCargo } = await supabase
-          .from('usuarios')
-          .select('cargo_id, cargo_secundario_id')
-          .eq('id', user.id)
-          .single()
-
-        let cargoPerms: any[] = []
-        if (userCargo) {
-          const cargos = [userCargo.cargo_id, userCargo.cargo_secundario_id].filter(Boolean)
-          if (cargos.length > 0) {
-            const { data: cPerms } = await supabase
-              .from('cargo_permissoes')
-              .select('permissoes(nome)')
-              .in('cargo_id', cargos)
-            if (cPerms) cargoPerms = cPerms
-          }
-        }
-
-        const permSet = new Set<string>()
-
-        const addPerm = (nome: string) => {
-          permSet.add(nome)
-          permSet.add(normalizePermissionToKey(nome))
-        }
-
-        userPerms?.forEach((up: any) => {
-          if (up.permissoes?.nome) addPerm(up.permissoes.nome)
-        })
-        cargoPerms?.forEach((cp: any) => {
-          if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
-        })
-
-        setPermissions(Array.from(permSet))
-      } catch (error) {
-        console.error('Erro ao buscar permissoes', error)
-      }
-    }
-    fetchPerms()
-  }, [user])
+  const { user, profile, permissions, signOut } = useAuth()
 
   const handleLogout = async () => {
     await signOut()

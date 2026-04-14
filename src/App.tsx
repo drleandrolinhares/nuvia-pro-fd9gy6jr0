@@ -25,25 +25,6 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
 
-import { supabase } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-
-const normalizePermissionToKey = (name: string): string => {
-  const lowerName = name.toLowerCase()
-  if (lowerName.includes('estoque')) return 'financeiro_estoque'
-  if (lowerName.includes('sac')) return 'operacional_sac'
-  if (lowerName.includes('rotina')) return 'operacional_rotina'
-  if (lowerName.includes('performance')) return 'operacional_performance'
-  if (lowerName.includes('comunicados')) return 'operacional_comunicados'
-  if (lowerName.includes('vendas')) return 'comercial_vendas'
-  if (lowerName.includes('comissões') || lowerName.includes('comissoes'))
-    return 'comercial_comissoes'
-  if (lowerName.includes('pacientes')) return 'comercial_pacientes'
-  if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
-    return 'comercial_negociacao'
-  return lowerName.replace(/\s+/g, '_')
-}
-
 const ProtectedRoute = ({
   allowedRoles,
   allowedPermissions,
@@ -53,86 +34,20 @@ const ProtectedRoute = ({
   allowedPermissions?: string[]
   children: React.ReactNode
 }) => {
-  const { user, profile, loading } = useAuth()
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
-
-  const userRole = profile?.role || 'visualizacao'
-
-  useEffect(() => {
-    if (!user || userRole === 'admin') {
-      setHasPermission(true)
-      return
-    }
-
-    if (!allowedPermissions || allowedPermissions.length === 0) {
-      setHasPermission(true)
-      return
-    }
-
-    const checkPerms = async () => {
-      try {
-        const { data: userPerms } = await supabase
-          .from('usuario_permissoes')
-          .select('permissoes(nome)')
-          .eq('usuario_id', user.id)
-
-        const { data: userCargo } = await supabase
-          .from('usuarios')
-          .select('cargo_id, cargo_secundario_id')
-          .eq('id', user.id)
-          .single()
-
-        let cargoPerms: any[] = []
-        if (userCargo) {
-          const cargos = [userCargo.cargo_id, userCargo.cargo_secundario_id].filter(Boolean)
-          if (cargos.length > 0) {
-            const { data: cPerms } = await supabase
-              .from('cargo_permissoes')
-              .select('permissoes(nome)')
-              .in('cargo_id', cargos)
-            if (cPerms) cargoPerms = cPerms
-          }
-        }
-
-        const permSet = new Set<string>()
-        const addPerm = (nome: string) => {
-          permSet.add(nome)
-          permSet.add(normalizePermissionToKey(nome))
-        }
-
-        userPerms?.forEach((up: any) => {
-          if (up.permissoes?.nome) addPerm(up.permissoes.nome)
-        })
-        cargoPerms?.forEach((cp: any) => {
-          if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
-        })
-
-        const hasAccess = allowedPermissions.some((p) => permSet.has(p))
-        setHasPermission(hasAccess)
-      } catch (error) {
-        console.error('Error checking perms', error)
-        setHasPermission(false)
-      }
-    }
-
-    checkPerms()
-  }, [user, allowedPermissions])
+  const { profile, permissions, loading } = useAuth()
 
   if (loading) return null
 
+  const userRole = profile?.role || 'visualizacao'
+
   if (userRole === 'admin') return <>{children}</>
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole))
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userRole))
     return <Navigate to="/" replace />
 
-  if (hasPermission === false) return <Navigate to="/" replace />
-
-  if (hasPermission === null && allowedPermissions && allowedPermissions.length > 0) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-      </div>
-    )
+  if (allowedPermissions && allowedPermissions.length > 0) {
+    const hasAccess = allowedPermissions.some((p) => permissions.includes(p))
+    if (!hasAccess) return <Navigate to="/" replace />
   }
 
   return <>{children}</>
