@@ -92,7 +92,16 @@ const AppRoutes = () => {
         <Route
           path="/configuracoes"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={[
+                'configuracoes_geral',
+                'configuracoes_usuarios',
+                'configuracoes_permissoes',
+                'configuracoes_parametros',
+                'configuracoes_fornecedores',
+              ]}
+            >
               <Configuracoes />
             </ProtectedRoute>
           }
@@ -108,7 +117,7 @@ const AppRoutes = () => {
         <Route
           path="/fornecedores"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={[]} allowedPermissions={['configuracoes_fornecedores']}>
               <Fornecedores />
             </ProtectedRoute>
           }
