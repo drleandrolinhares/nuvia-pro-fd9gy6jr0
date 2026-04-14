@@ -18,37 +18,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Evento, TipoEvento } from '../data/mock-eventos'
 
 interface EventoModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (e: Evento) => void
-  evento: Evento | null
+  onSave: (e: any) => void
+  evento: any | null
+  usuarios: { id: string; nome: string }[]
 }
 
-const TIPOS: TipoEvento[] = [
-  'Consulta',
-  'Viagem Pessoal',
-  'Viagem a Trabalho',
-  'Reunião',
-  'Congresso',
-  'Folga/Férias',
-  'Treinamento',
-  'Atendimento Externo',
-]
-const COLABORADORES = [
-  'Dr. Leandro Linhares',
-  'Dra. Amanda Silva',
-  'Carlos Eduardo (CRC)',
-  'Dra. Beatriz',
-  'Marcos (Financeiro)',
-  'Dra. Juliana',
+const TIPOS_OPCOES = [
+  { value: 'consulta', label: 'Consulta' },
+  { value: 'viagem_pessoal', label: 'Viagem Pessoal' },
+  { value: 'viagem_trabalho', label: 'Viagem a Trabalho' },
+  { value: 'reuniao', label: 'Reunião' },
+  { value: 'congresso', label: 'Congresso' },
+  { value: 'folga_ferias', label: 'Folga/Férias' },
+  { value: 'treinamento', label: 'Treinamento' },
+  { value: 'atendimento_externo', label: 'Atendimento Externo' },
 ]
 
-export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProps) {
-  const [colaborador, setColaborador] = useState('')
-  const [tipo, setTipo] = useState<TipoEvento>('Reunião')
+export function EventoModal({ isOpen, onClose, onSave, evento, usuarios }: EventoModalProps) {
+  const [usuarioId, setUsuarioId] = useState('')
+  const [tipo, setTipo] = useState('reuniao')
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
   const [diaInteiro, setDiaInteiro] = useState(true)
@@ -58,20 +50,23 @@ export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProp
 
   useEffect(() => {
     if (evento && isOpen) {
-      setColaborador(evento.colaborador)
-      setTipo(evento.tipo)
-      setDataInicio(evento.dataInicio.split('T')[0])
-      setDataFim(evento.dataFim.split('T')[0])
-      setDiaInteiro(evento.diaInteiro)
-      setHoraInicio(evento.horaInicio || '')
-      setHoraFim(evento.horaFim || '')
-      setDescricao(evento.descricao)
+      setUsuarioId(evento.usuario_id)
+      setTipo(evento.tipo_compromisso)
+      setDataInicio(evento.data_inicio)
+      setDataFim(evento.data_fim)
+      setDiaInteiro(evento.eh_dia_inteiro)
+      setHoraInicio(evento.hora_inicio ? evento.hora_inicio.substring(0, 5) : '')
+      setHoraFim(evento.hora_fim ? evento.hora_fim.substring(0, 5) : '')
+      setDescricao(evento.descricao || '')
     } else if (isOpen) {
-      const today = new Date().toISOString().split('T')[0]
-      setColaborador('')
-      setTipo('Reunião')
-      setDataInicio(today)
-      setDataFim(today)
+      const today = new Date()
+      const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0]
+      setUsuarioId('')
+      setTipo('reuniao')
+      setDataInicio(localDate)
+      setDataFim(localDate)
       setDiaInteiro(true)
       setHoraInicio('')
       setHoraFim('')
@@ -80,16 +75,15 @@ export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProp
   }, [evento, isOpen])
 
   const handleSave = () => {
-    if (!colaborador || !dataInicio || !dataFim) return
+    if (!usuarioId || !dataInicio || !dataFim) return
     onSave({
-      id: evento?.id || '',
-      colaborador,
-      tipo,
-      dataInicio: new Date(dataInicio + 'T12:00:00').toISOString(),
-      dataFim: new Date(dataFim + 'T12:00:00').toISOString(),
-      diaInteiro,
-      horaInicio: diaInteiro ? undefined : horaInicio,
-      horaFim: diaInteiro ? undefined : horaFim,
+      usuario_id: usuarioId,
+      tipo_compromisso: tipo,
+      data_inicio: dataInicio,
+      data_fim: dataFim,
+      eh_dia_inteiro: diaInteiro,
+      hora_inicio: diaInteiro ? null : horaInicio || null,
+      hora_fim: diaInteiro ? null : horaFim || null,
       descricao,
     })
   }
@@ -106,14 +100,14 @@ export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProp
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Colaborador</Label>
-              <Select value={colaborador} onValueChange={setColaborador}>
+              <Select value={usuarioId} onValueChange={setUsuarioId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {COLABORADORES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                  {usuarios.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -121,14 +115,14 @@ export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProp
             </div>
             <div className="space-y-2">
               <Label>Tipo de Compromisso</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v as TipoEvento)}>
+              <Select value={tipo} onValueChange={setTipo}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TIPOS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
+                  {TIPOS_OPCOES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -194,6 +188,7 @@ export function EventoModal({ isOpen, onClose, onSave, evento }: EventoModalProp
           </Button>
           <Button
             onClick={handleSave}
+            disabled={!usuarioId || !dataInicio || !dataFim}
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-8 shadow-sm"
           >
             Salvar

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { format, parseISO, startOfDay, endOfDay } from 'date-fns'
+import { useState, useMemo, useEffect } from 'react'
+import { format, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -12,63 +12,112 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Archive } from 'lucide-react'
-import { Evento, MOCK_EVENTOS } from './data/mock-eventos'
+import { Plus, Archive, Loader2 } from 'lucide-react'
 import { EventoCard } from './components/EventoCard'
 import { EventoModal } from './components/EventoModal'
+import {
+  getCompromissos,
+  createCompromisso,
+  updateCompromisso,
+  deleteCompromisso,
+  Compromisso,
+  getUsuarios,
+} from '@/services/compromissos'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 
 type FilterTab = 'periodo' | 'usuario' | 'todos' | 'arquivados'
 
 export default function Comunicados() {
-  const [eventos, setEventos] = useState<Evento[]>(MOCK_EVENTOS)
+  const [eventos, setEventos] = useState<Compromisso[]>([])
+  const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [eventoEditando, setEventoEditando] = useState<Evento | null>(null)
+  const [eventoEditando, setEventoEditando] = useState<Compromisso | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [activeTab, setActiveTab] = useState<FilterTab>('periodo')
   const [selectedUser, setSelectedUser] = useState<string>('todos')
+
+  const { toast } = useToast()
+  const { user } = useAuth()
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const [comps, usersData] = await Promise.all([getCompromissos(), getUsuarios()])
+      setEventos(comps)
+      setUsuarios(usersData || [])
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os dados',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleAdd = () => {
     setEventoEditando(null)
     setIsModalOpen(true)
   }
 
-  const handleEdit = (evento: Evento) => {
+  const handleEdit = (evento: Compromisso) => {
     setEventoEditando(evento)
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string) => {
-    setEventos((prev) => prev.filter((e) => e.id !== id))
-  }
-
-  const handleSave = (evento: Evento) => {
-    if (eventoEditando) {
-      setEventos((prev) => prev.map((e) => (e.id === evento.id ? evento : e)))
-    } else {
-      setEventos((prev) => [{ ...evento, id: Math.random().toString() }, ...prev])
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCompromisso(id)
+      setEventos((prev) => prev.filter((e) => e.id !== id))
+      toast({ title: 'Sucesso', description: 'Compromisso removido.' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
-    setIsModalOpen(false)
   }
 
-  const colaboradores = useMemo(() => {
-    return Array.from(new Set(eventos.map((e) => e.colaborador))).sort()
-  }, [eventos])
+  const handleSave = async (eventoData: any) => {
+    try {
+      if (eventoEditando) {
+        const updated = await updateCompromisso(eventoEditando.id, eventoData)
+        const userObj = usuarios.find((u) => u.id === updated.usuario_id)
+        setEventos((prev) =>
+          prev.map((e) => (e.id === eventoEditando.id ? { ...updated, usuario: userObj } : e)),
+        )
+        toast({ title: 'Sucesso', description: 'Compromisso atualizado.' })
+      } else {
+        const created = await createCompromisso({ ...eventoData, arquivado: false })
+        const userObj = usuarios.find((u) => u.id === created.usuario_id)
+        setEventos((prev) => [...prev, { ...created, usuario: userObj }])
+        toast({ title: 'Sucesso', description: 'Compromisso criado.' })
+      }
+      setIsModalOpen(false)
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
+  }
 
   const eventosFiltrados = useMemo(() => {
     const today = startOfDay(new Date())
 
     const isActiveTabArquivados = activeTab === 'arquivados'
     const baseEvents = eventos.filter((e) => {
-      const end = startOfDay(parseISO(e.dataFim))
+      const end = startOfDay(new Date(e.data_fim + 'T12:00:00'))
       if (isActiveTabArquivados) return end < today
       return end >= today
     })
 
-    const expanded: (Evento & { dataInstancia: Date })[] = []
+    const expanded: (Compromisso & { dataInstancia: Date })[] = []
     baseEvents.forEach((ev) => {
-      let curr = startOfDay(parseISO(ev.dataInicio))
-      const end = startOfDay(parseISO(ev.dataFim))
+      let curr = startOfDay(new Date(ev.data_inicio + 'T12:00:00'))
+      const end = startOfDay(new Date(ev.data_fim + 'T12:00:00'))
       if (curr > end) {
         expanded.push({ ...ev, dataInstancia: curr })
       } else {
@@ -89,14 +138,14 @@ export default function Comunicados() {
         )
       })
     } else if (activeTab === 'usuario' && selectedUser !== 'todos') {
-      filtered = filtered.filter((e) => e.colaborador === selectedUser)
+      filtered = filtered.filter((e) => e.usuario_id === selectedUser)
     }
 
     return filtered.sort((a, b) => {
       const diff = a.dataInstancia.getTime() - b.dataInstancia.getTime()
       if (diff !== 0) return diff
-      const timeA = a.horaInicio || '00:00'
-      const timeB = b.horaInicio || '00:00'
+      const timeA = a.hora_inicio || '00:00'
+      const timeB = b.hora_inicio || '00:00'
       return timeA.localeCompare(timeB)
     })
   }, [eventos, selectedDate, activeTab, selectedUser])
@@ -104,8 +153,8 @@ export default function Comunicados() {
   const eventDates = useMemo(() => {
     const dates: Date[] = []
     eventos.forEach((e) => {
-      let curr = startOfDay(parseISO(e.dataInicio))
-      const end = endOfDay(parseISO(e.dataFim))
+      let curr = startOfDay(new Date(e.data_inicio + 'T12:00:00'))
+      const end = endOfDay(new Date(e.data_fim + 'T12:00:00'))
       while (curr <= end) {
         dates.push(new Date(curr))
         curr.setDate(curr.getDate() + 1)
@@ -114,11 +163,19 @@ export default function Comunicados() {
     return dates
   }, [eventos])
 
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-slate-50/50">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-full bg-slate-50/50">
-      <div className="w-[360px] border-r bg-white p-6 overflow-y-auto shadow-sm z-10 hidden md:block">
-        <h2 className="text-xl font-bold text-slate-800 mb-6">Calendário</h2>
-        <div className="border rounded-xl p-2 bg-slate-50/50 shadow-sm">
+      <div className="hidden w-[360px] overflow-y-auto border-r bg-white p-6 shadow-sm z-10 md:block">
+        <h2 className="mb-6 text-xl font-bold text-slate-800">Calendário</h2>
+        <div className="rounded-xl border bg-slate-50/50 p-2 shadow-sm">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -140,12 +197,12 @@ export default function Comunicados() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col relative overflow-hidden">
-        <div className="p-6 border-b bg-white shadow-sm z-10 flex flex-col gap-4">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        <div className="z-10 flex flex-col gap-4 border-b bg-white p-6 shadow-sm">
           <h2 className="text-2xl font-bold text-slate-800">
             Feed de Compromissos
             {activeTab === 'periodo' && selectedDate && (
-              <span className="text-slate-500 font-medium ml-3 text-lg">
+              <span className="ml-3 text-lg font-medium text-slate-500">
                 - {format(selectedDate, 'MMMM yyyy', { locale: ptBR })}
               </span>
             )}
@@ -158,7 +215,7 @@ export default function Comunicados() {
                 <TabsTrigger value="usuario">Por Usuário</TabsTrigger>
                 <TabsTrigger value="todos">Todos</TabsTrigger>
                 <TabsTrigger value="arquivados" className="flex items-center gap-1.5">
-                  <Archive className="w-3.5 h-3.5" />
+                  <Archive className="h-3.5 w-3.5" />
                   Arquivados
                 </TabsTrigger>
               </TabsList>
@@ -171,9 +228,9 @@ export default function Comunicados() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os colaboradores</SelectItem>
-                  {colaboradores.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                  {usuarios.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -183,11 +240,11 @@ export default function Comunicados() {
         </div>
 
         <ScrollArea className="flex-1 p-6">
-          <div className="max-w-4xl mx-auto space-y-4 pb-24">
+          <div className="mx-auto max-w-4xl space-y-4 pb-24">
             {eventosFiltrados.length === 0 ? (
-              <div className="text-center text-slate-500 mt-20 p-8 border-2 border-dashed rounded-xl bg-white">
+              <div className="mt-20 rounded-xl border-2 border-dashed bg-white p-8 text-center text-slate-500">
                 <p className="text-lg font-medium">Nenhum compromisso encontrado.</p>
-                <p className="text-sm mt-1">Ajuste os filtros ou adicione um novo compromisso.</p>
+                <p className="mt-1 text-sm">Ajuste os filtros ou adicione um novo compromisso.</p>
               </div>
             ) : (
               eventosFiltrados.map((ev, i) => (
@@ -207,10 +264,10 @@ export default function Comunicados() {
 
         <Button
           onClick={handleAdd}
-          className="absolute bottom-8 right-8 h-16 w-16 rounded-full bg-emerald-600 hover:bg-emerald-700 shadow-xl transition-transform hover:scale-105"
+          className="absolute bottom-8 right-8 h-16 w-16 rounded-full bg-emerald-600 shadow-xl transition-transform hover:scale-105 hover:bg-emerald-700"
           size="icon"
         >
-          <Plus className="w-8 h-8 text-white" />
+          <Plus className="h-8 w-8 text-white" />
         </Button>
       </div>
 
@@ -219,6 +276,7 @@ export default function Comunicados() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         evento={eventoEditando}
+        usuarios={usuarios}
       />
     </div>
   )

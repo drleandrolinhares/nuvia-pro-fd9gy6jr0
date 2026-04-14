@@ -1,4 +1,4 @@
-import { Evento, TipoEvento } from '../data/mock-eventos'
+import { Compromisso } from '@/services/compromissos'
 import {
   Stethoscope,
   Plane,
@@ -14,13 +14,24 @@ import {
   CalendarIcon,
   Archive,
 } from 'lucide-react'
-import { format, parseISO, startOfDay } from 'date-fns'
+import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-const TIPO_ICONES: Record<TipoEvento, React.ElementType> = {
+export const TIPO_MAPPING: Record<string, string> = {
+  consulta: 'Consulta',
+  viagem_pessoal: 'Viagem Pessoal',
+  viagem_trabalho: 'Viagem a Trabalho',
+  reuniao: 'Reunião',
+  congresso: 'Congresso',
+  folga_ferias: 'Folga/Férias',
+  treinamento: 'Treinamento',
+  atendimento_externo: 'Atendimento Externo',
+}
+
+const TIPO_ICONES: Record<string, React.ElementType> = {
   Consulta: Stethoscope,
   'Viagem Pessoal': Plane,
   'Viagem a Trabalho': Briefcase,
@@ -39,16 +50,18 @@ export function EventoCard({
   onEdit,
   onDelete,
 }: {
-  evento: Evento
+  evento: Compromisso
   index: number
   dataInstancia?: Date
   isArquivado?: boolean
-  onEdit: (e: Evento) => void
+  onEdit: (e: Compromisso) => void
   onDelete: (id: string) => void
 }) {
-  const Icon = TIPO_ICONES[evento.tipo] || CalendarIcon
-  const dInicio = startOfDay(parseISO(evento.dataInicio))
-  const dFim = startOfDay(parseISO(evento.dataFim))
+  const tipoLabel = TIPO_MAPPING[evento.tipo_compromisso] || evento.tipo_compromisso
+  const Icon = TIPO_ICONES[tipoLabel] || CalendarIcon
+
+  const dInicio = new Date(evento.data_inicio + 'T12:00:00')
+  const dFim = new Date(evento.data_fim + 'T12:00:00')
   const mesmaData = dInicio.getTime() === dFim.getTime()
   const displayDate = dataInstancia || dInicio
 
@@ -79,7 +92,7 @@ export function EventoCard({
             <h4
               className={cn('text-lg font-bold', isArquivado ? 'text-slate-600' : 'text-slate-800')}
             >
-              {evento.colaborador}
+              {evento.usuario?.nome || 'Colaborador não encontrado'}
             </h4>
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 mt-1.5">
               <Badge
@@ -91,7 +104,7 @@ export function EventoCard({
                     : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200',
                 )}
               >
-                {evento.tipo}
+                {tipoLabel}
               </Badge>
               {isArquivado && (
                 <Badge
@@ -111,7 +124,7 @@ export function EventoCard({
                   </span>
                 )}
               </span>
-              {!evento.diaInteiro && evento.horaInicio && (
+              {!evento.eh_dia_inteiro && evento.hora_inicio && (
                 <>
                   <span className="text-slate-300">•</span>
                   <div
@@ -124,7 +137,8 @@ export function EventoCard({
                   >
                     <Clock className="w-3.5 h-3.5" />
                     <span>
-                      {evento.horaInicio} - {evento.horaFim}
+                      {evento.hora_inicio.substring(0, 5)} -{' '}
+                      {evento.hora_fim ? evento.hora_fim.substring(0, 5) : ''}
                     </span>
                   </div>
                 </>
