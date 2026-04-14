@@ -88,7 +88,7 @@ const formSchema = z.object({
   observacoes_criticas: z.string().optional(),
 
   manter_campos: z.boolean().default(false),
-  campos_dinamicos: z.record(z.string()).optional(),
+  campos_dinamicos: z.any().optional(),
 })
 
 type EntradaFormValues = z.infer<typeof formSchema>
@@ -438,9 +438,13 @@ export function EntradaProdutoModal({
     if (
       !entradaError &&
       values.campos_dinamicos &&
+      typeof values.campos_dinamicos === 'object' &&
       Object.keys(values.campos_dinamicos).length > 0
     ) {
-      await upsertProdutoCamposValores(finalProdutoId, values.campos_dinamicos)
+      await upsertProdutoCamposValores(
+        finalProdutoId,
+        values.campos_dinamicos as Record<string, string>,
+      )
     }
 
     setLoading(false)
@@ -681,7 +685,7 @@ export function EntradaProdutoModal({
                       <FormField
                         key={config.campo_id}
                         control={form.control}
-                        name={`campos_dinamicos.${config.campo_id}`}
+                        name={`campos_dinamicos.${config.campo_id}` as any}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[#d4af37] font-bold text-[11px] uppercase tracking-wider">
