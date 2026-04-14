@@ -46,15 +46,14 @@ const TIPO_ICONES: Record<string, React.ElementType> = {
 export function EventoCard({
   evento,
   index,
-  dataInstancia,
   isArquivado,
   canModify,
   onEdit,
   onDelete,
+  onDuplicate,
 }: {
   evento: Compromisso
   index: number
-  dataInstancia?: Date
   isArquivado?: boolean
   canModify?: boolean
   onEdit: (e: Compromisso) => void
@@ -67,7 +66,6 @@ export function EventoCard({
   const dInicio = new Date(evento.data_inicio + 'T12:00:00')
   const dFim = new Date(evento.data_fim + 'T12:00:00')
   const mesmaData = dInicio.getTime() === dFim.getTime()
-  const displayDate = dataInstancia || dInicio
 
   return (
     <div
@@ -121,10 +119,11 @@ export function EventoCard({
               <span className="text-slate-300">•</span>
               <span className="font-medium text-slate-700 flex items-center gap-1.5">
                 <CalendarIcon className="w-4 h-4 text-slate-400" />
-                {format(displayDate, "dd 'de' MMM", { locale: ptBR })}
-                {!mesmaData && (
-                  <span className="text-xs text-slate-500 font-normal ml-1">
-                    (Período: {format(dInicio, 'dd/MM')} a {format(dFim, 'dd/MM')})
+                {mesmaData ? (
+                  format(dInicio, "dd 'de' MMM", { locale: ptBR })
+                ) : (
+                  <span>
+                    {format(dInicio, 'dd/MM/yyyy')} até {format(dFim, 'dd/MM/yyyy')}
                   </span>
                 )}
               </span>

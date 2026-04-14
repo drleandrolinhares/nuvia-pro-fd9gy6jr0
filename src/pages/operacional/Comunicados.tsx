@@ -138,37 +138,23 @@ export default function Comunicados() {
       return end >= today
     })
 
-    const expanded: (Compromisso & { dataInstancia: Date })[] = []
-    baseEvents.forEach((ev) => {
-      let curr = startOfDay(new Date(ev.data_inicio + 'T12:00:00'))
-      const end = startOfDay(new Date(ev.data_fim + 'T12:00:00'))
-      if (curr > end) {
-        expanded.push({ ...ev, dataInstancia: curr })
-      } else {
-        while (curr <= end) {
-          expanded.push({ ...ev, dataInstancia: new Date(curr) })
-          curr.setDate(curr.getDate() + 1)
-        }
-      }
-    })
-
-    let filtered = expanded
+    let filtered = baseEvents
 
     if (activeTab === 'periodo' && selectedDate) {
+      const target = startOfDay(selectedDate)
       filtered = filtered.filter((e) => {
-        return (
-          e.dataInstancia.getDate() === selectedDate.getDate() &&
-          e.dataInstancia.getMonth() === selectedDate.getMonth() &&
-          e.dataInstancia.getFullYear() === selectedDate.getFullYear()
-        )
+        const start = startOfDay(new Date(e.data_inicio + 'T12:00:00'))
+        const end = startOfDay(new Date(e.data_fim + 'T12:00:00'))
+        return target >= start && target <= end
       })
     } else if (activeTab === 'usuario' && selectedUser !== 'todos') {
       filtered = filtered.filter((e) => e.usuario_id === selectedUser)
     }
 
     return filtered.sort((a, b) => {
-      const diff = a.dataInstancia.getTime() - b.dataInstancia.getTime()
-      if (diff !== 0) return diff
+      const startA = startOfDay(new Date(a.data_inicio + 'T12:00:00')).getTime()
+      const startB = startOfDay(new Date(b.data_inicio + 'T12:00:00')).getTime()
+      if (startA !== startB) return startA - startB
       const timeA = a.hora_inicio || '00:00'
       const timeB = b.hora_inicio || '00:00'
       return timeA.localeCompare(timeB)
@@ -307,10 +293,9 @@ export default function Comunicados() {
             ) : (
               eventosFiltrados.map((ev, i) => (
                 <EventoCard
-                  key={`${ev.id}-${ev.dataInstancia.getTime()}`}
+                  key={ev.id}
                   evento={ev}
                   index={i}
-                  dataInstancia={ev.dataInstancia}
                   isArquivado={activeTab === 'arquivados'}
                   canModify={isAdminOrManager || ev.usuario_id === currentUserId}
                   onEdit={handleEdit}
