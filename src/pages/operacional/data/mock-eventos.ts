@@ -26,6 +26,26 @@ const m = today.getMonth()
 
 export const MOCK_EVENTOS: Evento[] = [
   {
+    id: '8',
+    colaborador: 'Dra. Amanda Silva',
+    tipo: 'Congresso',
+    dataInicio: new Date(y, m - 1, 10).toISOString(),
+    dataFim: new Date(y, m - 1, 12).toISOString(),
+    diaInteiro: true,
+    descricao: 'Congresso de Odontopediatria (Evento Passado / Arquivado).',
+  },
+  {
+    id: '9',
+    colaborador: 'Dr. Leandro Linhares',
+    tipo: 'Reunião',
+    dataInicio: new Date(y, m - 1, 20).toISOString(),
+    dataFim: new Date(y, m - 1, 20).toISOString(),
+    diaInteiro: false,
+    horaInicio: '10:00',
+    horaFim: '11:00',
+    descricao: 'Reunião de alinhamento (Evento Passado / Arquivado).',
+  },
+  {
     id: '1',
     colaborador: 'Dr. Leandro Linhares',
     tipo: 'Congresso',

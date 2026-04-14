@@ -12,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus } from 'lucide-react'
+import { Plus, Archive } from 'lucide-react'
 import { Evento, MOCK_EVENTOS } from './data/mock-eventos'
 import { EventoCard } from './components/EventoCard'
 import { EventoModal } from './components/EventoModal'
 
-type FilterTab = 'periodo' | 'usuario' | 'todos'
+type FilterTab = 'periodo' | 'usuario' | 'todos' | 'arquivados'
 
 export default function Comunicados() {
   const [eventos, setEventos] = useState<Evento[]>(MOCK_EVENTOS)
@@ -56,23 +56,49 @@ export default function Comunicados() {
   }, [eventos])
 
   const eventosFiltrados = useMemo(() => {
-    let filtered = [...eventos]
+    const today = startOfDay(new Date())
+
+    const isActiveTabArquivados = activeTab === 'arquivados'
+    const baseEvents = eventos.filter((e) => {
+      const end = startOfDay(parseISO(e.dataFim))
+      if (isActiveTabArquivados) return end < today
+      return end >= today
+    })
+
+    const expanded: (Evento & { dataInstancia: Date })[] = []
+    baseEvents.forEach((ev) => {
+      let curr = startOfDay(parseISO(ev.dataInicio))
+      const end = startOfDay(parseISO(ev.dataFim))
+      if (curr > end) {
+        expanded.push({ ...ev, dataInstancia: curr })
+      } else {
+        while (curr <= end) {
+          expanded.push({ ...ev, dataInstancia: new Date(curr) })
+          curr.setDate(curr.getDate() + 1)
+        }
+      }
+    })
+
+    let filtered = expanded
 
     if (activeTab === 'periodo' && selectedDate) {
       filtered = filtered.filter((e) => {
-        const evDate = parseISO(e.dataInicio)
         return (
-          evDate.getMonth() === selectedDate.getMonth() &&
-          evDate.getFullYear() === selectedDate.getFullYear()
+          e.dataInstancia.getMonth() === selectedDate.getMonth() &&
+          e.dataInstancia.getFullYear() === selectedDate.getFullYear()
         )
       })
     } else if (activeTab === 'usuario' && selectedUser !== 'todos') {
       filtered = filtered.filter((e) => e.colaborador === selectedUser)
     }
 
-    return filtered.sort(
-      (a, b) => new Date(a.dataInicio).getTime() - new Date(b.dataInicio).getTime(),
-    )
+    return filtered.sort((a, b) => {
+      const diff = a.dataInstancia.getTime() - b.dataInstancia.getTime()
+      if (diff !== 0) return diff
+      const timeA = a.horaInicio || '00:00'
+      const timeB = b.horaInicio || '00:00'
+      return timeA.localeCompare(timeB)
+    })
   }, [eventos, selectedDate, activeTab, selectedUser])
 
   const eventDates = useMemo(() => {
@@ -131,6 +157,10 @@ export default function Comunicados() {
                 <TabsTrigger value="periodo">Por Período</TabsTrigger>
                 <TabsTrigger value="usuario">Por Usuário</TabsTrigger>
                 <TabsTrigger value="todos">Todos</TabsTrigger>
+                <TabsTrigger value="arquivados" className="flex items-center gap-1.5">
+                  <Archive className="w-3.5 h-3.5" />
+                  Arquivados
+                </TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -162,9 +192,11 @@ export default function Comunicados() {
             ) : (
               eventosFiltrados.map((ev, i) => (
                 <EventoCard
-                  key={ev.id}
+                  key={`${ev.id}-${ev.dataInstancia.getTime()}`}
                   evento={ev}
                   index={i}
+                  dataInstancia={ev.dataInstancia}
+                  isArquivado={activeTab === 'arquivados'}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
