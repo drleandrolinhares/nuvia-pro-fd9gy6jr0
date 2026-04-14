@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useToast } from '@/hooks/use-toast'
 import { Permissao, UsuarioComPermissoes, saveUsuarioPermissoes } from '@/services/permissoes'
 import { Loader2, Info } from 'lucide-react'
@@ -71,17 +70,17 @@ export function UsuarioPermissoesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="p-6 pb-4">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0">
+        <DialogHeader className="p-6 pb-4 shrink-0">
           <DialogTitle className="uppercase tracking-wider">Permissões Específicas</DialogTitle>
           <DialogDescription>
             Atribua permissões adicionais para o colaborador <strong>{usuario.nome}</strong>.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 overflow-y-auto px-6 min-h-0">
           <div className="space-y-6 pb-6">
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-3 rounded-md flex items-start text-xs">
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-3 rounded-md flex items-start text-xs shrink-0">
               <Info className="size-4 mr-2 shrink-0 mt-0.5" />
               <p>
                 Estas permissões são somadas às permissões do cargo (
@@ -123,9 +122,9 @@ export function UsuarioPermissoesDialog({
               ))}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="p-6 pt-4 border-t border-border/50">
+        <DialogFooter className="p-6 pt-4 border-t border-border/50 shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
