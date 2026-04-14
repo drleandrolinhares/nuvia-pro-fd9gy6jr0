@@ -117,8 +117,14 @@ const navData = [
     title: 'FINANCEIRO',
     icon: ShieldCheck,
     defaultOpen: true,
-    showRole: ['admin'],
-    items: [{ title: 'Estoque', url: '/estoque', icon: Package }],
+    items: [
+      {
+        title: 'Estoque',
+        url: '/estoque',
+        icon: Package,
+        permission: ['Acessar Estoque', 'Gerenciar Estoque'],
+      },
+    ],
   },
   {
     title: 'CONFIGURAÇÕES',
@@ -222,6 +228,9 @@ export function AppSidebar() {
           const filteredItems = group.items.filter((item: any) => {
             if (role === 'admin') return true
             if (item.permission) {
+              if (Array.isArray(item.permission)) {
+                return item.permission.some((p: string) => permissions.includes(p))
+              }
               return permissions.includes(item.permission)
             }
             if (item.showRole && !item.showRole.includes(role)) return false
