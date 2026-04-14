@@ -85,6 +85,11 @@ export default function Comunicados() {
     setIsModalOpen(true)
   }
 
+  const handleDuplicate = (evento: Compromisso) => {
+    setEventoEditando({ ...evento, id: '' })
+    setIsModalOpen(true)
+  }
+
   const handleDeleteClick = (id: string) => {
     setEventoParaDeletar(id)
   }
@@ -104,7 +109,7 @@ export default function Comunicados() {
 
   const handleSave = async (eventoData: any) => {
     try {
-      if (eventoEditando) {
+      if (eventoEditando && eventoEditando.id) {
         const updated = await updateCompromisso(eventoEditando.id, eventoData)
         const userObj = usuarios.find((u) => u.id === updated.usuario_id)
         setEventos((prev) =>
@@ -310,6 +315,7 @@ export default function Comunicados() {
                   canModify={isAdminOrManager || ev.usuario_id === currentUserId}
                   onEdit={handleEdit}
                   onDelete={handleDeleteClick}
+                  onDuplicate={handleDuplicate}
                 />
               ))
             )}

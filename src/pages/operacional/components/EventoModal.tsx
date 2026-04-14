@@ -93,7 +93,7 @@ export function EventoModal({ isOpen, onClose, onSave, evento, usuarios }: Event
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            {evento ? 'Editar Compromisso' : 'Novo Compromisso'}
+            {evento && evento.id ? 'Editar Compromisso' : 'Novo Compromisso'}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-5 py-4">

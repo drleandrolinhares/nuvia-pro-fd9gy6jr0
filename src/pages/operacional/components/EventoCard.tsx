@@ -13,6 +13,7 @@ import {
   Trash2,
   CalendarIcon,
   Archive,
+  Copy,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -58,6 +59,7 @@ export function EventoCard({
   canModify?: boolean
   onEdit: (e: Compromisso) => void
   onDelete: (id: string) => void
+  onDuplicate: (e: Compromisso) => void
 }) {
   const tipoLabel = TIPO_MAPPING[evento.tipo_compromisso] || evento.tipo_compromisso
   const Icon = TIPO_ICONES[tipoLabel] || CalendarIcon
@@ -152,6 +154,16 @@ export function EventoCard({
               <Button
                 variant="ghost"
                 size="icon"
+                title="Duplicar"
+                className="h-9 w-9 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-full"
+                onClick={() => onDuplicate(evento)}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Editar"
                 className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-full"
                 onClick={() => onEdit(evento)}
               >
@@ -160,6 +172,7 @@ export function EventoCard({
               <Button
                 variant="ghost"
                 size="icon"
+                title="Excluir"
                 className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-full"
                 onClick={() => onDelete(evento.id)}
               >
