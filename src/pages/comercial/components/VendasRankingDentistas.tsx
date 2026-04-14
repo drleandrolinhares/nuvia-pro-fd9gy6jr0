@@ -16,10 +16,20 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useRankingDentistas, RankingDentista } from '../hooks/use-ranking-dentistas'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDown, Video, DollarSign } from 'lucide-react'
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ArrowUpDown,
+  Video,
+  DollarSign,
+  Eye,
+  Target,
+  Trophy,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CriativosDentistaModal } from './CriativosDentistaModal'
+import { VendasDetalhamentoDentistaModal } from './VendasDetalhamentoDentistaModal'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -41,6 +51,14 @@ export function VendasRankingDentistas() {
   }, [])
 
   const [modalCriativos, setModalCriativos] = useState<{
+    isOpen: boolean
+    dentista: RankingDentista | null
+  }>({
+    isOpen: false,
+    dentista: null,
+  })
+
+  const [modalDetalhes, setModalDetalhes] = useState<{
     isOpen: boolean
     dentista: RankingDentista | null
   }>({
@@ -137,35 +155,82 @@ export function VendasRankingDentistas() {
         </Select>
       </CardHeader>
 
-      {!loading && sortedRanking.length > 0 && (
-        <div className="px-2 sm:px-6 pb-2">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-            {sortedRanking.map((dentista) => (
-              <Card
-                key={dentista.id}
-                className="min-w-[280px] shrink-0 snap-start border-l-4 border-l-primary shadow-sm bg-primary/5"
-              >
-                <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-xs font-bold text-primary uppercase">
-                    {periodo === 'mes_atual'
-                      ? 'Mês Atual'
-                      : periodo.match(/^\d{4}-\d{2}$/)
-                        ? 'Mês Específico'
-                        : 'Período'}
-                  </CardTitle>
-                  <DollarSign className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <div className="font-bold text-base truncate" title={dentista.nome}>
-                    {dentista.nome}
-                  </div>
-                  <div className="text-2xl text-primary font-black mt-1">
-                    {formatCurrency(dentista.valorTotalConversao)}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">Fechamento Total</div>
-                </CardContent>
-              </Card>
-            ))}
+      {!loading && ranking.length > 0 && (
+        <div className="px-2 sm:px-6 pb-6 space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Top 3 Valor */}
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2 text-muted-foreground uppercase text-xs tracking-wider">
+                <Trophy className="w-4 h-4 text-amber-500" /> Top 3 - Valor Fechado
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[...ranking]
+                  .sort((a, b) => b.valorTotalConversao - a.valorTotalConversao)
+                  .slice(0, 3)
+                  .map((dentista, i) => (
+                    <Card
+                      key={dentista.id}
+                      className={cn(
+                        'border-l-4 shadow-sm',
+                        i === 0
+                          ? 'border-l-amber-500 bg-amber-500/5'
+                          : i === 1
+                            ? 'border-l-slate-400 bg-slate-400/5'
+                            : 'border-l-amber-700 bg-amber-700/5',
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="text-xs font-bold text-muted-foreground mb-1">
+                          #{i + 1} LUGAR
+                        </div>
+                        <div className="font-bold text-sm truncate" title={dentista.nome}>
+                          {dentista.nome}
+                        </div>
+                        <div className="text-lg text-primary font-black mt-1">
+                          {formatCurrency(dentista.valorTotalConversao)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* Top 3 Conversão */}
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2 text-muted-foreground uppercase text-xs tracking-wider">
+                <Target className="w-4 h-4 text-emerald-500" /> Top 3 - Taxa de Conversão
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[...ranking]
+                  .sort((a, b) => b.conversao - a.conversao)
+                  .slice(0, 3)
+                  .map((dentista, i) => (
+                    <Card
+                      key={dentista.id}
+                      className={cn(
+                        'border-l-4 shadow-sm',
+                        i === 0
+                          ? 'border-l-emerald-500 bg-emerald-500/5'
+                          : i === 1
+                            ? 'border-l-emerald-400 bg-emerald-400/5'
+                            : 'border-l-emerald-300 bg-emerald-300/5',
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="text-xs font-bold text-muted-foreground mb-1">
+                          #{i + 1} LUGAR
+                        </div>
+                        <div className="font-bold text-sm truncate" title={dentista.nome}>
+                          {dentista.nome}
+                        </div>
+                        <div className="text-lg text-emerald-600 dark:text-emerald-400 font-black mt-1">
+                          {dentista.conversao.toFixed(1)}%
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -187,6 +252,7 @@ export function VendasRankingDentistas() {
                   column="criativos"
                   className="min-w-[160px]"
                 />
+                <TableHead className="w-[80px] text-center whitespace-nowrap">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -280,6 +346,16 @@ export function VendasRankingDentistas() {
                           </Button>
                         </div>
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setModalDetalhes({ isOpen: true, dentista: item })}
+                          title="Ver Histórico de Avaliações e Fechamentos"
+                        >
+                          <Eye className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )
                 })
@@ -295,6 +371,16 @@ export function VendasRankingDentistas() {
           onClose={() => setModalCriativos((prev) => ({ ...prev, isOpen: false }))}
           dentista={modalCriativos.dentista}
           onSuccess={refetch}
+        />
+      )}
+
+      {modalDetalhes.dentista && (
+        <VendasDetalhamentoDentistaModal
+          isOpen={modalDetalhes.isOpen}
+          onClose={() => setModalDetalhes((prev) => ({ ...prev, isOpen: false }))}
+          dentistaId={modalDetalhes.dentista.id}
+          dentistaNome={modalDetalhes.dentista.nome}
+          periodo={periodo}
         />
       )}
     </Card>
