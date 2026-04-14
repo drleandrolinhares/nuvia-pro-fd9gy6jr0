@@ -53,6 +53,22 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 
+const normalizePermissionToKey = (name: string): string => {
+  const lowerName = name.toLowerCase()
+  if (lowerName.includes('estoque')) return 'financeiro_estoque'
+  if (lowerName.includes('sac')) return 'operacional_sac'
+  if (lowerName.includes('rotina')) return 'operacional_rotina'
+  if (lowerName.includes('performance')) return 'operacional_performance'
+  if (lowerName.includes('comunicados')) return 'operacional_comunicados'
+  if (lowerName.includes('vendas')) return 'comercial_vendas'
+  if (lowerName.includes('comissões') || lowerName.includes('comissoes'))
+    return 'comercial_comissoes'
+  if (lowerName.includes('pacientes')) return 'comercial_pacientes'
+  if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
+    return 'comercial_negociacao'
+  return lowerName.replace(/\s+/g, '_')
+}
+
 const navData = [
   {
     title: 'SISTEMA',
@@ -62,24 +78,29 @@ const navData = [
     title: 'OPERACIONAL',
     icon: Activity,
     items: [
-      { title: 'SAC', url: '/operacional/sac', icon: MessageSquare, permission: 'Acessar SAC' },
+      {
+        title: 'SAC',
+        url: '/operacional/sac',
+        icon: MessageSquare,
+        permission: ['operacional_sac', 'Acessar SAC'],
+      },
       {
         title: 'Rotina Diária',
         url: '/operacional/rotina',
         icon: Clock,
-        permission: 'Acessar Rotina Diária',
+        permission: ['operacional_rotina', 'Acessar Rotina Diária'],
       },
       {
         title: 'Performance',
         url: '/operacional/performance',
         icon: BarChart3,
-        permission: 'Acessar Performance',
+        permission: ['operacional_performance', 'Acessar Performance'],
       },
       {
         title: 'Comunicados',
         url: '/operacional/comunicados',
         icon: Bell,
-        permission: 'Acessar Comunicados',
+        permission: ['operacional_comunicados', 'Acessar Comunicados'],
       },
     ],
   },
@@ -91,25 +112,25 @@ const navData = [
         title: 'Gestão de Vendas',
         url: '/comercial/vendas',
         icon: FileBarChart,
-        permission: 'Acessar Gestão de Vendas',
+        permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
       },
       {
         title: 'Controle de Comissões',
         url: '/comercial/comissoes',
         icon: Landmark,
-        permission: 'Acessar Controle de Comissões',
+        permission: ['comercial_comissoes', 'Acessar Controle de Comissões'],
       },
       {
         title: 'Pacientes',
         url: '/comercial/pacientes',
         icon: Users,
-        permission: 'Acessar Pacientes',
+        permission: ['comercial_pacientes', 'Acessar Pacientes'],
       },
       {
         title: 'Negociação',
         url: '/comercial/negociacao',
         icon: Handshake,
-        permission: 'Acessar Negociações',
+        permission: ['comercial_negociacao', 'Acessar Negociações'],
       },
     ],
   },
@@ -122,7 +143,7 @@ const navData = [
         title: 'Estoque',
         url: '/estoque',
         icon: Package,
-        permission: ['Acessar Estoque', 'Gerenciar Estoque'],
+        permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
       },
     ],
   },
@@ -181,11 +202,17 @@ export function AppSidebar() {
         }
 
         const permSet = new Set<string>()
+
+        const addPerm = (nome: string) => {
+          permSet.add(nome)
+          permSet.add(normalizePermissionToKey(nome))
+        }
+
         userPerms?.forEach((up: any) => {
-          if (up.permissoes?.nome) permSet.add(up.permissoes.nome)
+          if (up.permissoes?.nome) addPerm(up.permissoes.nome)
         })
         cargoPerms?.forEach((cp: any) => {
-          if (cp.permissoes?.nome) permSet.add(cp.permissoes.nome)
+          if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
         })
 
         setPermissions(Array.from(permSet))
