@@ -6,6 +6,7 @@ export interface RankingDentista {
   id: string
   nome: string
   avaliacoes: number
+  comparecimentos: number
   fechamentos: number
   conversao: number
   ticketOportunidade: number
@@ -131,6 +132,7 @@ export function useRankingDentistas(periodo: string) {
           const crs = criativos?.filter((c) => c.dentista_avaliador_id === d.id) || []
 
           const qtdAvaliacoes = avs.length
+          const qtdComparecimentos = avs.length
           const qtdFechamentos = vds.length
           const conversao = qtdAvaliacoes > 0 ? (qtdFechamentos / qtdAvaliacoes) * 100 : 0
 
@@ -150,6 +152,7 @@ export function useRankingDentistas(periodo: string) {
             id: d.id,
             nome: d.nome,
             avaliacoes: qtdAvaliacoes,
+            comparecimentos: qtdComparecimentos,
             fechamentos: qtdFechamentos,
             conversao,
             ticketOportunidade,

@@ -25,6 +25,8 @@ import {
   Eye,
   Target,
   Trophy,
+  ClipboardList,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -231,6 +233,82 @@ export function VendasRankingDentistas() {
                   ))}
               </div>
             </div>
+
+            {/* Top 3 Avaliações */}
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2 text-muted-foreground uppercase text-xs tracking-wider">
+                <ClipboardList className="w-4 h-4 text-blue-500" /> Top 3 - Avaliações
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[...ranking]
+                  .sort((a, b) => b.avaliacoes - a.avaliacoes)
+                  .slice(0, 3)
+                  .map((dentista, i) => (
+                    <Card
+                      key={`av-${dentista.id}`}
+                      className={cn(
+                        'border-l-4 shadow-sm',
+                        i === 0
+                          ? 'border-l-blue-500 bg-blue-500/5'
+                          : i === 1
+                            ? 'border-l-blue-400 bg-blue-400/5'
+                            : 'border-l-blue-300 bg-blue-300/5',
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="text-xs font-bold text-muted-foreground mb-1">
+                          #{i + 1} LUGAR
+                        </div>
+                        <div className="font-bold text-sm truncate" title={dentista.nome}>
+                          {dentista.nome}
+                        </div>
+                        <div className="text-lg text-blue-600 dark:text-blue-400 font-black mt-1">
+                          {dentista.avaliacoes}{' '}
+                          <span className="text-sm font-normal text-muted-foreground">avals</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* Top 3 Comparecimentos */}
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2 text-muted-foreground uppercase text-xs tracking-wider">
+                <Users className="w-4 h-4 text-purple-500" /> Top 3 - Comparecimentos
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[...ranking]
+                  .sort((a, b) => b.comparecimentos - a.comparecimentos)
+                  .slice(0, 3)
+                  .map((dentista, i) => (
+                    <Card
+                      key={`comp-${dentista.id}`}
+                      className={cn(
+                        'border-l-4 shadow-sm',
+                        i === 0
+                          ? 'border-l-purple-500 bg-purple-500/5'
+                          : i === 1
+                            ? 'border-l-purple-400 bg-purple-400/5'
+                            : 'border-l-purple-300 bg-purple-300/5',
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="text-xs font-bold text-muted-foreground mb-1">
+                          #{i + 1} LUGAR
+                        </div>
+                        <div className="font-bold text-sm truncate" title={dentista.nome}>
+                          {dentista.nome}
+                        </div>
+                        <div className="text-lg text-purple-600 dark:text-purple-400 font-black mt-1">
+                          {dentista.comparecimentos}{' '}
+                          <span className="text-sm font-normal text-muted-foreground">comps</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -242,6 +320,7 @@ export function VendasRankingDentistas() {
               <TableRow>
                 <TableHead className="w-[80px] text-center whitespace-nowrap">Posição</TableHead>
                 <SortableHead label="Nome do Dentista" column="nome" className="min-w-[180px]" />
+                <SortableHead label="Nº de Comparecimentos" column="comparecimentos" />
                 <SortableHead label="Nº de Avaliações" column="avaliacoes" />
                 <SortableHead label="Nº de Fechamentos" column="fechamentos" />
                 <SortableHead label="% de Conversão" column="conversao" />
@@ -258,13 +337,13 @@ export function VendasRankingDentistas() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     Carregando ranking...
                   </TableCell>
                 </TableRow>
               ) : sortedRanking.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     Nenhum dado encontrado para o período.
                   </TableCell>
                 </TableRow>
@@ -295,6 +374,7 @@ export function VendasRankingDentistas() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{item.nome}</TableCell>
+                      <TableCell>{item.comparecimentos}</TableCell>
                       <TableCell>{item.avaliacoes}</TableCell>
                       <TableCell>{item.fechamentos}</TableCell>
                       <TableCell className={cn('font-bold', numberColor)}>
