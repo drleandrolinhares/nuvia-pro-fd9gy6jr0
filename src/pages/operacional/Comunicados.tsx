@@ -152,6 +152,7 @@ export default function Comunicados() {
     if (activeTab === 'periodo' && selectedDate) {
       filtered = filtered.filter((e) => {
         return (
+          e.dataInstancia.getDate() === selectedDate.getDate() &&
           e.dataInstancia.getMonth() === selectedDate.getMonth() &&
           e.dataInstancia.getFullYear() === selectedDate.getFullYear()
         )
@@ -171,11 +172,14 @@ export default function Comunicados() {
 
   const eventDates = useMemo(() => {
     const dates: Date[] = []
+    const today = startOfDay(new Date())
     eventos.forEach((e) => {
       let curr = startOfDay(new Date(e.data_inicio + 'T12:00:00'))
       const end = endOfDay(new Date(e.data_fim + 'T12:00:00'))
       while (curr <= end) {
-        dates.push(new Date(curr))
+        if (curr >= today) {
+          dates.push(new Date(curr))
+        }
         curr.setDate(curr.getDate() + 1)
       }
     })
@@ -205,6 +209,10 @@ export default function Comunicados() {
               setSelectedDate(date || new Date())
               setActiveTab('periodo')
             }}
+            onMonthChange={(month) => {
+              setSelectedDate(month)
+              setActiveTab('periodo')
+            }}
             locale={ptBR}
             captionLayout="dropdown"
             fromYear={2020}
@@ -221,14 +229,23 @@ export default function Comunicados() {
 
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <div className="z-10 flex flex-col gap-4 border-b bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold text-slate-800">
-            Feed de Compromissos
-            {activeTab === 'periodo' && selectedDate && (
-              <span className="ml-3 text-lg font-medium text-slate-500">
-                - {format(selectedDate, 'MMMM yyyy', { locale: ptBR })}
-              </span>
-            )}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-800">
+              Feed de Compromissos
+              {activeTab === 'periodo' && selectedDate && (
+                <span className="ml-3 text-lg font-medium text-slate-500">
+                  - {format(selectedDate, "dd 'de' MMMM yyyy", { locale: ptBR })}
+                </span>
+              )}
+            </h2>
+            <Button
+              onClick={handleAdd}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Novo
+            </Button>
+          </div>
 
           <div className="flex flex-wrap items-center gap-4">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
@@ -284,14 +301,6 @@ export default function Comunicados() {
             )}
           </div>
         </ScrollArea>
-
-        <Button
-          onClick={handleAdd}
-          className="absolute bottom-8 right-8 h-16 w-16 rounded-full bg-emerald-600 shadow-xl transition-transform hover:scale-105 hover:bg-emerald-700"
-          size="icon"
-        >
-          <Plus className="h-8 w-8 text-white" />
-        </Button>
       </div>
 
       <EventoModal
