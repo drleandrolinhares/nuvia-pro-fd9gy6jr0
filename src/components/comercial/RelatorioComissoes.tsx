@@ -60,9 +60,12 @@ export function RelatorioComissoes({
   const [profToClose, setProfToClose] = useState<any>(null)
   const [fechando, setFechando] = useState(false)
 
+  const isCrcUser = !isAdmin && !!crcId && !dentistaId
+  const canViewAll = isAdmin || isCrcUser
+
   useEffect(() => {
     fetchDados()
-  }, [mesCompetencia, isAdmin, dentistaId, crcId])
+  }, [mesCompetencia, isAdmin, dentistaId, crcId, canViewAll])
 
   const fetchDados = async () => {
     setLoading(true)
@@ -93,9 +96,6 @@ export function RelatorioComissoes({
         return f?.percentual_comissao || 0
       }
 
-      const isCrcUser = !isAdmin && crcId && !dentistaId
-      const isDentistaUser = !isAdmin && dentistaId && !crcId
-
       for (const v of resVendas.data || []) {
         const statusFatura = v.faturas_comissoes?.status_pagamento
         let statusStr = 'em_aberto'
@@ -103,8 +103,8 @@ export function RelatorioComissoes({
           statusStr = statusFatura === 'pago' ? 'pago' : 'aguardando_pagamento'
         }
 
-        if (v.dentista_avaliador && !isCrcUser) {
-          if (isAdmin || dentistaId === v.dentista_avaliador) {
+        if (v.dentista_avaliador) {
+          if (canViewAll || dentistaId === v.dentista_avaliador) {
             const perc = getPercentual(resFaixasDentista.data || [], v.percentual_entrada)
             const dentista = resDentistas.data?.find((d) => d.id === v.dentista_avaliador)
             formatado.push({
@@ -123,8 +123,8 @@ export function RelatorioComissoes({
             })
           }
         }
-        if (v.crc && !isDentistaUser) {
-          if (isAdmin || crcId === v.crc) {
+        if (v.crc) {
+          if (canViewAll || crcId === v.crc) {
             const perc = getPercentual(resFaixasCrc.data || [], v.percentual_entrada)
             const crc = resCrcs.data?.find((c) => c.id === v.crc)
             formatado.push({
@@ -357,7 +357,7 @@ export function RelatorioComissoes({
         </Card>
       </div>
 
-      {isAdmin && (resumoAvaliadores.length > 0 || resumoCrc.length > 0) && (
+      {canViewAll && (resumoAvaliadores.length > 0 || resumoCrc.length > 0) && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
           {resumoAvaliadores.length > 0 && (
             <div>
@@ -477,7 +477,7 @@ export function RelatorioComissoes({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data Venda</TableHead>
-                    {isAdmin && <TableHead>Profissional</TableHead>}
+                    {canViewAll && <TableHead>Profissional</TableHead>}
                     <TableHead>Paciente</TableHead>
                     <TableHead className="text-right">Valor Venda</TableHead>
                     <TableHead className="text-right">% Comis.</TableHead>
@@ -491,7 +491,7 @@ export function RelatorioComissoes({
                       <TableCell>
                         {new Date(row.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                       </TableCell>
-                      {isAdmin && (
+                      {canViewAll && (
                         <TableCell>
                           <div className="font-medium">{row.profissional}</div>
                           <div className="text-xs text-muted-foreground">{row.tipo}</div>
@@ -528,7 +528,7 @@ export function RelatorioComissoes({
                   {dados.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={isAdmin ? 7 : 6}
+                        colSpan={canViewAll ? 7 : 6}
                         className="text-center py-6 text-muted-foreground"
                       >
                         Nenhuma comissão encontrada para o período selecionado.
