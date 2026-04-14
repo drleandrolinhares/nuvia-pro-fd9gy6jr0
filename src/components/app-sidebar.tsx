@@ -61,12 +61,26 @@ const navData = [
   {
     title: 'OPERACIONAL',
     icon: Activity,
-    showRole: ['admin'],
     items: [
-      { title: 'SAC', url: '/operacional/sac', icon: MessageSquare },
-      { title: 'Rotina Diária', url: '/operacional/rotina', icon: Clock },
-      { title: 'Performance', url: '/operacional/performance', icon: BarChart3 },
-      { title: 'Comunicados', url: '/operacional/comunicados', icon: Bell },
+      { title: 'SAC', url: '/operacional/sac', icon: MessageSquare, permission: 'Acessar SAC' },
+      {
+        title: 'Rotina Diária',
+        url: '/operacional/rotina',
+        icon: Clock,
+        permission: 'Acessar Rotina Diária',
+      },
+      {
+        title: 'Performance',
+        url: '/operacional/performance',
+        icon: BarChart3,
+        permission: 'Acessar Performance',
+      },
+      {
+        title: 'Comunicados',
+        url: '/operacional/comunicados',
+        icon: Bell,
+        permission: 'Acessar Comunicados',
+      },
     ],
   },
   {

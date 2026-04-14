@@ -15,7 +15,9 @@ import { useAuth } from '@/hooks/use-auth'
 export default function Vendas() {
   const { toast } = useToast()
   const { profile } = useAuth()
-  const canEdit = profile?.role === 'admin' || profile?.role === 'crc_comercial'
+  const [hasGerenciarVendas, setHasGerenciarVendas] = useState(false)
+  const canEdit =
+    profile?.role === 'admin' || profile?.role === 'crc_comercial' || hasGerenciarVendas
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
   const [loading, setLoading] = useState(true)
   const [dentistas, setDentistas] = useState<any[]>([])
@@ -50,9 +52,11 @@ export default function Vendas() {
     Promise.all([
       supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
       supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
-    ]).then(([d, c]) => {
+      supabase.rpc('has_permission', { permission_name: 'Gerenciar Vendas' }),
+    ]).then(([d, c, p]) => {
       if (d.data) setDentistas(d.data)
       if (c.data) setCrcs(c.data)
+      if (p.data) setHasGerenciarVendas(!!p.data)
     })
   }, [])
 
