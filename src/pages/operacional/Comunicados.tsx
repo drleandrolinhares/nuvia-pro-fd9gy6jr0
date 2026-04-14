@@ -4,16 +4,29 @@ import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Plus } from 'lucide-react'
 import { Evento, MOCK_EVENTOS } from './data/mock-eventos'
 import { EventoCard } from './components/EventoCard'
 import { EventoModal } from './components/EventoModal'
+
+type FilterTab = 'periodo' | 'usuario' | 'todos'
 
 export default function Comunicados() {
   const [eventos, setEventos] = useState<Evento[]>(MOCK_EVENTOS)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventoEditando, setEventoEditando] = useState<Evento | null>(null)
+
+  const [activeTab, setActiveTab] = useState<FilterTab>('periodo')
+  const [selectedUser, setSelectedUser] = useState<string>('todos')
 
   const handleAdd = () => {
     setEventoEditando(null)
@@ -38,18 +51,29 @@ export default function Comunicados() {
     setIsModalOpen(false)
   }
 
+  const colaboradores = useMemo(() => {
+    return Array.from(new Set(eventos.map((e) => e.colaborador))).sort()
+  }, [eventos])
+
   const eventosFiltrados = useMemo(() => {
-    if (!selectedDate) return eventos
-    return eventos
-      .filter((e) => {
+    let filtered = [...eventos]
+
+    if (activeTab === 'periodo' && selectedDate) {
+      filtered = filtered.filter((e) => {
         const evDate = parseISO(e.dataInicio)
         return (
           evDate.getMonth() === selectedDate.getMonth() &&
           evDate.getFullYear() === selectedDate.getFullYear()
         )
       })
-      .sort((a, b) => new Date(a.dataInicio).getTime() - new Date(b.dataInicio).getTime())
-  }, [eventos, selectedDate])
+    } else if (activeTab === 'usuario' && selectedUser !== 'todos') {
+      filtered = filtered.filter((e) => e.colaborador === selectedUser)
+    }
+
+    return filtered.sort(
+      (a, b) => new Date(a.dataInicio).getTime() - new Date(b.dataInicio).getTime(),
+    )
+  }, [eventos, selectedDate, activeTab, selectedUser])
 
   const eventDates = useMemo(() => {
     const dates: Date[] = []
@@ -72,7 +96,10 @@ export default function Comunicados() {
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={(date) => {
+              setSelectedDate(date || new Date())
+              setActiveTab('periodo')
+            }}
             locale={ptBR}
             captionLayout="dropdown"
             fromYear={2020}
@@ -88,23 +115,49 @@ export default function Comunicados() {
       </div>
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
-        <div className="p-6 border-b bg-white shadow-sm z-10 flex items-center justify-between">
+        <div className="p-6 border-b bg-white shadow-sm z-10 flex flex-col gap-4">
           <h2 className="text-2xl font-bold text-slate-800">
             Feed de Compromissos
-            {selectedDate && (
+            {activeTab === 'periodo' && selectedDate && (
               <span className="text-slate-500 font-medium ml-3 text-lg">
                 - {format(selectedDate, 'MMMM yyyy', { locale: ptBR })}
               </span>
             )}
           </h2>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
+              <TabsList>
+                <TabsTrigger value="periodo">Por Período</TabsTrigger>
+                <TabsTrigger value="usuario">Por Usuário</TabsTrigger>
+                <TabsTrigger value="todos">Todos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {activeTab === 'usuario' && (
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-[280px] bg-white">
+                  <SelectValue placeholder="Selecione um colaborador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os colaboradores</SelectItem>
+                  {colaboradores.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-4xl mx-auto space-y-4 pb-24">
             {eventosFiltrados.length === 0 ? (
               <div className="text-center text-slate-500 mt-20 p-8 border-2 border-dashed rounded-xl bg-white">
-                <p className="text-lg font-medium">Nenhum compromisso encontrado para este mês.</p>
-                <p className="text-sm mt-1">Selecione outro mês ou adicione um novo compromisso.</p>
+                <p className="text-lg font-medium">Nenhum compromisso encontrado.</p>
+                <p className="text-sm mt-1">Ajuste os filtros ou adicione um novo compromisso.</p>
               </div>
             ) : (
               eventosFiltrados.map((ev, i) => (
