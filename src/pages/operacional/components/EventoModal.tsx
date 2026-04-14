@@ -74,6 +74,20 @@ export function EventoModal({ isOpen, onClose, onSave, evento, usuarios }: Event
     }
   }, [evento, isOpen])
 
+  const handleDataInicioChange = (val: string) => {
+    setDataInicio(val)
+    if (!dataFim || val > dataFim) {
+      setDataFim(val)
+    }
+  }
+
+  const handleDataFimChange = (val: string) => {
+    setDataFim(val)
+    if (dataInicio && val < dataInicio) {
+      setDataInicio(val)
+    }
+  }
+
   const handleSave = () => {
     if (!usuarioId || !dataInicio || !dataFim) return
     onSave({
@@ -135,7 +149,7 @@ export function EventoModal({ isOpen, onClose, onSave, evento, usuarios }: Event
               <Input
                 type="date"
                 value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
+                onChange={(e) => handleDataInicioChange(e.target.value)}
                 className="w-full"
               />
             </div>
@@ -144,7 +158,7 @@ export function EventoModal({ isOpen, onClose, onSave, evento, usuarios }: Event
               <Input
                 type="date"
                 value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
+                onChange={(e) => handleDataFimChange(e.target.value)}
                 className="w-full"
               />
             </div>
