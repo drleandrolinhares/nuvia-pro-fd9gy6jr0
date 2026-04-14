@@ -200,10 +200,24 @@ export default function Comunicados() {
   return (
     <div className="flex h-full bg-slate-50/50">
       <div className="hidden w-[360px] overflow-y-auto border-r bg-white p-6 shadow-sm z-10 md:block">
-        <h2 className="mb-6 text-xl font-bold text-slate-800">Calendário</h2>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-800">Calendário</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedDate(new Date())
+              setActiveTab('periodo')
+            }}
+            className="h-8 px-3 text-xs font-medium"
+          >
+            Hoje
+          </Button>
+        </div>
         <div className="rounded-xl border bg-slate-50/50 p-2 shadow-sm">
           <Calendar
             mode="single"
+            month={selectedDate}
             selected={selectedDate}
             onSelect={(date) => {
               setSelectedDate(date || new Date())
