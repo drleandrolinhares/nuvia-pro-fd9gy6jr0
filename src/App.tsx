@@ -16,6 +16,7 @@ import RegistroUsuarios from './pages/admin/RegistroUsuarios'
 import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
+import Comunicados from './pages/operacional/Comunicados'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
@@ -162,7 +163,7 @@ const AppRoutes = () => {
           path="/operacional/comunicados"
           element={
             <ProtectedRoute allowedRoles={[]}>
-              <Placeholder />
+              <Comunicados />
             </ProtectedRoute>
           }
         />
