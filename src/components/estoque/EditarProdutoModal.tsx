@@ -50,7 +50,8 @@ export function EditarProdutoModal({
   const [especialidadeId, setEspecialidadeId] = useState('none')
   const [codigoBarras, setCodigoBarras] = useState('')
   const [quantidadeMinima, setQuantidadeMinima] = useState('')
-  const [sala, setSala] = useState('')
+  const [salaId, setSalaId] = useState('none')
+  const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
   const [numeroArmario, setNumeroArmario] = useState('')
   const [custoUnitario, setCustoUnitario] = useState('0')
 
@@ -63,6 +64,7 @@ export function EditarProdutoModal({
   useEffect(() => {
     if (open) {
       loadEspecialidades()
+      cadastrosService.getItems('salas').then((data) => setSalas(data || []))
       cadastrosService.getCampoOpcoes().then((data) => {
         if (data) {
           const map: Record<string, any[]> = {}
@@ -80,7 +82,7 @@ export function EditarProdutoModal({
         setEspecialidadeId(produto.especialidade_id || 'none')
         setCodigoBarras(produto.codigo_barras || '')
         setQuantidadeMinima(produto.quantidade_minima?.toString() || '0')
-        setSala(produto.sala || '')
+        setSalaId(produto.sala_id || 'none')
         setNumeroArmario(produto.numero_armario || '')
         setCustoUnitario(produto.custo_unitario?.toString() || '0')
 
@@ -137,13 +139,17 @@ export function EditarProdutoModal({
     }
 
     setLoading(true)
+
+    const salaNome = salaId !== 'none' ? salas.find((s) => s.id === salaId)?.nome || null : null
+
     const { data, error } = await updateProduto(produto.id, {
       nome: nome.trim(),
       marca: marca.trim() || null,
       especialidade_id: especialidadeId === 'none' ? null : especialidadeId,
       codigo_barras: codigoBarras.trim() || null,
       quantidade_minima: parseInt(quantidadeMinima) || 0,
-      sala: sala.trim() || null,
+      sala_id: salaId === 'none' ? null : salaId,
+      sala: salaNome,
       numero_armario: numeroArmario.trim() || null,
       custo_unitario: parseFloat(custoUnitario) || 0,
     })
@@ -240,12 +246,19 @@ export function EditarProdutoModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="sala">Sala</Label>
-              <Input
-                id="sala"
-                value={sala}
-                onChange={(e) => setSala(e.target.value)}
-                placeholder="Ex: Estoque Principal"
-              />
+              <Select value={salaId} onValueChange={setSalaId}>
+                <SelectTrigger id="sala">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  {salas.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="armario">Nº do Armário</Label>

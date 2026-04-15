@@ -40,6 +40,7 @@ const formSchema = z.object({
   especialidade_id: z.string().optional(),
   embalagem: z.string().optional(),
   custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
+  sala_id: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -58,6 +59,7 @@ export function CriarProdutoModal({
   onSuccess,
 }: CriarProdutoModalProps) {
   const [especialidades, setEspecialidades] = useState<{ id: string; nome: string }[]>([])
+  const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
@@ -86,10 +88,12 @@ export function CriarProdutoModal({
         especialidade_id: 'none',
         embalagem: '',
         custo_unitario: 0,
+        sala_id: 'none',
       })
       fetchEspecialidades().then((res) => {
         if (res.data) setEspecialidades(res.data)
       })
+      cadastrosService.getItems('salas').then((data) => setSalas(data || []))
       cadastrosService.getCampoOpcoes().then((data) => {
         if (data) {
           const map: Record<string, any[]> = {}
@@ -118,9 +122,15 @@ export function CriarProdutoModal({
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
+
+    const salaNome =
+      values.sala_id !== 'none' ? salas.find((s) => s.id === values.sala_id)?.nome || null : null
+
     const payload = {
       ...values,
       especialidade_id: values.especialidade_id === 'none' ? null : values.especialidade_id,
+      sala_id: values.sala_id === 'none' ? null : values.sala_id,
+      sala: salaNome,
       quantidade_estoque: 0,
       quantidade_minima: 0,
       custo_unitario: values.custo_unitario || 0,
@@ -225,13 +235,13 @@ export function CriarProdutoModal({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="embalagem"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Embalagem de Compra</FormLabel>
+                    <FormLabel>Embalagem</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -257,10 +267,36 @@ export function CriarProdutoModal({
                 name="custo_unitario"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Custo Unitário (Aprox.)</FormLabel>
+                    <FormLabel>Custo Unitário</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="0.00" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sala_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sala</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {salas.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
