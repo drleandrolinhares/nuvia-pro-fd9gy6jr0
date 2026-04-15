@@ -69,6 +69,9 @@ export default function Estoque() {
   const [canManage, setCanManage] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
   const [activeTab, setActiveTab] = useState('produtos')
+  const [camposDinamicos, setCamposDinamicos] = useState<
+    Record<string, { tamanho: string; diametro: string }>
+  >({})
   const { toast } = useToast()
   const { dataVersion, invalidateCache } = useCache()
 
@@ -102,6 +105,34 @@ export default function Estoque() {
       })
     } else if (data) {
       setProdutos(data)
+
+      const ids = data.map((p) => p.id)
+      if (ids.length > 0) {
+        const { data: campos } = await supabase
+          .from('produto_campos_valores')
+          .select(`
+            produto_id,
+            valor,
+            campos_personalizados!inner(nome)
+          `)
+          .in('produto_id', ids)
+
+        if (campos) {
+          const map: Record<string, { tamanho: string; diametro: string }> = {}
+          campos.forEach((c) => {
+            const pid = c.produto_id
+            const nomeCampo = (c.campos_personalizados as any)?.nome?.toLowerCase() || ''
+            if (!map[pid]) map[pid] = { tamanho: '-', diametro: '-' }
+
+            if (nomeCampo.includes('tamanho')) {
+              map[pid].tamanho = c.valor || '-'
+            } else if (nomeCampo.includes('diâmetro') || nomeCampo.includes('diametro')) {
+              map[pid].diametro = c.valor || '-'
+            }
+          })
+          setCamposDinamicos(map)
+        }
+      }
     }
     setLoading(false)
   }
@@ -570,11 +601,11 @@ export default function Estoque() {
                                       )}
                                     </div>
                                   </TableCell>
-                                  <TableCell className="text-slate-600 text-sm">
-                                    {item.embalagens?.nome || item.embalagem || '-'}
+                                  <TableCell className="text-slate-600 text-sm font-medium">
+                                    {camposDinamicos[item.id]?.tamanho || '-'}
                                   </TableCell>
-                                  <TableCell className="text-slate-600 text-sm">
-                                    {item.lote || '-'}
+                                  <TableCell className="text-slate-600 text-sm font-medium">
+                                    {camposDinamicos[item.id]?.diametro || '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex flex-col items-end">

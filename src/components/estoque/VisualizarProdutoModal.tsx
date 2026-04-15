@@ -5,12 +5,8 @@ import { Loader2, ArrowDownRight, ArrowUpRight, Package } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Produto,
-  fetchProdutoMovimentacoes,
-  fetchEspecialidadeCampos,
-  fetchProdutoCamposValores,
-} from '@/services/produtos'
+import { Produto, fetchProdutoMovimentacoes } from '@/services/produtos'
+import { supabase } from '@/lib/supabase/client'
 
 interface VisualizarProdutoModalProps {
   produto: Produto | null
@@ -27,31 +23,71 @@ export function VisualizarProdutoModal({
   const [saidas, setSaidas] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
-  const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
+  const [camposExtras, setCamposExtras] = useState<{ nome: string; valor: string }[]>([])
 
   useEffect(() => {
     if (open && produto) {
       loadMovimentacoes()
-      if (produto.especialidade_id) {
-        fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
-          if (res.data) setCamposDinamicos(res.data)
-        })
-        fetchProdutoCamposValores(produto.id).then((res) => {
-          if (res.data) {
-            const vals: Record<string, string> = {}
-            res.data.forEach((item: any) => {
-              vals[item.campo_id] = item.valor
-            })
-            setValoresDinamicos(vals)
-          }
-        })
-      } else {
-        setCamposDinamicos([])
-        setValoresDinamicos({})
-      }
+      loadCamposExtras()
     }
   }, [open, produto])
+
+  const loadCamposExtras = async () => {
+    if (!produto) return
+
+    let fieldsConfig: any[] = []
+    if (produto.especialidade_id) {
+      const { data } = await supabase
+        .from('especialidade_campos')
+        .select(`
+          campo_id,
+          campos_personalizados ( nome )
+        `)
+        .eq('especialidade_id', produto.especialidade_id)
+        .eq('ativo', true)
+
+      if (data) fieldsConfig = data
+    }
+
+    const { data: valuesData } = await supabase
+      .from('produto_campos_valores')
+      .select(`
+        campo_id,
+        valor,
+        campos_personalizados ( nome )
+      `)
+      .eq('produto_id', produto.id)
+
+    const valuesMap = new Map()
+    if (valuesData) {
+      valuesData.forEach((v) => {
+        valuesMap.set(v.campo_id, v.valor)
+      })
+    }
+
+    const result: { nome: string; valor: string }[] = []
+
+    fieldsConfig.forEach((fc) => {
+      result.push({
+        nome: fc.campos_personalizados?.nome || 'Campo',
+        valor: valuesMap.get(fc.campo_id) || '-',
+      })
+      valuesMap.delete(fc.campo_id)
+    })
+
+    if (valuesData) {
+      valuesData.forEach((v) => {
+        if (valuesMap.has(v.campo_id)) {
+          result.push({
+            nome: (v.campos_personalizados as any)?.nome || 'Campo Extra',
+            valor: v.valor || '-',
+          })
+        }
+      })
+    }
+
+    setCamposExtras(result)
+  }
 
   const loadMovimentacoes = async () => {
     if (!produto) return
@@ -90,9 +126,9 @@ export function VisualizarProdutoModal({
                 {produto.especialidades?.nome || 'Não classificado'}
               </Badge>
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <p className="text-sm font-medium text-slate-500">Código de Barras</p>
-              <p className="font-mono text-sm text-slate-900 mt-1">
+              <p className="font-mono text-sm text-slate-900 mt-1 break-all">
                 {produto.codigo_barras || '-'}
               </p>
             </div>
@@ -116,24 +152,18 @@ export function VisualizarProdutoModal({
             </div>
           </div>
 
-          {camposDinamicos.length > 0 && (
+          {camposExtras.length > 0 && (
             <div className="bg-[#1a2a4a] text-white p-5 rounded-xl space-y-4 shadow-sm animate-fade-in">
               <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider border-b border-white/10 pb-2">
                 Dados do Implante
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {camposDinamicos.map((config) => {
-                  const campo = config.campos
-                  if (!campo) return null
-                  return (
-                    <div key={campo.id}>
-                      <p className="text-xs font-medium text-slate-300">{campo.nome}</p>
-                      <p className="font-semibold text-white mt-1">
-                        {valoresDinamicos[campo.id] || '-'}
-                      </p>
-                    </div>
-                  )
-                })}
+                {camposExtras.map((campo, idx) => (
+                  <div key={idx}>
+                    <p className="text-xs font-medium text-slate-300">{campo.nome}</p>
+                    <p className="font-semibold text-white mt-1">{campo.valor}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
