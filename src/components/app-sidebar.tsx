@@ -13,6 +13,7 @@ import {
   Handshake,
   Landmark,
   LayoutDashboard,
+  ListTodo,
   LogOut,
   MessageSquare,
   Package,
@@ -152,6 +153,12 @@ const navData = [
         url: '/fornecedores',
         icon: Truck,
         permission: ['configuracoes_fornecedores'],
+      },
+      {
+        title: 'Configuração de Rotinas',
+        url: '/configuracoes/rotinas',
+        icon: ListTodo,
+        showRole: ['admin'],
       },
       {
         title: 'NEGOCIAÇÃO DADOS',

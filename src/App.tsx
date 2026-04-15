@@ -14,6 +14,7 @@ import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
 import RegistroUsuarios from './pages/admin/RegistroUsuarios'
 import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
+import ConfiguracaoRotinas from './pages/configuracoes/ConfiguracaoRotinas'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
@@ -136,6 +137,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]}>
               <RegistroUsuarios />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/rotinas"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <ConfiguracaoRotinas />
             </ProtectedRoute>
           }
         />
