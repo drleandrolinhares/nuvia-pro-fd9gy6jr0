@@ -472,22 +472,22 @@ export default function Estoque() {
                       Produtos/Detalhes
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
-                      Embalagens
+                      Tamanho
+                    </TableHead>
+                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
+                      Diâmetro
+                    </TableHead>
+                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-right">
+                      Estoque
+                    </TableHead>
+                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-right">
+                      Custo
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
                       Sala
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-center">
                       Validade
-                    </TableHead>
-                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-center">
-                      Lote
-                    </TableHead>
-                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-right">
-                      Custo
-                    </TableHead>
-                    <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-right">
-                      Estoque
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-center">
                       Ações
@@ -531,9 +531,6 @@ export default function Estoque() {
                               {group.items.length} variação(ões)
                             </TableCell>
                             <TableCell className="text-slate-400 text-sm">-</TableCell>
-                            <TableCell className="text-slate-400 text-center">-</TableCell>
-                            <TableCell className="text-slate-400 text-center">-</TableCell>
-                            <TableCell className="text-slate-400 text-right">-</TableCell>
                             <TableCell className="text-right">
                               <div className="flex flex-col items-end">
                                 <span
@@ -548,6 +545,9 @@ export default function Estoque() {
                                 )}
                               </div>
                             </TableCell>
+                            <TableCell className="text-slate-400 text-right">-</TableCell>
+                            <TableCell className="text-slate-400 text-sm">-</TableCell>
+                            <TableCell className="text-slate-400 text-center">-</TableCell>
                             <TableCell className="text-center text-slate-400">-</TableCell>
                           </TableRow>
                           {isExpanded &&
@@ -574,6 +574,24 @@ export default function Estoque() {
                                     {item.embalagens?.nome || item.embalagem || '-'}
                                   </TableCell>
                                   <TableCell className="text-slate-600 text-sm">
+                                    {item.lote || '-'}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex flex-col items-end">
+                                      <span
+                                        className={`font-bold ${isCritico ? 'text-red-600' : 'text-slate-900'}`}
+                                      >
+                                        {item.quantidade_estoque}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-medium text-slate-900">
+                                    R${' '}
+                                    {item.custo_unitario.toLocaleString('pt-BR', {
+                                      minimumFractionDigits: 2,
+                                    })}
+                                  </TableCell>
+                                  <TableCell className="text-slate-600 text-sm">
                                     {item.salas?.nome || item.sala || '-'}
                                   </TableCell>
                                   <TableCell className="text-center">
@@ -587,24 +605,6 @@ export default function Estoque() {
                                     ) : (
                                       '-'
                                     )}
-                                  </TableCell>
-                                  <TableCell className="text-center font-mono text-xs text-slate-500">
-                                    {item.lote || '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right font-medium text-slate-900">
-                                    R${' '}
-                                    {item.custo_unitario.toLocaleString('pt-BR', {
-                                      minimumFractionDigits: 2,
-                                    })}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <div className="flex flex-col items-end">
-                                      <span
-                                        className={`font-bold ${isCritico ? 'text-red-600' : 'text-slate-900'}`}
-                                      >
-                                        {item.quantidade_estoque}
-                                      </span>
-                                    </div>
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex items-center justify-center gap-2">
