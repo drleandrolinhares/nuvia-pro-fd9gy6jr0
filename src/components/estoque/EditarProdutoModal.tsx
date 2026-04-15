@@ -52,6 +52,7 @@ export function EditarProdutoModal({
   const [quantidadeMinima, setQuantidadeMinima] = useState('')
   const [sala, setSala] = useState('')
   const [numeroArmario, setNumeroArmario] = useState('')
+  const [custoUnitario, setCustoUnitario] = useState('0')
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
@@ -81,6 +82,7 @@ export function EditarProdutoModal({
         setQuantidadeMinima(produto.quantidade_minima?.toString() || '0')
         setSala(produto.sala || '')
         setNumeroArmario(produto.numero_armario || '')
+        setCustoUnitario(produto.custo_unitario?.toString() || '0')
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -143,6 +145,7 @@ export function EditarProdutoModal({
       quantidade_minima: parseInt(quantidadeMinima) || 0,
       sala: sala.trim() || null,
       numero_armario: numeroArmario.trim() || null,
+      custo_unitario: parseFloat(custoUnitario) || 0,
     })
 
     setLoading(false)
@@ -224,7 +227,7 @@ export function EditarProdutoModal({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="qtd_min">Estq. Mínimo</Label>
               <Input
@@ -251,6 +254,18 @@ export function EditarProdutoModal({
                 value={numeroArmario}
                 onChange={(e) => setNumeroArmario(e.target.value)}
                 placeholder="Ex: A1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custo_unitario">Custo Aprox.</Label>
+              <Input
+                id="custo_unitario"
+                type="number"
+                step="0.01"
+                min="0"
+                value={custoUnitario}
+                onChange={(e) => setCustoUnitario(e.target.value)}
+                placeholder="0.00"
               />
             </div>
           </div>

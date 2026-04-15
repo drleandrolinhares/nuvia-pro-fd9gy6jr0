@@ -39,6 +39,7 @@ const formSchema = z.object({
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
   embalagem: z.string().optional(),
+  custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -72,6 +73,7 @@ export function CriarProdutoModal({
       marca: '',
       especialidade_id: 'none',
       embalagem: '',
+      custo_unitario: 0,
     },
   })
 
@@ -83,6 +85,7 @@ export function CriarProdutoModal({
         marca: '',
         especialidade_id: 'none',
         embalagem: '',
+        custo_unitario: 0,
       })
       fetchEspecialidades().then((res) => {
         if (res.data) setEspecialidades(res.data)
@@ -120,7 +123,7 @@ export function CriarProdutoModal({
       especialidade_id: values.especialidade_id === 'none' ? null : values.especialidade_id,
       quantidade_estoque: 0,
       quantidade_minima: 0,
-      custo_unitario: 0,
+      custo_unitario: values.custo_unitario || 0,
     }
 
     const { data, error } = await createProduto(payload)
@@ -222,31 +225,47 @@ export function CriarProdutoModal({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="embalagem"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Embalagem de Compra</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="embalagem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Embalagem de Compra</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Caixa">Caixa</SelectItem>
+                        <SelectItem value="Unidade">Unidade</SelectItem>
+                        <SelectItem value="Frasco">Frasco</SelectItem>
+                        <SelectItem value="Pote">Pote</SelectItem>
+                        <SelectItem value="Rolo">Rolo</SelectItem>
+                        <SelectItem value="Pacote">Pacote</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="custo_unitario"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Custo Unitário (Aprox.)</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Caixa">Caixa</SelectItem>
-                      <SelectItem value="Unidade">Unidade</SelectItem>
-                      <SelectItem value="Frasco">Frasco</SelectItem>
-                      <SelectItem value="Pote">Pote</SelectItem>
-                      <SelectItem value="Rolo">Rolo</SelectItem>
-                      <SelectItem value="Pacote">Pacote</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {camposDinamicos.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">

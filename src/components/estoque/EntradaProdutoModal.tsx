@@ -376,6 +376,12 @@ export function EntradaProdutoModal({
       }
     }
 
+    const precoTotalCalc = values.valor_total
+    const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
+    const totalAdicSubmit =
+      refConsumo === 'itens_embalagem' ? values.itens_embalagem : values.quantidade_comprada
+    const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
+
     if (!finalProdutoId) {
       const { data: novoProduto, error } = await createProduto({
         nome: values.nome_material,
@@ -387,7 +393,7 @@ export function EntradaProdutoModal({
         numero_armario: values.numero_armario || null,
         quantidade_minima: values.estoque_minimo,
         quantidade_estoque: 0,
-        custo_unitario: 0,
+        custo_unitario: valorAtribSubmit,
         validade: dataValidadeParsed,
         referencia_consumo: values.referencia_consumo,
       })
@@ -413,12 +419,6 @@ export function EntradaProdutoModal({
     }
     const obsFinal = []
     if (values.observacoes) obsFinal.push(values.observacoes)
-
-    const precoTotalCalc = values.valor_total
-    const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
-    const totalAdicSubmit =
-      refConsumo === 'itens_embalagem' ? values.itens_embalagem : values.quantidade_comprada
-    const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
     const { error: entradaError } = await registrarEntrada({
       produto_id: finalProdutoId,
