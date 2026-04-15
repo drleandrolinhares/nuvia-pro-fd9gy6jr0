@@ -126,7 +126,11 @@ export default function Estoque() {
 
             if (nomeCampo.includes('tamanho')) {
               map[pid].tamanho = c.valor || '-'
-            } else if (nomeCampo.includes('diâmetro') || nomeCampo.includes('diametro')) {
+            } else if (
+              nomeCampo.includes('diâmetro') ||
+              nomeCampo.includes('diametro') ||
+              nomeCampo === 'ø'
+            ) {
               map[pid].diametro = c.valor || '-'
             }
           })

@@ -86,6 +86,23 @@ export function VisualizarProdutoModal({
       })
     }
 
+    result.sort((a, b) => {
+      const aLower = a.nome.toLowerCase()
+      const bLower = b.nome.toLowerCase()
+
+      const getWeight = (nome: string) => {
+        if (nome.includes('tamanho')) return 1
+        if (nome.includes('diâmetro') || nome.includes('diametro') || nome === 'ø') return 2
+        return 3
+      }
+
+      const weightA = getWeight(aLower)
+      const weightB = getWeight(bLower)
+
+      if (weightA !== weightB) return weightA - weightB
+      return a.nome.localeCompare(b.nome)
+    })
+
     setCamposExtras(result)
   }
 
@@ -126,12 +143,6 @@ export function VisualizarProdutoModal({
                 {produto.especialidades?.nome || 'Não classificado'}
               </Badge>
             </div>
-            <div className="col-span-2 md:col-span-1">
-              <p className="text-sm font-medium text-slate-500">Código de Barras</p>
-              <p className="font-mono text-sm text-slate-900 mt-1 break-all">
-                {produto.codigo_barras || '-'}
-              </p>
-            </div>
             <div>
               <p className="text-sm font-medium text-slate-500">Estoque Atual</p>
               <p
@@ -148,6 +159,12 @@ export function VisualizarProdutoModal({
               <p className="text-sm font-medium text-slate-500">Sala / Armário</p>
               <p className="font-semibold text-slate-900">
                 {produto.sala || '-'} {produto.numero_armario ? `/ ${produto.numero_armario}` : ''}
+              </p>
+            </div>
+            <div className="col-span-2 md:col-span-3 bg-slate-50/80 p-3 rounded-lg border border-slate-100 mt-2">
+              <p className="text-sm font-medium text-slate-500">Código de Barras</p>
+              <p className="font-mono text-sm text-slate-900 mt-1 break-all">
+                {produto.codigo_barras || '-'}
               </p>
             </div>
           </div>
