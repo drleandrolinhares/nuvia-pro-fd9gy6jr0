@@ -426,15 +426,42 @@ export default function RotinaDiaria() {
 
     if (checked) {
       timestamp_conclusao = nowTime.toISOString()
-      const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-      const fimDate = new Date(nowTime)
-      fimDate.setHours(hFim, mFim, 0, 0)
 
-      minutos_atrasado = Math.max(0, Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000))
+      try {
+        const { data, error } = await supabase.functions.invoke('calcular_criticidade', {
+          body: {
+            tarefa_id: taskId,
+            horario_fim: task.horario_fim,
+            timestamp_conclusao,
+          },
+        })
 
-      if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
-      else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
-      else nivel_criticidade = 'critico'
+        if (!error && data) {
+          minutos_atrasado = data.minutos_atrasado
+          nivel_criticidade = data.nivel_criticidade
+        } else {
+          // Fallback caso a edge function falhe
+          const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+          const fimDate = new Date(nowTime)
+          fimDate.setHours(hFim, mFim, 0, 0)
+          minutos_atrasado = Math.max(
+            0,
+            Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
+          )
+          if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
+          else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+          else nivel_criticidade = 'critico'
+        }
+      } catch (err) {
+        console.error('Erro ao calcular criticidade:', err)
+        const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+        const fimDate = new Date(nowTime)
+        fimDate.setHours(hFim, mFim, 0, 0)
+        minutos_atrasado = Math.max(0, Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000))
+        if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
+        else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+        else nivel_criticidade = 'critico'
+      }
     }
 
     let concluidaEm = null
