@@ -5,6 +5,7 @@
     "ativar_cascata_dentista_avaliador": 3,
     "calcular-entrada-venda": 3,
     "update-user-password": 1,
-    "calcular_criticidade": 1
+    "calcular_criticidade": 1,
+    "validar_conclusao_tarefa": 1
   }
 }
