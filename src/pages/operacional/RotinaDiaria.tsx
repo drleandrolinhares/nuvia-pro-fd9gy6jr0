@@ -428,6 +428,30 @@ export default function RotinaDiaria() {
       timestamp_conclusao = nowTime.toISOString()
 
       try {
+        const { data: validacao, error: validacaoError } = await supabase.functions.invoke(
+          'validar_conclusao_tarefa',
+          {
+            body: {
+              usuario_id: user!.id,
+              tarefa_id: taskId,
+              timestamp_cliente: timestamp_conclusao,
+            },
+          },
+        )
+
+        if (validacaoError) throw validacaoError
+
+        if (validacao && !validacao.valido) {
+          toast.error(validacao.mensagem)
+          return
+        }
+      } catch (err) {
+        console.error('Erro ao validar conclusão:', err)
+        toast.error('Erro ao validar horário. Tente novamente.')
+        return
+      }
+
+      try {
         const { data, error } = await supabase.functions.invoke('calcular_criticidade', {
           body: {
             tarefa_id: taskId,
