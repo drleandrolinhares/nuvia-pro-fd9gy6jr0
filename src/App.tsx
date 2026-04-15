@@ -17,6 +17,7 @@ import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
+import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
@@ -168,7 +169,7 @@ const AppRoutes = () => {
           path="/operacional/rotina"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_rotina']}>
-              <Placeholder />
+              <RotinaDiaria />
             </ProtectedRoute>
           }
         />
