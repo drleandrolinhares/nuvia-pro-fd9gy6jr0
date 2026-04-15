@@ -881,6 +881,63 @@ export type Database = {
         }
         Relationships: []
       }
+      execucoes_rotina: {
+        Row: {
+          concluida: boolean
+          data_criacao: string
+          data_execucao: string
+          data_fechamento: string | null
+          fechamento_confirmado: boolean
+          id: string
+          minutos_atrasado: number
+          nivel_criticidade: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          tarefa_id: string
+          timestamp_conclusao: string | null
+          usuario_id: string
+        }
+        Insert: {
+          concluida?: boolean
+          data_criacao?: string
+          data_execucao?: string
+          data_fechamento?: string | null
+          fechamento_confirmado?: boolean
+          id?: string
+          minutos_atrasado?: number
+          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          tarefa_id: string
+          timestamp_conclusao?: string | null
+          usuario_id: string
+        }
+        Update: {
+          concluida?: boolean
+          data_criacao?: string
+          data_execucao?: string
+          data_fechamento?: string | null
+          fechamento_confirmado?: boolean
+          id?: string
+          minutos_atrasado?: number
+          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          tarefa_id?: string
+          timestamp_conclusao?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'execucoes_rotina_tarefa_id_fkey'
+            columns: ['tarefa_id']
+            isOneToOne: false
+            referencedRelation: 'tarefas_rotina'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'execucoes_rotina_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       faixas_valores_parcelas: {
         Row: {
           criado_em: string
@@ -1379,6 +1436,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rotinas_usuarios: {
+        Row: {
+          ativa: boolean
+          cargo_id: string | null
+          data_atualizacao: string
+          data_criacao: string
+          id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          cargo_id?: string | null
+          data_atualizacao?: string
+          data_criacao?: string
+          id?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          cargo_id?: string | null
+          data_atualizacao?: string
+          data_criacao?: string
+          id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rotinas_usuarios_cargo_id_fkey'
+            columns: ['cargo_id']
+            isOneToOne: false
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'rotinas_usuarios_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       saida_produtos: {
         Row: {
           criado_em: string | null
@@ -1468,6 +1567,50 @@ export type Database = {
           nome?: string
         }
         Relationships: []
+      }
+      tarefas_rotina: {
+        Row: {
+          ativa: boolean
+          data_criacao: string
+          descricao_tarefa: string
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          numero_sequencia: number
+          peso_percentual: number
+          rotina_id: string
+        }
+        Insert: {
+          ativa?: boolean
+          data_criacao?: string
+          descricao_tarefa: string
+          horario_fim: string
+          horario_inicio: string
+          id?: string
+          numero_sequencia: number
+          peso_percentual?: number
+          rotina_id: string
+        }
+        Update: {
+          ativa?: boolean
+          data_criacao?: string
+          descricao_tarefa?: string
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          numero_sequencia?: number
+          peso_percentual?: number
+          rotina_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tarefas_rotina_rotina_id_fkey'
+            columns: ['rotina_id']
+            isOneToOne: false
+            referencedRelation: 'rotinas_usuarios'
+            referencedColumns: ['id']
+          },
+        ]
       }
       usuario_permissoes: {
         Row: {
@@ -1724,6 +1867,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
+      nivel_criticidade_enum: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida'
       permissao_compromisso_enum: 'visualizar' | 'editar' | 'deletar'
       referencia_consumo_enum: 'qtd_comprada' | 'itens_embalagem'
       tipo_compromisso_enum:
@@ -1860,6 +2004,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      nivel_criticidade_enum: ['no_horario', 'tolerancia', 'critico', 'nao_concluida'],
       permissao_compromisso_enum: ['visualizar', 'editar', 'deletar'],
       referencia_consumo_enum: ['qtd_comprada', 'itens_embalagem'],
       tipo_compromisso_enum: [
@@ -2067,6 +2212,18 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: execucoes_rotina
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   data_execucao: date (not null, default: CURRENT_DATE)
+//   tarefa_id: uuid (not null)
+//   concluida: boolean (not null, default: false)
+//   timestamp_conclusao: timestamp with time zone (nullable)
+//   minutos_atrasado: integer (not null, default: 0)
+//   nivel_criticidade: nivel_criticidade_enum (nullable)
+//   fechamento_confirmado: boolean (not null, default: false)
+//   data_fechamento: timestamp with time zone (nullable)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: faixas_valores_parcelas
 //   id: uuid (not null, default: gen_random_uuid())
 //   valor_minimo: numeric (not null, default: 0)
@@ -2182,6 +2339,13 @@ export const Constants = {
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: rotinas_usuarios
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (nullable)
+//   cargo_id: uuid (nullable)
+//   ativa: boolean (not null, default: true)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   data_atualizacao: timestamp with time zone (not null, default: now())
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -2201,6 +2365,16 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: tarefas_rotina
+//   id: uuid (not null, default: gen_random_uuid())
+//   rotina_id: uuid (not null)
+//   numero_sequencia: integer (not null)
+//   descricao_tarefa: text (not null)
+//   horario_inicio: time without time zone (not null)
+//   horario_fim: time without time zone (not null)
+//   peso_percentual: numeric (not null, default: 5)
+//   ativa: boolean (not null, default: true)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -2326,6 +2500,10 @@ export const Constants = {
 // Table: especialidades
 //   UNIQUE especialidades_nome_key: UNIQUE (nome)
 //   PRIMARY KEY especialidades_pkey: PRIMARY KEY (id)
+// Table: execucoes_rotina
+//   PRIMARY KEY execucoes_rotina_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY execucoes_rotina_tarefa_id_fkey: FOREIGN KEY (tarefa_id) REFERENCES tarefas_rotina(id) ON DELETE CASCADE
+//   FOREIGN KEY execucoes_rotina_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: faixas_valores_parcelas
 //   PRIMARY KEY faixas_valores_parcelas_pkey: PRIMARY KEY (id)
 // Table: faturamento_comissoes
@@ -2365,6 +2543,10 @@ export const Constants = {
 //   PRIMARY KEY referencias_comissao_crc_pkey: PRIMARY KEY (id)
 // Table: referencias_comissao_dentista
 //   PRIMARY KEY referencias_comissao_dentista_pkey: PRIMARY KEY (id)
+// Table: rotinas_usuarios
+//   FOREIGN KEY rotinas_usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
+//   PRIMARY KEY rotinas_usuarios_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY rotinas_usuarios_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: saida_produtos
 //   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
@@ -2376,6 +2558,9 @@ export const Constants = {
 // Table: tamanhos_implante
 //   UNIQUE tamanhos_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY tamanhos_implante_pkey: PRIMARY KEY (id)
+// Table: tarefas_rotina
+//   PRIMARY KEY tarefas_rotina_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY tarefas_rotina_rotina_id_fkey: FOREIGN KEY (rotina_id) REFERENCES rotinas_usuarios(id) ON DELETE CASCADE
 // Table: usuario_permissoes
 //   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
@@ -2516,6 +2701,16 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "especialidades_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: execucoes_rotina
+//   Policy "execucoes_rotina_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "execucoes_rotina_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((usuario_id = auth.uid()) OR is_admin())
+//   Policy "execucoes_rotina_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "execucoes_rotina_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR is_admin())
+//     WITH CHECK: ((usuario_id = auth.uid()) OR is_admin())
 // Table: faixas_valores_parcelas
 //   Policy "faixas_valores_parcelas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2588,6 +2783,11 @@ export const Constants = {
 //   Policy "referencias_comissao_dentista_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: rotinas_usuarios
+//   Policy "rotinas_usuarios_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('configuracoes_geral'::text) OR has_permission('configuracoes_rotinas'::text))
+//   Policy "rotinas_usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: saida_produtos
 //   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
@@ -2607,6 +2807,11 @@ export const Constants = {
 //   Policy "tamanhos_implante_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "tamanhos_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: tarefas_rotina
+//   Policy "tarefas_rotina_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('configuracoes_geral'::text) OR has_permission('configuracoes_rotinas'::text))
+//   Policy "tarefas_rotina_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: usuario_permissoes
 //   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
@@ -2970,6 +3175,10 @@ export const Constants = {
 //   CREATE UNIQUE INDEX embalagens_nome_key ON public.embalagens USING btree (nome)
 // Table: especialidades
 //   CREATE UNIQUE INDEX especialidades_nome_key ON public.especialidades USING btree (nome)
+// Table: execucoes_rotina
+//   CREATE INDEX execucoes_rotina_data_execucao_idx ON public.execucoes_rotina USING btree (data_execucao)
+//   CREATE INDEX execucoes_rotina_tarefa_id_idx ON public.execucoes_rotina USING btree (tarefa_id)
+//   CREATE INDEX execucoes_rotina_usuario_id_idx ON public.execucoes_rotina USING btree (usuario_id)
 // Table: faturas_comissoes
 //   CREATE INDEX faturas_comissoes_faturamento_id_idx ON public.faturas_comissoes USING btree (faturamento_id)
 //   CREATE INDEX faturas_comissoes_profissional_id_idx ON public.faturas_comissoes USING btree (profissional_id)
@@ -2982,10 +3191,15 @@ export const Constants = {
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: produto_campos_valores
 //   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
+// Table: rotinas_usuarios
+//   CREATE INDEX rotinas_usuarios_cargo_id_idx ON public.rotinas_usuarios USING btree (cargo_id)
+//   CREATE INDEX rotinas_usuarios_usuario_id_idx ON public.rotinas_usuarios USING btree (usuario_id)
 // Table: salas
 //   CREATE UNIQUE INDEX salas_nome_key ON public.salas USING btree (nome)
 // Table: tamanhos_implante
 //   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
+// Table: tarefas_rotina
+//   CREATE INDEX tarefas_rotina_rotina_id_idx ON public.tarefas_rotina USING btree (rotina_id)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas

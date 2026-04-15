@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Trash2, Edit2, Copy, Save, Info } from 'lucide-react'
+import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -34,10 +34,11 @@ import { supabase } from '@/lib/supabase/client'
 
 type Task = {
   id: string
-  descricao: string
-  horarioInicio: string
-  horarioFim: string
-  peso: number
+  descricao_tarefa: string
+  horario_inicio: string
+  horario_fim: string
+  peso_percentual: number
+  numero_sequencia: number
 }
 
 type User = {
@@ -60,12 +61,22 @@ export default function ConfiguracaoRotinas() {
   const [horarioFim, setHorarioFim] = useState('')
   const [peso, setPeso] = useState<number>(5)
 
-  // Mocked state to hold routines mapped by user id
-  const [routines, setRoutines] = useState<Record<string, Task[]>>({})
+  const [currentTasks, setCurrentTasks] = useState<Task[]>([])
+  const [loadingTasks, setLoadingTasks] = useState(false)
+  const [savingTask, setSavingTask] = useState(false)
 
   useEffect(() => {
     fetchUsers()
   }, [])
+
+  useEffect(() => {
+    if (selectedUser) {
+      loadRoutine(selectedUser)
+      resetForm()
+    } else {
+      setCurrentTasks([])
+    }
+  }, [selectedUser])
 
   const fetchUsers = async () => {
     const { data, error } = await supabase.from('usuarios').select('id, nome, role').order('nome')
@@ -79,51 +90,41 @@ export default function ConfiguracaoRotinas() {
       return
     }
 
-    // Filter out CEO and Sócia
     const filtered = data.filter((u) => {
       const role = u.role?.toLowerCase() || ''
       return !role.includes('ceo') && !role.includes('socia')
     })
 
     setUsers(filtered)
+  }
 
-    // Initialize mock data for the first user to demonstrate functionality
-    if (filtered.length > 0) {
-      setRoutines({
-        [filtered[0].id]: [
-          {
-            id: '1',
-            descricao: 'Conferência de equipamentos',
-            horarioInicio: '08:00',
-            horarioFim: '08:15',
-            peso: 15,
-          },
-          {
-            id: '2',
-            descricao: 'Revisão da agenda do dia',
-            horarioInicio: '08:15',
-            horarioFim: '08:30',
-            peso: 25,
-          },
-          {
-            id: '3',
-            descricao: 'Preparação dos consultórios',
-            horarioInicio: '08:30',
-            horarioFim: '09:00',
-            peso: 60,
-          },
-        ],
-      })
+  const loadRoutine = async (userId: string) => {
+    setLoadingTasks(true)
+    try {
+      const { data: routine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', userId)
+        .maybeSingle()
+
+      if (routine) {
+        const { data: tasks } = await supabase
+          .from('tarefas_rotina')
+          .select('*')
+          .eq('rotina_id', routine.id)
+          .order('numero_sequencia', { ascending: true })
+
+        setCurrentTasks(tasks || [])
+      } else {
+        setCurrentTasks([])
+      }
+    } finally {
+      setLoadingTasks(false)
     }
   }
 
-  const currentTasks = useMemo(() => {
-    if (!selectedUser) return []
-    return routines[selectedUser] || []
-  }, [selectedUser, routines])
-
   const totalWeight = useMemo(() => {
-    return currentTasks.reduce((sum, task) => sum + task.peso, 0)
+    return currentTasks.reduce((sum, task) => sum + Number(task.peso_percentual), 0)
   }, [currentTasks])
 
   const resetForm = () => {
@@ -134,7 +135,7 @@ export default function ConfiguracaoRotinas() {
     setPeso(5)
   }
 
-  const handleAddOrUpdateTask = () => {
+  const handleAddOrUpdateTask = async () => {
     if (!descricao || !horarioInicio || !horarioFim || peso <= 0) {
       toast({
         title: 'Campos inválidos',
@@ -144,41 +145,75 @@ export default function ConfiguracaoRotinas() {
       return
     }
 
-    const newTask: Task = {
-      id: editId || crypto.randomUUID(),
-      descricao,
-      horarioInicio,
-      horarioFim,
-      peso,
-    }
+    setSavingTask(true)
+    try {
+      let routineId = null
+      const { data: routine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', selectedUser)
+        .maybeSingle()
 
-    setRoutines((prev) => {
-      const userTasks = prev[selectedUser] ? [...prev[selectedUser]] : []
-      if (editId) {
-        const index = userTasks.findIndex((t) => t.id === editId)
-        if (index !== -1) userTasks[index] = newTask
+      if (!routine) {
+        const { data: newRoutine } = await supabase
+          .from('rotinas_usuarios')
+          .insert({ usuario_id: selectedUser, ativa: true })
+          .select('id')
+          .single()
+        if (newRoutine) routineId = newRoutine.id
       } else {
-        userTasks.push(newTask)
+        routineId = routine.id
       }
-      return { ...prev, [selectedUser]: userTasks }
-    })
 
-    resetForm()
+      if (!routineId) throw new Error('Não foi possível criar rotina')
+
+      const taskData = {
+        rotina_id: routineId,
+        descricao_tarefa: descricao,
+        horario_inicio: horarioInicio,
+        horario_fim: horarioFim,
+        peso_percentual: peso,
+        ativa: true,
+      }
+
+      if (editId) {
+        const { error } = await supabase.from('tarefas_rotina').update(taskData).eq('id', editId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('tarefas_rotina').insert({
+          ...taskData,
+          numero_sequencia: currentTasks.length + 1,
+        })
+        if (error) throw error
+      }
+
+      await loadRoutine(selectedUser)
+      resetForm()
+      toast({ description: 'Tarefa salva com sucesso!' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setSavingTask(false)
+    }
   }
 
   const handleEditTask = (task: Task) => {
     setEditId(task.id)
-    setDescricao(task.descricao)
-    setHorarioInicio(task.horarioInicio)
-    setHorarioFim(task.horarioFim)
-    setPeso(task.peso)
+    setDescricao(task.descricao_tarefa)
+    setHorarioInicio(task.horario_inicio.substring(0, 5))
+    setHorarioFim(task.horario_fim.substring(0, 5))
+    setPeso(task.peso_percentual)
   }
 
-  const handleDeleteTask = (taskId: string) => {
-    setRoutines((prev) => {
-      const userTasks = prev[selectedUser]?.filter((t) => t.id !== taskId) || []
-      return { ...prev, [selectedUser]: userTasks }
-    })
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase.from('tarefas_rotina').delete().eq('id', taskId)
+      if (error) throw error
+      await loadRoutine(selectedUser)
+      toast({ description: 'Tarefa excluída com sucesso!' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
   }
 
   const handleSaveRoutine = () => {
@@ -193,11 +228,11 @@ export default function ConfiguracaoRotinas() {
 
     toast({
       title: 'Rotina Salva',
-      description: 'A configuração de rotina foi salva com sucesso!',
+      description: 'A configuração de rotina foi salva e validada com sucesso!',
     })
   }
 
-  const handleDuplicate = () => {
+  const handleDuplicate = async () => {
     if (!targetDuplicateUser) {
       toast({
         title: 'Selecione um destino',
@@ -207,17 +242,51 @@ export default function ConfiguracaoRotinas() {
       return
     }
 
-    setRoutines((prev) => ({
-      ...prev,
-      [targetDuplicateUser]: [...currentTasks].map((t) => ({ ...t, id: crypto.randomUUID() })),
-    }))
+    try {
+      let { data: targetRoutine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', targetDuplicateUser)
+        .maybeSingle()
 
-    setIsDuplicateDialogOpen(false)
-    setTargetDuplicateUser('')
-    toast({
-      title: 'Rotina Duplicada',
-      description: 'A rotina foi copiada com sucesso para o usuário selecionado.',
-    })
+      if (!targetRoutine) {
+        const { data: newRoutine, error } = await supabase
+          .from('rotinas_usuarios')
+          .insert({ usuario_id: targetDuplicateUser, ativa: true })
+          .select('id')
+          .single()
+        if (error) throw error
+        targetRoutine = newRoutine
+      }
+
+      if (!targetRoutine) throw new Error('Erro ao encontrar rotina de destino')
+
+      await supabase.from('tarefas_rotina').delete().eq('rotina_id', targetRoutine.id)
+
+      const tasksToInsert = currentTasks.map((t) => ({
+        rotina_id: targetRoutine!.id,
+        descricao_tarefa: t.descricao_tarefa,
+        horario_inicio: t.horario_inicio,
+        horario_fim: t.horario_fim,
+        peso_percentual: t.peso_percentual,
+        numero_sequencia: t.numero_sequencia,
+        ativa: true,
+      }))
+
+      if (tasksToInsert.length > 0) {
+        const { error } = await supabase.from('tarefas_rotina').insert(tasksToInsert)
+        if (error) throw error
+      }
+
+      setIsDuplicateDialogOpen(false)
+      setTargetDuplicateUser('')
+      toast({
+        title: 'Rotina Duplicada',
+        description: 'A rotina foi copiada com sucesso para o usuário selecionado.',
+      })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
   }
 
   return (
@@ -348,11 +417,22 @@ export default function ConfiguracaoRotinas() {
                   />
                 </div>
                 <div className="md:col-span-1 flex gap-2">
-                  <Button onClick={handleAddOrUpdateTask} className="w-full">
-                    {editId ? <Save className="size-4" /> : <Plus className="size-4" />}
+                  <Button onClick={handleAddOrUpdateTask} disabled={savingTask} className="w-full">
+                    {savingTask ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : editId ? (
+                      <Save className="size-4" />
+                    ) : (
+                      <Plus className="size-4" />
+                    )}
                   </Button>
                   {editId && (
-                    <Button variant="outline" onClick={resetForm} className="w-full px-0">
+                    <Button
+                      variant="outline"
+                      onClick={resetForm}
+                      disabled={savingTask}
+                      className="w-full px-0"
+                    >
                       X
                     </Button>
                   )}
@@ -374,7 +454,12 @@ export default function ConfiguracaoRotinas() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {currentTasks.length === 0 ? (
+              {loadingTasks ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-center">
+                  <Loader2 className="size-8 animate-spin mb-4" />
+                  <p className="text-sm font-medium">Carregando tarefas...</p>
+                </div>
+              ) : currentTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-center">
                   <Info className="size-12 mb-3 opacity-20" />
                   <p className="text-lg font-medium">Nenhuma tarefa configurada</p>
@@ -394,17 +479,20 @@ export default function ConfiguracaoRotinas() {
                     </TableHeader>
                     <TableBody>
                       {currentTasks
-                        .sort((a, b) => a.horarioInicio.localeCompare(b.horarioInicio))
+                        .sort((a, b) => a.numero_sequencia - b.numero_sequencia)
                         .map((task, idx) => (
                           <TableRow key={task.id}>
-                            <TableCell className="font-medium">{idx + 1}</TableCell>
-                            <TableCell>{task.descricao}</TableCell>
+                            <TableCell className="font-medium">{task.numero_sequencia}</TableCell>
+                            <TableCell>{task.descricao_tarefa}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className="font-mono">
-                                {task.horarioInicio} - {task.horarioFim}
+                                {task.horario_inicio.substring(0, 5)} -{' '}
+                                {task.horario_fim.substring(0, 5)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right font-medium">{task.peso}%</TableCell>
+                            <TableCell className="text-right font-medium">
+                              {task.peso_percentual}%
+                            </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
                                 <Button
@@ -437,7 +525,7 @@ export default function ConfiguracaoRotinas() {
                   size="lg"
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold uppercase tracking-wider"
                   onClick={handleSaveRoutine}
-                  disabled={currentTasks.length === 0}
+                  disabled={currentTasks.length === 0 || loadingTasks}
                 >
                   <Save className="size-4 mr-2" />
                   Salvar Rotina

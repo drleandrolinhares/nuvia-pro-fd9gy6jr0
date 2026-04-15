@@ -3,165 +3,44 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Clock, CheckCircle2, AlertCircle, AlertTriangle, XCircle, ArrowLeft } from 'lucide-react'
+import {
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  XCircle,
+  ArrowLeft,
+  Loader2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 
 type Task = {
   id: string
-  descricao: string
-  horarioInicio: string
-  horarioFim: string
+  rotina_id: string
+  numero_sequencia: number
+  descricao_tarefa: string
+  horario_inicio: string
+  horario_fim: string
+  peso_percentual: number
+
+  execucao_id?: string
+  concluida: boolean
   concluidaEm: string | null
+  minutos_atrasado: number
+  nivel_criticidade: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida' | null
+  fechamento_confirmado: boolean
 }
 
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    descricao: 'Chegar e abrir a clínica',
-    horarioInicio: '08:00',
-    horarioFim: '08:15',
-    concluidaEm: '08:10',
-  },
-  {
-    id: '2',
-    descricao: 'Ligar compressores e equipamentos',
-    horarioInicio: '08:15',
-    horarioFim: '08:30',
-    concluidaEm: null,
-  },
-  {
-    id: '3',
-    descricao: 'Conferir agenda do dia',
-    horarioInicio: '08:30',
-    horarioFim: '09:00',
-    concluidaEm: null,
-  },
-  {
-    id: '4',
-    descricao: 'Preparar salas de atendimento',
-    horarioInicio: '09:00',
-    horarioFim: '09:30',
-    concluidaEm: null,
-  },
-  {
-    id: '5',
-    descricao: 'Confirmar consultas do período da tarde',
-    horarioInicio: '09:30',
-    horarioFim: '10:00',
-    concluidaEm: null,
-  },
-  {
-    id: '6',
-    descricao: 'Checagem de materiais de consumo',
-    horarioInicio: '10:00',
-    horarioFim: '10:30',
-    concluidaEm: null,
-  },
-  {
-    id: '7',
-    descricao: 'Atualizar planilhas de controle',
-    horarioInicio: '10:30',
-    horarioFim: '11:00',
-    concluidaEm: null,
-  },
-  {
-    id: '8',
-    descricao: 'Esterilização de instrumentais (Lote 1)',
-    horarioInicio: '11:00',
-    horarioFim: '11:30',
-    concluidaEm: null,
-  },
-  {
-    id: '9',
-    descricao: 'Revisão de prontuários',
-    horarioInicio: '11:30',
-    horarioFim: '12:00',
-    concluidaEm: null,
-  },
-  {
-    id: '10',
-    descricao: 'Pausa para Almoço',
-    horarioInicio: '12:00',
-    horarioFim: '13:00',
-    concluidaEm: null,
-  },
-  {
-    id: '11',
-    descricao: 'Retorno e organização da recepção',
-    horarioInicio: '13:00',
-    horarioFim: '13:30',
-    concluidaEm: null,
-  },
-  {
-    id: '12',
-    descricao: 'Confirmar consultas do dia seguinte',
-    horarioInicio: '13:30',
-    horarioFim: '14:00',
-    concluidaEm: null,
-  },
-  {
-    id: '13',
-    descricao: 'Preparar salas para o período da tarde',
-    horarioInicio: '14:00',
-    horarioFim: '14:30',
-    concluidaEm: null,
-  },
-  {
-    id: '14',
-    descricao: 'Auditoria de estoque nas gavetas',
-    horarioInicio: '14:30',
-    horarioFim: '15:00',
-    concluidaEm: null,
-  },
-  {
-    id: '15',
-    descricao: 'Fechamento de caixa parcial',
-    horarioInicio: '15:00',
-    horarioFim: '15:30',
-    concluidaEm: null,
-  },
-  {
-    id: '16',
-    descricao: 'Esterilização de instrumentais (Lote 2)',
-    horarioInicio: '15:30',
-    horarioFim: '16:00',
-    concluidaEm: null,
-  },
-  {
-    id: '17',
-    descricao: 'Contato com pacientes faltantes',
-    horarioInicio: '16:00',
-    horarioFim: '16:30',
-    concluidaEm: null,
-  },
-  {
-    id: '18',
-    descricao: 'Organização de documentos físicos',
-    horarioInicio: '16:30',
-    horarioFim: '17:00',
-    concluidaEm: null,
-  },
-  {
-    id: '19',
-    descricao: 'Desligar equipamentos não essenciais',
-    horarioInicio: '17:00',
-    horarioFim: '17:30',
-    concluidaEm: null,
-  },
-  {
-    id: '20',
-    descricao: 'Fechamento da clínica e alarme',
-    horarioInicio: '17:30',
-    horarioFim: '18:00',
-    concluidaEm: null,
-  },
-]
-
 const timeToMinutes = (time: string) => {
+  if (!time) return 0
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m
 }
+
+const formatTime = (time: string) => (time ? time.substring(0, 5) : '')
 
 function ResumoFechamento({
   tasks,
@@ -174,9 +53,10 @@ function ResumoFechamento({
   now: Date
   progressPercent: number
   onCancel: () => void
-  onConfirm: () => void
+  onConfirm: () => Promise<void>
 }) {
   const [hasConfirmed, setHasConfirmed] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const stats = useMemo(() => {
     let onTime = 0
@@ -191,37 +71,33 @@ function ResumoFechamento({
     }[] = []
 
     tasks.forEach((t) => {
-      if (!t.concluidaEm) {
+      if (!t.concluida) {
         notCompleted++
         delays.push({
           id: t.id,
-          descricao: t.descricao,
+          descricao: t.descricao_tarefa,
           delayStr: 'Não concluída',
           type: 'notCompleted',
         })
       } else {
-        const endMins = timeToMinutes(t.horarioFim)
-        const doneMins = timeToMinutes(t.concluidaEm)
-        const delay = doneMins - endMins
-
-        if (delay <= 0) {
+        if (t.nivel_criticidade === 'no_horario') {
           onTime++
-        } else if (delay <= 60) {
+        } else if (t.nivel_criticidade === 'tolerancia') {
           tolerance++
           delays.push({
             id: t.id,
-            descricao: t.descricao,
-            delayStr: `${delay} min atrasado`,
+            descricao: t.descricao_tarefa,
+            delayStr: `${t.minutos_atrasado} min atrasado`,
             type: 'tolerance',
           })
-        } else {
+        } else if (t.nivel_criticidade === 'critico') {
           critical++
-          const h = Math.floor(delay / 60)
-          const m = delay % 60
+          const h = Math.floor(t.minutos_atrasado / 60)
+          const m = t.minutos_atrasado % 60
           const timeStr = h > 0 ? `${h}h ${m}min` : `${m} min`
           delays.push({
             id: t.id,
-            descricao: t.descricao,
+            descricao: t.descricao_tarefa,
             delayStr: `${timeStr} atrasado`,
             type: 'critical',
           })
@@ -234,17 +110,25 @@ function ResumoFechamento({
 
   const total = tasks.length
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    setIsSaving(true)
+    await onConfirm()
+    setIsSaving(false)
     const dateStr = now.toLocaleDateString('pt-BR')
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     toast.success(`Rotina fechada com sucesso em ${dateStr} às ${timeStr}`)
-    onConfirm()
   }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onCancel} className="shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="shrink-0"
+        >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
@@ -398,11 +282,15 @@ function ResumoFechamento({
               id="confirm-closure"
               checked={hasConfirmed}
               onCheckedChange={(c) => setHasConfirmed(!!c)}
+              disabled={isSaving}
               className="mt-1 w-5 h-5 data-[state=checked]:bg-primary"
             />
             <label
               htmlFor="confirm-closure"
-              className="text-base font-medium leading-tight cursor-pointer select-none"
+              className={cn(
+                'text-base font-medium leading-tight cursor-pointer select-none',
+                isSaving && 'opacity-70',
+              )}
             >
               Eu confirmo que revisei minha rotina do dia e tomo ciência dos atrasos e não
               conclusões acima.
@@ -410,14 +298,20 @@ function ResumoFechamento({
           </div>
         </CardContent>
         <CardFooter className="p-4 bg-muted/30 border-t border-border/50 flex flex-col sm:flex-row justify-end gap-3">
-          <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="w-full sm:w-auto"
+          >
             CANCELAR
           </Button>
           <Button
-            disabled={!hasConfirmed}
+            disabled={!hasConfirmed || isSaving}
             onClick={handleConfirm}
             className="w-full sm:w-auto font-bold tracking-wide"
           >
+            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             CONFIRMAR FECHAMENTO
           </Button>
         </CardFooter>
@@ -427,43 +321,226 @@ function ResumoFechamento({
 }
 
 export default function RotinaDiaria() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks)
+  const { user } = useAuth()
+  const [tasks, setTasks] = useState<Task[]>([])
   const [now, setNow] = useState(new Date())
   const [isClosing, setIsClosing] = useState(false)
   const [isClosed, setIsClosed] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(timer)
   }, [])
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  useEffect(() => {
+    if (user) {
+      loadRoutine()
+    }
+  }, [user])
 
-  const handleCheck = (taskId: string, checked: boolean) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          if (checked) {
-            const hh = String(now.getHours()).padStart(2, '0')
-            const mm = String(now.getMinutes()).padStart(2, '0')
-            return { ...t, concluidaEm: `${hh}:${mm}` }
-          } else {
-            return { ...t, concluidaEm: null }
-          }
+  const loadRoutine = async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      const { data: routine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .eq('ativa', true)
+        .maybeSingle()
+
+      if (!routine) {
+        setTasks([])
+        return
+      }
+
+      const { data: tarefas } = await supabase
+        .from('tarefas_rotina')
+        .select('*')
+        .eq('rotina_id', routine.id)
+        .eq('ativa', true)
+        .order('numero_sequencia', { ascending: true })
+
+      if (!tarefas) {
+        setTasks([])
+        return
+      }
+
+      const today = new Date().toISOString().split('T')[0]
+
+      const { data: execucoes } = await supabase
+        .from('execucoes_rotina')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .eq('data_execucao', today)
+
+      const mergedTasks: Task[] = tarefas.map((t) => {
+        const exec = execucoes?.find((e) => e.tarefa_id === t.id)
+        let concluidaEm = null
+        if (exec?.timestamp_conclusao) {
+          const d = new Date(exec.timestamp_conclusao)
+          concluidaEm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
         }
-        return t
-      }),
-    )
+
+        return {
+          id: t.id,
+          rotina_id: t.rotina_id,
+          numero_sequencia: t.numero_sequencia,
+          descricao_tarefa: t.descricao_tarefa,
+          horario_inicio: t.horario_inicio,
+          horario_fim: t.horario_fim,
+          peso_percentual: t.peso_percentual,
+          execucao_id: exec?.id,
+          concluida: exec?.concluida || false,
+          concluidaEm,
+          minutos_atrasado: exec?.minutos_atrasado || 0,
+          nivel_criticidade: exec?.nivel_criticidade || null,
+          fechamento_confirmado: exec?.fechamento_confirmado || false,
+        }
+      })
+
+      setTasks(mergedTasks)
+
+      if (mergedTasks.length > 0 && mergedTasks.some((t) => t.fechamento_confirmado)) {
+        setIsClosed(true)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const completedCount = tasks.filter((t) => t.concluidaEm !== null).length
-  const progressPercent = Math.round((completedCount / tasks.length) * 100)
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
-  const allTasksHandled = tasks.every((t) => {
-    if (t.concluidaEm) return true
-    const endMins = timeToMinutes(t.horarioFim)
-    return currentMinutes > endMins
-  })
+  const handleCheck = async (taskId: string, checked: boolean) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+
+    const nowTime = new Date()
+    const todayDate = nowTime.toISOString().split('T')[0]
+
+    let concluida = checked
+    let timestamp_conclusao = null
+    let minutos_atrasado = 0
+    let nivel_criticidade: any = null
+
+    if (checked) {
+      timestamp_conclusao = nowTime.toISOString()
+      const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+      const fimDate = new Date(nowTime)
+      fimDate.setHours(hFim, mFim, 0, 0)
+
+      minutos_atrasado = Math.max(0, Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000))
+
+      if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
+      else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+      else nivel_criticidade = 'critico'
+    }
+
+    let concluidaEm = null
+    if (timestamp_conclusao) {
+      concluidaEm = `${String(nowTime.getHours()).padStart(2, '0')}:${String(nowTime.getMinutes()).padStart(2, '0')}`
+    }
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              concluida,
+              concluidaEm,
+              minutos_atrasado,
+              nivel_criticidade,
+            }
+          : t,
+      ),
+    )
+
+    const payload = {
+      usuario_id: user!.id,
+      data_execucao: todayDate,
+      tarefa_id: taskId,
+      concluida,
+      timestamp_conclusao,
+      minutos_atrasado,
+      nivel_criticidade,
+      fechamento_confirmado: false,
+    }
+
+    if (task.execucao_id) {
+      await supabase.from('execucoes_rotina').update(payload).eq('id', task.execucao_id)
+    } else {
+      const { data } = await supabase.from('execucoes_rotina').insert(payload).select().single()
+      if (data) {
+        setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, execucao_id: data.id } : t)))
+      }
+    }
+  }
+
+  const handleConfirmClosure = async () => {
+    const todayDate = now.toISOString().split('T')[0]
+    const closedAt = now.toISOString()
+
+    for (const t of tasks) {
+      if (t.concluida) {
+        if (t.execucao_id) {
+          await supabase
+            .from('execucoes_rotina')
+            .update({
+              fechamento_confirmado: true,
+              data_fechamento: closedAt,
+            })
+            .eq('id', t.execucao_id)
+        }
+      } else {
+        if (t.execucao_id) {
+          await supabase
+            .from('execucoes_rotina')
+            .update({
+              concluida: false,
+              nivel_criticidade: 'nao_concluida',
+              fechamento_confirmado: true,
+              data_fechamento: closedAt,
+            })
+            .eq('id', t.execucao_id)
+        } else {
+          await supabase.from('execucoes_rotina').insert({
+            usuario_id: user!.id,
+            data_execucao: todayDate,
+            tarefa_id: t.id,
+            concluida: false,
+            minutos_atrasado: 0,
+            nivel_criticidade: 'nao_concluida',
+            fechamento_confirmado: true,
+            data_fechamento: closedAt,
+          })
+        }
+      }
+    }
+
+    setIsClosed(true)
+    setIsClosing(false)
+  }
+
+  const completedCount = tasks.filter((t) => t.concluida).length
+  const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
+
+  const allTasksHandled =
+    tasks.length > 0 &&
+    tasks.every((t) => {
+      if (t.concluida) return true
+      const endMins = timeToMinutes(t.horario_fim)
+      return currentMinutes > endMins
+    })
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-muted-foreground font-medium">Carregando rotina diária...</p>
+      </div>
+    )
+  }
 
   if (isClosed) {
     return (
@@ -475,17 +552,6 @@ export default function RotinaDiaria() {
         <p className="text-muted-foreground text-center max-w-md">
           Seu checklist diário foi encerrado e salvo com sucesso. Bom descanso!
         </p>
-        <Button
-          onClick={() => {
-            setIsClosed(false)
-            setIsClosing(false)
-            setTasks(mockTasks)
-          }}
-          variant="outline"
-          className="mt-8"
-        >
-          Reiniciar Checklist
-        </Button>
       </div>
     )
   }
@@ -498,7 +564,7 @@ export default function RotinaDiaria() {
           now={now}
           progressPercent={progressPercent}
           onCancel={() => setIsClosing(false)}
-          onConfirm={() => setIsClosed(true)}
+          onConfirm={handleConfirmClosure}
         />
       </div>
     )
@@ -514,14 +580,14 @@ export default function RotinaDiaria() {
       )
     }
 
-    const startMins = timeToMinutes(task.horarioInicio)
-    const endMins = timeToMinutes(task.horarioFim)
+    const startMins = timeToMinutes(task.horario_inicio)
+    const endMins = timeToMinutes(task.horario_fim)
 
     if (currentMinutes < startMins) {
       return (
         <div className="flex items-center text-slate-400 dark:text-slate-500 text-sm gap-1.5">
           <Clock className="w-4 h-4" />
-          <span>Disponível em {task.horarioInicio}</span>
+          <span>Disponível em {formatTime(task.horario_inicio)}</span>
         </div>
       )
     }
@@ -562,7 +628,7 @@ export default function RotinaDiaria() {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-4xl space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 max-w-4xl space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Rotina Diária</h1>
@@ -580,87 +646,100 @@ export default function RotinaDiaria() {
         </div>
       </div>
 
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader className="pb-4 bg-muted/10 border-b border-border/50">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:mb-3">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-amber-500" />
-              Progresso das Tarefas
-            </CardTitle>
-            <span className="font-semibold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full w-fit">
-              Progresso: {completedCount}/{tasks.length} ({progressPercent}%)
-            </span>
-          </div>
-          <Progress value={progressPercent} className="h-2.5" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-border">
-            {tasks.map((task) => {
-              const startMins = timeToMinutes(task.horarioInicio)
-              const endMins = timeToMinutes(task.horarioFim)
-              const isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
-              const disabled = !isWithinWindow
+      {tasks.length === 0 ? (
+        <Card className="border-border/50 shadow-sm p-12 flex flex-col items-center justify-center text-muted-foreground">
+          <Clock className="w-12 h-12 mb-4 opacity-20" />
+          <p className="text-lg font-medium">Nenhuma rotina configurada para hoje.</p>
+          <p className="text-sm text-center max-w-md mt-1">
+            Sua lista de tarefas aparecerá aqui quando for definida pelo administrador em
+            Configurações.
+          </p>
+        </Card>
+      ) : (
+        <>
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-4 bg-muted/10 border-b border-border/50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:mb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                  Progresso das Tarefas
+                </CardTitle>
+                <span className="font-semibold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full w-fit">
+                  Progresso: {completedCount}/{tasks.length} ({progressPercent}%)
+                </span>
+              </div>
+              <Progress value={progressPercent} className="h-2.5" />
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {tasks.map((task) => {
+                  const startMins = timeToMinutes(task.horario_inicio)
+                  const endMins = timeToMinutes(task.horario_fim)
+                  const isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
+                  const disabled = currentMinutes < startMins && !task.concluida
 
-              return (
-                <div
-                  key={task.id}
-                  className={cn(
-                    'p-4 sm:px-6 flex items-start sm:items-center gap-4 transition-colors hover:bg-muted/30',
-                    !isWithinWindow && !task.concluidaEm && 'opacity-80 bg-muted/10',
-                    task.concluidaEm && 'bg-emerald-50/30 dark:bg-emerald-950/10',
-                  )}
-                >
-                  <div className="mt-1 sm:mt-0">
-                    <Checkbox
-                      id={`task-${task.id}`}
-                      checked={!!task.concluidaEm}
-                      disabled={disabled}
-                      onCheckedChange={(checked) => handleCheck(task.id, checked as boolean)}
+                  return (
+                    <div
+                      key={task.id}
                       className={cn(
-                        'w-5 h-5',
-                        task.concluidaEm &&
-                          'data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500',
+                        'p-4 sm:px-6 flex items-start sm:items-center gap-4 transition-colors hover:bg-muted/30',
+                        !isWithinWindow && !task.concluida && 'opacity-80 bg-muted/10',
+                        task.concluida && 'bg-emerald-50/30 dark:bg-emerald-950/10',
                       )}
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1.5">
-                      <label
-                        htmlFor={`task-${task.id}`}
-                        className={cn(
-                          'text-base font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-                          !disabled && 'cursor-pointer hover:text-primary',
-                          task.concluidaEm && 'line-through text-muted-foreground',
-                        )}
-                      >
-                        {task.descricao}
-                      </label>
-                      <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
-                        <Clock className="w-3.5 h-3.5" />
-                        {task.horarioInicio} - {task.horarioFim}
+                    >
+                      <div className="mt-1 sm:mt-0">
+                        <Checkbox
+                          id={`task-${task.id}`}
+                          checked={!!task.concluida}
+                          disabled={disabled}
+                          onCheckedChange={(checked) => handleCheck(task.id, checked as boolean)}
+                          className={cn(
+                            'w-5 h-5',
+                            task.concluida &&
+                              'data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500',
+                          )}
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1.5">
+                          <label
+                            htmlFor={`task-${task.id}`}
+                            className={cn(
+                              'text-base font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+                              !disabled && 'cursor-pointer hover:text-primary',
+                              task.concluida && 'line-through text-muted-foreground',
+                            )}
+                          >
+                            {task.descricao_tarefa}
+                          </label>
+                          <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatTime(task.horario_inicio)} - {formatTime(task.horario_fim)}
+                          </div>
+                        </div>
+                        <div className="shrink-0 bg-background sm:bg-transparent rounded-md p-2 sm:p-0 border sm:border-none border-border/50">
+                          {renderTaskStatus(task)}
+                        </div>
                       </div>
                     </div>
-                    <div className="shrink-0 bg-background sm:bg-transparent rounded-md p-2 sm:p-0 border sm:border-none border-border/50">
-                      {renderTaskStatus(task)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="flex justify-end pt-2 pb-10">
-        <Button
-          size="lg"
-          disabled={!allTasksHandled}
-          onClick={() => setIsClosing(true)}
-          className="w-full sm:w-auto font-bold tracking-wide"
-        >
-          FECHAR ROTINA DO DIA
-        </Button>
-      </div>
+          <div className="flex justify-end pt-2 pb-10">
+            <Button
+              size="lg"
+              disabled={!allTasksHandled}
+              onClick={() => setIsClosing(true)}
+              className="w-full sm:w-auto font-bold tracking-wide"
+            >
+              FECHAR ROTINA DO DIA
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
