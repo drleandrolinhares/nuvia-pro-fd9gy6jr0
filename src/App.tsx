@@ -19,6 +19,7 @@ import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
+import RelatorioRotinas from './pages/operacional/RelatorioRotinas'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
@@ -179,6 +180,17 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_rotina']}>
               <RotinaDiaria />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/relatorio-rotinas"
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin', 'gestor']}
+              allowedPermissions={['operacional_relatorio_rotinas']}
+            >
+              <RelatorioRotinas />
             </ProtectedRoute>
           }
         />

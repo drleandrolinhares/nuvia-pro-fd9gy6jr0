@@ -85,6 +85,13 @@ const navData = [
         icon: Bell,
         permission: ['operacional_comunicados', 'Acessar Comunicados'],
       },
+      {
+        title: 'Relatório de Rotinas',
+        url: '/operacional/relatorio-rotinas',
+        icon: FileBarChart,
+        showRole: ['admin', 'gestor'],
+        permission: ['operacional_relatorio_rotinas', 'Acessar Relatório de Rotinas'],
+      },
     ],
   },
   {
