@@ -91,8 +91,8 @@ export function VisualizarProdutoModal({
       const bLower = b.nome.toLowerCase()
 
       const getWeight = (nome: string) => {
-        if (nome.includes('tamanho')) return 1
-        if (nome.includes('diâmetro') || nome.includes('diametro') || nome === 'ø') return 2
+        if (nome.includes('diâmetro') || nome.includes('diametro') || nome === 'ø') return 1
+        if (nome.includes('tamanho')) return 2
         return 3
       }
 

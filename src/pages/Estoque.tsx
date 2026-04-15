@@ -507,10 +507,10 @@ export default function Estoque() {
                       Produtos/Detalhes
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
-                      Tamanho
+                      Diâmetro
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
-                      Diâmetro
+                      Tamanho
                     </TableHead>
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap text-right">
                       Estoque
@@ -606,10 +606,10 @@ export default function Estoque() {
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-slate-600 text-sm font-medium">
-                                    {camposDinamicos[item.id]?.tamanho || '-'}
+                                    {camposDinamicos[item.id]?.diametro || '-'}
                                   </TableCell>
                                   <TableCell className="text-slate-600 text-sm font-medium">
-                                    {camposDinamicos[item.id]?.diametro || '-'}
+                                    {camposDinamicos[item.id]?.tamanho || '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex flex-col items-end">
