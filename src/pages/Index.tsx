@@ -59,20 +59,18 @@ const Index = () => {
   }, [invalidateCache])
 
   const produtosDashboard = useMemo(() => {
-    return produtos
-      .filter((p) => p.compra_itens?.some((ci) => ci.compras?.status === 'Finalizada'))
-      .map((p) => {
-        const finalizedPurchases =
-          p.compra_itens?.filter((ci) => ci.compras?.status === 'Finalizada') || []
-        finalizedPurchases.sort(
-          (a, b) =>
-            new Date(b.compras?.data || 0).getTime() - new Date(a.compras?.data || 0).getTime(),
-        )
+    return produtos.map((p) => {
+      const finalizedPurchases =
+        p.compra_itens?.filter((ci) => ci.compras?.status === 'Finalizada') || []
+      finalizedPurchases.sort(
+        (a, b) =>
+          new Date(b.compras?.data || 0).getTime() - new Date(a.compras?.data || 0).getTime(),
+      )
 
-        const latestCusto =
-          finalizedPurchases.length > 0 ? finalizedPurchases[0].valor_unitario : p.custo_unitario
-        return { ...p, custo_unitario: latestCusto }
-      })
+      const latestCusto =
+        finalizedPurchases.length > 0 ? finalizedPurchases[0].valor_unitario : p.custo_unitario
+      return { ...p, custo_unitario: latestCusto }
+    })
   }, [produtos])
 
   const { capitalInvestido, unidadesTotais, avisosEstoque, itemsAvisos } = useMemo(() => {

@@ -9,6 +9,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_tarefas_rotina: {
+        Row: {
+          criado_em: string
+          id: string
+          mensagem: string | null
+          tarefa_id: string
+          timestamp_cliente: string
+          usuario_id: string
+          valido: boolean
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          mensagem?: string | null
+          tarefa_id: string
+          timestamp_cliente: string
+          usuario_id: string
+          valido: boolean
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          mensagem?: string | null
+          tarefa_id?: string
+          timestamp_cliente?: string
+          usuario_id?: string
+          valido?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'auditoria_tarefas_rotina_tarefa_id_fkey'
+            columns: ['tarefa_id']
+            isOneToOne: false
+            referencedRelation: 'tarefas_rotina'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       avaliacoes: {
         Row: {
           atualizado_em: string | null
@@ -2031,6 +2069,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: auditoria_tarefas_rotina
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   tarefa_id: uuid (not null)
+//   timestamp_cliente: timestamp with time zone (not null)
+//   valido: boolean (not null)
+//   mensagem: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   paciente_id: uuid (not null)
@@ -2424,6 +2470,10 @@ export const Constants = {
 //   valor_comissao: numeric (nullable)
 
 // --- CONSTRAINTS ---
+// Table: auditoria_tarefas_rotina
+//   PRIMARY KEY auditoria_tarefas_rotina_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY auditoria_tarefas_rotina_tarefa_id_fkey: FOREIGN KEY (tarefa_id) REFERENCES tarefas_rotina(id) ON DELETE CASCADE
+//   FOREIGN KEY auditoria_tarefas_rotina_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: avaliacoes
 //   FOREIGN KEY avaliacoes_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY avaliacoes_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
@@ -2584,6 +2634,11 @@ export const Constants = {
 //   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: auditoria_tarefas_rotina
+//   Policy "auditoria_tarefas_rotina_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "auditoria_tarefas_rotina_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: avaliacoes
 //   Policy "avaliacoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
