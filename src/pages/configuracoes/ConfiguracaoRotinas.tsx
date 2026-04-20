@@ -155,6 +155,7 @@ export default function ConfiguracaoRotinas() {
           .from('tarefas_rotina')
           .select('*')
           .eq('rotina_id', routine.id)
+          .order('horario_inicio', { ascending: true, nullsFirst: false })
           .order('numero_sequencia', { ascending: true })
 
         setCurrentTasks(tasks || [])
@@ -491,7 +492,7 @@ export default function ConfiguracaoRotinas() {
             <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div className="md:col-span-1 space-y-2">
-                  <Label>Ordem</Label>
+                  <Label title="Apenas para itens sob demanda">Seq.</Label>
                   <Input
                     type="number"
                     min="1"
@@ -665,16 +666,15 @@ export default function ConfiguracaoRotinas() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[80px]">Seq.</TableHead>
+                        <TableHead className="w-[140px]">Horário / Seq.</TableHead>
                         <TableHead>Descrição da Tarefa</TableHead>
                         <TableHead>Periodicidade</TableHead>
-                        <TableHead>Horário</TableHead>
                         <TableHead className="text-right">Peso</TableHead>
                         <TableHead className="text-right w-[120px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {currentTasks
+                      {[...currentTasks]
                         .sort((a, b) => {
                           if (a.horario_inicio && b.horario_inicio) {
                             const timeA = timeToMinutes(a.horario_inicio)
@@ -688,8 +688,25 @@ export default function ConfiguracaoRotinas() {
                         })
                         .map((task) => (
                           <TableRow key={task.id}>
-                            <TableCell className="font-medium">{task.numero_sequencia}</TableCell>
-                            <TableCell>{task.descricao_tarefa}</TableCell>
+                            <TableCell>
+                              {task.horario_inicio ? (
+                                <Badge
+                                  variant="outline"
+                                  className="font-mono bg-muted/50 whitespace-nowrap"
+                                >
+                                  {task.horario_inicio.substring(0, 5)}
+                                  {task.horario_fim ? ` - ${task.horario_fim.substring(0, 5)}` : ''}
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="secondary"
+                                  className="font-mono font-normal bg-primary/5 text-primary border-primary/20"
+                                >
+                                  {task.numero_sequencia}º (Demanda)
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">{task.descricao_tarefa}</TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1 items-start">
                                 <Badge
@@ -730,18 +747,6 @@ export default function ConfiguracaoRotinas() {
                                   </span>
                                 )}
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              {task.horario_inicio ? (
-                                <Badge variant="outline" className="font-mono">
-                                  {task.horario_inicio.substring(0, 5)}
-                                  {task.horario_fim ? ` - ${task.horario_fim.substring(0, 5)}` : ''}
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="font-mono font-normal">
-                                  Sob demanda
-                                </Badge>
-                              )}
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               {task.peso_percentual}%

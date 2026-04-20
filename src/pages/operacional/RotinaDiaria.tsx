@@ -365,6 +365,8 @@ export default function RotinaDiaria() {
         .select('*')
         .eq('rotina_id', routine.id)
         .eq('ativa', true)
+        .order('horario_inicio', { ascending: true, nullsFirst: false })
+        .order('numero_sequencia', { ascending: true })
 
       if (!tarefas) {
         setTasks([])
@@ -701,7 +703,7 @@ export default function RotinaDiaria() {
       return (
         <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm font-medium gap-1.5">
           <ListOrdered className="w-4 h-4" />
-          <span>Pendente</span>
+          <span>Pendente (Sob demanda)</span>
         </div>
       )
     }

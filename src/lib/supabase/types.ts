@@ -1615,7 +1615,7 @@ export type Database = {
           dia_mes: number | null
           dias_semana: Json | null
           horario_fim: string | null
-          horario_inicio: string
+          horario_inicio: string | null
           id: string
           numero_sequencia: number
           periodicidade: string
@@ -1630,7 +1630,7 @@ export type Database = {
           dia_mes?: number | null
           dias_semana?: Json | null
           horario_fim?: string | null
-          horario_inicio: string
+          horario_inicio?: string | null
           id?: string
           numero_sequencia: number
           periodicidade?: string
@@ -1645,7 +1645,7 @@ export type Database = {
           dia_mes?: number | null
           dias_semana?: Json | null
           horario_fim?: string | null
-          horario_inicio?: string
+          horario_inicio?: string | null
           id?: string
           numero_sequencia?: number
           periodicidade?: string
@@ -2455,7 +2455,7 @@ export const Constants = {
 //   rotina_id: uuid (not null)
 //   numero_sequencia: integer (not null)
 //   descricao_tarefa: text (not null)
-//   horario_inicio: time without time zone (not null)
+//   horario_inicio: time without time zone (nullable)
 //   horario_fim: time without time zone (nullable)
 //   peso_percentual: numeric (not null, default: 5)
 //   ativa: boolean (not null, default: true)
