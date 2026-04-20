@@ -36,7 +36,7 @@ type Task = {
   id: string
   descricao_tarefa: string
   horario_inicio: string
-  horario_fim: string
+  horario_fim: string | null
   peso_percentual: number
   numero_sequencia: number
 }
@@ -136,10 +136,10 @@ export default function ConfiguracaoRotinas() {
   }
 
   const handleAddOrUpdateTask = async () => {
-    if (!descricao || !horarioInicio || !horarioFim || peso <= 0) {
+    if (!descricao || !horarioInicio || peso <= 0) {
       toast({
         title: 'Campos inválidos',
-        description: 'Preencha todos os campos corretamente.',
+        description: 'Preencha os campos obrigatórios corretamente.',
         variant: 'destructive',
       })
       return
@@ -171,7 +171,7 @@ export default function ConfiguracaoRotinas() {
         rotina_id: routineId,
         descricao_tarefa: descricao,
         horario_inicio: horarioInicio,
-        horario_fim: horarioFim,
+        horario_fim: horarioFim || null,
         peso_percentual: peso,
         ativa: true,
       }
@@ -201,7 +201,7 @@ export default function ConfiguracaoRotinas() {
     setEditId(task.id)
     setDescricao(task.descricao_tarefa)
     setHorarioInicio(task.horario_inicio.substring(0, 5))
-    setHorarioFim(task.horario_fim.substring(0, 5))
+    setHorarioFim(task.horario_fim ? task.horario_fim.substring(0, 5) : '')
     setPeso(task.peso_percentual)
   }
 
@@ -399,7 +399,7 @@ export default function ConfiguracaoRotinas() {
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <Label>Fim (HH:MM)</Label>
+                  <Label>Fim (HH:MM) - Opcional</Label>
                   <Input
                     type="time"
                     value={horarioFim}
@@ -486,8 +486,8 @@ export default function ConfiguracaoRotinas() {
                             <TableCell>{task.descricao_tarefa}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className="font-mono">
-                                {task.horario_inicio.substring(0, 5)} -{' '}
-                                {task.horario_fim.substring(0, 5)}
+                                {task.horario_inicio.substring(0, 5)}
+                                {task.horario_fim ? ` - ${task.horario_fim.substring(0, 5)}` : ''}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right font-medium">

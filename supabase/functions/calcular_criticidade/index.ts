@@ -25,6 +25,16 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    if (!horario_fim) {
+      return new Response(
+        JSON.stringify({
+          minutos_atrasado: 0,
+          nivel_criticidade: 'no_horario',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+      )
+    }
+
     const concluidaEm = new Date(timestamp_conclusao)
     const [h, m] = horario_fim.split(':').map(Number)
 

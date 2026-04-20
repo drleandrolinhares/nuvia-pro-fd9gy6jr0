@@ -40,23 +40,31 @@ Deno.serve(async (req: Request) => {
     const [hInicio, mInicio] = tarefa.horario_inicio.split(':').map(Number)
     const inicioTotalMinutes = hInicio * 60 + mInicio
 
-    const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
-    const fimTotalMinutes = hFim * 60 + mFim
-
     let valido = false
-    if (inicioTotalMinutes <= fimTotalMinutes) {
-      valido = currentTotalMinutes >= inicioTotalMinutes && currentTotalMinutes <= fimTotalMinutes
-    } else {
-      // Caso a tarefa cruze a meia-noite
-      valido = currentTotalMinutes >= inicioTotalMinutes || currentTotalMinutes <= fimTotalMinutes
-    }
-
-    const hInicioStr = tarefa.horario_inicio.substring(0, 5)
-    const hFimStr = tarefa.horario_fim.substring(0, 5)
-
     let mensagem = 'Tarefa marcada com sucesso'
-    if (!valido) {
-      mensagem = `Fora do horário permitido. Horário permitido: ${hInicioStr} - ${hFimStr}`
+    const hInicioStr = tarefa.horario_inicio.substring(0, 5)
+
+    if (!tarefa.horario_fim) {
+      valido = currentTotalMinutes >= inicioTotalMinutes
+      if (!valido) {
+        mensagem = `Fora do horário permitido. Horário permitido: a partir de ${hInicioStr}`
+      }
+    } else {
+      const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
+      const fimTotalMinutes = hFim * 60 + mFim
+
+      if (inicioTotalMinutes <= fimTotalMinutes) {
+        valido = currentTotalMinutes >= inicioTotalMinutes && currentTotalMinutes <= fimTotalMinutes
+      } else {
+        // Caso a tarefa cruze a meia-noite
+        valido = currentTotalMinutes >= inicioTotalMinutes || currentTotalMinutes <= fimTotalMinutes
+      }
+
+      const hFimStr = tarefa.horario_fim.substring(0, 5)
+
+      if (!valido) {
+        mensagem = `Fora do horário permitido. Horário permitido: ${hInicioStr} - ${hFimStr}`
+      }
     }
 
     // Registra a tentativa de auditoria (falhas não impedem o retorno da função)

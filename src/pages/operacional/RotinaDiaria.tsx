@@ -23,7 +23,7 @@ type Task = {
   numero_sequencia: number
   descricao_tarefa: string
   horario_inicio: string
-  horario_fim: string
+  horario_fim: string | null
   peso_percentual: number
 
   execucao_id?: string
@@ -34,13 +34,13 @@ type Task = {
   fechamento_confirmado: boolean
 }
 
-const timeToMinutes = (time: string) => {
+const timeToMinutes = (time: string | null) => {
   if (!time) return 0
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m
 }
 
-const formatTime = (time: string) => (time ? time.substring(0, 5) : '')
+const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 
 function ResumoFechamento({
   tasks,
@@ -465,6 +465,28 @@ export default function RotinaDiaria() {
           nivel_criticidade = data.nivel_criticidade
         } else {
           // Fallback caso a edge function falhe
+          if (!task.horario_fim) {
+            minutos_atrasado = 0
+            nivel_criticidade = 'no_horario'
+          } else {
+            const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+            const fimDate = new Date(nowTime)
+            fimDate.setHours(hFim, mFim, 0, 0)
+            minutos_atrasado = Math.max(
+              0,
+              Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
+            )
+            if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
+            else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+            else nivel_criticidade = 'critico'
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao calcular criticidade:', err)
+        if (!task.horario_fim) {
+          minutos_atrasado = 0
+          nivel_criticidade = 'no_horario'
+        } else {
           const [hFim, mFim] = task.horario_fim.split(':').map(Number)
           const fimDate = new Date(nowTime)
           fimDate.setHours(hFim, mFim, 0, 0)
@@ -476,15 +498,6 @@ export default function RotinaDiaria() {
           else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
           else nivel_criticidade = 'critico'
         }
-      } catch (err) {
-        console.error('Erro ao calcular criticidade:', err)
-        const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-        const fimDate = new Date(nowTime)
-        fimDate.setHours(hFim, mFim, 0, 0)
-        minutos_atrasado = Math.max(0, Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000))
-        if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
-        else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
-        else nivel_criticidade = 'critico'
       }
     }
 
@@ -580,6 +593,7 @@ export default function RotinaDiaria() {
     tasks.length > 0 &&
     tasks.every((t) => {
       if (t.concluida) return true
+      if (!t.horario_fim) return true
       const endMins = timeToMinutes(t.horario_fim)
       return currentMinutes > endMins
     })
@@ -632,42 +646,44 @@ export default function RotinaDiaria() {
     }
 
     const startMins = timeToMinutes(task.horario_inicio)
-    const endMins = timeToMinutes(task.horario_fim)
 
     if (currentMinutes < startMins) {
       return (
         <div className="flex items-center text-slate-400 dark:text-slate-500 text-sm gap-1.5">
           <Clock className="w-4 h-4" />
-          <span>Disponível em {formatTime(task.horario_inicio)}</span>
+          <span>Disponível a partir de {formatTime(task.horario_inicio)}</span>
         </div>
       )
     }
 
-    if (currentMinutes > endMins) {
-      const minutesLate = currentMinutes - endMins
-      const isCritical = minutesLate > 60
+    if (task.horario_fim) {
+      const endMins = timeToMinutes(task.horario_fim)
+      if (currentMinutes > endMins) {
+        const minutesLate = currentMinutes - endMins
+        const isCritical = minutesLate > 60
 
-      return (
-        <div className="flex items-center text-red-500 dark:text-red-400 text-sm font-medium gap-1.5">
-          {isCritical ? (
-            <AlertCircle className="w-4 h-4" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-          )}
-          <div className="flex items-center flex-wrap sm:flex-nowrap gap-y-1">
-            <span>Prazo expirado</span>
+        return (
+          <div className="flex items-center text-red-500 dark:text-red-400 text-sm font-medium gap-1.5">
             {isCritical ? (
-              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-200 dark:border-red-800 tracking-wider">
-                🔴 CRÍTICO
-              </span>
+              <AlertCircle className="w-4 h-4" />
             ) : (
-              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 tracking-wider">
-                ⚠️ TOLERÂNCIA
-              </span>
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
             )}
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-y-1">
+              <span>Prazo expirado</span>
+              {isCritical ? (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-200 dark:border-red-800 tracking-wider">
+                  🔴 CRÍTICO
+                </span>
+              ) : (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 tracking-wider">
+                  ⚠️ TOLERÂNCIA
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      )
+        )
+      }
     }
 
     return (
@@ -725,8 +741,15 @@ export default function RotinaDiaria() {
               <div className="divide-y divide-border">
                 {tasks.map((task) => {
                   const startMins = timeToMinutes(task.horario_inicio)
-                  const endMins = timeToMinutes(task.horario_fim)
-                  const isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
+
+                  let isWithinWindow = false
+                  if (task.horario_fim) {
+                    const endMins = timeToMinutes(task.horario_fim)
+                    isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
+                  } else {
+                    isWithinWindow = currentMinutes >= startMins
+                  }
+
                   const disabled = currentMinutes < startMins && !task.concluida
 
                   return (
@@ -765,7 +788,10 @@ export default function RotinaDiaria() {
                           </label>
                           <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
                             <Clock className="w-3.5 h-3.5" />
-                            {formatTime(task.horario_inicio)} - {formatTime(task.horario_fim)}
+                            {formatTime(task.horario_inicio)}
+                            {task.horario_fim
+                              ? ` - ${formatTime(task.horario_fim)}`
+                              : ' (sem prazo final)'}
                           </div>
                         </div>
                         <div className="shrink-0 bg-background sm:bg-transparent rounded-md p-2 sm:p-0 border sm:border-none border-border/50">
