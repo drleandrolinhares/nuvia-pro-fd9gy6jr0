@@ -51,6 +51,7 @@ import { toast } from 'sonner'
 import { Tables } from '@/lib/supabase/types'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 export interface ExtendedUsuario extends UsuarioWithCargo {
   ordem?: number
@@ -113,6 +114,12 @@ export default function Colaboradores() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+
+  const { profile } = useAuth()
+  const isAdmin =
+    profile?.role === 'admin' ||
+    profile?.email === 'drleandro@nuvia.com' ||
+    profile?.email === 'drleandrolinhares@gmail.com'
 
   const load = async () => {
     try {
@@ -531,6 +538,7 @@ export default function Colaboradores() {
         cargos={cargos}
         usuario={editingUsuario}
         onSuccess={load}
+        isAdmin={isAdmin}
       />
     </div>
   )

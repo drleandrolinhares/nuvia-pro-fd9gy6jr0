@@ -34,7 +34,14 @@ const Field = ({ label, error, children }: any) => (
   </div>
 )
 
-export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario, onSuccess }: any) {
+export default function ColaboradorFormSheet({
+  isOpen,
+  onClose,
+  cargos,
+  usuario,
+  onSuccess,
+  isAdmin,
+}: any) {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('pessoal')
@@ -87,6 +94,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
     try {
       setSaving(true)
       const payload = {
+        id: usuario?.id,
         ...data,
         horario_entrada: data.horario_entrada || null,
         inicio_lanche_manha: data.inicio_lanche_manha || null,
@@ -102,7 +110,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
           parentesco: data.emergencia_parentesco,
         }),
       }
-      await saveColaborador(payload, isEdit)
+      await saveColaborador(payload, isEdit, usuario?.email)
 
       if (isEdit && data.password && data.password.trim() !== '') {
         const { error: pwError } = await supabase.functions.invoke('update-user-password', {
@@ -194,7 +202,7 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                 </Field>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="E-mail *" error={errors.email}>
-                    <Input type="email" disabled={isEdit} {...register('email')} />
+                    <Input type="email" disabled={isEdit && !isAdmin} {...register('email')} />
                   </Field>
                   <Field
                     label={isEdit ? 'Nova Senha (opcional)' : 'Senha Temporária *'}

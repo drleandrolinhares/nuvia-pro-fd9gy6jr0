@@ -39,7 +39,7 @@ export async function getColaboradorDetalhes(usuarioId: string) {
   return data
 }
 
-export async function saveColaborador(data: any, isEdit: boolean) {
+export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: string) {
   let userId = data.id
 
   if (!isEdit) {
@@ -53,6 +53,18 @@ export async function saveColaborador(data: any, isEdit: boolean) {
     if (edgeError) throw edgeError
     if (edgeData?.error) throw new Error(edgeData.error)
     userId = edgeData.user.id
+  } else if (oldEmail && data.email !== oldEmail) {
+    const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+      'update-user-email',
+      {
+        body: {
+          userId: userId,
+          email: data.email,
+        },
+      },
+    )
+    if (edgeError) throw edgeError
+    if (edgeData?.error) throw new Error(edgeData.error)
   }
 
   const { error: userError } = await supabase.from('usuarios').upsert({
