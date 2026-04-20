@@ -36,6 +36,7 @@ import {
   UserCheck,
   ShieldAlert,
   Loader2,
+  GripVertical,
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import {
@@ -48,9 +49,67 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { Tables } from '@/lib/supabase/types'
+import { supabase } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
+
+export interface ExtendedUsuario extends UsuarioWithCargo {
+  ordem?: number
+  horario_entrada?: string | null
+  inicio_lanche_manha?: string | null
+  fim_lanche_manha?: string | null
+  saida_almoco?: string | null
+  retorno_almoco?: string | null
+  inicio_lanche_tarde?: string | null
+  fim_lanche_tarde?: string | null
+  horario_saida?: string | null
+}
+
+const timeToMinutes = (timeStr?: string | null) => {
+  if (!timeStr) return 0
+  const parts = timeStr.split(':')
+  if (parts.length < 2) return 0
+  const h = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  if (isNaN(h) || isNaN(m)) return 0
+  return h * 60 + m
+}
+
+const formatTimeShort = (timeStr?: string | null) => {
+  if (!timeStr) return '-'
+  const parts = timeStr.split(':')
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`
+  return timeStr
+}
+
+const calculateTotalHours = (u: ExtendedUsuario) => {
+  const entrada = timeToMinutes(u.horario_entrada)
+  const saida = timeToMinutes(u.horario_saida)
+
+  if (entrada === 0 && saida === 0) return '-'
+
+  let total = saida - entrada
+  if (total < 0) total += 24 * 60
+
+  const lancheM = Math.max(
+    0,
+    timeToMinutes(u.fim_lanche_manha) - timeToMinutes(u.inicio_lanche_manha),
+  )
+  const almoco = Math.max(0, timeToMinutes(u.retorno_almoco) - timeToMinutes(u.saida_almoco))
+  const lancheT = Math.max(
+    0,
+    timeToMinutes(u.fim_lanche_tarde) - timeToMinutes(u.inicio_lanche_tarde),
+  )
+
+  total = total - lancheM - almoco - lancheT
+  if (total < 0) total = 0
+
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+}
 
 export default function Colaboradores() {
-  const [usuarios, setUsuarios] = useState<UsuarioWithCargo[]>([])
+  const [usuarios, setUsuarios] = useState<ExtendedUsuario[]>([])
   const [cargos, setCargos] = useState<Tables<'cargos'>[]>([])
   const [loading, setLoading] = useState(true)
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
@@ -60,7 +119,8 @@ export default function Colaboradores() {
   const [cargoFilter, setCargoFilter] = useState<string>('todos')
 
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [editingUsuario, setEditingUsuario] = useState<UsuarioWithCargo | null>(null)
+  const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   const load = async () => {
     try {
@@ -69,7 +129,20 @@ export default function Colaboradores() {
 
       if (permitted) {
         const [us, cs] = await Promise.all([getUsuarios(), getCargos()])
-        setUsuarios(us)
+
+        const { data: scheduleData } = await supabase
+          .from('usuarios')
+          .select(
+            'id, ordem, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida',
+          )
+
+        const extendedUs = us.map((u) => {
+          const s = scheduleData?.find((sd) => sd.id === u.id)
+          return { ...u, ...s } as ExtendedUsuario
+        })
+
+        extendedUs.sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+        setUsuarios(extendedUs)
         setCargos(cs)
       }
     } catch (error) {
@@ -89,7 +162,7 @@ export default function Colaboradores() {
     setSheetOpen(true)
   }
 
-  const handleEdit = (u: UsuarioWithCargo) => {
+  const handleEdit = (u: ExtendedUsuario) => {
     setEditingUsuario(u)
     setSheetOpen(true)
   }
@@ -104,6 +177,45 @@ export default function Colaboradores() {
     } catch (error) {
       console.error(error)
       toast.error('Erro ao atualizar status')
+    }
+  }
+
+  const isFiltered = search !== '' || statusFilter !== 'todos' || cargoFilter !== 'todos'
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (isFiltered || draggedIndex === null || draggedIndex === dropIndex) return
+
+    const newUsuarios = [...usuarios]
+    const draggedItem = newUsuarios[draggedIndex]
+
+    newUsuarios.splice(draggedIndex, 1)
+    newUsuarios.splice(dropIndex, 0, draggedItem)
+
+    setUsuarios(newUsuarios)
+    setDraggedIndex(null)
+
+    try {
+      const updates = newUsuarios.map((u, i) =>
+        supabase.from('usuarios').update({ ordem: i }).eq('id', u.id),
+      )
+      await Promise.all(updates)
+      toast.success('Ordem atualizada com sucesso')
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao atualizar ordem')
+      load()
     }
   }
 
@@ -143,7 +255,7 @@ export default function Colaboradores() {
   })
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="p-6 md:p-8 max-w-full mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
@@ -200,13 +312,24 @@ export default function Colaboradores() {
           </div>
         </div>
 
-        <div className="rounded-md border overflow-hidden bg-background">
-          <Table>
+        <div className="rounded-md border overflow-x-auto bg-background">
+          <Table className="min-w-[1200px]">
             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
               <TableRow>
+                <TableHead className="w-8 px-2"></TableHead>
                 <TableHead>Colaborador</TableHead>
                 <TableHead>Cargo / Setor</TableHead>
-                <TableHead>Admissão</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Entrada</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Início L.M.</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Fim L.M.</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Saída Almoço</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Retorno Almoço</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Início L.T.</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Fim L.T.</TableHead>
+                <TableHead className="text-xs whitespace-nowrap">Saída</TableHead>
+                <TableHead className="text-xs whitespace-nowrap font-bold text-amber-600">
+                  Total Hrs
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[80px] text-right">Ações</TableHead>
               </TableRow>
@@ -214,7 +337,7 @@ export default function Colaboradores() {
             <TableBody>
               {filteredUsuarios.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={14} className="text-center py-10 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <UserX className="w-8 h-8 opacity-20" />
                       <p>Nenhum colaborador encontrado.</p>
@@ -222,15 +345,32 @@ export default function Colaboradores() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsuarios.map((usuario) => {
+                filteredUsuarios.map((usuario, index) => {
                   const status = usuario.status || 'ativo'
                   return (
                     <TableRow
                       key={usuario.id}
-                      className="group transition-colors hover:bg-muted/50"
+                      draggable={!isFiltered}
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={() => setDraggedIndex(null)}
+                      className={cn(
+                        'group transition-colors',
+                        draggedIndex === index ? 'opacity-50 bg-muted' : 'hover:bg-muted/50',
+                      )}
                     >
+                      <TableCell className="w-8 px-2 text-center">
+                        {!isFiltered ? (
+                          <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded inline-flex">
+                            <GripVertical className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4" title="Limpe os filtros para reordenar" />
+                        )}
+                      </TableCell>
                       <TableCell>
-                        <div className="font-medium text-slate-900 dark:text-slate-100">
+                        <div className="font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
                           {usuario.nome}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -238,10 +378,12 @@ export default function Colaboradores() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{usuario.cargo?.nome || 'Não definido'}</div>
+                        <div className="font-medium whitespace-nowrap">
+                          {usuario.cargo?.nome || 'Não definido'}
+                        </div>
                         {(usuario as any).cargo_secundario_id &&
                           cargos.find((c) => c.id === (usuario as any).cargo_secundario_id) && (
-                            <div className="text-[11px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">
+                            <div className="text-[11px] font-medium text-amber-600 dark:text-amber-500 mt-0.5 whitespace-nowrap">
                               +{' '}
                               {
                                 cargos.find((c) => c.id === (usuario as any).cargo_secundario_id)
@@ -249,15 +391,41 @@ export default function Colaboradores() {
                               }
                             </div>
                           )}
-                        <div className="text-xs text-muted-foreground mt-0.5">
+                        <div className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">
                           {usuario.cargo?.setor || '-'}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {usuario.data_admissao
-                          ? format(parseISO(usuario.data_admissao), 'dd/MM/yyyy', { locale: ptBR })
-                          : '-'}
+
+                      {/* Horários */}
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {formatTimeShort(usuario.horario_entrada)}
                       </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.inicio_lanche_manha)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.fim_lanche_manha)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.saida_almoco)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.retorno_almoco)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.inicio_lanche_tarde)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {formatTimeShort(usuario.fim_lanche_tarde)}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {formatTimeShort(usuario.horario_saida)}
+                      </TableCell>
+
+                      <TableCell className="text-xs whitespace-nowrap font-bold text-amber-600">
+                        {calculateTotalHours(usuario)}
+                      </TableCell>
+
                       <TableCell>
                         <Badge
                           variant={status === 'ativo' ? 'default' : 'secondary'}

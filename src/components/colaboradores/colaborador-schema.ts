@@ -30,6 +30,15 @@ export const colaboradorSchema = z
     emergencia_nome: z.string().optional(),
     emergencia_telefone: z.string().optional(),
     emergencia_parentesco: z.string().optional(),
+
+    horario_entrada: z.string().optional().nullable(),
+    inicio_lanche_manha: z.string().optional().nullable(),
+    fim_lanche_manha: z.string().optional().nullable(),
+    saida_almoco: z.string().optional().nullable(),
+    retorno_almoco: z.string().optional().nullable(),
+    inicio_lanche_tarde: z.string().optional().nullable(),
+    fim_lanche_tarde: z.string().optional().nullable(),
+    horario_saida: z.string().optional().nullable(),
   })
   .refine((data) => !!data.id || (data.password && data.password.length >= 6), {
     message: 'Senha obrigatória (mín. 6 caracteres) para novos usuários',

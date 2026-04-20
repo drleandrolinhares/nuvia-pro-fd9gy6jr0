@@ -88,6 +88,14 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
       setSaving(true)
       const payload = {
         ...data,
+        horario_entrada: data.horario_entrada || null,
+        inicio_lanche_manha: data.inicio_lanche_manha || null,
+        fim_lanche_manha: data.fim_lanche_manha || null,
+        saida_almoco: data.saida_almoco || null,
+        retorno_almoco: data.retorno_almoco || null,
+        inicio_lanche_tarde: data.inicio_lanche_tarde || null,
+        fim_lanche_tarde: data.fim_lanche_tarde || null,
+        horario_saida: data.horario_saida || null,
         beneficiario_emergencia: JSON.stringify({
           nome: data.emergencia_nome,
           telefone: data.emergencia_telefone,
@@ -121,6 +129,16 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
       const profFields = ['cargo_id', 'status', 'salario', 'data_admissao', 'cargo_secundario_id']
       const bancoFields = ['banco', 'agencia', 'conta', 'pix', 'ctps', 'pis']
       const emergFields = ['emergencia_nome', 'emergencia_telefone', 'emergencia_parentesco']
+      const jornadaFields = [
+        'horario_entrada',
+        'horario_saida',
+        'inicio_lanche_manha',
+        'fim_lanche_manha',
+        'saida_almoco',
+        'retorno_almoco',
+        'inicio_lanche_tarde',
+        'fim_lanche_tarde',
+      ]
 
       const firstError = errorKeys[0]
       if (profFields.includes(firstError)) {
@@ -129,6 +147,8 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
         setActiveTab('banco')
       } else if (emergFields.includes(firstError)) {
         setActiveTab('emerg')
+      } else if (jornadaFields.includes(firstError)) {
+        setActiveTab('jornada')
       } else {
         setActiveTab('pessoal')
       }
@@ -150,11 +170,22 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
         ) : (
           <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="pessoal">Pessoal</TabsTrigger>
-                <TabsTrigger value="prof">Profissional</TabsTrigger>
-                <TabsTrigger value="banco">Docs/Banco</TabsTrigger>
-                <TabsTrigger value="emerg">Emergência</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 h-auto">
+                <TabsTrigger value="pessoal" className="text-xs px-1">
+                  Pessoal
+                </TabsTrigger>
+                <TabsTrigger value="prof" className="text-xs px-1">
+                  Profissional
+                </TabsTrigger>
+                <TabsTrigger value="jornada" className="text-xs px-1">
+                  Jornada
+                </TabsTrigger>
+                <TabsTrigger value="banco" className="text-xs px-1">
+                  Docs/Banco
+                </TabsTrigger>
+                <TabsTrigger value="emerg" className="text-xs px-1">
+                  Emergência
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="pessoal" className="space-y-4 mt-4">
@@ -289,6 +320,41 @@ export default function ColaboradorFormSheet({ isOpen, onClose, cargos, usuario,
                   </Field>
                   <Field label="Salário" error={errors.salario}>
                     <Input type="number" step="0.01" {...register('salario')} />
+                  </Field>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="jornada" className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Horário de Entrada" error={errors.horario_entrada}>
+                    <Input type="time" {...register('horario_entrada')} />
+                  </Field>
+                  <Field label="Horário de Saída" error={errors.horario_saida}>
+                    <Input type="time" {...register('horario_saida')} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Início Lanche Manhã" error={errors.inicio_lanche_manha}>
+                    <Input type="time" {...register('inicio_lanche_manha')} />
+                  </Field>
+                  <Field label="Fim Lanche Manhã" error={errors.fim_lanche_manha}>
+                    <Input type="time" {...register('fim_lanche_manha')} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Saída para Almoço" error={errors.saida_almoco}>
+                    <Input type="time" {...register('saida_almoco')} />
+                  </Field>
+                  <Field label="Retorno do Almoço" error={errors.retorno_almoco}>
+                    <Input type="time" {...register('retorno_almoco')} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Início Lanche Tarde" error={errors.inicio_lanche_tarde}>
+                    <Input type="time" {...register('inicio_lanche_tarde')} />
+                  </Field>
+                  <Field label="Fim Lanche Tarde" error={errors.fim_lanche_tarde}>
+                    <Input type="time" {...register('fim_lanche_tarde')} />
                   </Field>
                 </div>
               </TabsContent>
