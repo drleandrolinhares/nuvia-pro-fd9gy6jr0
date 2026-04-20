@@ -115,7 +115,7 @@ export default function Colaboradores() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
 
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('ativo')
+  const [statusFilter, setStatusFilter] = useState<string>('todos')
   const [cargoFilter, setCargoFilter] = useState<string>('todos')
 
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -313,25 +313,62 @@ export default function Colaboradores() {
         </div>
 
         <div className="rounded-md border overflow-x-auto bg-background">
-          <Table className="min-w-[1200px]">
+          <Table className="min-w-max w-full text-sm">
             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
               <TableRow>
-                <TableHead className="w-8 px-2"></TableHead>
-                <TableHead>Colaborador</TableHead>
-                <TableHead>Cargo / Setor</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Entrada</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Início L.M.</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Fim L.M.</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Saída Almoço</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Retorno Almoço</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Início L.T.</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Fim L.T.</TableHead>
-                <TableHead className="text-xs whitespace-nowrap">Saída</TableHead>
-                <TableHead className="text-xs whitespace-nowrap font-bold text-amber-600">
-                  Total Hrs
+                <TableHead className="w-8 px-1"></TableHead>
+                <TableHead className="px-2">Colaborador</TableHead>
+                <TableHead className="px-2">Cargo</TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Entrada"
+                >
+                  Entrada
                 </TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px] text-right">Ações</TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Início Lanche Manhã"
+                >
+                  I.L.M.
+                </TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Fim Lanche Manhã"
+                >
+                  F.L.M.
+                </TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Saída Almoço"
+                >
+                  S.Alm.
+                </TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Retorno Almoço"
+                >
+                  R.Alm.
+                </TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Início Lanche Tarde"
+                >
+                  I.L.T.
+                </TableHead>
+                <TableHead
+                  className="px-1 text-[11px] whitespace-nowrap text-center"
+                  title="Fim Lanche Tarde"
+                >
+                  F.L.T.
+                </TableHead>
+                <TableHead className="px-1 text-[11px] whitespace-nowrap text-center" title="Saída">
+                  Saída
+                </TableHead>
+                <TableHead className="px-2 text-xs whitespace-nowrap font-bold text-amber-600 text-center">
+                  Total
+                </TableHead>
+                <TableHead className="px-2">Status</TableHead>
+                <TableHead className="w-[60px] px-2 text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -360,7 +397,7 @@ export default function Colaboradores() {
                         draggedIndex === index ? 'opacity-50 bg-muted' : 'hover:bg-muted/50',
                       )}
                     >
-                      <TableCell className="w-8 px-2 text-center">
+                      <TableCell className="w-8 px-1 text-center">
                         {!isFiltered ? (
                           <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded inline-flex">
                             <GripVertical className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground" />
@@ -369,21 +406,24 @@ export default function Colaboradores() {
                           <div className="w-4 h-4" title="Limpe os filtros para reordenar" />
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                      <TableCell className="px-2">
+                        <div className="font-medium text-xs text-slate-900 dark:text-slate-100 whitespace-nowrap">
                           {usuario.nome}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">
                           {usuario.cpf || 'Sem CPF'}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="font-medium whitespace-nowrap">
+                      <TableCell className="px-2">
+                        <div
+                          className="font-medium text-xs whitespace-nowrap truncate max-w-[140px]"
+                          title={usuario.cargo?.nome || 'Não definido'}
+                        >
                           {usuario.cargo?.nome || 'Não definido'}
                         </div>
                         {(usuario as any).cargo_secundario_id &&
                           cargos.find((c) => c.id === (usuario as any).cargo_secundario_id) && (
-                            <div className="text-[11px] font-medium text-amber-600 dark:text-amber-500 mt-0.5 whitespace-nowrap">
+                            <div className="text-[10px] font-medium text-amber-600 dark:text-amber-500 mt-0.5 whitespace-nowrap truncate max-w-[140px]">
                               +{' '}
                               {
                                 cargos.find((c) => c.id === (usuario as any).cargo_secundario_id)
@@ -391,54 +431,55 @@ export default function Colaboradores() {
                               }
                             </div>
                           )}
-                        <div className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">
+                        <div className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap truncate max-w-[140px]">
                           {usuario.cargo?.setor || '-'}
                         </div>
                       </TableCell>
 
                       {/* Horários */}
-                      <TableCell className="text-xs whitespace-nowrap">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center font-medium">
                         {formatTimeShort(usuario.horario_entrada)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.inicio_lanche_manha)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.fim_lanche_manha)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.saida_almoco)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.retorno_almoco)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.inicio_lanche_tarde)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.fim_lanche_tarde)}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center font-medium">
                         {formatTimeShort(usuario.horario_saida)}
                       </TableCell>
 
-                      <TableCell className="text-xs whitespace-nowrap font-bold text-amber-600">
+                      <TableCell className="px-2 text-[11px] whitespace-nowrap font-bold text-amber-600 text-center">
                         {calculateTotalHours(usuario)}
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="px-2">
                         <Badge
                           variant={status === 'ativo' ? 'default' : 'secondary'}
-                          className={
+                          className={cn(
+                            'text-[10px] px-1.5 py-0',
                             status === 'ativo'
                               ? 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-400 border-none'
-                              : 'opacity-70'
-                          }
+                              : 'opacity-70',
+                          )}
                         >
                           {status === 'ativo' ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-2 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

@@ -1691,9 +1691,18 @@ export type Database = {
           data_nascimento: string | null
           email: string
           endereco: string | null
+          fim_lanche_manha: string | null
+          fim_lanche_tarde: string | null
+          horario_entrada: string | null
+          horario_saida: string | null
           id: string
+          inicio_lanche_manha: string | null
+          inicio_lanche_tarde: string | null
           nome: string
+          ordem: number | null
+          retorno_almoco: string | null
           role: string | null
+          saida_almoco: string | null
           salario: number | null
           status: string | null
           telefone: string | null
@@ -1708,9 +1717,18 @@ export type Database = {
           data_nascimento?: string | null
           email: string
           endereco?: string | null
+          fim_lanche_manha?: string | null
+          fim_lanche_tarde?: string | null
+          horario_entrada?: string | null
+          horario_saida?: string | null
           id: string
+          inicio_lanche_manha?: string | null
+          inicio_lanche_tarde?: string | null
           nome: string
+          ordem?: number | null
+          retorno_almoco?: string | null
           role?: string | null
+          saida_almoco?: string | null
           salario?: number | null
           status?: string | null
           telefone?: string | null
@@ -1725,9 +1743,18 @@ export type Database = {
           data_nascimento?: string | null
           email?: string
           endereco?: string | null
+          fim_lanche_manha?: string | null
+          fim_lanche_tarde?: string | null
+          horario_entrada?: string | null
+          horario_saida?: string | null
           id?: string
+          inicio_lanche_manha?: string | null
+          inicio_lanche_tarde?: string | null
           nome?: string
+          ordem?: number | null
+          retorno_almoco?: string | null
           role?: string | null
+          saida_almoco?: string | null
           salario?: number | null
           status?: string | null
           telefone?: string | null
@@ -2440,6 +2467,15 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   cargo_secundario_id: uuid (nullable)
 //   avatar_url: text (nullable)
+//   ordem: integer (nullable, default: 0)
+//   horario_entrada: time without time zone (nullable)
+//   inicio_lanche_manha: time without time zone (nullable)
+//   fim_lanche_manha: time without time zone (nullable)
+//   saida_almoco: time without time zone (nullable)
+//   retorno_almoco: time without time zone (nullable)
+//   inicio_lanche_tarde: time without time zone (nullable)
+//   fim_lanche_tarde: time without time zone (nullable)
+//   horario_saida: time without time zone (nullable)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)

@@ -68,6 +68,14 @@ export async function saveColaborador(data: any, isEdit: boolean) {
     data_admissao: data.data_admissao || null,
     salario: data.salario || null,
     status: data.status || 'ativo',
+    horario_entrada: data.horario_entrada || null,
+    inicio_lanche_manha: data.inicio_lanche_manha || null,
+    fim_lanche_manha: data.fim_lanche_manha || null,
+    saida_almoco: data.saida_almoco || null,
+    retorno_almoco: data.retorno_almoco || null,
+    inicio_lanche_tarde: data.inicio_lanche_tarde || null,
+    fim_lanche_tarde: data.fim_lanche_tarde || null,
+    horario_saida: data.horario_saida || null,
   })
   if (userError) throw userError
 
