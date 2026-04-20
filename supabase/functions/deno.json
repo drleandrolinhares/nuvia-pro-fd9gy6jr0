@@ -6,6 +6,7 @@
     "calcular-entrada-venda": 3,
     "update-user-password": 1,
     "calcular_criticidade": 1,
-    "validar_conclusao_tarefa": 1
+    "validar_conclusao_tarefa": 1,
+    "update-user-email": 1
   }
 }
