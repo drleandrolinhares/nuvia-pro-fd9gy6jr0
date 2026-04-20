@@ -39,6 +39,10 @@ type Task = {
   horario_fim: string | null
   peso_percentual: number
   numero_sequencia: number
+  periodicidade?: 'diaria' | 'semanal' | 'quinzenal' | 'mensal'
+  dias_semana?: number[] | null
+  dia_mes?: number | null
+  data_inicio_contagem?: string | null
 }
 
 type User = {
@@ -62,6 +66,12 @@ export default function ConfiguracaoRotinas() {
   const [horarioFim, setHorarioFim] = useState('')
   const [peso, setPeso] = useState<number>(5)
   const [numeroSequencia, setNumeroSequencia] = useState<number>(1)
+  const [periodicidade, setPeriodicidade] = useState<'diaria' | 'semanal' | 'quinzenal' | 'mensal'>(
+    'diaria',
+  )
+  const [diasSemana, setDiasSemana] = useState<number[]>([])
+  const [diaMes, setDiaMes] = useState<number>(1)
+  const [dataInicioContagem, setDataInicioContagem] = useState<string>('')
 
   const [currentTasks, setCurrentTasks] = useState<Task[]>([])
   const formRef = useRef<HTMLDivElement>(null)
@@ -161,6 +171,10 @@ export default function ConfiguracaoRotinas() {
     setHorarioFim('')
     setPeso(5)
     setNumeroSequencia(currentTasks.length + 1)
+    setPeriodicidade('diaria')
+    setDiasSemana([])
+    setDiaMes(1)
+    setDataInicioContagem('')
   }
 
   const handleAddOrUpdateTask = async () => {
@@ -170,6 +184,27 @@ export default function ConfiguracaoRotinas() {
         description: 'Preencha os campos obrigatórios corretamente.',
         variant: 'destructive',
       })
+      return
+    }
+
+    if (periodicidade === 'semanal' && diasSemana.length === 0) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione pelo menos um dia da semana.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (periodicidade === 'quinzenal' && !dataInicioContagem) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione a data de início para a contagem quinzenal.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (periodicidade === 'mensal' && (diaMes < 1 || diaMes > 31)) {
+      toast({ title: 'Erro', description: 'Dia do mês inválido.', variant: 'destructive' })
       return
     }
 
@@ -202,6 +237,10 @@ export default function ConfiguracaoRotinas() {
         horario_fim: horarioFim || null,
         peso_percentual: peso,
         numero_sequencia: numeroSequencia,
+        periodicidade,
+        dias_semana: periodicidade === 'semanal' ? diasSemana : null,
+        dia_mes: periodicidade === 'mensal' ? diaMes : null,
+        data_inicio_contagem: periodicidade === 'quinzenal' ? dataInicioContagem : null,
         ativa: true,
       }
 
@@ -231,6 +270,10 @@ export default function ConfiguracaoRotinas() {
     setHorarioFim(task.horario_fim ? task.horario_fim.substring(0, 5) : '')
     setPeso(Number(task.peso_percentual))
     setNumeroSequencia(task.numero_sequencia)
+    setPeriodicidade(task.periodicidade || 'diaria')
+    setDiasSemana(task.dias_semana || [])
+    setDiaMes(task.dia_mes || 1)
+    setDataInicioContagem(task.data_inicio_contagem || '')
 
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -304,6 +347,10 @@ export default function ConfiguracaoRotinas() {
         horario_fim: t.horario_fim,
         peso_percentual: Number(t.peso_percentual),
         numero_sequencia: t.numero_sequencia,
+        periodicidade: t.periodicidade || 'diaria',
+        dias_semana: t.dias_semana,
+        dia_mes: t.dia_mes,
+        data_inicio_contagem: t.data_inicio_contagem,
         ativa: true,
       }))
 
@@ -435,7 +482,7 @@ export default function ConfiguracaoRotinas() {
                 {editId ? 'Editar Tarefa' : 'Adicionar Nova Tarefa'}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div className="md:col-span-1 space-y-2">
                   <Label>Ordem</Label>
@@ -463,7 +510,7 @@ export default function ConfiguracaoRotinas() {
                     onChange={(e) => setHorarioInicio(e.target.value)}
                   />
                 </div>
-                <div className="md:col-span-2 space-y-2">
+                <div className="md:col-span-3 space-y-2">
                   <Label>Fim (HH:MM) - Opcional</Label>
                   <Input
                     type="time"
@@ -481,22 +528,99 @@ export default function ConfiguracaoRotinas() {
                     onChange={(e) => setPeso(Number(e.target.value))}
                   />
                 </div>
-                <div className="md:col-span-1 flex gap-2">
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div className="md:col-span-3 space-y-2">
+                  <Label>Periodicidade</Label>
+                  <Select value={periodicidade} onValueChange={(v: any) => setPeriodicidade(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="diaria">Diária</SelectItem>
+                      <SelectItem value="semanal">Semanal</SelectItem>
+                      <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {periodicidade === 'semanal' && (
+                  <div className="md:col-span-6 space-y-2">
+                    <Label>Dias da Semana</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { label: 'Dom', val: 0 },
+                        { label: 'Seg', val: 1 },
+                        { label: 'Ter', val: 2 },
+                        { label: 'Qua', val: 3 },
+                        { label: 'Qui', val: 4 },
+                        { label: 'Sex', val: 5 },
+                        { label: 'Sáb', val: 6 },
+                      ].map((d) => (
+                        <Badge
+                          key={d.val}
+                          variant={diasSemana.includes(d.val) ? 'default' : 'outline'}
+                          className="cursor-pointer px-3 py-1 hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            if (diasSemana.includes(d.val)) {
+                              setDiasSemana(diasSemana.filter((x) => x !== d.val))
+                            } else {
+                              setDiasSemana([...diasSemana, d.val])
+                            }
+                          }}
+                        >
+                          {d.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {periodicidade === 'quinzenal' && (
+                  <div className="md:col-span-3 space-y-2">
+                    <Label>A partir de</Label>
+                    <Input
+                      type="date"
+                      value={dataInicioContagem}
+                      onChange={(e) => setDataInicioContagem(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {periodicidade === 'mensal' && (
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Dia do Mês (1-31)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={diaMes}
+                      onChange={(e) => setDiaMes(Number(e.target.value))}
+                    />
+                  </div>
+                )}
+
+                <div
+                  className={`md:col-span-3 ${periodicidade === 'semanal' ? 'md:col-start-10' : periodicidade === 'quinzenal' ? 'md:col-start-10' : periodicidade === 'mensal' ? 'md:col-start-10' : 'md:col-start-10'} flex gap-2 w-full justify-end`}
+                >
                   <Button onClick={handleAddOrUpdateTask} disabled={savingTask} className="w-full">
                     {savingTask ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : editId ? (
-                      <Save className="size-4" />
+                      <Save className="size-4 mr-2" />
                     ) : (
-                      <Plus className="size-4" />
+                      <Plus className="size-4 mr-2" />
                     )}
+                    {editId ? 'Salvar' : 'Adicionar'}
                   </Button>
                   {editId && (
                     <Button
                       variant="outline"
                       onClick={resetForm}
                       disabled={savingTask}
-                      className="w-full px-0"
+                      className="w-12 px-0 shrink-0"
                     >
                       X
                     </Button>
@@ -537,6 +661,7 @@ export default function ConfiguracaoRotinas() {
                       <TableRow>
                         <TableHead className="w-[80px]">Seq.</TableHead>
                         <TableHead>Descrição da Tarefa</TableHead>
+                        <TableHead>Periodicidade</TableHead>
                         <TableHead>Horário</TableHead>
                         <TableHead className="text-right">Peso</TableHead>
                         <TableHead className="text-right w-[120px]">Ações</TableHead>
@@ -545,10 +670,49 @@ export default function ConfiguracaoRotinas() {
                     <TableBody>
                       {currentTasks
                         .sort((a, b) => a.numero_sequencia - b.numero_sequencia)
-                        .map((task, idx) => (
+                        .map((task) => (
                           <TableRow key={task.id}>
                             <TableCell className="font-medium">{task.numero_sequencia}</TableCell>
                             <TableCell>{task.descricao_tarefa}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1 items-start">
+                                <Badge
+                                  variant="secondary"
+                                  className="w-fit text-[10px] px-2 py-0 uppercase tracking-wider"
+                                >
+                                  {task.periodicidade === 'diaria'
+                                    ? 'Diária'
+                                    : task.periodicidade === 'semanal'
+                                      ? 'Semanal'
+                                      : task.periodicidade === 'quinzenal'
+                                        ? 'Quinzenal'
+                                        : 'Mensal' || 'Diária'}
+                                </Badge>
+                                {task.periodicidade === 'semanal' && task.dias_semana && (
+                                  <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider leading-tight">
+                                    {task.dias_semana
+                                      .map(
+                                        (d) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d],
+                                      )
+                                      .join(', ')}
+                                  </span>
+                                )}
+                                {task.periodicidade === 'quinzenal' &&
+                                  task.data_inicio_contagem && (
+                                    <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider leading-tight">
+                                      Início:{' '}
+                                      {new Date(
+                                        task.data_inicio_contagem + 'T00:00:00',
+                                      ).toLocaleDateString('pt-BR')}
+                                    </span>
+                                  )}
+                                {task.periodicidade === 'mensal' && task.dia_mes && (
+                                  <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider leading-tight">
+                                    Dia {task.dia_mes}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="font-mono">
                                 {task.horario_inicio.substring(0, 5)}

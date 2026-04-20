@@ -25,6 +25,10 @@ type Task = {
   horario_inicio: string
   horario_fim: string | null
   peso_percentual: number
+  periodicidade?: 'diaria' | 'semanal' | 'quinzenal' | 'mensal'
+  dias_semana?: number[] | null
+  dia_mes?: number | null
+  data_inicio_contagem?: string | null
 
   execucao_id?: string
   concluida: boolean
@@ -367,15 +371,47 @@ export default function RotinaDiaria() {
         return
       }
 
-      const today = new Date().toISOString().split('T')[0]
+      const today = new Date()
+      const currentDayOfWeek = today.getDay()
+      const currentDayOfMonth = today.getDate()
+      const todayDateStr = today.toISOString().split('T')[0]
+
+      const tarefasFiltradas = tarefas.filter((t) => {
+        const p = t.periodicidade || 'diaria'
+        if (p === 'diaria') return true
+        if (p === 'semanal') {
+          return (
+            t.dias_semana &&
+            Array.isArray(t.dias_semana) &&
+            t.dias_semana.includes(currentDayOfWeek)
+          )
+        }
+        if (p === 'mensal') {
+          const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+          const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
+          return targetDay === currentDayOfMonth
+        }
+        if (p === 'quinzenal') {
+          if (!t.data_inicio_contagem) return false
+          const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
+          const startDate = new Date(year, month - 1, day)
+          const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+          const diffTime = todayDate.getTime() - startDate.getTime()
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+          if (diffDays < 0) return false
+          return diffDays % 15 === 0
+        }
+        return true
+      })
 
       const { data: execucoes } = await supabase
         .from('execucoes_rotina')
         .select('*')
         .eq('usuario_id', user.id)
-        .eq('data_execucao', today)
+        .eq('data_execucao', todayDateStr)
 
-      const mergedTasks: Task[] = tarefas.map((t) => {
+      const mergedTasks: Task[] = tarefasFiltradas.map((t) => {
         const exec = execucoes?.find((e) => e.tarefa_id === t.id)
         let concluidaEm = null
         if (exec?.timestamp_conclusao) {
@@ -391,6 +427,10 @@ export default function RotinaDiaria() {
           horario_inicio: t.horario_inicio,
           horario_fim: t.horario_fim,
           peso_percentual: t.peso_percentual,
+          periodicidade: t.periodicidade,
+          dias_semana: t.dias_semana,
+          dia_mes: t.dia_mes,
+          data_inicio_contagem: t.data_inicio_contagem,
           execucao_id: exec?.id,
           concluida: exec?.concluida || false,
           concluidaEm,
@@ -719,7 +759,7 @@ export default function RotinaDiaria() {
           <p className="text-lg font-medium">Nenhuma rotina configurada para hoje.</p>
           <p className="text-sm text-center max-w-md mt-1">
             Sua lista de tarefas aparecerá aqui quando for definida pelo administrador em
-            Configurações.
+            Configurações e corresponder à data de hoje.
           </p>
         </Card>
       ) : (
@@ -792,6 +832,15 @@ export default function RotinaDiaria() {
                             {task.horario_fim
                               ? ` - ${formatTime(task.horario_fim)}`
                               : ' (sem prazo final)'}
+                            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] uppercase font-bold tracking-wider">
+                              {task.periodicidade === 'diaria'
+                                ? 'Diária'
+                                : task.periodicidade === 'semanal'
+                                  ? 'Semanal'
+                                  : task.periodicidade === 'quinzenal'
+                                    ? 'Quinzenal'
+                                    : 'Mensal' || 'Diária'}
+                            </span>
                           </div>
                         </div>
                         <div className="shrink-0 bg-background sm:bg-transparent rounded-md p-2 sm:p-0 border sm:border-none border-border/50">
