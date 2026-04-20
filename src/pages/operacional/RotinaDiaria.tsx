@@ -839,7 +839,9 @@ export default function RotinaDiaria() {
                                   ? 'Semanal'
                                   : task.periodicidade === 'quinzenal'
                                     ? 'Quinzenal'
-                                    : 'Mensal' || 'Diária'}
+                                    : task.periodicidade === 'mensal'
+                                      ? 'Mensal'
+                                      : 'Diária'}
                             </span>
                           </div>
                         </div>

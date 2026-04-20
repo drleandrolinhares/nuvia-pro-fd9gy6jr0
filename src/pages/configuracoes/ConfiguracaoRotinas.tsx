@@ -686,7 +686,9 @@ export default function ConfiguracaoRotinas() {
                                       ? 'Semanal'
                                       : task.periodicidade === 'quinzenal'
                                         ? 'Quinzenal'
-                                        : 'Mensal' || 'Diária'}
+                                        : task.periodicidade === 'mensal'
+                                          ? 'Mensal'
+                                          : 'Diária'}
                                 </Badge>
                                 {task.periodicidade === 'semanal' && task.dias_semana && (
                                   <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider leading-tight">
