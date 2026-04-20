@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,6 +32,8 @@ import {
   Loader2,
   FileBarChart,
   BarChart as BarChartIcon,
+  Activity,
+  AlertTriangle,
 } from 'lucide-react'
 
 const chartConfig = {
@@ -46,12 +48,14 @@ export default function RelatorioRotinas() {
 
   const [userFilter, setUserFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('hoje')
+  const [cycleFilter, setCycleFilter] = useState('all')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
 
   const [usersWithRoutines, setUsersWithRoutines] = useState<any[]>([])
   const [executions, setExecutions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [isLive, setIsLive] = useState(true)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -79,7 +83,7 @@ export default function RelatorioRotinas() {
     fetchUsers()
   }, [])
 
-  const handleApplyFilters = async () => {
+  const fetchExecutions = useCallback(async () => {
     setLoading(true)
     try {
       let startD = new Date()
@@ -95,7 +99,10 @@ export default function RelatorioRotinas() {
         startD = startOfMonth(new Date())
         endD = endOfMonth(new Date())
       } else if (dateFilter === 'custom') {
-        if (!customStart || !customEnd) return
+        if (!customStart || !customEnd) {
+          setLoading(false)
+          return
+        }
         startD = startOfDay(parseISO(customStart))
         endD = endOfDay(parseISO(customEnd))
       }
@@ -105,7 +112,8 @@ export default function RelatorioRotinas() {
         .select(`
           *,
           tarefas_rotina!inner (
-            peso_percentual
+            peso_percentual,
+            periodicidade
           ),
           usuarios:usuario_id (
             nome
@@ -118,6 +126,10 @@ export default function RelatorioRotinas() {
         query = query.eq('usuario_id', userFilter)
       }
 
+      if (cycleFilter !== 'all') {
+        query = query.eq('tarefas_rotina.periodicidade', cycleFilter)
+      }
+
       const { data, error } = await query
 
       if (error) throw error
@@ -127,13 +139,25 @@ export default function RelatorioRotinas() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateFilter, userFilter, customStart, customEnd, cycleFilter])
 
-  // Load data initially
   useEffect(() => {
-    handleApplyFilters()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    fetchExecutions()
+  }, [fetchExecutions])
+
+  useEffect(() => {
+    if (!isLive) return
+    const channel = supabase
+      .channel('realtime_execucoes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'execucoes_rotina' }, () => {
+        fetchExecutions()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [fetchExecutions, isLive])
 
   const ranking = useMemo(() => {
     const byUser: Record<string, any[]> = {}
@@ -162,6 +186,28 @@ export default function RelatorioRotinas() {
             (a, b) => new Date(b.data_fechamento).getTime() - new Date(a.data_fechamento).getTime(),
           )[0]?.data_fechamento
 
+        const ultimaAcao = userExecs
+          .filter((e) => e.timestamp_conclusao)
+          .sort(
+            (a, b) =>
+              new Date(b.timestamp_conclusao).getTime() - new Date(a.timestamp_conclusao).getTime(),
+          )[0]?.timestamp_conclusao
+
+        let inatividadeMinutos = -1
+        let inatividadeTexto = 'Sem ação hoje'
+
+        if (ultimaAcao) {
+          inatividadeMinutos = Math.floor(
+            (new Date().getTime() - new Date(ultimaAcao).getTime()) / 60000,
+          )
+          if (inatividadeMinutos < 60) {
+            inatividadeTexto = `Há ${inatividadeMinutos} min`
+          } else {
+            const diffHours = Math.floor(inatividadeMinutos / 60)
+            inatividadeTexto = `Há ${diffHours}h ${inatividadeMinutos % 60}m`
+          }
+        }
+
         const concluidas = userExecs.filter((e) => e.concluida).length
         const tolerancia = userExecs.filter((e) => e.nivel_criticidade === 'tolerancia').length
         const criticas = userExecs.filter((e) => e.nivel_criticidade === 'critico').length
@@ -178,6 +224,9 @@ export default function RelatorioRotinas() {
           percentual,
           isFechado,
           dataFechamento: latestFechamento,
+          ultimaAcao,
+          inatividadeMinutos,
+          inatividadeTexto,
           stats: {
             concluidas,
             tolerancia,
@@ -229,15 +278,26 @@ export default function RelatorioRotinas() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Relatório de Rotinas</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">Torre de Comando</h1>
+            {isLive && (
+              <Badge
+                variant="outline"
+                className="bg-red-500/10 text-red-500 border-red-200 animate-pulse flex items-center gap-1.5 px-2 py-0.5"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                AO VIVO
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground mt-1">
-            Acompanhe a performance e execução dos checklists diários
+            Monitoramento dinâmico e proativo de rotinas da equipe
           </p>
         </div>
         <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
-          <FileBarChart className="w-5 h-5 text-primary" />
+          <Activity className="w-5 h-5 text-primary" />
         </div>
       </div>
 
@@ -257,6 +317,22 @@ export default function RelatorioRotinas() {
                       {u.nome}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5 w-full md:w-auto flex-1">
+              <Label>Ciclo / Periodicidade</Label>
+              <Select value={cycleFilter} onValueChange={setCycleFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Tarefas</SelectItem>
+                  <SelectItem value="diaria">Diárias</SelectItem>
+                  <SelectItem value="semanal">Semanais</SelectItem>
+                  <SelectItem value="quinzenal">Quinzenais</SelectItem>
+                  <SelectItem value="mensal">Mensais</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -298,16 +374,18 @@ export default function RelatorioRotinas() {
             )}
 
             <Button
-              onClick={handleApplyFilters}
-              disabled={loading}
+              variant={isLive ? 'default' : 'outline'}
+              onClick={() => setIsLive(!isLive)}
               className="w-full md:w-auto gap-2"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isLive ? (
+                <Activity className="w-4 h-4" />
               ) : (
                 <Filter className="w-4 h-4" />
               )}
-              APLICAR FILTROS
+              {isLive ? 'Pausar Atualizações' : 'Ativar Ao Vivo'}
             </Button>
           </div>
         </CardContent>
@@ -316,40 +394,37 @@ export default function RelatorioRotinas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="col-span-1 lg:col-span-2 shadow-sm border-border/50">
           <CardHeader>
-            <CardTitle>Ranking do Período</CardTitle>
-            <CardDescription>Performance dos colaboradores nas rotinas</CardDescription>
+            <CardTitle>Grid de Status da Equipe</CardTitle>
+            <CardDescription>Acompanhe a inatividade e o progresso em tempo real</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-secondary/30">
-                    <TableHead className="w-[100px] text-center">Posição</TableHead>
                     <TableHead>Colaborador</TableHead>
                     <TableHead>Conclusão</TableHead>
+                    <TableHead>Última Ação</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {ranking.map((r, i) => (
                     <TableRow key={r.usuario_id}>
-                      <TableCell className="text-center font-bold text-xl">
-                        {i === 0 ? (
-                          '🥇'
-                        ) : i === 1 ? (
-                          '🥈'
-                        ) : i === 2 ? (
-                          '🥉'
-                        ) : (
-                          <span className="text-sm text-muted-foreground">{i + 1}º</span>
-                        )}
-                      </TableCell>
                       <TableCell className="font-medium">{r.nome}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Progress value={r.percentual} className="w-[80px] h-2.5" />
                           <span className="text-sm font-semibold">{r.percentual.toFixed(1)}%</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-sm flex items-center gap-1.5 ${r.inatividadeMinutos > 120 ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}
+                        >
+                          {r.inatividadeMinutos > 120 && <AlertTriangle className="w-3.5 h-3.5" />}
+                          {r.inatividadeTexto}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         {r.isFechado ? (
@@ -375,7 +450,7 @@ export default function RelatorioRotinas() {
                       <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                         {loading
                           ? 'Carregando dados...'
-                          : 'Nenhum dado encontrado para o período selecionado.'}
+                          : 'Nenhum dado encontrado para o período/ciclo selecionado.'}
                       </TableCell>
                     </TableRow>
                   )}

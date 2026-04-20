@@ -72,6 +72,7 @@ const navData = [
         url: '/operacional/rotina',
         icon: Clock,
         permission: ['operacional_rotina', 'Acessar Rotina Diária'],
+        hideRole: ['admin', 'gestor', 'CEO', 'SÓCIA', 'ceo', 'sócia'],
       },
       {
         title: 'Performance',
@@ -215,6 +216,12 @@ export function AppSidebar() {
           }
 
           const filteredItems = group.items.filter((item: any) => {
+            if (
+              item.hideRole &&
+              item.hideRole.some((r: string) => r.toLowerCase() === role?.toLowerCase())
+            )
+              return false
+
             if (role === 'admin') return true
             if (item.permission) {
               if (Array.isArray(item.permission)) {

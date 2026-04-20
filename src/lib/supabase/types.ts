@@ -1610,33 +1610,45 @@ export type Database = {
         Row: {
           ativa: boolean
           data_criacao: string
+          data_inicio_contagem: string | null
           descricao_tarefa: string
+          dia_mes: number | null
+          dias_semana: Json | null
           horario_fim: string | null
           horario_inicio: string
           id: string
           numero_sequencia: number
+          periodicidade: string
           peso_percentual: number
           rotina_id: string
         }
         Insert: {
           ativa?: boolean
           data_criacao?: string
+          data_inicio_contagem?: string | null
           descricao_tarefa: string
+          dia_mes?: number | null
+          dias_semana?: Json | null
           horario_fim?: string | null
           horario_inicio: string
           id?: string
           numero_sequencia: number
+          periodicidade?: string
           peso_percentual?: number
           rotina_id: string
         }
         Update: {
           ativa?: boolean
           data_criacao?: string
+          data_inicio_contagem?: string | null
           descricao_tarefa?: string
+          dia_mes?: number | null
+          dias_semana?: Json | null
           horario_fim?: string | null
           horario_inicio?: string
           id?: string
           numero_sequencia?: number
+          periodicidade?: string
           peso_percentual?: number
           rotina_id?: string
         }
@@ -2448,6 +2460,10 @@ export const Constants = {
 //   peso_percentual: numeric (not null, default: 5)
 //   ativa: boolean (not null, default: true)
 //   data_criacao: timestamp with time zone (not null, default: now())
+//   periodicidade: text (not null, default: 'diaria'::text)
+//   dias_semana: jsonb (nullable)
+//   dia_mes: integer (nullable)
+//   data_inicio_contagem: date (nullable)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
