@@ -90,17 +90,9 @@ const calculateTotalHours = (u: ExtendedUsuario) => {
   let total = saida - entrada
   if (total < 0) total += 24 * 60
 
-  const lancheM = Math.max(
-    0,
-    timeToMinutes(u.fim_lanche_manha) - timeToMinutes(u.inicio_lanche_manha),
-  )
   const almoco = Math.max(0, timeToMinutes(u.retorno_almoco) - timeToMinutes(u.saida_almoco))
-  const lancheT = Math.max(
-    0,
-    timeToMinutes(u.fim_lanche_tarde) - timeToMinutes(u.inicio_lanche_tarde),
-  )
 
-  total = total - lancheM - almoco - lancheT
+  total = total - almoco
   if (total < 0) total = 0
 
   const h = Math.floor(total / 60)
@@ -446,10 +438,10 @@ export default function Colaboradores() {
                       <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
                         {formatTimeShort(usuario.fim_lanche_manha)}
                       </TableCell>
-                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center font-medium">
                         {formatTimeShort(usuario.saida_almoco)}
                       </TableCell>
-                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
+                      <TableCell className="px-1 text-[11px] whitespace-nowrap text-center font-medium">
                         {formatTimeShort(usuario.retorno_almoco)}
                       </TableCell>
                       <TableCell className="px-1 text-[11px] whitespace-nowrap text-center text-muted-foreground">
