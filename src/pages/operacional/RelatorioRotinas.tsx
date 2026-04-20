@@ -166,8 +166,51 @@ export default function RelatorioRotinas() {
       byUser[e.usuario_id].push(e)
     })
 
-    return Object.values(byUser)
-      .map((userExecs) => {
+    const usersToDisplay = new Map<string, { id: string; nome: string }>()
+
+    usersWithRoutines.forEach((u) => {
+      usersToDisplay.set(u.id, { id: u.id, nome: u.nome })
+    })
+
+    executions.forEach((e) => {
+      if (!usersToDisplay.has(e.usuario_id)) {
+        const uObj = Array.isArray(e.usuarios) ? e.usuarios[0] : e.usuarios
+        usersToDisplay.set(e.usuario_id, {
+          id: e.usuario_id,
+          nome: uObj?.nome || 'Desconhecido',
+        })
+      }
+    })
+
+    let filteredUsers = Array.from(usersToDisplay.values())
+    if (userFilter !== 'all') {
+      filteredUsers = filteredUsers.filter((u) => u.id === userFilter)
+    }
+
+    return filteredUsers
+      .map((u) => {
+        const userExecs = byUser[u.id] || []
+
+        if (userExecs.length === 0) {
+          return {
+            usuario_id: u.id,
+            nome: u.nome,
+            percentual: 0,
+            isFechado: false,
+            dataFechamento: null,
+            ultimaAcao: null,
+            inatividadeMinutos: -1,
+            inatividadeTexto: 'Não iniciado',
+            stats: {
+              concluidas: 0,
+              tolerancia: 0,
+              criticas: 0,
+              naoConcluidas: 0,
+              noHorario: 0,
+            },
+          }
+        }
+
         const totalPeso = userExecs.reduce(
           (acc, curr) => acc + Number(curr.tarefas_rotina?.peso_percentual || 5),
           0,
@@ -214,13 +257,9 @@ export default function RelatorioRotinas() {
         const naoConcluidas = userExecs.filter((e) => !e.concluida).length
         const noHorario = userExecs.filter((e) => e.nivel_criticidade === 'no_horario').length
 
-        const userObj = Array.isArray(userExecs[0].usuarios)
-          ? userExecs[0].usuarios[0]
-          : userExecs[0].usuarios
-
         return {
-          usuario_id: userExecs[0].usuario_id,
-          nome: userObj?.nome || 'Desconhecido',
+          usuario_id: u.id,
+          nome: u.nome,
           percentual,
           isFechado,
           dataFechamento: latestFechamento,
@@ -237,7 +276,7 @@ export default function RelatorioRotinas() {
         }
       })
       .sort((a, b) => b.percentual - a.percentual)
-  }, [executions])
+  }, [executions, usersWithRoutines, userFilter])
 
   const selectedDetails = useMemo(() => {
     if (userFilter !== 'all') {
