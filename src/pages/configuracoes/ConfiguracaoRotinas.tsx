@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -60,8 +60,16 @@ export default function ConfiguracaoRotinas() {
   const [horarioInicio, setHorarioInicio] = useState('')
   const [horarioFim, setHorarioFim] = useState('')
   const [peso, setPeso] = useState<number>(5)
+  const [numeroSequencia, setNumeroSequencia] = useState<number>(1)
 
   const [currentTasks, setCurrentTasks] = useState<Task[]>([])
+  const formRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!editId) {
+      setNumeroSequencia(currentTasks.length + 1)
+    }
+  }, [currentTasks, editId])
   const [loadingTasks, setLoadingTasks] = useState(false)
   const [savingTask, setSavingTask] = useState(false)
 
@@ -133,6 +141,7 @@ export default function ConfiguracaoRotinas() {
     setHorarioInicio('')
     setHorarioFim('')
     setPeso(5)
+    setNumeroSequencia(currentTasks.length + 1)
   }
 
   const handleAddOrUpdateTask = async () => {
@@ -173,6 +182,7 @@ export default function ConfiguracaoRotinas() {
         horario_inicio: horarioInicio,
         horario_fim: horarioFim || null,
         peso_percentual: peso,
+        numero_sequencia: numeroSequencia,
         ativa: true,
       }
 
@@ -180,10 +190,7 @@ export default function ConfiguracaoRotinas() {
         const { error } = await supabase.from('tarefas_rotina').update(taskData).eq('id', editId)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('tarefas_rotina').insert({
-          ...taskData,
-          numero_sequencia: currentTasks.length + 1,
-        })
+        const { error } = await supabase.from('tarefas_rotina').insert(taskData)
         if (error) throw error
       }
 
@@ -202,7 +209,13 @@ export default function ConfiguracaoRotinas() {
     setDescricao(task.descricao_tarefa)
     setHorarioInicio(task.horario_inicio.substring(0, 5))
     setHorarioFim(task.horario_fim ? task.horario_fim.substring(0, 5) : '')
-    setPeso(task.peso_percentual)
+    setPeso(Number(task.peso_percentual))
+    setNumeroSequencia(task.numero_sequencia)
+
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.getElementById('input-descricao')?.focus()
+    }, 100)
   }
 
   const handleDeleteTask = async (taskId: string) => {
@@ -268,7 +281,7 @@ export default function ConfiguracaoRotinas() {
         descricao_tarefa: t.descricao_tarefa,
         horario_inicio: t.horario_inicio,
         horario_fim: t.horario_fim,
-        peso_percentual: t.peso_percentual,
+        peso_percentual: Number(t.peso_percentual),
         numero_sequencia: t.numero_sequencia,
         ativa: true,
       }))
@@ -373,18 +386,32 @@ export default function ConfiguracaoRotinas() {
 
       {selectedUser && (
         <div className="space-y-6 animate-fade-in">
-          <Card className="border-border/50 shadow-sm">
+          <Card ref={formRef} className="border-border/50 shadow-sm transition-all duration-300">
             <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
               <CardTitle className="text-lg uppercase tracking-wider flex items-center gap-2">
-                <Plus className="size-5 text-primary" />
+                {editId ? (
+                  <Edit2 className="size-5 text-primary" />
+                ) : (
+                  <Plus className="size-5 text-primary" />
+                )}
                 {editId ? 'Editar Tarefa' : 'Adicionar Nova Tarefa'}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                <div className="md:col-span-5 space-y-2">
+                <div className="md:col-span-1 space-y-2">
+                  <Label>Ordem</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={numeroSequencia}
+                    onChange={(e) => setNumeroSequencia(Number(e.target.value))}
+                  />
+                </div>
+                <div className="md:col-span-4 space-y-2">
                   <Label>Descrição da Tarefa</Label>
                   <Input
+                    id="input-descricao"
                     placeholder="Ex: Conferência de estoque"
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}

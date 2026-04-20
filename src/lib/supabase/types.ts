@@ -1611,7 +1611,7 @@ export type Database = {
           ativa: boolean
           data_criacao: string
           descricao_tarefa: string
-          horario_fim: string
+          horario_fim: string | null
           horario_inicio: string
           id: string
           numero_sequencia: number
@@ -1622,7 +1622,7 @@ export type Database = {
           ativa?: boolean
           data_criacao?: string
           descricao_tarefa: string
-          horario_fim: string
+          horario_fim?: string | null
           horario_inicio: string
           id?: string
           numero_sequencia: number
@@ -1633,7 +1633,7 @@ export type Database = {
           ativa?: boolean
           data_criacao?: string
           descricao_tarefa?: string
-          horario_fim?: string
+          horario_fim?: string | null
           horario_inicio?: string
           id?: string
           numero_sequencia?: number
@@ -2444,7 +2444,7 @@ export const Constants = {
 //   numero_sequencia: integer (not null)
 //   descricao_tarefa: text (not null)
 //   horario_inicio: time without time zone (not null)
-//   horario_fim: time without time zone (not null)
+//   horario_fim: time without time zone (nullable)
 //   peso_percentual: numeric (not null, default: 5)
 //   ativa: boolean (not null, default: true)
 //   data_criacao: timestamp with time zone (not null, default: now())
