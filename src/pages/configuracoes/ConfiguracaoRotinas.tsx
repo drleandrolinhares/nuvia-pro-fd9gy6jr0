@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -45,6 +45,7 @@ type User = {
   id: string
   nome: string
   role: string | null
+  hasRoutine?: boolean
 }
 
 export default function ConfiguracaoRotinas() {
@@ -98,10 +99,28 @@ export default function ConfiguracaoRotinas() {
       return
     }
 
-    const filtered = data.filter((u) => {
-      const role = u.role?.toLowerCase() || ''
-      return !role.includes('ceo') && !role.includes('socia')
-    })
+    const { data: rotinasData } = await supabase
+      .from('rotinas_usuarios')
+      .select('usuario_id, tarefas_rotina(id)')
+
+    const usersWithRoutine = new Set(
+      rotinasData
+        ?.filter(
+          (r: any) =>
+            r.tarefas_rotina && Array.isArray(r.tarefas_rotina) && r.tarefas_rotina.length > 0,
+        )
+        .map((r) => r.usuario_id),
+    )
+
+    const filtered = data
+      .filter((u) => {
+        const role = u.role?.toLowerCase() || ''
+        return !role.includes('ceo') && !role.includes('socia')
+      })
+      .map((u) => ({
+        ...u,
+        hasRoutine: usersWithRoutine.has(u.id),
+      }))
 
     setUsers(filtered)
   }
@@ -195,6 +214,7 @@ export default function ConfiguracaoRotinas() {
       }
 
       await loadRoutine(selectedUser)
+      await fetchUsers()
       resetForm()
       toast({ description: 'Tarefa salva com sucesso!' })
     } catch (error: any) {
@@ -223,6 +243,7 @@ export default function ConfiguracaoRotinas() {
       const { error } = await supabase.from('tarefas_rotina').delete().eq('id', taskId)
       if (error) throw error
       await loadRoutine(selectedUser)
+      await fetchUsers()
       toast({ description: 'Tarefa excluída com sucesso!' })
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -291,6 +312,7 @@ export default function ConfiguracaoRotinas() {
         if (error) throw error
       }
 
+      await fetchUsers()
       setIsDuplicateDialogOpen(false)
       setTargetDuplicateUser('')
       toast({
@@ -331,7 +353,15 @@ export default function ConfiguracaoRotinas() {
                 <SelectContent>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
-                      {u.nome}
+                      <div className="flex items-center gap-2">
+                        <span>{u.nome}</span>
+                        {u.hasRoutine && (
+                          <span className="flex items-center text-emerald-600 text-xs font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                            <CheckCircle2 className="size-3 mr-1" />
+                            Configurado
+                          </span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -364,7 +394,15 @@ export default function ConfiguracaoRotinas() {
                             .filter((u) => u.id !== selectedUser)
                             .map((u) => (
                               <SelectItem key={u.id} value={u.id}>
-                                {u.nome}
+                                <div className="flex items-center gap-2">
+                                  <span>{u.nome}</span>
+                                  {u.hasRoutine && (
+                                    <span className="flex items-center text-amber-600 text-xs font-medium bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                                      <CheckCircle2 className="size-3 mr-1" />
+                                      Substituir
+                                    </span>
+                                  )}
+                                </div>
                               </SelectItem>
                             ))}
                         </SelectContent>
