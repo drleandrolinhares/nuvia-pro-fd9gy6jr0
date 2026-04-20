@@ -43,33 +43,40 @@ Deno.serve(async (req: Request) => {
     const currentMinutes = brtTime.getUTCMinutes()
     const currentTotalMinutes = currentHours * 60 + currentMinutes
 
-    const [hInicio, mInicio] = tarefa.horario_inicio.split(':').map(Number)
-    const inicioTotalMinutes = hInicio * 60 + mInicio
-
     let valido = false
     let mensagem = 'Tarefa marcada com sucesso'
-    const hInicioStr = tarefa.horario_inicio.substring(0, 5)
 
-    if (!tarefa.horario_fim) {
-      valido = currentTotalMinutes >= inicioTotalMinutes
-      if (!valido) {
-        mensagem = `Fora do horário permitido. Horário permitido: a partir de ${hInicioStr}`
-      }
+    if (!tarefa.horario_inicio) {
+      valido = true
+      mensagem = 'Tarefa sob demanda concluída'
     } else {
-      const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
-      const fimTotalMinutes = hFim * 60 + mFim
+      const [hInicio, mInicio] = tarefa.horario_inicio.split(':').map(Number)
+      const inicioTotalMinutes = hInicio * 60 + mInicio
+      const hInicioStr = tarefa.horario_inicio.substring(0, 5)
 
-      if (inicioTotalMinutes <= fimTotalMinutes) {
-        valido = currentTotalMinutes >= inicioTotalMinutes && currentTotalMinutes <= fimTotalMinutes
+      if (!tarefa.horario_fim) {
+        valido = currentTotalMinutes >= inicioTotalMinutes
+        if (!valido) {
+          mensagem = `Fora do horário permitido. Horário permitido: a partir de ${hInicioStr}`
+        }
       } else {
-        // Caso a tarefa cruze a meia-noite
-        valido = currentTotalMinutes >= inicioTotalMinutes || currentTotalMinutes <= fimTotalMinutes
-      }
+        const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
+        const fimTotalMinutes = hFim * 60 + mFim
 
-      const hFimStr = tarefa.horario_fim.substring(0, 5)
+        if (inicioTotalMinutes <= fimTotalMinutes) {
+          valido =
+            currentTotalMinutes >= inicioTotalMinutes && currentTotalMinutes <= fimTotalMinutes
+        } else {
+          // Caso a tarefa cruze a meia-noite
+          valido =
+            currentTotalMinutes >= inicioTotalMinutes || currentTotalMinutes <= fimTotalMinutes
+        }
 
-      if (!valido) {
-        mensagem = `Fora do horário permitido. Horário permitido: ${hInicioStr} - ${hFimStr}`
+        const hFimStr = tarefa.horario_fim.substring(0, 5)
+
+        if (!valido) {
+          mensagem = `Fora do horário permitido. Horário permitido: ${hInicioStr} - ${hFimStr}`
+        }
       }
     }
 

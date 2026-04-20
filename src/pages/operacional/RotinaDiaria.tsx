@@ -11,6 +11,7 @@ import {
   XCircle,
   ArrowLeft,
   Loader2,
+  ListOrdered,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -22,7 +23,7 @@ type Task = {
   rotina_id: string
   numero_sequencia: number
   descricao_tarefa: string
-  horario_inicio: string
+  horario_inicio: string | null
   horario_fim: string | null
   peso_percentual: number
   periodicidade?: 'diaria' | 'semanal' | 'quinzenal' | 'mensal'
@@ -364,7 +365,6 @@ export default function RotinaDiaria() {
         .select('*')
         .eq('rotina_id', routine.id)
         .eq('ativa', true)
-        .order('numero_sequencia', { ascending: true })
 
       if (!tarefas) {
         setTasks([])
@@ -438,6 +438,18 @@ export default function RotinaDiaria() {
           nivel_criticidade: exec?.nivel_criticidade || null,
           fechamento_confirmado: exec?.fechamento_confirmado || false,
         }
+      })
+
+      mergedTasks.sort((a, b) => {
+        if (a.horario_inicio && b.horario_inicio) {
+          const timeA = timeToMinutes(a.horario_inicio)
+          const timeB = timeToMinutes(b.horario_inicio)
+          if (timeA !== timeB) return timeA - timeB
+          return a.numero_sequencia - b.numero_sequencia
+        }
+        if (a.horario_inicio && !b.horario_inicio) return -1
+        if (!a.horario_inicio && b.horario_inicio) return 1
+        return a.numero_sequencia - b.numero_sequencia
       })
 
       setTasks(mergedTasks)
@@ -685,6 +697,15 @@ export default function RotinaDiaria() {
       )
     }
 
+    if (!task.horario_inicio) {
+      return (
+        <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm font-medium gap-1.5">
+          <ListOrdered className="w-4 h-4" />
+          <span>Pendente</span>
+        </div>
+      )
+    }
+
     const startMins = timeToMinutes(task.horario_inicio)
 
     if (currentMinutes < startMins) {
@@ -780,17 +801,20 @@ export default function RotinaDiaria() {
             <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {tasks.map((task) => {
-                  const startMins = timeToMinutes(task.horario_inicio)
+                  const hasTime = !!task.horario_inicio
+                  const startMins = hasTime ? timeToMinutes(task.horario_inicio) : 0
 
                   let isWithinWindow = false
-                  if (task.horario_fim) {
+                  if (!hasTime) {
+                    isWithinWindow = true
+                  } else if (task.horario_fim) {
                     const endMins = timeToMinutes(task.horario_fim)
                     isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
                   } else {
                     isWithinWindow = currentMinutes >= startMins
                   }
 
-                  const disabled = currentMinutes < startMins && !task.concluida
+                  const disabled = hasTime && currentMinutes < startMins && !task.concluida
 
                   return (
                     <div
@@ -801,7 +825,18 @@ export default function RotinaDiaria() {
                         task.concluida && 'bg-emerald-50/30 dark:bg-emerald-950/10',
                       )}
                     >
-                      <div className="mt-1 sm:mt-0">
+                      <div
+                        className={cn(
+                          'w-14 flex-shrink-0 text-center font-bold text-sm py-1.5 rounded border',
+                          hasTime
+                            ? 'bg-muted/50 text-muted-foreground border-border/50'
+                            : 'bg-primary/5 text-primary border-primary/20',
+                        )}
+                      >
+                        {hasTime ? formatTime(task.horario_inicio) : `${task.numero_sequencia}º`}
+                      </div>
+
+                      <div className="mt-1 sm:mt-0 flex-shrink-0">
                         <Checkbox
                           id={`task-${task.id}`}
                           checked={!!task.concluida}
@@ -827,11 +862,20 @@ export default function RotinaDiaria() {
                             {task.descricao_tarefa}
                           </label>
                           <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
-                            <Clock className="w-3.5 h-3.5" />
-                            {formatTime(task.horario_inicio)}
-                            {task.horario_fim
-                              ? ` - ${formatTime(task.horario_fim)}`
-                              : ' (sem prazo final)'}
+                            {hasTime ? (
+                              <>
+                                <Clock className="w-3.5 h-3.5" />
+                                {formatTime(task.horario_inicio)}
+                                {task.horario_fim
+                                  ? ` - ${formatTime(task.horario_fim)}`
+                                  : ' (sem prazo)'}
+                              </>
+                            ) : (
+                              <>
+                                <ListOrdered className="w-3.5 h-3.5" />
+                                Sob demanda
+                              </>
+                            )}
                             <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] uppercase font-bold tracking-wider">
                               {task.periodicidade === 'diaria'
                                 ? 'Diária'

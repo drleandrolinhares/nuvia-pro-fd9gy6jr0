@@ -35,7 +35,7 @@ import { supabase } from '@/lib/supabase/client'
 type Task = {
   id: string
   descricao_tarefa: string
-  horario_inicio: string
+  horario_inicio: string | null
   horario_fim: string | null
   peso_percentual: number
   numero_sequencia: number
@@ -50,6 +50,12 @@ type User = {
   nome: string
   role: string | null
   hasRoutine?: boolean
+}
+
+const timeToMinutes = (time: string | null) => {
+  if (!time) return 0
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
 }
 
 export default function ConfiguracaoRotinas() {
@@ -178,7 +184,7 @@ export default function ConfiguracaoRotinas() {
   }
 
   const handleAddOrUpdateTask = async () => {
-    if (!descricao || !horarioInicio || peso <= 0) {
+    if (!descricao || peso <= 0) {
       toast({
         title: 'Campos inválidos',
         description: 'Preencha os campos obrigatórios corretamente.',
@@ -230,10 +236,10 @@ export default function ConfiguracaoRotinas() {
 
       if (!routineId) throw new Error('Não foi possível criar rotina')
 
-      const taskData = {
+      const taskData: any = {
         rotina_id: routineId,
         descricao_tarefa: descricao,
-        horario_inicio: horarioInicio,
+        horario_inicio: horarioInicio || null,
         horario_fim: horarioFim || null,
         peso_percentual: peso,
         numero_sequencia: numeroSequencia,
@@ -266,7 +272,7 @@ export default function ConfiguracaoRotinas() {
   const handleEditTask = (task: Task) => {
     setEditId(task.id)
     setDescricao(task.descricao_tarefa)
-    setHorarioInicio(task.horario_inicio.substring(0, 5))
+    setHorarioInicio(task.horario_inicio ? task.horario_inicio.substring(0, 5) : '')
     setHorarioFim(task.horario_fim ? task.horario_fim.substring(0, 5) : '')
     setPeso(Number(task.peso_percentual))
     setNumeroSequencia(task.numero_sequencia)
@@ -340,7 +346,7 @@ export default function ConfiguracaoRotinas() {
 
       await supabase.from('tarefas_rotina').delete().eq('rotina_id', targetRoutine.id)
 
-      const tasksToInsert = currentTasks.map((t) => ({
+      const tasksToInsert: any = currentTasks.map((t) => ({
         rotina_id: targetRoutine!.id,
         descricao_tarefa: t.descricao_tarefa,
         horario_inicio: t.horario_inicio,
@@ -503,7 +509,7 @@ export default function ConfiguracaoRotinas() {
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <Label>Início (HH:MM)</Label>
+                  <Label>Início (HH:MM) - Opcional</Label>
                   <Input
                     type="time"
                     value={horarioInicio}
@@ -669,7 +675,17 @@ export default function ConfiguracaoRotinas() {
                     </TableHeader>
                     <TableBody>
                       {currentTasks
-                        .sort((a, b) => a.numero_sequencia - b.numero_sequencia)
+                        .sort((a, b) => {
+                          if (a.horario_inicio && b.horario_inicio) {
+                            const timeA = timeToMinutes(a.horario_inicio)
+                            const timeB = timeToMinutes(b.horario_inicio)
+                            if (timeA !== timeB) return timeA - timeB
+                            return a.numero_sequencia - b.numero_sequencia
+                          }
+                          if (a.horario_inicio && !b.horario_inicio) return -1
+                          if (!a.horario_inicio && b.horario_inicio) return 1
+                          return a.numero_sequencia - b.numero_sequencia
+                        })
                         .map((task) => (
                           <TableRow key={task.id}>
                             <TableCell className="font-medium">{task.numero_sequencia}</TableCell>
@@ -716,10 +732,16 @@ export default function ConfiguracaoRotinas() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="font-mono">
-                                {task.horario_inicio.substring(0, 5)}
-                                {task.horario_fim ? ` - ${task.horario_fim.substring(0, 5)}` : ''}
-                              </Badge>
+                              {task.horario_inicio ? (
+                                <Badge variant="outline" className="font-mono">
+                                  {task.horario_inicio.substring(0, 5)}
+                                  {task.horario_fim ? ` - ${task.horario_fim.substring(0, 5)}` : ''}
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="font-mono font-normal">
+                                  Sob demanda
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               {task.peso_percentual}%
