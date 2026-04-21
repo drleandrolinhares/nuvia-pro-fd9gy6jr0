@@ -1618,6 +1618,7 @@ export type Database = {
           horario_inicio: string | null
           id: string
           numero_sequencia: number
+          observacao: string | null
           periodicidade: string
           peso_percentual: number
           rotina_id: string
@@ -1633,6 +1634,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           numero_sequencia: number
+          observacao?: string | null
           periodicidade?: string
           peso_percentual?: number
           rotina_id: string
@@ -1648,6 +1650,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           numero_sequencia?: number
+          observacao?: string | null
           periodicidade?: string
           peso_percentual?: number
           rotina_id?: string
@@ -2464,6 +2467,7 @@ export const Constants = {
 //   dias_semana: jsonb (nullable)
 //   dia_mes: integer (nullable)
 //   data_inicio_contagem: date (nullable)
+//   observacao: text (nullable)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)

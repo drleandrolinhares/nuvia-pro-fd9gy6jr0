@@ -728,17 +728,16 @@ export default function ConfiguracaoRotinas() {
                             </TableCell>
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
-                                {task.descricao_tarefa}
                                 {task.observacao && (
                                   <Popover>
                                     <PopoverTrigger asChild>
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-5 w-5 text-muted-foreground shrink-0"
+                                        className="h-6 w-6 text-primary bg-primary/5 hover:bg-primary/10 shrink-0"
                                         title="Ver Observação/Script"
                                       >
-                                        <Eye className="w-3.5 h-3.5" />
+                                        <Eye className="w-4 h-4" />
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent
@@ -750,6 +749,7 @@ export default function ConfiguracaoRotinas() {
                                     </PopoverContent>
                                   </Popover>
                                 )}
+                                <span>{task.descricao_tarefa}</span>
                               </div>
                             </TableCell>
                             <TableCell>

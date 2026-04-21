@@ -67,7 +67,7 @@ function ScriptPopover({ text }: { text: string }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-muted-foreground hover:text-primary shrink-0 transition-colors"
+          className="h-7 w-7 text-primary bg-primary/5 hover:bg-primary/10 shrink-0 transition-colors"
           title="Visualizar Script / Observação"
         >
           <Eye className="w-4 h-4" />
@@ -904,6 +904,7 @@ export default function RotinaDiaria() {
                       <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
+                            {task.observacao && <ScriptPopover text={task.observacao} />}
                             <label
                               htmlFor={`task-${task.id}`}
                               className={cn(
@@ -914,7 +915,6 @@ export default function RotinaDiaria() {
                             >
                               {task.descricao_tarefa}
                             </label>
-                            {task.observacao && <ScriptPopover text={task.observacao} />}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
                             {hasTime ? (
