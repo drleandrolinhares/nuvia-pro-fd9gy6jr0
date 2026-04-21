@@ -12,8 +12,11 @@ import {
   ArrowLeft,
   Loader2,
   ListOrdered,
+  Eye,
+  Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -30,6 +33,7 @@ type Task = {
   dias_semana?: number[] | null
   dia_mes?: number | null
   data_inicio_contagem?: string | null
+  observacao?: string | null
 
   execucao_id?: string
   concluida: boolean
@@ -46,6 +50,51 @@ const timeToMinutes = (time: string | null) => {
 }
 
 const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
+
+function ScriptPopover({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    toast.success('Copiado para a área de transferência!')
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-muted-foreground hover:text-primary shrink-0 transition-colors"
+          title="Visualizar Script / Observação"
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-4" side="bottom" align="start">
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm flex items-center gap-2">
+            <Eye className="w-4 h-4 text-primary" />
+            Script / Observação
+          </h4>
+          <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-md border border-border/50 max-h-60 overflow-y-auto">
+            {text}
+          </p>
+          <Button onClick={handleCopy} size="sm" className="w-full font-medium" variant="secondary">
+            {copied ? (
+              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
+            ) : (
+              <Copy className="w-4 h-4 mr-2" />
+            )}
+            {copied ? 'Copiado!' : 'Copiar Texto'}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 function ResumoFechamento({
   tasks,
@@ -433,6 +482,7 @@ export default function RotinaDiaria() {
           dias_semana: t.dias_semana,
           dia_mes: t.dia_mes,
           data_inicio_contagem: t.data_inicio_contagem,
+          observacao: t.observacao,
           execucao_id: exec?.id,
           concluida: exec?.concluida || false,
           concluidaEm,
@@ -853,16 +903,19 @@ export default function RotinaDiaria() {
                       </div>
                       <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-1.5">
-                          <label
-                            htmlFor={`task-${task.id}`}
-                            className={cn(
-                              'text-base font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-                              !disabled && 'cursor-pointer hover:text-primary',
-                              task.concluida && 'line-through text-muted-foreground',
-                            )}
-                          >
-                            {task.descricao_tarefa}
-                          </label>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <label
+                              htmlFor={`task-${task.id}`}
+                              className={cn(
+                                'text-base font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+                                !disabled && 'cursor-pointer hover:text-primary',
+                                task.concluida && 'line-through text-muted-foreground',
+                              )}
+                            >
+                              {task.descricao_tarefa}
+                            </label>
+                            {task.observacao && <ScriptPopover text={task.observacao} />}
+                          </div>
                           <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
                             {hasTime ? (
                               <>

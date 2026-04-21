@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2, CheckCircle2, Eye } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -43,6 +45,7 @@ type Task = {
   dias_semana?: number[] | null
   dia_mes?: number | null
   data_inicio_contagem?: string | null
+  observacao?: string | null
 }
 
 type User = {
@@ -78,6 +81,7 @@ export default function ConfiguracaoRotinas() {
   const [diasSemana, setDiasSemana] = useState<number[]>([])
   const [diaMes, setDiaMes] = useState<number>(1)
   const [dataInicioContagem, setDataInicioContagem] = useState<string>('')
+  const [observacao, setObservacao] = useState<string>('')
 
   const [currentTasks, setCurrentTasks] = useState<Task[]>([])
   const formRef = useRef<HTMLDivElement>(null)
@@ -182,6 +186,7 @@ export default function ConfiguracaoRotinas() {
     setDiasSemana([])
     setDiaMes(1)
     setDataInicioContagem('')
+    setObservacao('')
   }
 
   const handleAddOrUpdateTask = async () => {
@@ -248,6 +253,7 @@ export default function ConfiguracaoRotinas() {
         dias_semana: periodicidade === 'semanal' ? diasSemana : null,
         dia_mes: periodicidade === 'mensal' ? diaMes : null,
         data_inicio_contagem: periodicidade === 'quinzenal' ? dataInicioContagem : null,
+        observacao: observacao || null,
         ativa: true,
       }
 
@@ -281,6 +287,7 @@ export default function ConfiguracaoRotinas() {
     setDiasSemana(task.dias_semana || [])
     setDiaMes(task.dia_mes || 1)
     setDataInicioContagem(task.data_inicio_contagem || '')
+    setObservacao(task.observacao || '')
 
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -358,6 +365,7 @@ export default function ConfiguracaoRotinas() {
         dias_semana: t.dias_semana,
         dia_mes: t.dia_mes,
         data_inicio_contagem: t.data_inicio_contagem,
+        observacao: t.observacao,
         ativa: true,
       }))
 
@@ -538,6 +546,18 @@ export default function ConfiguracaoRotinas() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div className="md:col-span-12 space-y-2">
+                  <Label>Observação / Script de Apoio (Opcional)</Label>
+                  <Textarea
+                    placeholder="Ex: Olá, tudo bem? Gostaria de confirmar sua consulta..."
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    className="resize-none min-h-[80px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div className="md:col-span-3 space-y-2">
                   <Label>Periodicidade</Label>
                   <Select value={periodicidade} onValueChange={(v: any) => setPeriodicidade(v)}>
@@ -706,7 +726,32 @@ export default function ConfiguracaoRotinas() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="font-medium">{task.descricao_tarefa}</TableCell>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {task.descricao_tarefa}
+                                {task.observacao && (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-5 w-5 text-muted-foreground shrink-0"
+                                        title="Ver Observação/Script"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-80 text-sm whitespace-pre-wrap font-normal"
+                                      side="right"
+                                      align="center"
+                                    >
+                                      {task.observacao}
+                                    </PopoverContent>
+                                  </Popover>
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1 items-start">
                                 <Badge
