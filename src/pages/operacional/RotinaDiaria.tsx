@@ -73,13 +73,17 @@ function ScriptPopover({ text }: { text: string }) {
           <Eye className="w-4 h-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4" side="bottom" align="start">
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] sm:w-[500px] md:w-[600px] p-4"
+        side="bottom"
+        align="start"
+      >
         <div className="space-y-3">
           <h4 className="font-medium text-sm flex items-center gap-2">
             <Eye className="w-4 h-4 text-primary" />
             Script / Observação
           </h4>
-          <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-md border border-border/50 max-h-60 overflow-y-auto">
+          <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-md border border-border/50 max-h-[60vh] overflow-y-auto">
             {text}
           </p>
           <Button onClick={handleCopy} size="sm" className="w-full font-medium" variant="secondary">
