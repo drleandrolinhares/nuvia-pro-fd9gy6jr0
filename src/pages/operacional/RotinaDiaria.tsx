@@ -74,7 +74,7 @@ function ScriptPopover({ text }: { text: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] sm:w-[500px] md:w-[600px] p-4"
+        className="w-[calc(100vw-2rem)] max-w-[900px] p-4"
         side="bottom"
         align="start"
       >

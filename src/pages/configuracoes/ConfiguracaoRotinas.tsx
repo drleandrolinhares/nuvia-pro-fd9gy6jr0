@@ -741,9 +741,9 @@ export default function ConfiguracaoRotinas() {
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent
-                                      className="w-[calc(100vw-2rem)] sm:w-[500px] md:w-[600px] text-sm whitespace-pre-wrap font-normal max-h-[80vh] overflow-y-auto"
-                                      side="right"
-                                      align="center"
+                                      className="w-[calc(100vw-2rem)] max-w-[900px] text-sm whitespace-pre-wrap font-normal max-h-[80vh] overflow-y-auto"
+                                      side="bottom"
+                                      align="start"
                                     >
                                       {task.observacao}
                                     </PopoverContent>
