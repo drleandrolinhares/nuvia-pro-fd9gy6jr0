@@ -36,12 +36,15 @@ Deno.serve(async (req: Request) => {
     }
 
     const concluidaEm = new Date(timestamp_conclusao)
+
+    // Assumindo fuso horário do Brasil (UTC-3)
+    const brtTime = new Date(concluidaEm.getTime() - 3 * 60 * 60 * 1000)
     const [h, m] = horario_fim.split(':').map(Number)
 
-    const prazo = new Date(concluidaEm)
-    prazo.setHours(h, m, 0, 0)
+    const prazoBrt = new Date(brtTime.getTime())
+    prazoBrt.setUTCHours(h, m, 0, 0)
 
-    let minutos_atrasado = Math.floor((concluidaEm.getTime() - prazo.getTime()) / 60000)
+    let minutos_atrasado = Math.floor((brtTime.getTime() - prazoBrt.getTime()) / 60000)
 
     if (minutos_atrasado <= 0) {
       minutos_atrasado = 0

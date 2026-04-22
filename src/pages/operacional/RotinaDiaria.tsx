@@ -63,6 +63,13 @@ const timeToMinutes = (time: string | null) => {
 
 const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 
+const getLocalDateString = (d: Date = new Date()) => {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 function ScriptPopover({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
 
@@ -420,6 +427,7 @@ export default function RotinaDiaria() {
   const [isClosed, setIsClosed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [horarioSaida, setHorarioSaida] = useState<string | null>(null)
+  const [horarioEntrada, setHorarioEntrada] = useState<string | null>(null)
   const [isTimeLocked, setIsTimeLocked] = useState(false)
 
   const autoCloseRoutine = async (currentTasks: Task[], userId: string, dateStr: string) => {
@@ -475,7 +483,7 @@ export default function RotinaDiaria() {
         const limitMins = timeToMinutes(horarioSaida) + 30
         if (currentMins >= limitMins) {
           setIsTimeLocked(true)
-          const todayDateStr = newNow.toISOString().split('T')[0]
+          const todayDateStr = getLocalDateString(newNow)
 
           autoCloseRoutine(tasks, user.id, todayDateStr)
 
@@ -511,12 +519,13 @@ export default function RotinaDiaria() {
     try {
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('horario_saida')
+        .select('horario_saida, horario_entrada')
         .eq('id', user.id)
         .single()
 
       if (usuario) {
         setHorarioSaida(usuario.horario_saida)
+        setHorarioEntrada(usuario.horario_entrada)
       }
 
       const { data: routine } = await supabase
@@ -547,7 +556,7 @@ export default function RotinaDiaria() {
       const today = new Date()
       const currentDayOfWeek = today.getDay()
       const currentDayOfMonth = today.getDate()
-      const todayDateStr = today.toISOString().split('T')[0]
+      const todayDateStr = getLocalDateString(today)
 
       let timeLocked = false
       if (usuario?.horario_saida) {
@@ -668,12 +677,26 @@ export default function RotinaDiaria() {
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
+  const isBeforeOpening = useMemo(() => {
+    if (!horarioEntrada) return false
+    const startLimitMins = timeToMinutes(horarioEntrada) - 30
+    return currentMinutes < startLimitMins
+  }, [currentMinutes, horarioEntrada])
+
+  const openingTimeStr = useMemo(() => {
+    if (!horarioEntrada) return ''
+    const limitMins = timeToMinutes(horarioEntrada) - 30
+    const h = Math.floor(limitMins / 60)
+    const m = limitMins % 60
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+  }, [horarioEntrada])
+
   const handleCheck = async (taskId: string, checked: boolean) => {
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
 
     const nowTime = new Date()
-    const todayDate = nowTime.toISOString().split('T')[0]
+    const todayDate = getLocalDateString(nowTime)
 
     let concluida = checked
     let timestamp_conclusao = null
@@ -798,7 +821,7 @@ export default function RotinaDiaria() {
   }
 
   const handleConfirmClosure = async () => {
-    const todayDate = now.toISOString().split('T')[0]
+    const todayDate = getLocalDateString(now)
     const closedAt = now.toISOString()
 
     for (const t of tasks) {
@@ -999,6 +1022,19 @@ export default function RotinaDiaria() {
         </div>
       )}
 
+      {isBeforeOpening && (
+        <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-300 flex items-start gap-3 shadow-sm mb-4">
+          <Lock className="w-5 h-5 shrink-0 mt-0.5 text-blue-600 dark:text-blue-500" />
+          <div>
+            <h3 className="font-semibold">Rotina Aguardando Abertura</h3>
+            <p className="text-sm mt-1">
+              Sua rotina estará disponível para edição a partir das {openingTimeStr} (30 minutos
+              antes do seu horário de entrada).
+            </p>
+          </div>
+        </div>
+      )}
+
       {tasks.length === 0 ? (
         <Card className="border-border/50 shadow-sm p-12 flex flex-col items-center justify-center text-muted-foreground">
           <Clock className="w-12 h-12 mb-4 opacity-20" />
@@ -1040,7 +1076,9 @@ export default function RotinaDiaria() {
                   }
 
                   const disabled =
-                    (hasTime && currentMinutes < startMins && !task.concluida) || isTimeLocked
+                    (hasTime && currentMinutes < startMins && !task.concluida) ||
+                    isTimeLocked ||
+                    isBeforeOpening
 
                   return (
                     <div
@@ -1142,7 +1180,7 @@ export default function RotinaDiaria() {
             {!isTimeLocked ? (
               <Button
                 size="lg"
-                disabled={!allTasksHandled}
+                disabled={!allTasksHandled || isBeforeOpening}
                 onClick={() => setIsClosing(true)}
                 className="w-full sm:w-auto font-bold tracking-wide"
               >
