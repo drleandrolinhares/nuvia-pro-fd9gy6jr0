@@ -610,12 +610,13 @@ export default function RotinaDiaria() {
         .eq('data_execucao', todayDateStr)
 
       // Safe-Check: Garantir que as execuções carregadas foram realmente criadas no dia de hoje (BRT)
-      const validExecucoes = execucoes?.filter(e => {
-        if (!e.data_criacao) return true;
-        const criacaoDate = getBrtDate(new Date(e.data_criacao));
-        const criacaoStr = getLocalDateString(criacaoDate);
-        return criacaoStr === todayDateStr;
-      }) || [];
+      const validExecucoes =
+        execucoes?.filter((e) => {
+          if (!e.data_criacao) return true
+          const criacaoDate = getBrtDate(new Date(e.data_criacao))
+          const criacaoStr = getLocalDateString(criacaoDate)
+          return criacaoStr === todayDateStr
+        }) || []
 
       const mergedTasks: Task[] = tarefasFiltradas.map((t) => {
         const exec = validExecucoes.find((e) => e.tarefa_id === t.id)
@@ -770,7 +771,8 @@ export default function RotinaDiaria() {
               0,
               Math.floor((realNow.getTime() - fimDate.getTime()) / 60000),
             )
-            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
+            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
+            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
             else nivel_criticidade = 'critico'
           }
         }
