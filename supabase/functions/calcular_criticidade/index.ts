@@ -48,9 +48,9 @@ Deno.serve(async (req: Request) => {
     }
 
     let nivel_criticidade = 'no_horario'
-    if (minutos_atrasado > 0 && minutos_atrasado <= 60) {
+    if (minutos_atrasado > 5 && minutos_atrasado <= 30) {
       nivel_criticidade = 'tolerancia'
-    } else if (minutos_atrasado > 60) {
+    } else if (minutos_atrasado > 30) {
       nivel_criticidade = 'critico'
     }
 

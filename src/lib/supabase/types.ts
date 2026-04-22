@@ -1791,6 +1791,7 @@ export type Database = {
           criado_em: string | null
           data_prevista: string | null
           descricao: string | null
+          etiquetas: Json | null
           id: string
           ordem: number | null
           paciente_nome: string | null
@@ -1806,6 +1807,7 @@ export type Database = {
           criado_em?: string | null
           data_prevista?: string | null
           descricao?: string | null
+          etiquetas?: Json | null
           id?: string
           ordem?: number | null
           paciente_nome?: string | null
@@ -1821,6 +1823,7 @@ export type Database = {
           criado_em?: string | null
           data_prevista?: string | null
           descricao?: string | null
+          etiquetas?: Json | null
           id?: string
           ordem?: number | null
           paciente_nome?: string | null
@@ -2682,6 +2685,7 @@ export const Constants = {
 //   atualizado_em: timestamp with time zone (nullable, default: now())
 //   usuario_id: uuid (nullable)
 //   cor: text (nullable, default: 'border-slate-700'::text)
+//   etiquetas: jsonb (nullable, default: '[]'::jsonb)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)

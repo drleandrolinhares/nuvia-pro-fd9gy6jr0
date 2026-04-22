@@ -699,8 +699,8 @@ export default function RotinaDiaria() {
               0,
               Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
             )
-            if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
-            else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
+            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
             else nivel_criticidade = 'critico'
           }
         }
@@ -717,8 +717,8 @@ export default function RotinaDiaria() {
             0,
             Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
           )
-          if (minutos_atrasado <= 0) nivel_criticidade = 'no_horario'
-          else if (minutos_atrasado <= 60) nivel_criticidade = 'tolerancia'
+          if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
+          else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
           else nivel_criticidade = 'critico'
         }
       }
@@ -860,10 +860,18 @@ export default function RotinaDiaria() {
 
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
+      const isOk = task.nivel_criticidade === 'no_horario' || !task.nivel_criticidade
       return (
-        <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-medium gap-1.5">
+        <div
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold border-2 shadow-sm transform -rotate-2',
+            isOk
+              ? 'bg-green-50 text-green-700 border-green-400 dark:bg-green-950/50 dark:text-green-400 dark:border-green-700'
+              : 'bg-red-50 text-red-700 border-red-400 dark:bg-red-950/50 dark:text-red-400 dark:border-red-700',
+          )}
+        >
           <CheckCircle2 className="w-4 h-4" />
-          <span>Concluído às {task.concluidaEm}</span>
+          <span>{task.concluidaEm}</span>
         </div>
       )
     }
@@ -1005,9 +1013,18 @@ export default function RotinaDiaria() {
                     <div
                       key={task.id}
                       className={cn(
-                        'p-4 sm:px-6 flex items-start sm:items-center gap-4 transition-colors hover:bg-muted/30',
-                        !isWithinWindow && !task.concluida && 'opacity-80 bg-muted/10',
-                        task.concluida && 'bg-emerald-50/30 dark:bg-emerald-950/10',
+                        'p-4 sm:px-6 flex items-start sm:items-center gap-4 transition-colors border-b border-border/50 last:border-0',
+                        !isWithinWindow &&
+                          !task.concluida &&
+                          'opacity-80 bg-muted/10 hover:bg-muted/30',
+                        task.concluida &&
+                          task.nivel_criticidade === 'no_horario' &&
+                          'bg-green-100 dark:bg-green-900/30',
+                        task.concluida &&
+                          (task.nivel_criticidade === 'tolerancia' ||
+                            task.nivel_criticidade === 'critico') &&
+                          'bg-red-100 dark:bg-red-900/30',
+                        !task.concluida && isWithinWindow && 'hover:bg-muted/30',
                       )}
                     >
                       <div
