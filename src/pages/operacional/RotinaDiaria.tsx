@@ -14,6 +14,7 @@ import {
   ListOrdered,
   Eye,
   Copy,
+  Lock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -74,7 +75,7 @@ function ScriptPopover({ text }: { text: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] max-w-[900px] p-4"
+        className="w-[calc(100vw-2rem)] sm:w-[900px] max-w-4xl p-4"
         side="bottom"
         align="start"
       >
@@ -385,11 +386,85 @@ export default function RotinaDiaria() {
   const [isClosing, setIsClosing] = useState(false)
   const [isClosed, setIsClosed] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [horarioSaida, setHorarioSaida] = useState<string | null>(null)
+  const [isTimeLocked, setIsTimeLocked] = useState(false)
+
+  const autoCloseRoutine = async (currentTasks: Task[], userId: string, dateStr: string) => {
+    const closedAt = new Date().toISOString()
+    const updates = currentTasks.filter((t) => !t.fechamento_confirmado)
+    if (updates.length === 0) return
+
+    for (const t of updates) {
+      if (t.concluida) {
+        if (t.execucao_id) {
+          await supabase
+            .from('execucoes_rotina')
+            .update({
+              fechamento_confirmado: true,
+              data_fechamento: closedAt,
+            })
+            .eq('id', t.execucao_id)
+        }
+      } else {
+        if (t.execucao_id) {
+          await supabase
+            .from('execucoes_rotina')
+            .update({
+              concluida: false,
+              nivel_criticidade: 'nao_concluida',
+              fechamento_confirmado: true,
+              data_fechamento: closedAt,
+            })
+            .eq('id', t.execucao_id)
+        } else {
+          await supabase.from('execucoes_rotina').insert({
+            usuario_id: userId,
+            data_execucao: dateStr,
+            tarefa_id: t.id,
+            concluida: false,
+            minutos_atrasado: 0,
+            nivel_criticidade: 'nao_concluida',
+            fechamento_confirmado: true,
+            data_fechamento: closedAt,
+          })
+        }
+      }
+    }
+  }
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60000)
+    const timer = setInterval(() => {
+      const newNow = new Date()
+      setNow(newNow)
+
+      if (horarioSaida && !isTimeLocked && user) {
+        const currentMins = newNow.getHours() * 60 + newNow.getMinutes()
+        const limitMins = timeToMinutes(horarioSaida) + 30
+        if (currentMins >= limitMins) {
+          setIsTimeLocked(true)
+          const todayDateStr = newNow.toISOString().split('T')[0]
+
+          autoCloseRoutine(tasks, user.id, todayDateStr)
+
+          setTasks((prev) =>
+            prev.map((t) => {
+              if (!t.fechamento_confirmado) {
+                return {
+                  ...t,
+                  fechamento_confirmado: true,
+                  concluida: !!t.concluida,
+                  nivel_criticidade: t.concluida ? t.nivel_criticidade : 'nao_concluida',
+                }
+              }
+              return t
+            }),
+          )
+          setIsClosed(true)
+        }
+      }
+    }, 60000)
     return () => clearInterval(timer)
-  }, [])
+  }, [horarioSaida, isTimeLocked, tasks, user])
 
   useEffect(() => {
     if (user) {
@@ -401,6 +476,16 @@ export default function RotinaDiaria() {
     if (!user) return
     setLoading(true)
     try {
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('horario_saida')
+        .eq('id', user.id)
+        .single()
+
+      if (usuario) {
+        setHorarioSaida(usuario.horario_saida)
+      }
+
       const { data: routine } = await supabase
         .from('rotinas_usuarios')
         .select('id')
@@ -430,6 +515,16 @@ export default function RotinaDiaria() {
       const currentDayOfWeek = today.getDay()
       const currentDayOfMonth = today.getDate()
       const todayDateStr = today.toISOString().split('T')[0]
+
+      let timeLocked = false
+      if (usuario?.horario_saida) {
+        const currentMins = today.getHours() * 60 + today.getMinutes()
+        const limitMins = timeToMinutes(usuario.horario_saida) + 30
+        if (currentMins >= limitMins) {
+          timeLocked = true
+          setIsTimeLocked(true)
+        }
+      }
 
       const tarefasFiltradas = tarefas.filter((t) => {
         const p = t.periodicidade || 'diaria'
@@ -512,6 +607,26 @@ export default function RotinaDiaria() {
 
       if (mergedTasks.length > 0 && mergedTasks.some((t) => t.fechamento_confirmado)) {
         setIsClosed(true)
+      }
+
+      if (timeLocked) {
+        const unconfirmed = mergedTasks.filter((t) => !t.fechamento_confirmado)
+        if (unconfirmed.length > 0) {
+          autoCloseRoutine(mergedTasks, user.id, todayDateStr)
+          const updatedTasks = mergedTasks.map((t) => {
+            if (!t.fechamento_confirmado) {
+              return {
+                ...t,
+                fechamento_confirmado: true,
+                concluida: !!t.concluida,
+                nivel_criticidade: t.concluida ? t.nivel_criticidade : 'nao_concluida',
+              } as Task
+            }
+            return t
+          })
+          setTasks(updatedTasks)
+          setIsClosed(true)
+        }
       }
     } finally {
       setLoading(false)
@@ -715,7 +830,7 @@ export default function RotinaDiaria() {
     )
   }
 
-  if (isClosed) {
+  if (isClosed && !isTimeLocked) {
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-4xl flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in zoom-in-95 duration-500">
         <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center mb-4">
@@ -813,7 +928,7 @@ export default function RotinaDiaria() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-4xl space-y-6 animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Rotina Diária</h1>
           <p className="text-muted-foreground mt-1">
@@ -829,6 +944,19 @@ export default function RotinaDiaria() {
           </div>
         </div>
       </div>
+
+      {isTimeLocked && (
+        <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-900/50 dark:text-amber-300 flex items-start gap-3 shadow-sm mb-4">
+          <Lock className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
+          <div>
+            <h3 className="font-semibold">Rotina Bloqueada Automaticamente</h3>
+            <p className="text-sm mt-1">
+              O horário limite para edição da sua rotina de hoje foi atingido (30 minutos após o seu
+              horário de saída). O sistema encontra-se em modo de leitura.
+            </p>
+          </div>
+        </div>
+      )}
 
       {tasks.length === 0 ? (
         <Card className="border-border/50 shadow-sm p-12 flex flex-col items-center justify-center text-muted-foreground">
@@ -870,7 +998,8 @@ export default function RotinaDiaria() {
                     isWithinWindow = currentMinutes >= startMins
                   }
 
-                  const disabled = hasTime && currentMinutes < startMins && !task.concluida
+                  const disabled =
+                    (hasTime && currentMinutes < startMins && !task.concluida) || isTimeLocked
 
                   return (
                     <div
@@ -960,14 +1089,21 @@ export default function RotinaDiaria() {
           </Card>
 
           <div className="flex justify-end pt-2 pb-10">
-            <Button
-              size="lg"
-              disabled={!allTasksHandled}
-              onClick={() => setIsClosing(true)}
-              className="w-full sm:w-auto font-bold tracking-wide"
-            >
-              FECHAR ROTINA DO DIA
-            </Button>
+            {!isTimeLocked ? (
+              <Button
+                size="lg"
+                disabled={!allTasksHandled}
+                onClick={() => setIsClosing(true)}
+                className="w-full sm:w-auto font-bold tracking-wide"
+              >
+                FECHAR ROTINA DO DIA
+              </Button>
+            ) : (
+              <div className="flex items-center text-amber-600 dark:text-amber-500 font-medium gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 rounded-md border border-amber-200 dark:border-amber-900/30">
+                <Lock className="w-4 h-4" />
+                <span>Edição Bloqueada (Modo Leitura)</span>
+              </div>
+            )}
           </div>
         </>
       )}
