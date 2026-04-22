@@ -18,6 +18,17 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -365,14 +376,36 @@ function ResumoFechamento({
           >
             CANCELAR
           </Button>
-          <Button
-            disabled={!hasConfirmed || isSaving}
-            onClick={handleConfirm}
-            className="w-full sm:w-auto font-bold tracking-wide"
-          >
-            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            CONFIRMAR FECHAMENTO
-          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={!hasConfirmed || isSaving}
+                className="w-full sm:w-auto font-bold tracking-wide"
+              >
+                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                CONFIRMAR FECHAMENTO
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Deseja realmente encerrar sua rotina?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível para o dia de hoje e bloqueará novas edições e marcações.
+                  Certifique-se de que todas as tarefas foram registradas corretamente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Voltar e Revisar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleConfirm}
+                  className="bg-primary text-primary-foreground"
+                >
+                  Sim, Encerrar Rotina
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardFooter>
       </Card>
     </div>

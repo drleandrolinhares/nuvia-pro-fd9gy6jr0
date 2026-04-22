@@ -46,8 +46,21 @@ import {
   AlertTriangle,
   TrendingUp,
   TrendingDown,
+  RotateCcw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 function DashboardCard({ title, stats }: { title: string; stats: any }) {
   const radius = 36
@@ -156,6 +169,7 @@ export default function RelatorioRotinas() {
   const { profile } = useAuth()
 
   const [userFilter, setUserFilter] = useState('all')
+  const [isReopening, setIsReopening] = useState(false)
   const [dateFilter, setDateFilter] = useState('hoje')
   const [cycleFilter, setCycleFilter] = useState('all')
   const [customStart, setCustomStart] = useState('')
@@ -510,6 +524,38 @@ export default function RelatorioRotinas() {
     ]
   }, [selectedDetails])
 
+  const handleReabrirRotina = async (usuarioId: string) => {
+    setIsReopening(true)
+    try {
+      const execsToOpen = executions.filter(
+        (e) => e.usuario_id === usuarioId && e.fechamento_confirmado,
+      )
+      const ids = execsToOpen.map((e) => e.id)
+
+      if (ids.length > 0) {
+        const { error } = await supabase
+          .from('execucoes_rotina')
+          .update({
+            fechamento_confirmado: false,
+            data_fechamento: null,
+          })
+          .in('id', ids)
+
+        if (error) throw error
+        toast.success('Rotina reaberta com sucesso!')
+        fetchExecutions()
+        fetchDashboardExecutions()
+      } else {
+        toast.info('Nenhuma execução fechada encontrada para este usuário no período.')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao reabrir rotina.')
+    } finally {
+      setIsReopening(false)
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -668,12 +714,19 @@ export default function RelatorioRotinas() {
                       </TableCell>
                       <TableCell className="text-right">
                         {r.isFechado ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-200 gap-1"
-                          >
-                            <CheckCircle2 className="w-3 h-3" /> Fechado
-                          </Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-200 gap-1"
+                            >
+                              <CheckCircle2 className="w-3 h-3" /> Fechado
+                            </Badge>
+                            {r.dataFechamento && (
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                às {format(new Date(r.dataFechamento), 'HH:mm')}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <Badge
                             variant="outline"
@@ -763,14 +816,49 @@ export default function RelatorioRotinas() {
                     Status de Fechamento
                   </h4>
                   {selectedDetails.isFechado ? (
-                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex flex-col gap-3">
                       <p className="text-sm text-green-700 dark:text-green-400 flex items-center justify-center gap-2 font-semibold">
                         <CheckCircle2 className="w-4 h-4" />
                         Fechado{' '}
                         {selectedDetails.dataFechamento
-                          ? `em ${format(new Date(selectedDetails.dataFechamento), 'dd/MM HH:mm')}`
+                          ? `em ${format(new Date(selectedDetails.dataFechamento), 'dd/MM às HH:mm')}`
                           : ''}
                       </p>
+                      {profile?.role === 'admin' &&
+                        selectedDetails.nome !== 'Todos os Usuários (Média)' && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full bg-background/50 hover:bg-background border-green-500/30 text-green-700 hover:text-green-800"
+                                disabled={isReopening}
+                              >
+                                <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                                Reabrir Rotina
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Reabrir rotina deste colaborador?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Ao confirmar, o status de fechamento será removido e o colaborador
+                                  poderá editar sua rotina novamente dentro da data de hoje.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleReabrirRotina(selectedDetails.usuario_id)}
+                                >
+                                  Sim, Reabrir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                     </div>
                   ) : (
                     <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
