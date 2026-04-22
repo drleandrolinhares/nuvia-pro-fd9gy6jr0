@@ -50,6 +50,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+
+const getBrtDate = (d: Date = new Date()) => {
+  return new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+}
 import {
   AlertDialog,
   AlertDialogAction,
@@ -210,25 +214,25 @@ export default function RelatorioRotinas() {
   const fetchExecutions = useCallback(async () => {
     setLoading(true)
     try {
-      let startD = new Date()
-      let endD = new Date()
+      let startStr = format(getBrtDate(), 'yyyy-MM-dd')
+      let endStr = format(getBrtDate(), 'yyyy-MM-dd')
 
       if (dateFilter === 'hoje') {
-        startD = startOfDay(new Date())
-        endD = endOfDay(new Date())
+        startStr = format(startOfDay(getBrtDate()), 'yyyy-MM-dd')
+        endStr = format(endOfDay(getBrtDate()), 'yyyy-MM-dd')
       } else if (dateFilter === '7dias') {
-        startD = startOfDay(subDays(new Date(), 7))
-        endD = endOfDay(new Date())
+        startStr = format(startOfDay(subDays(getBrtDate(), 7)), 'yyyy-MM-dd')
+        endStr = format(endOfDay(getBrtDate()), 'yyyy-MM-dd')
       } else if (dateFilter === 'mes') {
-        startD = startOfMonth(new Date())
-        endD = endOfMonth(new Date())
+        startStr = format(startOfMonth(getBrtDate()), 'yyyy-MM-dd')
+        endStr = format(endOfMonth(getBrtDate()), 'yyyy-MM-dd')
       } else if (dateFilter === 'custom') {
         if (!customStart || !customEnd) {
           setLoading(false)
           return
         }
-        startD = startOfDay(parseISO(customStart))
-        endD = endOfDay(parseISO(customEnd))
+        startStr = customStart
+        endStr = customEnd
       }
 
       let query = supabase
@@ -243,8 +247,8 @@ export default function RelatorioRotinas() {
             nome
           )
         `)
-        .gte('data_execucao', format(startD, 'yyyy-MM-dd'))
-        .lte('data_execucao', format(endD, 'yyyy-MM-dd'))
+        .gte('data_execucao', startStr)
+        .lte('data_execucao', endStr)
 
       if (userFilter !== 'all') {
         query = query.eq('usuario_id', userFilter)
@@ -266,8 +270,8 @@ export default function RelatorioRotinas() {
   }, [dateFilter, userFilter, customStart, customEnd, cycleFilter])
 
   const fetchDashboardExecutions = useCallback(async () => {
-    const startM = startOfMonth(new Date())
-    const endM = endOfMonth(new Date())
+    const startM = startOfMonth(getBrtDate())
+    const endM = endOfMonth(getBrtDate())
 
     const { data } = await supabase
       .from('execucoes_rotina')
@@ -310,7 +314,7 @@ export default function RelatorioRotinas() {
   }, [fetchExecutions, fetchDashboardExecutions, isLive])
 
   const dashboardStats = useMemo(() => {
-    const now = new Date()
+    const now = getBrtDate()
     const todayStr = format(now, 'yyyy-MM-dd')
     const weekStartStr = format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
     const weekEndStr = format(endOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
@@ -723,7 +727,7 @@ export default function RelatorioRotinas() {
                             </Badge>
                             {r.dataFechamento && (
                               <span className="text-[10px] text-muted-foreground font-medium">
-                                às {format(new Date(r.dataFechamento), 'HH:mm')}
+                                às {format(getBrtDate(new Date(r.dataFechamento)), 'HH:mm')}
                               </span>
                             )}
                           </div>
@@ -821,7 +825,7 @@ export default function RelatorioRotinas() {
                         <CheckCircle2 className="w-4 h-4" />
                         Fechado{' '}
                         {selectedDetails.dataFechamento
-                          ? `em ${format(new Date(selectedDetails.dataFechamento), 'dd/MM às HH:mm')}`
+                          ? `em ${format(getBrtDate(new Date(selectedDetails.dataFechamento)), 'dd/MM às HH:mm')}`
                           : ''}
                       </p>
                       {profile?.role === 'admin' &&

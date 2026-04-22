@@ -63,7 +63,11 @@ const timeToMinutes = (time: string | null) => {
 
 const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 
-const getLocalDateString = (d: Date = new Date()) => {
+const getBrtDate = (d: Date = new Date()) => {
+  return new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+}
+
+const getLocalDateString = (d: Date = getBrtDate()) => {
   const yyyy = d.getFullYear()
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
@@ -422,7 +426,7 @@ function ResumoFechamento({
 export default function RotinaDiaria() {
   const { user } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
-  const [now, setNow] = useState(new Date())
+  const [now, setNow] = useState(getBrtDate())
   const [isClosing, setIsClosing] = useState(false)
   const [isClosed, setIsClosed] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -475,7 +479,8 @@ export default function RotinaDiaria() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const newNow = new Date()
+      const realNow = new Date()
+      const newNow = getBrtDate(realNow)
       setNow(newNow)
 
       if (horarioSaida && !isTimeLocked && user) {
@@ -553,7 +558,8 @@ export default function RotinaDiaria() {
         return
       }
 
-      const today = new Date()
+      const realToday = new Date()
+      const today = getBrtDate(realToday)
       const currentDayOfWeek = today.getDay()
       const currentDayOfMonth = today.getDate()
       const todayDateStr = getLocalDateString(today)
@@ -603,11 +609,19 @@ export default function RotinaDiaria() {
         .eq('usuario_id', user.id)
         .eq('data_execucao', todayDateStr)
 
+      // Safe-Check: Garantir que as execuções carregadas foram realmente criadas no dia de hoje (BRT)
+      const validExecucoes = execucoes?.filter(e => {
+        if (!e.data_criacao) return true;
+        const criacaoDate = getBrtDate(new Date(e.data_criacao));
+        const criacaoStr = getLocalDateString(criacaoDate);
+        return criacaoStr === todayDateStr;
+      }) || [];
+
       const mergedTasks: Task[] = tarefasFiltradas.map((t) => {
-        const exec = execucoes?.find((e) => e.tarefa_id === t.id)
+        const exec = validExecucoes.find((e) => e.tarefa_id === t.id)
         let concluidaEm = null
         if (exec?.timestamp_conclusao) {
-          const d = new Date(exec.timestamp_conclusao)
+          const d = getBrtDate(new Date(exec.timestamp_conclusao))
           concluidaEm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
         }
 
@@ -695,8 +709,9 @@ export default function RotinaDiaria() {
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
 
-    const nowTime = new Date()
-    const todayDate = getLocalDateString(nowTime)
+    const realNow = new Date()
+    const brtNow = getBrtDate(realNow)
+    const todayDate = getLocalDateString(brtNow)
 
     let concluida = checked
     let timestamp_conclusao = null
@@ -704,7 +719,7 @@ export default function RotinaDiaria() {
     let nivel_criticidade: any = null
 
     if (checked) {
-      timestamp_conclusao = nowTime.toISOString()
+      timestamp_conclusao = realNow.toISOString()
 
       try {
         const { data: validacao, error: validacaoError } = await supabase.functions.invoke(
@@ -749,14 +764,13 @@ export default function RotinaDiaria() {
             nivel_criticidade = 'no_horario'
           } else {
             const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-            const fimDate = new Date(nowTime)
+            const fimDate = new Date(realNow)
             fimDate.setHours(hFim, mFim, 0, 0)
             minutos_atrasado = Math.max(
               0,
-              Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
+              Math.floor((realNow.getTime() - fimDate.getTime()) / 60000),
             )
-            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
-            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
+            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
             else nivel_criticidade = 'critico'
           }
         }
@@ -767,11 +781,11 @@ export default function RotinaDiaria() {
           nivel_criticidade = 'no_horario'
         } else {
           const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-          const fimDate = new Date(nowTime)
+          const fimDate = new Date(realNow)
           fimDate.setHours(hFim, mFim, 0, 0)
           minutos_atrasado = Math.max(
             0,
-            Math.floor((nowTime.getTime() - fimDate.getTime()) / 60000),
+            Math.floor((realNow.getTime() - fimDate.getTime()) / 60000),
           )
           if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
           else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
@@ -782,7 +796,7 @@ export default function RotinaDiaria() {
 
     let concluidaEm = null
     if (timestamp_conclusao) {
-      concluidaEm = `${String(nowTime.getHours()).padStart(2, '0')}:${String(nowTime.getMinutes()).padStart(2, '0')}`
+      concluidaEm = `${String(brtNow.getHours()).padStart(2, '0')}:${String(brtNow.getMinutes()).padStart(2, '0')}`
     }
 
     setTasks((prev) =>
@@ -821,8 +835,10 @@ export default function RotinaDiaria() {
   }
 
   const handleConfirmClosure = async () => {
-    const todayDate = getLocalDateString(now)
-    const closedAt = now.toISOString()
+    const realNow = new Date()
+    const brtNow = getBrtDate(realNow)
+    const todayDate = getLocalDateString(brtNow)
+    const closedAt = realNow.toISOString()
 
     for (const t of tasks) {
       if (t.concluida) {

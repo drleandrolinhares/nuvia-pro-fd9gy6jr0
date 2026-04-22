@@ -25,11 +25,13 @@ const MONTHS = [
 ]
 
 export function useClock() {
-  const [time, setTime] = useState(new Date())
+  const getBrtDate = () =>
+    new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+  const [time, setTime] = useState(getBrtDate())
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTime(new Date())
+      setTime(getBrtDate())
     }, 1000)
     return () => clearInterval(timer)
   }, [])
