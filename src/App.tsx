@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { CacheProvider } from '@/hooks/use-cache'
+import { GlobalNormasPopup } from '@/components/normas/global-normas-popup'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
@@ -20,6 +21,7 @@ import Placeholder from './pages/Placeholder'
 import Compromissos from './pages/operacional/Compromissos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import RelatorioRotinas from './pages/operacional/RelatorioRotinas'
+import NormasInternas from './pages/operacional/NormasInternas'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
@@ -214,7 +216,7 @@ const AppRoutes = () => {
           path="/operacional/comunicados/normas-internas"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_comunicados']}>
-              <Placeholder />
+              <NormasInternas />
             </ProtectedRoute>
           }
         />
@@ -274,6 +276,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <AppRoutes />
+          <GlobalNormasPopup />
         </TooltipProvider>
       </CacheProvider>
     </AuthProvider>
