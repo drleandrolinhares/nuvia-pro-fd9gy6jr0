@@ -1195,6 +1195,65 @@ export type Database = {
         }
         Relationships: []
       }
+      normas_aceites: {
+        Row: {
+          aceito_em: string
+          id: string
+          norma_id: string
+          usuario_id: string
+        }
+        Insert: {
+          aceito_em?: string
+          id?: string
+          norma_id: string
+          usuario_id: string
+        }
+        Update: {
+          aceito_em?: string
+          id?: string
+          norma_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'normas_aceites_norma_id_fkey'
+            columns: ['norma_id']
+            isOneToOne: false
+            referencedRelation: 'normas_internas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      normas_internas: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          conteudo: string
+          criado_em: string
+          criado_por: string | null
+          id: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          conteudo: string
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          conteudo?: string
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       orcamentos: {
         Row: {
           avaliacao_id: string
@@ -2363,6 +2422,19 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: normas_aceites
+//   id: uuid (not null, default: gen_random_uuid())
+//   norma_id: uuid (not null)
+//   usuario_id: uuid (not null)
+//   aceito_em: timestamp with time zone (not null, default: now())
+// Table: normas_internas
+//   id: uuid (not null, default: gen_random_uuid())
+//   titulo: text (not null)
+//   conteudo: text (not null)
+//   ativo: boolean (not null, default: true)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+//   criado_por: uuid (nullable)
 // Table: orcamentos
 //   id: uuid (not null, default: gen_random_uuid())
 //   avaliacao_id: uuid (not null)
@@ -2627,6 +2699,14 @@ export const Constants = {
 // Table: marcas_implante
 //   UNIQUE marcas_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY marcas_implante_pkey: PRIMARY KEY (id)
+// Table: normas_aceites
+//   FOREIGN KEY normas_aceites_norma_id_fkey: FOREIGN KEY (norma_id) REFERENCES normas_internas(id) ON DELETE CASCADE
+//   UNIQUE normas_aceites_norma_id_usuario_id_key: UNIQUE (norma_id, usuario_id)
+//   PRIMARY KEY normas_aceites_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY normas_aceites_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: normas_internas
+//   FOREIGN KEY normas_internas_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE SET NULL
+//   PRIMARY KEY normas_internas_pkey: PRIMARY KEY (id)
 // Table: orcamentos
 //   FOREIGN KEY orcamentos_avaliacao_id_fkey: FOREIGN KEY (avaliacao_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
 //   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
@@ -2859,6 +2939,21 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "marcas_implante_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: normas_aceites
+//   Policy "normas_aceites_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (usuario_id = auth.uid())
+//   Policy "normas_aceites_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: normas_internas
+//   Policy "normas_internas_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "normas_internas_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: is_admin()
+//   Policy "normas_internas_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "normas_internas_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
 // Table: orcamentos
 //   Policy "orcamentos_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -3295,6 +3390,8 @@ export const Constants = {
 //   CREATE INDEX faturas_comissoes_profissional_id_idx ON public.faturas_comissoes USING btree (profissional_id)
 // Table: marcas_implante
 //   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
+// Table: normas_aceites
+//   CREATE UNIQUE INDEX normas_aceites_norma_id_usuario_id_key ON public.normas_aceites USING btree (norma_id, usuario_id)
 // Table: orcamentos
 //   CREATE INDEX orcamentos_avaliacao_id_idx ON public.orcamentos USING btree (avaliacao_id)
 //   CREATE INDEX orcamentos_status_idx ON public.orcamentos USING btree (status)
