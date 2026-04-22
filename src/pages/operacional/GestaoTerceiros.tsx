@@ -37,6 +37,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const TITLES: Record<string, string> = {
   laboratorios: 'Laboratórios',
@@ -45,15 +53,36 @@ const TITLES: Record<string, string> = {
 }
 
 const CARD_COLORS = [
-  { value: 'border-slate-700', label: 'Padrão', bg: 'bg-slate-700' },
-  { value: 'border-blue-500', label: 'Azul', bg: 'bg-blue-500' },
-  { value: 'border-emerald-500', label: 'Verde', bg: 'bg-emerald-500' },
-  { value: 'border-rose-500', label: 'Vermelho', bg: 'bg-rose-500' },
-  { value: 'border-amber-500', label: 'Amarelo', bg: 'bg-amber-500' },
-  { value: 'border-purple-500', label: 'Roxo', bg: 'bg-purple-500' },
-  { value: 'border-cyan-500', label: 'Ciano', bg: 'bg-cyan-500' },
-  { value: 'border-pink-500', label: 'Rosa', bg: 'bg-pink-500' },
+  { value: 'bg-slate-700', label: 'Padrão' },
+  { value: 'bg-blue-600', label: 'Azul' },
+  { value: 'bg-emerald-600', label: 'Verde' },
+  { value: 'bg-rose-600', label: 'Vermelho' },
+  { value: 'bg-amber-600', label: 'Amarelo' },
+  { value: 'bg-purple-600', label: 'Roxo' },
+  { value: 'bg-cyan-600', label: 'Ciano' },
+  { value: 'bg-pink-600', label: 'Rosa' },
 ]
+
+const TAG_COLORS = [
+  { value: 'bg-slate-500', label: 'Cinza' },
+  { value: 'bg-blue-500', label: 'Azul' },
+  { value: 'bg-emerald-500', label: 'Verde' },
+  { value: 'bg-rose-500', label: 'Vermelho' },
+  { value: 'bg-amber-500', label: 'Amarelo' },
+  { value: 'bg-purple-500', label: 'Roxo' },
+  { value: 'bg-cyan-500', label: 'Ciano' },
+  { value: 'bg-pink-500', label: 'Rosa' },
+]
+
+const getCardBg = (cor: string | null) => {
+  if (!cor) return 'bg-slate-700'
+  if (cor.startsWith('border-')) {
+    const base = cor.replace('border-', '')
+    if (base === 'slate-700') return 'bg-slate-700'
+    return `bg-${base.replace('500', '600')}`
+  }
+  return cor
+}
 
 export default function GestaoTerceiros() {
   const { categoriaSlug } = useParams<{ categoriaSlug: string }>()
@@ -68,6 +97,9 @@ export default function GestaoTerceiros() {
   const [editColTitle, setEditColTitle] = useState('')
   const [newColTitle, setNewColTitle] = useState('')
 
+  const [tagInput, setTagInput] = useState('')
+  const [tagColor, setTagColor] = useState('bg-slate-500')
+
   const [formData, setFormData] = useState({
     pacienteNome: '',
     terceiroNome: '',
@@ -75,7 +107,8 @@ export default function GestaoTerceiros() {
     dataPrevista: '',
     descricao: '',
     criadoEm: '',
-    cor: 'border-slate-700',
+    cor: 'bg-slate-700',
+    etiquetas: [] as { nome: string; cor: string }[],
   })
 
   const loadData = async () => {
@@ -104,7 +137,13 @@ export default function GestaoTerceiros() {
       setTarefas((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)))
       try {
         await updateTarefaStatus(id, status)
-      } catch {
+      } catch (error) {
+        console.error('Erro ao mover tarefa', error)
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível mover a tarefa.',
+          variant: 'destructive',
+        })
         loadData()
       }
     }
@@ -122,9 +161,28 @@ export default function GestaoTerceiros() {
       criadoEm: t?.criado_em
         ? format(new Date(t.criado_em), 'yyyy-MM-dd')
         : format(new Date(), 'yyyy-MM-dd'),
-      cor: t?.cor || 'border-slate-700',
+      cor: t ? getCardBg(t.cor) : 'bg-slate-700',
+      etiquetas: t?.etiquetas || [],
     })
+    setTagInput('')
+    setTagColor('bg-slate-500')
     setIsModalOpen(true)
+  }
+
+  const handleAddTag = () => {
+    if (!tagInput.trim()) return
+    setFormData((prev) => ({
+      ...prev,
+      etiquetas: [...prev.etiquetas, { nome: tagInput.trim(), cor: tagColor }],
+    }))
+    setTagInput('')
+  }
+
+  const removeTag = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      etiquetas: prev.etiquetas.filter((_, i) => i !== index),
+    }))
   }
 
   const handleSave = async () => {
@@ -140,10 +198,16 @@ export default function GestaoTerceiros() {
         data_prevista: formData.dataPrevista || null,
         descricao: formData.descricao,
         cor: formData.cor,
+        etiquetas: formData.etiquetas,
       }
+
       if (formData.criadoEm) {
-        payload.criado_em = new Date(formData.criadoEm + 'T12:00:00').toISOString()
+        const parsedDate = new Date(formData.criadoEm + 'T12:00:00')
+        if (!isNaN(parsedDate.getTime())) {
+          payload.criado_em = parsedDate.toISOString()
+        }
       }
+
       if (editingTarefa) {
         await updateTarefa(editingTarefa.id, payload)
       } else {
@@ -154,7 +218,12 @@ export default function GestaoTerceiros() {
       loadData()
       toast({ title: 'Sucesso', description: 'Registro salvo.' })
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      console.error('Erro ao salvar:', error)
+      toast({
+        title: 'Erro',
+        description: error.message || 'Falha ao salvar.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -166,7 +235,12 @@ export default function GestaoTerceiros() {
       loadData()
       toast({ title: 'Sucesso', description: 'Registro excluído.' })
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      console.error('Erro ao excluir:', error)
+      toast({
+        title: 'Erro',
+        description: error.message || 'Falha ao excluir.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -177,6 +251,7 @@ export default function GestaoTerceiros() {
       setColunas((prev) => prev.map((c) => (c.id === id ? { ...c, titulo: editColTitle } : c)))
       setEditingColId(null)
     } catch (error: any) {
+      console.error(error)
       toast({ title: 'Erro', description: 'Falha ao renomear.', variant: 'destructive' })
     }
   }
@@ -195,6 +270,7 @@ export default function GestaoTerceiros() {
       loadData()
       toast({ title: 'Sucesso', description: 'Etapa criada com sucesso.' })
     } catch (error: any) {
+      console.error(error)
       toast({ title: 'Erro', description: 'Erro ao criar etapa.', variant: 'destructive' })
     }
   }
@@ -281,30 +357,47 @@ export default function GestaoTerceiros() {
                       onDragStart={(e) => onDragStart(e, t.id)}
                       onClick={() => openModal(t)}
                       className={cn(
-                        'bg-slate-900/90 border p-4 rounded-lg cursor-grab hover:bg-slate-800 transition-all shadow-sm',
-                        t.cor || 'border-slate-700',
+                        'p-4 rounded-lg cursor-grab hover:brightness-110 transition-all shadow-md',
+                        getCardBg(t.cor),
                       )}
                     >
                       <div className="flex justify-between items-start gap-2 mb-2">
-                        <h4 className="font-medium text-slate-200 text-sm leading-tight line-clamp-2 flex-1">
+                        <h4 className="font-semibold text-white text-sm leading-tight line-clamp-2 flex-1">
                           {t.titulo}
                         </h4>
-                        <GripVertical className="w-4 h-4 text-slate-500 shrink-0" />
+                        <GripVertical className="w-4 h-4 text-white/50 shrink-0" />
                       </div>
+
+                      {t.etiquetas && t.etiquetas.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {t.etiquetas.map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded font-medium text-white shadow-sm border border-white/10',
+                                tag.cor,
+                              )}
+                            >
+                              {tag.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       {t.paciente_nome && (
-                        <div className="flex items-center text-xs text-slate-400 mb-1">
+                        <div className="flex items-center text-xs text-white/80 mb-1">
                           <User className="w-3 h-3 mr-1 shrink-0" />
                           <span className="truncate">{t.paciente_nome}</span>
                         </div>
                       )}
                       {t.terceiro_nome && (
-                        <div className="flex items-center text-xs text-slate-400 mb-2">
+                        <div className="flex items-center text-xs text-white/80 mb-2">
                           <Building2 className="w-3 h-3 mr-1 shrink-0" />
                           <span className="truncate">{t.terceiro_nome}</span>
                         </div>
                       )}
                       {t.data_prevista && (
-                        <div className="flex items-center mt-3 pt-3 border-t border-slate-800/50 text-xs text-amber-500">
+                        <div className="flex items-center mt-3 pt-2 border-t border-white/20 text-xs text-white/90 font-medium">
                           <Calendar className="w-3 h-3 mr-1" />
                           Agendado: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
                         </div>
@@ -383,18 +476,18 @@ export default function GestaoTerceiros() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Cor de Identificação (Laboratório/Prestador)</Label>
+              <Label>Cor do Card (Laboratório/Prestador)</Label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {CARD_COLORS.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => setFormData({ ...formData, cor: c.value })}
                     className={cn(
-                      'w-6 h-6 rounded-full border-2 transition-transform',
-                      c.bg,
+                      'w-8 h-8 rounded-md transition-transform border-2 shadow-sm',
+                      c.value,
                       formData.cor === c.value
-                        ? 'border-white scale-110 shadow-sm'
-                        : 'border-transparent hover:scale-110',
+                        ? 'border-white scale-110'
+                        : 'border-transparent hover:scale-105',
                     )}
                     title={c.label}
                     type="button"
@@ -411,7 +504,63 @@ export default function GestaoTerceiros() {
                 className="bg-slate-950 border-slate-800"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="space-y-2 pt-4 border-t border-slate-800">
+              <Label>Etiquetas do Card</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Nome da etiqueta"
+                  className="bg-slate-950 border-slate-800 flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                />
+                <Select value={tagColor} onValueChange={setTagColor}>
+                  <SelectTrigger className="w-[110px] bg-slate-950 border-slate-800">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TAG_COLORS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        <div className="flex items-center gap-2">
+                          <div className={cn('w-3 h-3 rounded-full', c.value)} />
+                          <span className="text-xs">{c.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  onClick={handleAddTag}
+                  variant="secondary"
+                  className="shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700"
+                >
+                  Adicionar
+                </Button>
+              </div>
+              {formData.etiquetas.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.etiquetas.map((t, idx) => (
+                    <Badge
+                      key={idx}
+                      className={cn(
+                        t.cor,
+                        'text-white gap-1 pl-2 pr-1 py-0.5 font-normal hover:opacity-90 transition-opacity border-none',
+                      )}
+                    >
+                      {t.nome}
+                      <X
+                        className="w-3 h-3 ml-1 cursor-pointer hover:text-red-200"
+                        onClick={() => removeTag(idx)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
               <div className="space-y-1">
                 <Label>Data inclusão sistema</Label>
                 <Input
@@ -441,7 +590,7 @@ export default function GestaoTerceiros() {
               />
             </div>
           </div>
-          <DialogFooter className="flex justify-between items-center sm:justify-between mt-2">
+          <DialogFooter className="flex justify-between items-center sm:justify-between mt-2 pt-4 border-t border-slate-800">
             {editingTarefa ? (
               <Button
                 variant="ghost"

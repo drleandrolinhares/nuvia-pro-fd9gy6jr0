@@ -1787,6 +1787,7 @@ export type Database = {
         Row: {
           atualizado_em: string | null
           categoria_slug: string
+          cor: string | null
           criado_em: string | null
           data_prevista: string | null
           descricao: string | null
@@ -1801,6 +1802,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string | null
           categoria_slug: string
+          cor?: string | null
           criado_em?: string | null
           data_prevista?: string | null
           descricao?: string | null
@@ -1815,6 +1817,7 @@ export type Database = {
         Update: {
           atualizado_em?: string | null
           categoria_slug?: string
+          cor?: string | null
           criado_em?: string | null
           data_prevista?: string | null
           descricao?: string | null
@@ -2678,6 +2681,7 @@ export const Constants = {
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
 //   usuario_id: uuid (nullable)
+//   cor: text (nullable, default: 'border-slate-700'::text)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)

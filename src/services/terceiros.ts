@@ -1,5 +1,10 @@
 import { supabase } from '@/lib/supabase/client'
 
+export interface Etiqueta {
+  nome: string
+  cor: string
+}
+
 export interface TarefaTerceiro {
   id: string
   categoria_slug: string
@@ -12,6 +17,7 @@ export interface TarefaTerceiro {
   ordem: number
   criado_em: string
   cor: string | null
+  etiquetas?: Etiqueta[] | null
 }
 
 export interface TerceiroColuna {
