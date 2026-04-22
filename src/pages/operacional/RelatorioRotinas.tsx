@@ -24,7 +24,17 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
-import { format, subDays, startOfMonth, endOfMonth, startOfDay, endOfDay, parseISO } from 'date-fns'
+import {
+  format,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+} from 'date-fns'
 import {
   CheckCircle2,
   Clock,
@@ -34,7 +44,106 @@ import {
   BarChart as BarChartIcon,
   Activity,
   AlertTriangle,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+function DashboardCard({ title, stats }: { title: string; stats: any }) {
+  const radius = 36
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (circumference * stats.globalPercentual) / 100
+
+  return (
+    <Card className="shadow-sm border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg text-center">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col items-center justify-center mb-6 mt-2">
+          <div className="relative flex items-center justify-center w-24 h-24">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 96 96">
+              <circle
+                cx="48"
+                cy="48"
+                r={radius}
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="transparent"
+                className="text-secondary"
+              />
+              <circle
+                cx="48"
+                cy="48"
+                r={radius}
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="transparent"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                className={cn(
+                  'transition-all duration-1000 ease-out',
+                  stats.globalPercentual >= 80
+                    ? 'text-green-500'
+                    : stats.globalPercentual >= 50
+                      ? 'text-amber-500'
+                      : 'text-red-500',
+                )}
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center justify-center text-center">
+              <span className="text-xl font-bold">{stats.globalPercentual.toFixed(0)}%</span>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-2">
+            Conclusão Global
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-secondary/30 p-2 rounded-md">
+            <h4 className="font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4" /> Top 3
+            </h4>
+            <div className="space-y-2">
+              {stats.top3.length > 0 ? (
+                stats.top3.map((u: any, i: number) => (
+                  <div key={u.id} className="flex justify-between items-center text-xs">
+                    <span className="truncate pr-2 text-muted-foreground" title={u.nome}>
+                      {i + 1}. {u.nome.split(' ')[0]}
+                    </span>
+                    <span className="font-medium">{u.percentual.toFixed(0)}%</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">Sem dados</span>
+              )}
+            </div>
+          </div>
+          <div className="bg-secondary/30 p-2 rounded-md">
+            <h4 className="font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5">
+              <TrendingDown className="w-4 h-4" /> Menores
+            </h4>
+            <div className="space-y-2">
+              {stats.bottom3.length > 0 ? (
+                stats.bottom3.map((u: any, i: number) => (
+                  <div key={u.id} className="flex justify-between items-center text-xs">
+                    <span className="truncate pr-2 text-muted-foreground" title={u.nome}>
+                      {i + 1}. {u.nome.split(' ')[0]}
+                    </span>
+                    <span className="font-medium">{u.percentual.toFixed(0)}%</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">Sem dados</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 const chartConfig = {
   quantidade: {
@@ -56,6 +165,7 @@ export default function RelatorioRotinas() {
   const [executions, setExecutions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [isLive, setIsLive] = useState(true)
+  const [dashboardExecutions, setDashboardExecutions] = useState<any[]>([])
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -141,9 +251,34 @@ export default function RelatorioRotinas() {
     }
   }, [dateFilter, userFilter, customStart, customEnd, cycleFilter])
 
+  const fetchDashboardExecutions = useCallback(async () => {
+    const startM = startOfMonth(new Date())
+    const endM = endOfMonth(new Date())
+
+    const { data } = await supabase
+      .from('execucoes_rotina')
+      .select(`
+        *,
+        tarefas_rotina!inner (
+          peso_percentual,
+          periodicidade
+        ),
+        usuarios:usuario_id (
+          nome
+        )
+      `)
+      .gte('data_execucao', format(startM, 'yyyy-MM-dd'))
+      .lte('data_execucao', format(endM, 'yyyy-MM-dd'))
+
+    if (data) {
+      setDashboardExecutions(data)
+    }
+  }, [])
+
   useEffect(() => {
     fetchExecutions()
-  }, [fetchExecutions])
+    fetchDashboardExecutions()
+  }, [fetchExecutions, fetchDashboardExecutions])
 
   useEffect(() => {
     if (!isLive) return
@@ -151,13 +286,73 @@ export default function RelatorioRotinas() {
       .channel('realtime_execucoes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'execucoes_rotina' }, () => {
         fetchExecutions()
+        fetchDashboardExecutions()
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchExecutions, isLive])
+  }, [fetchExecutions, fetchDashboardExecutions, isLive])
+
+  const dashboardStats = useMemo(() => {
+    const now = new Date()
+    const todayStr = format(now, 'yyyy-MM-dd')
+    const weekStartStr = format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
+    const weekEndStr = format(endOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
+    const monthStartStr = format(startOfMonth(now), 'yyyy-MM-dd')
+    const monthEndStr = format(endOfMonth(now), 'yyyy-MM-dd')
+
+    const getStats = (startStr: string, endStr: string) => {
+      const filtered = dashboardExecutions.filter((e) => {
+        return e.data_execucao >= startStr && e.data_execucao <= endStr
+      })
+
+      const byUser: Record<string, any[]> = {}
+      filtered.forEach((e) => {
+        if (!byUser[e.usuario_id]) byUser[e.usuario_id] = []
+        byUser[e.usuario_id].push(e)
+      })
+
+      const userStats = usersWithRoutines
+        .map((u) => {
+          const userExecs = byUser[u.id] || []
+          const totalPeso = userExecs.reduce(
+            (acc, curr) => acc + Number(curr.tarefas_rotina?.peso_percentual || 5),
+            0,
+          )
+          const concluidoPeso = userExecs
+            .filter((e) => e.concluida)
+            .reduce((acc, curr) => acc + Number(curr.tarefas_rotina?.peso_percentual || 5), 0)
+          const percentual = totalPeso > 0 ? (concluidoPeso / totalPeso) * 100 : 0
+          return { id: u.id, nome: u.nome, percentual, totalPeso }
+        })
+        .filter((u) => u.totalPeso > 0)
+
+      userStats.sort((a, b) => b.percentual - a.percentual)
+
+      const top3 = userStats.slice(0, 3)
+      const bottom3 = [...userStats].sort((a, b) => a.percentual - b.percentual).slice(0, 3)
+
+      const globalTotalPeso = filtered.reduce(
+        (acc, curr) => acc + Number(curr.tarefas_rotina?.peso_percentual || 5),
+        0,
+      )
+      const globalConcluidoPeso = filtered
+        .filter((e) => e.concluida)
+        .reduce((acc, curr) => acc + Number(curr.tarefas_rotina?.peso_percentual || 5), 0)
+      const globalPercentual =
+        globalTotalPeso > 0 ? (globalConcluidoPeso / globalTotalPeso) * 100 : 0
+
+      return { globalPercentual, top3, bottom3 }
+    }
+
+    return {
+      diario: getStats(todayStr, todayStr),
+      semanal: getStats(weekStartStr, weekEndStr),
+      mensal: getStats(monthStartStr, monthEndStr),
+    }
+  }, [dashboardExecutions, usersWithRoutines])
 
   const ranking = useMemo(() => {
     const byUser: Record<string, any[]> = {}
@@ -338,6 +533,12 @@ export default function RelatorioRotinas() {
         <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
           <Activity className="w-5 h-5 text-primary" />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <DashboardCard title="Desempenho Diário" stats={dashboardStats.diario} />
+        <DashboardCard title="Desempenho Semanal" stats={dashboardStats.semanal} />
+        <DashboardCard title="Desempenho Mensal" stats={dashboardStats.mensal} />
       </div>
 
       <Card className="bg-card">
