@@ -1724,6 +1724,83 @@ export type Database = {
           },
         ]
       }
+      terceiros_categorias: {
+        Row: {
+          criado_em: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      terceiros_tarefas: {
+        Row: {
+          atualizado_em: string | null
+          categoria_slug: string
+          criado_em: string | null
+          data_prevista: string | null
+          descricao: string | null
+          id: string
+          ordem: number | null
+          paciente_nome: string | null
+          status: string
+          terceiro_nome: string | null
+          titulo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          categoria_slug: string
+          criado_em?: string | null
+          data_prevista?: string | null
+          descricao?: string | null
+          id?: string
+          ordem?: number | null
+          paciente_nome?: string | null
+          status?: string
+          terceiro_nome?: string | null
+          titulo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          categoria_slug?: string
+          criado_em?: string | null
+          data_prevista?: string | null
+          descricao?: string | null
+          id?: string
+          ordem?: number | null
+          paciente_nome?: string | null
+          status?: string
+          terceiro_nome?: string | null
+          titulo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'terceiros_tarefas_categoria_slug_fkey'
+            columns: ['categoria_slug']
+            isOneToOne: false
+            referencedRelation: 'terceiros_categorias'
+            referencedColumns: ['slug']
+          },
+        ]
+      }
       usuario_permissoes: {
         Row: {
           permissao_id: string
@@ -2540,6 +2617,25 @@ export const Constants = {
 //   dia_mes: integer (nullable)
 //   data_inicio_contagem: date (nullable)
 //   observacao: text (nullable)
+// Table: terceiros_categorias
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   slug: text (not null)
+//   ordem: integer (nullable, default: 0)
+//   criado_em: timestamp with time zone (nullable, default: now())
+// Table: terceiros_tarefas
+//   id: uuid (not null, default: gen_random_uuid())
+//   categoria_slug: text (not null)
+//   titulo: text (not null)
+//   descricao: text (nullable)
+//   paciente_nome: text (nullable)
+//   terceiro_nome: text (nullable)
+//   status: text (not null, default: 'pendente'::text)
+//   data_prevista: date (nullable)
+//   ordem: integer (nullable, default: 0)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
+//   usuario_id: uuid (nullable)
 // Table: usuario_permissoes
 //   usuario_id: uuid (not null)
 //   permissao_id: uuid (not null)
@@ -2747,6 +2843,13 @@ export const Constants = {
 // Table: tarefas_rotina
 //   PRIMARY KEY tarefas_rotina_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY tarefas_rotina_rotina_id_fkey: FOREIGN KEY (rotina_id) REFERENCES rotinas_usuarios(id) ON DELETE CASCADE
+// Table: terceiros_categorias
+//   PRIMARY KEY terceiros_categorias_pkey: PRIMARY KEY (id)
+//   UNIQUE terceiros_categorias_slug_key: UNIQUE (slug)
+// Table: terceiros_tarefas
+//   FOREIGN KEY terceiros_tarefas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON DELETE CASCADE
+//   PRIMARY KEY terceiros_tarefas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY terceiros_tarefas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: usuario_permissoes
 //   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
@@ -3019,6 +3122,14 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('configuracoes_geral'::text) OR has_permission('configuracoes_rotinas'::text))
 //   Policy "tarefas_rotina_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: terceiros_categorias
+//   Policy "terceiros_categorias_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: terceiros_tarefas
+//   Policy "terceiros_tarefas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: usuario_permissoes
 //   Policy "usuario_permissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -3408,6 +3519,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
 // Table: tarefas_rotina
 //   CREATE INDEX tarefas_rotina_rotina_id_idx ON public.tarefas_rotina USING btree (rotina_id)
+// Table: terceiros_categorias
+//   CREATE UNIQUE INDEX terceiros_categorias_slug_key ON public.terceiros_categorias USING btree (slug)
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas

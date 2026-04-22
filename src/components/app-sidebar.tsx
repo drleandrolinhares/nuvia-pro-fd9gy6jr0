@@ -102,9 +102,8 @@ const navData = [
         icon: ClipboardList,
         permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],
         subItems: [
-          { title: 'Próteses', url: '/operacional/terceiros/proteses' },
-          { title: 'Exames', url: '/operacional/terceiros/exames' },
-          { title: 'Risco Cirúrgico', url: '/operacional/terceiros/risco-cirurgico' },
+          { title: 'Laboratórios', url: '/operacional/terceiros/laboratorios' },
+          { title: 'Radiologia', url: '/operacional/terceiros/radiologia' },
           { title: 'Outros', url: '/operacional/terceiros/outros' },
         ],
       },

@@ -8,9 +8,22 @@ import {
   updateTarefa,
   deleteTarefa,
   TarefaTerceiro,
+  getColunas,
+  TerceiroColuna,
+  updateColuna,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
-import { Plus, GripVertical, Calendar, User, Building2, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  GripVertical,
+  Calendar,
+  User,
+  Building2,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+} from 'lucide-react'
 import { format } from 'date-fns'
 import {
   Dialog,
@@ -23,45 +36,48 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-const COLUMNS = [
-  { id: 'pendente', title: 'Pendente', color: 'border-slate-700 bg-slate-800/50' },
-  { id: 'em_execucao', title: 'Em Execução', color: 'border-blue-900 bg-blue-950/30' },
-  { id: 'concluido', title: 'Concluído', color: 'border-emerald-900 bg-emerald-950/30' },
-]
-
 const TITLES: Record<string, string> = {
-  proteses: 'Gestão de Próteses',
-  exames: 'Exames Radiológicos',
-  'risco-cirurgico': 'Risco Cirúrgico',
+  laboratorios: 'Gestão de Laboratórios',
+  radiologia: 'Radiologia',
   outros: 'Outros Terceiros',
 }
 
 export default function GestaoTerceiros() {
   const { categoriaSlug } = useParams<{ categoriaSlug: string }>()
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
+  const [colunas, setColunas] = useState<TerceiroColuna[]>([])
   const { toast } = useToast()
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTarefa, setEditingTarefa] = useState<TarefaTerceiro | null>(null)
+  const [editingColId, setEditingColId] = useState<string | null>(null)
+  const [editColTitle, setEditColTitle] = useState('')
+
   const [formData, setFormData] = useState({
-    titulo: '',
     pacienteNome: '',
     terceiroNome: '',
+    titulo: '',
     dataPrevista: '',
     descricao: '',
+    criadoEm: '',
   })
 
-  const loadTarefas = async () => {
+  const loadData = async () => {
     if (!categoriaSlug) return
     try {
-      const data = await getTarefas(categoriaSlug)
-      setTarefas(data)
+      const [tData, cData] = await Promise.all([
+        getTarefas(categoriaSlug),
+        getColunas(categoriaSlug),
+      ])
+      setTarefas(tData)
+      setColunas(cData)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
   }
 
   useEffect(() => {
-    loadTarefas()
+    loadData()
   }, [categoriaSlug])
 
   const onDragStart = (e: React.DragEvent, id: string) => e.dataTransfer.setData('id', id)
@@ -73,7 +89,7 @@ export default function GestaoTerceiros() {
       try {
         await updateTarefaStatus(id, status)
       } catch {
-        loadTarefas()
+        loadData()
       }
     }
   }
@@ -81,24 +97,25 @@ export default function GestaoTerceiros() {
 
   const openModal = (t?: TarefaTerceiro) => {
     setEditingTarefa(t || null)
-    setFormData(
-      t
-        ? {
-            titulo: t.titulo,
-            pacienteNome: t.paciente_nome || '',
-            terceiroNome: t.terceiro_nome || '',
-            dataPrevista: t.data_prevista || '',
-            descricao: t.descricao || '',
-          }
-        : { titulo: '', pacienteNome: '', terceiroNome: '', dataPrevista: '', descricao: '' },
-    )
+    setFormData({
+      pacienteNome: t?.paciente_nome || '',
+      terceiroNome: t?.terceiro_nome || '',
+      titulo: t?.titulo || '',
+      dataPrevista: t?.data_prevista || '',
+      descricao: t?.descricao || '',
+      criadoEm: t?.criado_em
+        ? format(new Date(t.criado_em), 'yyyy-MM-dd')
+        : format(new Date(), 'yyyy-MM-dd'),
+    })
     setIsModalOpen(true)
   }
 
   const handleSave = async () => {
-    if (!formData.titulo || !categoriaSlug) return
+    if (!formData.pacienteNome || !formData.titulo || !categoriaSlug) {
+      return toast({ title: 'Atenção', description: 'Preencha os campos obrigatórios.' })
+    }
     try {
-      const payload = {
+      const payload: any = {
         categoria_slug: categoriaSlug,
         titulo: formData.titulo,
         paciente_nome: formData.pacienteNome,
@@ -106,10 +123,14 @@ export default function GestaoTerceiros() {
         data_prevista: formData.dataPrevista || null,
         descricao: formData.descricao,
       }
-      if (editingTarefa) await updateTarefa(editingTarefa.id, payload)
-      else await createTarefa(payload)
+      if (editingTarefa) {
+        await updateTarefa(editingTarefa.id, payload)
+      } else {
+        payload.status = colunas.length > 0 ? colunas[0].id : 'pendente'
+        await createTarefa(payload)
+      }
       setIsModalOpen(false)
-      loadTarefas()
+      loadData()
       toast({ title: 'Sucesso', description: 'Registro salvo.' })
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -121,10 +142,21 @@ export default function GestaoTerceiros() {
     try {
       await deleteTarefa(id)
       setIsModalOpen(false)
-      loadTarefas()
+      loadData()
       toast({ title: 'Sucesso', description: 'Registro excluído.' })
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
+  }
+
+  const saveCol = async (id: string) => {
+    if (!editColTitle.trim()) return
+    try {
+      await updateColuna(id, editColTitle)
+      setColunas((prev) => prev.map((c) => (c.id === id ? { ...c, titulo: editColTitle } : c)))
+      setEditingColId(null)
+    } catch (error: any) {
+      toast({ title: 'Erro', description: 'Falha ao renomear.', variant: 'destructive' })
     }
   }
 
@@ -136,7 +168,7 @@ export default function GestaoTerceiros() {
             {TITLES[categoriaSlug || ''] || 'Gestão de Terceiros'}
           </h1>
           <p className="text-sm text-slate-400">
-            Gerencie trabalhos e serviços externos (laboratórios, clínicas, especialistas).
+            Gerencie trabalhos e serviços externos (laboratórios, clínicas).
           </p>
         </div>
         <Button onClick={() => openModal()} className="bg-amber-600 hover:bg-amber-700 text-white">
@@ -146,18 +178,59 @@ export default function GestaoTerceiros() {
 
       <div className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-6 h-full min-w-max">
-          {COLUMNS.map((col) => (
+          {colunas.map((col) => (
             <div
               key={col.id}
-              className={`w-[320px] flex flex-col rounded-xl border ${col.color} p-4`}
+              className={`w-[320px] flex flex-col rounded-xl border ${col.cor} p-4`}
               onDrop={(e) => onDrop(e, col.id)}
               onDragOver={onDragOver}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-slate-200">{col.title}</h3>
-                <span className="bg-slate-900 px-2 py-0.5 rounded text-xs text-slate-400">
-                  {tarefas.filter((t) => t.status === col.id).length}
-                </span>
+              <div className="flex justify-between items-center mb-4 group h-8">
+                {editingColId === col.id ? (
+                  <div className="flex items-center gap-1 w-full">
+                    <Input
+                      value={editColTitle}
+                      onChange={(e) => setEditColTitle(e.target.value)}
+                      className="h-7 text-sm bg-slate-900 border-slate-700 px-2"
+                      autoFocus
+                      onKeyDown={(e) => e.key === 'Enter' && saveCol(col.id)}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-emerald-500 hover:bg-emerald-500/20"
+                      onClick={() => saveCol(col.id)}
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-slate-400 hover:bg-slate-800"
+                      onClick={() => setEditingColId(null)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="font-semibold text-slate-200 flex items-center gap-2">
+                      {col.titulo}
+                      <button
+                        onClick={() => {
+                          setEditingColId(col.id)
+                          setEditColTitle(col.titulo)
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-slate-300"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </h3>
+                    <span className="bg-slate-900 px-2 py-0.5 rounded text-xs text-slate-400">
+                      {tarefas.filter((t) => t.status === col.id).length}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                 {tarefas
@@ -171,7 +244,7 @@ export default function GestaoTerceiros() {
                       className="bg-slate-900/80 border border-slate-700 p-4 rounded-lg cursor-grab hover:border-amber-500/50 transition-colors"
                     >
                       <div className="flex justify-between items-start gap-2 mb-2">
-                        <h4 className="font-medium text-slate-200 text-sm leading-tight">
+                        <h4 className="font-medium text-slate-200 text-sm leading-tight line-clamp-2 flex-1">
                           {t.titulo}
                         </h4>
                         <GripVertical className="w-4 h-4 text-slate-500 shrink-0" />
@@ -191,7 +264,7 @@ export default function GestaoTerceiros() {
                       {t.data_prevista && (
                         <div className="flex items-center mt-3 pt-3 border-t border-slate-800 text-xs text-amber-500">
                           <Calendar className="w-3 h-3 mr-1" />
-                          Prev: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
+                          Agendado: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
                         </div>
                       )}
                     </div>
@@ -209,41 +282,50 @@ export default function GestaoTerceiros() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label>Título / Procedimento</Label>
+              <Label>Nome do paciente *</Label>
+              <Input
+                value={formData.pacienteNome}
+                onChange={(e) => setFormData({ ...formData, pacienteNome: e.target.value })}
+                className="bg-slate-950 border-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Prestador</Label>
+              <Input
+                value={formData.terceiroNome}
+                onChange={(e) => setFormData({ ...formData, terceiroNome: e.target.value })}
+                placeholder="Nome do laboratório ou clínica"
+                className="bg-slate-950 border-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Serviço a ser executado *</Label>
               <Input
                 value={formData.titulo}
                 onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                placeholder="Ex: Avaliação de risco, Aparelho total..."
+                placeholder="Ex: Protocolo superior, Tomografia..."
                 className="bg-slate-950 border-slate-800"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>Paciente</Label>
+                <Label>Data inclusão sistema</Label>
                 <Input
-                  value={formData.pacienteNome}
-                  onChange={(e) => setFormData({ ...formData, pacienteNome: e.target.value })}
-                  className="bg-slate-950 border-slate-800"
+                  type="date"
+                  value={formData.criadoEm}
+                  disabled
+                  className="bg-slate-950 border-slate-800 text-slate-500 [color-scheme:dark]"
                 />
               </div>
               <div className="space-y-1">
-                <Label>Terceiro</Label>
+                <Label>Data agendamento</Label>
                 <Input
-                  value={formData.terceiroNome}
-                  onChange={(e) => setFormData({ ...formData, terceiroNome: e.target.value })}
-                  placeholder="Lab. / Clínica"
-                  className="bg-slate-950 border-slate-800"
+                  type="date"
+                  value={formData.dataPrevista}
+                  onChange={(e) => setFormData({ ...formData, dataPrevista: e.target.value })}
+                  className="bg-slate-950 border-slate-800 [color-scheme:dark]"
                 />
               </div>
-            </div>
-            <div className="space-y-1">
-              <Label>Data Prevista</Label>
-              <Input
-                type="date"
-                value={formData.dataPrevista}
-                onChange={(e) => setFormData({ ...formData, dataPrevista: e.target.value })}
-                className="bg-slate-950 border-slate-800 [color-scheme:dark]"
-              />
             </div>
             <div className="space-y-1">
               <Label>Observações</Label>

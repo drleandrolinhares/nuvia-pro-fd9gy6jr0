@@ -13,6 +13,37 @@ export interface TarefaTerceiro {
   criado_em: string
 }
 
+export interface TerceiroColuna {
+  id: string
+  categoria_slug: string
+  titulo: string
+  cor: string
+  ordem: number
+}
+
+export const getColunas = async (categoriaSlug: string) => {
+  const { data, error } = await supabase
+    .from('terceiros_colunas' as any)
+    .select('*')
+    .eq('categoria_slug', categoriaSlug)
+    .order('ordem', { ascending: true })
+
+  if (error) throw error
+  return data as TerceiroColuna[]
+}
+
+export const updateColuna = async (id: string, titulo: string) => {
+  const { data, error } = await supabase
+    .from('terceiros_colunas' as any)
+    .update({ titulo })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as TerceiroColuna
+}
+
 export const getTarefas = async (categoriaSlug: string) => {
   const { data, error } = await supabase
     .from('terceiros_tarefas' as any)
