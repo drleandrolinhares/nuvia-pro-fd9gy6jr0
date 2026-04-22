@@ -28,6 +28,18 @@ export interface TerceiroColuna {
   ordem: number
 }
 
+export interface TerceiroHistorico {
+  id: string
+  tarefa_id: string
+  usuario_id: string | null
+  acao: string
+  detalhes: string | null
+  criado_em: string
+  usuario?: {
+    nome: string
+  }
+}
+
 export const createColuna = async (coluna: Partial<TerceiroColuna>) => {
   const { data, error } = await supabase
     .from('terceiros_colunas' as any)
@@ -116,4 +128,27 @@ export const deleteTarefa = async (id: string) => {
     .eq('id', id)
 
   if (error) throw error
+}
+
+export const getHistorico = async (tarefaId: string) => {
+  const { data, error } = await supabase
+    .from('terceiros_historico' as any)
+    .select('*, usuario:usuario_id(nome)')
+    .eq('tarefa_id', tarefaId)
+    .order('criado_em', { ascending: false })
+
+  if (error) throw error
+  return data as TerceiroHistorico[]
+}
+
+export const createHistorico = async (historico: {
+  tarefa_id: string
+  usuario_id: string
+  acao: string
+  detalhes?: string
+}) => {
+  const { data, error } = await supabase.from('terceiros_historico' as any).insert([historico])
+
+  if (error) throw error
+  return data
 }

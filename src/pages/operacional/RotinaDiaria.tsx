@@ -201,7 +201,7 @@ function ResumoFechamento({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Button
           variant="ghost"
@@ -609,7 +609,6 @@ export default function RotinaDiaria() {
         .eq('usuario_id', user.id)
         .eq('data_execucao', todayDateStr)
 
-      // Safe-Check: Garantir que as execuções carregadas foram realmente criadas no dia de hoje (BRT)
       const validExecucoes =
         execucoes?.filter((e) => {
           if (!e.data_criacao) return true
@@ -707,132 +706,117 @@ export default function RotinaDiaria() {
   }, [horarioEntrada])
 
   const handleCheck = async (taskId: string, checked: boolean) => {
+    if (!checked) return // Impede desmarcar a tarefa concluída
+
     const task = tasks.find((t) => t.id === taskId)
-    if (!task) return
+    if (!task || task.concluida) return
 
     const realNow = new Date()
     const brtNow = getBrtDate(realNow)
     const todayDate = getLocalDateString(brtNow)
+    const timestamp_conclusao = realNow.toISOString()
+    const concluidaEmStr = `${String(brtNow.getHours()).padStart(2, '0')}:${String(brtNow.getMinutes()).padStart(2, '0')}`
 
-    let concluida = checked
-    let timestamp_conclusao = null
-    let minutos_atrasado = 0
-    let nivel_criticidade: any = null
+    const prevTasks = [...tasks]
 
-    if (checked) {
-      timestamp_conclusao = realNow.toISOString()
-
-      try {
-        const { data: validacao, error: validacaoError } = await supabase.functions.invoke(
-          'validar_conclusao_tarefa',
-          {
-            body: {
-              usuario_id: user!.id,
-              tarefa_id: taskId,
-              timestamp_cliente: timestamp_conclusao,
-            },
-          },
-        )
-
-        if (validacaoError) throw validacaoError
-
-        if (validacao && !validacao.valido) {
-          toast.error(validacao.mensagem)
-          return
-        }
-      } catch (err) {
-        console.error('Erro ao validar conclusão:', err)
-        toast.error('Erro ao validar horário. Tente novamente.')
-        return
-      }
-
-      try {
-        const { data, error } = await supabase.functions.invoke('calcular_criticidade', {
-          body: {
-            tarefa_id: taskId,
-            horario_fim: task.horario_fim,
-            timestamp_conclusao,
-          },
-        })
-
-        if (!error && data) {
-          minutos_atrasado = data.minutos_atrasado
-          nivel_criticidade = data.nivel_criticidade
-        } else {
-          // Fallback caso a edge function falhe
-          if (!task.horario_fim) {
-            minutos_atrasado = 0
-            nivel_criticidade = 'no_horario'
-          } else {
-            const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-            const fimDate = new Date(realNow)
-            fimDate.setHours(hFim, mFim, 0, 0)
-            minutos_atrasado = Math.max(
-              0,
-              Math.floor((realNow.getTime() - fimDate.getTime()) / 60000),
-            )
-            if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
-            else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
-            else nivel_criticidade = 'critico'
-          }
-        }
-      } catch (err) {
-        console.error('Erro ao calcular criticidade:', err)
-        if (!task.horario_fim) {
-          minutos_atrasado = 0
-          nivel_criticidade = 'no_horario'
-        } else {
-          const [hFim, mFim] = task.horario_fim.split(':').map(Number)
-          const fimDate = new Date(realNow)
-          fimDate.setHours(hFim, mFim, 0, 0)
-          minutos_atrasado = Math.max(
-            0,
-            Math.floor((realNow.getTime() - fimDate.getTime()) / 60000),
-          )
-          if (minutos_atrasado <= 5) nivel_criticidade = 'no_horario'
-          else if (minutos_atrasado <= 30) nivel_criticidade = 'tolerancia'
-          else nivel_criticidade = 'critico'
-        }
-      }
-    }
-
-    let concluidaEm = null
-    if (timestamp_conclusao) {
-      concluidaEm = `${String(brtNow.getHours()).padStart(2, '0')}:${String(brtNow.getMinutes()).padStart(2, '0')}`
-    }
-
+    // Optimistic Update para eliminar delay
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskId
           ? {
               ...t,
-              concluida,
-              concluidaEm,
-              minutos_atrasado,
-              nivel_criticidade,
+              concluida: true,
+              concluidaEm: concluidaEmStr,
+              minutos_atrasado: 0,
+              nivel_criticidade: 'no_horario',
             }
           : t,
       ),
     )
 
-    const payload = {
-      usuario_id: user!.id,
-      data_execucao: todayDate,
-      tarefa_id: taskId,
-      concluida,
-      timestamp_conclusao,
-      minutos_atrasado,
-      nivel_criticidade,
-      fechamento_confirmado: false,
-    }
+    try {
+      const { data: validacao, error: validacaoError } = await supabase.functions.invoke(
+        'validar_conclusao_tarefa',
+        {
+          body: {
+            usuario_id: user!.id,
+            tarefa_id: taskId,
+            timestamp_cliente: timestamp_conclusao,
+          },
+        },
+      )
 
-    if (task.execucao_id) {
-      await supabase.from('execucoes_rotina').update(payload).eq('id', task.execucao_id)
-    } else {
-      const { data } = await supabase.from('execucoes_rotina').insert(payload).select().single()
-      if (data) {
-        setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, execucao_id: data.id } : t)))
+      if (validacaoError) throw validacaoError
+
+      if (validacao && !validacao.valido) {
+        toast.error(validacao.mensagem)
+        setTasks(prevTasks) // Reverte caso haja erro
+        return
       }
+
+      let min_atrasado = 0
+      let nivel_crit: any = 'no_horario'
+
+      const { data, error } = await supabase.functions.invoke('calcular_criticidade', {
+        body: {
+          tarefa_id: taskId,
+          horario_fim: task.horario_fim,
+          timestamp_conclusao,
+        },
+      })
+
+      if (!error && data) {
+        min_atrasado = data.minutos_atrasado
+        nivel_crit = data.nivel_criticidade
+      } else {
+        if (task.horario_fim) {
+          const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+          const fimDate = new Date(brtNow)
+          fimDate.setHours(hFim, mFim, 0, 0)
+          min_atrasado = Math.max(0, Math.floor((brtNow.getTime() - fimDate.getTime()) / 60000))
+          if (min_atrasado <= 5) nivel_crit = 'no_horario'
+          else if (min_atrasado <= 30) nivel_crit = 'tolerancia'
+          else nivel_crit = 'critico'
+        }
+      }
+
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, minutos_atrasado: min_atrasado, nivel_criticidade: nivel_crit }
+            : t,
+        ),
+      )
+
+      const payload = {
+        usuario_id: user!.id,
+        data_execucao: todayDate,
+        tarefa_id: taskId,
+        concluida: true,
+        timestamp_conclusao,
+        minutos_atrasado: min_atrasado,
+        nivel_criticidade: nivel_crit,
+        fechamento_confirmado: false,
+      }
+
+      if (task.execucao_id) {
+        await supabase.from('execucoes_rotina').update(payload).eq('id', task.execucao_id)
+      } else {
+        const { data: inserted } = await supabase
+          .from('execucoes_rotina')
+          .insert(payload)
+          .select()
+          .single()
+        if (inserted) {
+          setTasks((prev) =>
+            prev.map((t) => (t.id === taskId ? { ...t, execucao_id: inserted.id } : t)),
+          )
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao processar conclusão:', err)
+      toast.error('Erro ao processar horário. Tente novamente.')
+      setTasks(prevTasks) // Reverte update otimista
     }
   }
 
@@ -920,7 +904,7 @@ export default function RotinaDiaria() {
 
   if (isClosing) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 max-w-4xl">
+      <div className="container mx-auto p-4 sm:p-6 w-full">
         <ResumoFechamento
           tasks={tasks}
           now={now}
@@ -934,14 +918,14 @@ export default function RotinaDiaria() {
 
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
-      const isOk = task.nivel_criticidade === 'no_horario' || !task.nivel_criticidade
+      const isOk = task.minutos_atrasado <= 10
       return (
         <div
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold border-2 shadow-sm transform -rotate-2',
             isOk
               ? 'bg-green-50 text-green-700 border-green-400 dark:bg-green-950/50 dark:text-green-400 dark:border-green-700'
-              : 'bg-red-50 text-red-700 border-red-400 dark:bg-red-950/50 dark:text-red-400 dark:border-red-700',
+              : 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:border-red-800',
           )}
         >
           <CheckCircle2 className="w-4 h-4" />
@@ -1009,7 +993,7 @@ export default function RotinaDiaria() {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-4xl space-y-6 animate-fade-in-up">
+    <div className="container mx-auto p-4 sm:p-6 max-w-6xl space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Rotina Diária</h1>
@@ -1107,11 +1091,10 @@ export default function RotinaDiaria() {
                           !task.concluida &&
                           'opacity-80 bg-muted/10 hover:bg-muted/30',
                         task.concluida &&
-                          task.nivel_criticidade === 'no_horario' &&
+                          task.minutos_atrasado <= 10 &&
                           'bg-green-100 dark:bg-green-900/30',
                         task.concluida &&
-                          (task.nivel_criticidade === 'tolerancia' ||
-                            task.nivel_criticidade === 'critico') &&
+                          task.minutos_atrasado > 10 &&
                           'bg-red-100 dark:bg-red-900/30',
                         !task.concluida && isWithinWindow && 'hover:bg-muted/30',
                       )}
@@ -1127,23 +1110,24 @@ export default function RotinaDiaria() {
                         {hasTime ? formatTime(task.horario_inicio) : `${task.numero_sequencia}º`}
                       </div>
 
-                      <div className="mt-1 sm:mt-0 flex-shrink-0">
+                      <div className="mt-1 sm:mt-0 flex-shrink-0 flex items-center gap-3">
+                        {task.observacao && <ScriptPopover text={task.observacao} />}
                         <Checkbox
                           id={`task-${task.id}`}
                           checked={!!task.concluida}
-                          disabled={disabled}
+                          disabled={disabled || !!task.concluida}
                           onCheckedChange={(checked) => handleCheck(task.id, checked as boolean)}
                           className={cn(
                             'w-5 h-5',
                             task.concluida &&
-                              'data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500',
+                              'data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500 opacity-60 cursor-not-allowed',
                           )}
                         />
                       </div>
+
                       <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {task.observacao && <ScriptPopover text={task.observacao} />}
                             <label
                               htmlFor={`task-${task.id}`}
                               className={cn(
