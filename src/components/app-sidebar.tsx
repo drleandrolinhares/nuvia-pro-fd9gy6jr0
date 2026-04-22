@@ -81,10 +81,13 @@ const navData = [
         permission: ['operacional_performance', 'Acessar Performance'],
       },
       {
-        title: 'Comunicados',
-        url: '/operacional/comunicados',
+        title: 'COMUNICADOS',
         icon: Bell,
         permission: ['operacional_comunicados', 'Acessar Comunicados'],
+        subItems: [
+          { title: 'Compromissos', url: '/operacional/comunicados/compromissos' },
+          { title: 'Normas Internas', url: '/operacional/comunicados/normas-internas' },
+        ],
       },
       {
         title: 'Relatório de Rotinas',

@@ -17,7 +17,7 @@ import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import ConfiguracaoRotinas from './pages/configuracoes/ConfiguracaoRotinas'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import Placeholder from './pages/Placeholder'
-import Comunicados from './pages/operacional/Comunicados'
+import Compromissos from './pages/operacional/Compromissos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import RelatorioRotinas from './pages/operacional/RelatorioRotinas'
 import Negociacao from './pages/comercial/Negociacao'
@@ -203,10 +203,18 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/operacional/comunicados"
+          path="/operacional/comunicados/compromissos"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_comunicados']}>
-              <Comunicados />
+              <Compromissos />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/comunicados/normas-internas"
+          element={
+            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_comunicados']}>
+              <Placeholder />
             </ProtectedRoute>
           }
         />

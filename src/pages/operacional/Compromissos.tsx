@@ -38,7 +38,7 @@ import { useAuth } from '@/hooks/use-auth'
 
 type FilterTab = 'periodo' | 'usuario' | 'todos' | 'arquivados'
 
-export default function Comunicados() {
+export default function Compromissos() {
   const [eventos, setEventos] = useState<Compromisso[]>([])
   const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
@@ -210,11 +210,11 @@ export default function Comunicados() {
             mode="single"
             month={selectedDate}
             selected={selectedDate}
-            onSelect={(date) => {
+            onSelect={(date: Date | undefined) => {
               setSelectedDate(date || new Date())
               setActiveTab('periodo')
             }}
-            onMonthChange={(month) => {
+            onMonthChange={(month: Date) => {
               setSelectedDate(month)
               setActiveTab('periodo')
             }}
@@ -318,7 +318,7 @@ export default function Comunicados() {
 
       <AlertDialog
         open={!!eventoParaDeletar}
-        onOpenChange={(open) => !open && setEventoParaDeletar(null)}
+        onOpenChange={(open: boolean) => !open && setEventoParaDeletar(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
