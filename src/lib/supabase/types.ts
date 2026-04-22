@@ -1748,6 +1748,41 @@ export type Database = {
         }
         Relationships: []
       }
+      terceiros_colunas: {
+        Row: {
+          categoria_slug: string
+          cor: string
+          criado_em: string | null
+          id: string
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          categoria_slug: string
+          cor?: string
+          criado_em?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+        }
+        Update: {
+          categoria_slug?: string
+          cor?: string
+          criado_em?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'terceiros_colunas_categoria_slug_fkey'
+            columns: ['categoria_slug']
+            isOneToOne: false
+            referencedRelation: 'terceiros_categorias'
+            referencedColumns: ['slug']
+          },
+        ]
+      }
       terceiros_tarefas: {
         Row: {
           atualizado_em: string | null
@@ -2623,6 +2658,13 @@ export const Constants = {
 //   slug: text (not null)
 //   ordem: integer (nullable, default: 0)
 //   criado_em: timestamp with time zone (nullable, default: now())
+// Table: terceiros_colunas
+//   id: uuid (not null, default: gen_random_uuid())
+//   categoria_slug: text (not null)
+//   titulo: text (not null)
+//   cor: text (not null, default: 'border-slate-700 bg-slate-800/50'::text)
+//   ordem: integer (not null, default: 0)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: terceiros_tarefas
 //   id: uuid (not null, default: gen_random_uuid())
 //   categoria_slug: text (not null)
@@ -2846,6 +2888,9 @@ export const Constants = {
 // Table: terceiros_categorias
 //   PRIMARY KEY terceiros_categorias_pkey: PRIMARY KEY (id)
 //   UNIQUE terceiros_categorias_slug_key: UNIQUE (slug)
+// Table: terceiros_colunas
+//   FOREIGN KEY terceiros_colunas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON UPDATE CASCADE ON DELETE CASCADE
+//   PRIMARY KEY terceiros_colunas_pkey: PRIMARY KEY (id)
 // Table: terceiros_tarefas
 //   FOREIGN KEY terceiros_tarefas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON DELETE CASCADE
 //   PRIMARY KEY terceiros_tarefas_pkey: PRIMARY KEY (id)
@@ -3124,6 +3169,10 @@ export const Constants = {
 //     USING: true
 // Table: terceiros_categorias
 //   Policy "terceiros_categorias_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: terceiros_colunas
+//   Policy "terceiros_colunas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: terceiros_tarefas

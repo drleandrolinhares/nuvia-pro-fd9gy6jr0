@@ -37,9 +37,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 const TITLES: Record<string, string> = {
-  laboratorios: 'Gestão de Laboratórios',
+  laboratorios: 'Laboratórios',
   radiologia: 'Radiologia',
-  outros: 'Outros Terceiros',
+  outros: 'Outros',
 }
 
 export default function GestaoTerceiros() {
@@ -123,6 +123,9 @@ export default function GestaoTerceiros() {
         data_prevista: formData.dataPrevista || null,
         descricao: formData.descricao,
       }
+      if (formData.criadoEm) {
+        payload.criado_em = new Date(formData.criadoEm + 'T12:00:00').toISOString()
+      }
       if (editingTarefa) {
         await updateTarefa(editingTarefa.id, payload)
       } else {
@@ -185,20 +188,20 @@ export default function GestaoTerceiros() {
               onDrop={(e) => onDrop(e, col.id)}
               onDragOver={onDragOver}
             >
-              <div className="flex justify-between items-center mb-4 group h-8">
+              <div className="flex justify-between items-center mb-4 group min-h-10 bg-blue-950 rounded-md px-3 py-1 border border-blue-900 shadow-sm">
                 {editingColId === col.id ? (
                   <div className="flex items-center gap-1 w-full">
                     <Input
                       value={editColTitle}
                       onChange={(e) => setEditColTitle(e.target.value)}
-                      className="h-7 text-sm bg-slate-900 border-slate-700 px-2"
+                      className="h-8 text-sm bg-blue-900 border-blue-800 text-amber-500 px-2 font-bold uppercase tracking-wide"
                       autoFocus
                       onKeyDown={(e) => e.key === 'Enter' && saveCol(col.id)}
                     />
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 text-emerald-500 hover:bg-emerald-500/20"
+                      className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/20"
                       onClick={() => saveCol(col.id)}
                     >
                       <Check className="w-4 h-4" />
@@ -206,7 +209,7 @@ export default function GestaoTerceiros() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 text-slate-400 hover:bg-slate-800"
+                      className="h-8 w-8 text-slate-400 hover:bg-slate-800"
                       onClick={() => setEditingColId(null)}
                     >
                       <X className="w-4 h-4" />
@@ -214,19 +217,19 @@ export default function GestaoTerceiros() {
                   </div>
                 ) : (
                   <>
-                    <h3 className="font-semibold text-slate-200 flex items-center gap-2">
+                    <h3 className="font-bold text-amber-500 flex items-center gap-2 text-sm uppercase tracking-wide">
                       {col.titulo}
                       <button
                         onClick={() => {
                           setEditingColId(col.id)
                           setEditColTitle(col.titulo)
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-slate-300"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 hover:text-amber-400"
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
                     </h3>
-                    <span className="bg-slate-900 px-2 py-0.5 rounded text-xs text-slate-400">
+                    <span className="bg-blue-900 px-2 py-0.5 rounded text-xs text-amber-500/80 font-medium">
                       {tarefas.filter((t) => t.status === col.id).length}
                     </span>
                   </>
@@ -313,12 +316,12 @@ export default function GestaoTerceiros() {
                 <Input
                   type="date"
                   value={formData.criadoEm}
-                  disabled
-                  className="bg-slate-950 border-slate-800 text-slate-500 [color-scheme:dark]"
+                  onChange={(e) => setFormData({ ...formData, criadoEm: e.target.value })}
+                  className="bg-slate-950 border-slate-800 [color-scheme:dark]"
                 />
               </div>
               <div className="space-y-1">
-                <Label>Data agendamento</Label>
+                <Label>Data agendamento no prestador</Label>
                 <Input
                   type="date"
                   value={formData.dataPrevista}
