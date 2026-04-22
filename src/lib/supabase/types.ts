@@ -2892,7 +2892,7 @@ export const Constants = {
 //   FOREIGN KEY terceiros_colunas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON UPDATE CASCADE ON DELETE CASCADE
 //   PRIMARY KEY terceiros_colunas_pkey: PRIMARY KEY (id)
 // Table: terceiros_tarefas
-//   FOREIGN KEY terceiros_tarefas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON DELETE CASCADE
+//   FOREIGN KEY terceiros_tarefas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON UPDATE CASCADE ON DELETE CASCADE
 //   PRIMARY KEY terceiros_tarefas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY terceiros_tarefas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: usuario_permissoes

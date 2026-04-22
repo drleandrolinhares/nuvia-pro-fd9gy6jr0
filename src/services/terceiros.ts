@@ -11,6 +11,7 @@ export interface TarefaTerceiro {
   data_prevista: string | null
   ordem: number
   criado_em: string
+  cor: string | null
 }
 
 export interface TerceiroColuna {
@@ -19,6 +20,17 @@ export interface TerceiroColuna {
   titulo: string
   cor: string
   ordem: number
+}
+
+export const createColuna = async (coluna: Partial<TerceiroColuna>) => {
+  const { data, error } = await supabase
+    .from('terceiros_colunas' as any)
+    .insert([coluna])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as TerceiroColuna
 }
 
 export const getColunas = async (categoriaSlug: string) => {

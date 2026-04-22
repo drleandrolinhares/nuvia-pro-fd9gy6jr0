@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 import {
   getTarefas,
   updateTarefaStatus,
@@ -11,6 +12,7 @@ import {
   getColunas,
   TerceiroColuna,
   updateColuna,
+  createColuna,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,6 +44,17 @@ const TITLES: Record<string, string> = {
   outros: 'Outros',
 }
 
+const CARD_COLORS = [
+  { value: 'border-slate-700', label: 'Padrão', bg: 'bg-slate-700' },
+  { value: 'border-blue-500', label: 'Azul', bg: 'bg-blue-500' },
+  { value: 'border-emerald-500', label: 'Verde', bg: 'bg-emerald-500' },
+  { value: 'border-rose-500', label: 'Vermelho', bg: 'bg-rose-500' },
+  { value: 'border-amber-500', label: 'Amarelo', bg: 'bg-amber-500' },
+  { value: 'border-purple-500', label: 'Roxo', bg: 'bg-purple-500' },
+  { value: 'border-cyan-500', label: 'Ciano', bg: 'bg-cyan-500' },
+  { value: 'border-pink-500', label: 'Rosa', bg: 'bg-pink-500' },
+]
+
 export default function GestaoTerceiros() {
   const { categoriaSlug } = useParams<{ categoriaSlug: string }>()
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
@@ -49,9 +62,11 @@ export default function GestaoTerceiros() {
   const { toast } = useToast()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isNewColModalOpen, setIsNewColModalOpen] = useState(false)
   const [editingTarefa, setEditingTarefa] = useState<TarefaTerceiro | null>(null)
   const [editingColId, setEditingColId] = useState<string | null>(null)
   const [editColTitle, setEditColTitle] = useState('')
+  const [newColTitle, setNewColTitle] = useState('')
 
   const [formData, setFormData] = useState({
     pacienteNome: '',
@@ -60,6 +75,7 @@ export default function GestaoTerceiros() {
     dataPrevista: '',
     descricao: '',
     criadoEm: '',
+    cor: 'border-slate-700',
   })
 
   const loadData = async () => {
@@ -106,6 +122,7 @@ export default function GestaoTerceiros() {
       criadoEm: t?.criado_em
         ? format(new Date(t.criado_em), 'yyyy-MM-dd')
         : format(new Date(), 'yyyy-MM-dd'),
+      cor: t?.cor || 'border-slate-700',
     })
     setIsModalOpen(true)
   }
@@ -122,6 +139,7 @@ export default function GestaoTerceiros() {
         terceiro_nome: formData.terceiroNome,
         data_prevista: formData.dataPrevista || null,
         descricao: formData.descricao,
+        cor: formData.cor,
       }
       if (formData.criadoEm) {
         payload.criado_em = new Date(formData.criadoEm + 'T12:00:00').toISOString()
@@ -163,6 +181,24 @@ export default function GestaoTerceiros() {
     }
   }
 
+  const handleCreateCol = async () => {
+    if (!newColTitle.trim() || !categoriaSlug) return
+    try {
+      await createColuna({
+        categoria_slug: categoriaSlug,
+        titulo: newColTitle,
+        ordem: colunas.length,
+        cor: 'border-slate-700 bg-slate-800/50',
+      })
+      setIsNewColModalOpen(false)
+      setNewColTitle('')
+      loadData()
+      toast({ title: 'Sucesso', description: 'Etapa criada com sucesso.' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: 'Erro ao criar etapa.', variant: 'destructive' })
+    }
+  }
+
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6">
       <div className="flex items-center justify-between">
@@ -184,17 +220,17 @@ export default function GestaoTerceiros() {
           {colunas.map((col) => (
             <div
               key={col.id}
-              className={`w-[320px] flex flex-col rounded-xl border ${col.cor} p-4`}
+              className={`w-[320px] shrink-0 flex flex-col rounded-xl border ${col.cor} p-4`}
               onDrop={(e) => onDrop(e, col.id)}
               onDragOver={onDragOver}
             >
-              <div className="flex justify-between items-center mb-4 group min-h-10 bg-blue-950 rounded-md px-3 py-1 border border-blue-900 shadow-sm">
+              <div className="flex justify-between items-center mb-4 group min-h-12 bg-[#0a1128] rounded-md px-4 py-2 border border-[#1e293b] shadow-md">
                 {editingColId === col.id ? (
                   <div className="flex items-center gap-1 w-full">
                     <Input
                       value={editColTitle}
                       onChange={(e) => setEditColTitle(e.target.value)}
-                      className="h-8 text-sm bg-blue-900 border-blue-800 text-amber-500 px-2 font-bold uppercase tracking-wide"
+                      className="h-8 text-sm bg-blue-950 border-blue-900 text-[#d4af37] px-2 font-bold uppercase tracking-wide"
                       autoFocus
                       onKeyDown={(e) => e.key === 'Enter' && saveCol(col.id)}
                     />
@@ -217,19 +253,19 @@ export default function GestaoTerceiros() {
                   </div>
                 ) : (
                   <>
-                    <h3 className="font-bold text-amber-500 flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <h3 className="font-bold text-[#d4af37] flex items-center gap-2 text-sm uppercase tracking-wider">
                       {col.titulo}
                       <button
                         onClick={() => {
                           setEditingColId(col.id)
                           setEditColTitle(col.titulo)
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 hover:text-amber-400"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#d4af37]/70 hover:text-[#d4af37]"
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
                     </h3>
-                    <span className="bg-blue-900 px-2 py-0.5 rounded text-xs text-amber-500/80 font-medium">
+                    <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-medium border border-blue-800/50">
                       {tarefas.filter((t) => t.status === col.id).length}
                     </span>
                   </>
@@ -244,7 +280,10 @@ export default function GestaoTerceiros() {
                       draggable
                       onDragStart={(e) => onDragStart(e, t.id)}
                       onClick={() => openModal(t)}
-                      className="bg-slate-900/80 border border-slate-700 p-4 rounded-lg cursor-grab hover:border-amber-500/50 transition-colors"
+                      className={cn(
+                        'bg-slate-900/90 border p-4 rounded-lg cursor-grab hover:bg-slate-800 transition-all shadow-sm',
+                        t.cor || 'border-slate-700',
+                      )}
                     >
                       <div className="flex justify-between items-start gap-2 mb-2">
                         <h4 className="font-medium text-slate-200 text-sm leading-tight line-clamp-2 flex-1">
@@ -265,7 +304,7 @@ export default function GestaoTerceiros() {
                         </div>
                       )}
                       {t.data_prevista && (
-                        <div className="flex items-center mt-3 pt-3 border-t border-slate-800 text-xs text-amber-500">
+                        <div className="flex items-center mt-3 pt-3 border-t border-slate-800/50 text-xs text-amber-500">
                           <Calendar className="w-3 h-3 mr-1" />
                           Agendado: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
                         </div>
@@ -275,15 +314,57 @@ export default function GestaoTerceiros() {
               </div>
             </div>
           ))}
+
+          <div
+            onClick={() => setIsNewColModalOpen(true)}
+            className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-slate-600 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
+          >
+            <Plus className="w-8 h-8 text-slate-400 mb-2" />
+            <span className="text-slate-400 font-medium">Nova Etapa</span>
+          </div>
         </div>
       </div>
+
+      <Dialog open={isNewColModalOpen} onOpenChange={setIsNewColModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Nova Etapa (Coluna)</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Label>Nome da Etapa</Label>
+            <Input
+              value={newColTitle}
+              onChange={(e) => setNewColTitle(e.target.value)}
+              placeholder="Ex: Em Prova, Finalizado..."
+              className="bg-slate-950 border-slate-800"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateCol()}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsNewColModalOpen(false)}
+              className="border-slate-700 hover:bg-slate-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateCol}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Criar Etapa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTarefa ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
             <div className="space-y-1">
               <Label>Nome do paciente *</Label>
               <Input
@@ -300,6 +381,26 @@ export default function GestaoTerceiros() {
                 placeholder="Nome do laboratório ou clínica"
                 className="bg-slate-950 border-slate-800"
               />
+            </div>
+            <div className="space-y-1">
+              <Label>Cor de Identificação (Laboratório/Prestador)</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {CARD_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onClick={() => setFormData({ ...formData, cor: c.value })}
+                    className={cn(
+                      'w-6 h-6 rounded-full border-2 transition-transform',
+                      c.bg,
+                      formData.cor === c.value
+                        ? 'border-white scale-110 shadow-sm'
+                        : 'border-transparent hover:scale-110',
+                    )}
+                    title={c.label}
+                    type="button"
+                  />
+                ))}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Serviço a ser executado *</Label>
@@ -321,7 +422,7 @@ export default function GestaoTerceiros() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>Data agendamento no prestador</Label>
+                <Label>Data agendamento</Label>
                 <Input
                   type="date"
                   value={formData.dataPrevista}
@@ -340,11 +441,11 @@ export default function GestaoTerceiros() {
               />
             </div>
           </div>
-          <DialogFooter className="flex justify-between items-center sm:justify-between">
+          <DialogFooter className="flex justify-between items-center sm:justify-between mt-2">
             {editingTarefa ? (
               <Button
                 variant="ghost"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive p-0 h-auto"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive p-0 h-auto px-2 py-1"
                 onClick={() => handleDelete(editingTarefa.id)}
               >
                 <Trash2 className="w-4 h-4 mr-1" /> Excluir
