@@ -1360,6 +1360,7 @@ export type Database = {
           ativo: boolean
           criado_em: string
           descricao: string
+          explicacao: string | null
           id: string
           ordem: number
         }
@@ -1367,6 +1368,7 @@ export type Database = {
           ativo?: boolean
           criado_em?: string
           descricao: string
+          explicacao?: string | null
           id?: string
           ordem?: number
         }
@@ -1374,6 +1376,7 @@ export type Database = {
           ativo?: boolean
           criado_em?: string
           descricao?: string
+          explicacao?: string | null
           id?: string
           ordem?: number
         }
@@ -2712,6 +2715,7 @@ export const Constants = {
 //   ordem: integer (not null, default: 0)
 //   ativo: boolean (not null, default: true)
 //   criado_em: timestamp with time zone (not null, default: now())
+//   explicacao: text (nullable)
 // Table: performance_pp_pdm
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
