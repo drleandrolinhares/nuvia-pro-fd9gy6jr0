@@ -54,6 +54,21 @@ import { toast } from 'sonner'
 const getBrtDate = (d: Date = new Date()) => {
   return new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
 }
+
+const getLocalDateString = (d: Date = getBrtDate()) => {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+const timeToMinutes = (time: string | null) => {
+  if (!time) return 0
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +80,452 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
+import { XCircle, ListOrdered, Eye, Copy, AlertCircle } from 'lucide-react'
+
+type Task = {
+  id: string
+  rotina_id: string
+  numero_sequencia: number
+  descricao_tarefa: string
+  horario_inicio: string | null
+  horario_fim: string | null
+  peso_percentual: number
+  periodicidade?: 'diaria' | 'semanal' | 'quinzenal' | 'mensal'
+  dias_semana?: number[] | null
+  dia_mes?: number | null
+  data_inicio_contagem?: string | null
+  observacao?: string | null
+
+  execucao_id?: string
+  concluida: boolean
+  concluidaEm: string | null
+  minutos_atrasado: number
+  nivel_criticidade: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida' | null
+  fechamento_confirmado: boolean
+}
+
+function ScriptPopoverReadOnly({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    toast.success('Copiado para a área de transferência!')
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-primary bg-primary/5 hover:bg-primary/10 shrink-0 transition-colors"
+          title="Visualizar Script / Observação"
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] sm:w-[500px] p-4 z-[9999]"
+        side="bottom"
+        align="start"
+      >
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm flex items-center gap-2">
+            <Eye className="w-4 h-4 text-primary" />
+            Script / Observação
+          </h4>
+          <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-md border border-border/50 max-h-[40vh] overflow-y-auto">
+            {text}
+          </p>
+          <Button onClick={handleCopy} size="sm" className="w-full font-medium" variant="secondary">
+            {copied ? (
+              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
+            ) : (
+              <Copy className="w-4 h-4 mr-2" />
+            )}
+            {copied ? 'Copiado!' : 'Copiar Texto'}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateStr: string }) {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const { data: routine } = await supabase
+          .from('rotinas_usuarios')
+          .select('id')
+          .eq('usuario_id', usuarioId)
+          .eq('ativa', true)
+          .maybeSingle()
+
+        if (!routine) {
+          setTasks([])
+          return
+        }
+
+        const { data: tarefas } = await supabase
+          .from('tarefas_rotina')
+          .select('*')
+          .eq('rotina_id', routine.id)
+          .eq('ativa', true)
+          .order('horario_inicio', { ascending: true, nullsFirst: false })
+          .order('numero_sequencia', { ascending: true })
+
+        if (!tarefas) {
+          setTasks([])
+          return
+        }
+
+        const [year, month, day] = dateStr.split('-').map(Number)
+        const targetDate = new Date(year, month - 1, day)
+        const currentDayOfWeek = targetDate.getDay()
+        const currentDayOfMonth = targetDate.getDate()
+
+        const tarefasFiltradas = tarefas.filter((t) => {
+          const p = t.periodicidade || 'diaria'
+          if (p === 'diaria') return true
+          if (p === 'semanal') {
+            return (
+              t.dias_semana &&
+              Array.isArray(t.dias_semana) &&
+              t.dias_semana.includes(currentDayOfWeek)
+            )
+          }
+          if (p === 'mensal') {
+            const lastDayOfMonth = new Date(year, month, 0).getDate()
+            const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
+            return targetDay === currentDayOfMonth
+          }
+          if (p === 'quinzenal') {
+            if (!t.data_inicio_contagem) return false
+            const [iy, im, id] = t.data_inicio_contagem.split('-').map(Number)
+            const startDate = new Date(iy, im - 1, id)
+            const diffTime = targetDate.getTime() - startDate.getTime()
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+            if (diffDays < 0) return false
+            return diffDays % 15 === 0
+          }
+          return true
+        })
+
+        const { data: execucoes } = await supabase
+          .from('execucoes_rotina')
+          .select('*')
+          .eq('usuario_id', usuarioId)
+          .eq('data_execucao', dateStr)
+
+        const validExecucoes =
+          execucoes?.filter((e) => {
+            if (!e.data_criacao) return true
+            const criacaoDate = getBrtDate(new Date(e.data_criacao))
+            const criacaoStr = getLocalDateString(criacaoDate)
+            return criacaoStr === dateStr
+          }) || []
+
+        const mergedTasks: Task[] = tarefasFiltradas.map((t) => {
+          const exec = validExecucoes.find((e) => e.tarefa_id === t.id)
+          let concluidaEm = null
+          if (exec?.timestamp_conclusao) {
+            const d = getBrtDate(new Date(exec.timestamp_conclusao))
+            concluidaEm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+          }
+
+          return {
+            id: t.id,
+            rotina_id: t.rotina_id,
+            numero_sequencia: t.numero_sequencia,
+            descricao_tarefa: t.descricao_tarefa,
+            horario_inicio: t.horario_inicio,
+            horario_fim: t.horario_fim,
+            peso_percentual: t.peso_percentual,
+            periodicidade: t.periodicidade,
+            dias_semana: t.dias_semana,
+            dia_mes: t.dia_mes,
+            data_inicio_contagem: t.data_inicio_contagem,
+            observacao: t.observacao,
+            execucao_id: exec?.id,
+            concluida: exec?.concluida || false,
+            concluidaEm,
+            minutos_atrasado: exec?.minutos_atrasado || 0,
+            nivel_criticidade: exec?.nivel_criticidade || null,
+            fechamento_confirmado: exec?.fechamento_confirmado || false,
+          }
+        })
+
+        mergedTasks.sort((a, b) => {
+          if (a.horario_inicio && b.horario_inicio) {
+            const timeA = timeToMinutes(a.horario_inicio)
+            const timeB = timeToMinutes(b.horario_inicio)
+            if (timeA !== timeB) return timeA - timeB
+            return a.numero_sequencia - b.numero_sequencia
+          }
+          if (a.horario_inicio && !b.horario_inicio) return -1
+          if (!a.horario_inicio && b.horario_inicio) return 1
+          return a.numero_sequencia - b.numero_sequencia
+        })
+
+        setTasks(mergedTasks)
+      } finally {
+        setLoading(false)
+      }
+    }
+    if (usuarioId && dateStr) {
+      load()
+    }
+  }, [usuarioId, dateStr])
+
+  const brtNow = getBrtDate()
+  const todayStr = format(brtNow, 'yyyy-MM-dd')
+  let currentMinutes = 1439 // end of day
+  if (dateStr === todayStr) {
+    currentMinutes = brtNow.getHours() * 60 + brtNow.getMinutes()
+  } else if (dateStr > todayStr) {
+    currentMinutes = 0
+  }
+
+  const renderTaskStatus = (task: Task) => {
+    if (task.concluidaEm) {
+      const isOk = task.nivel_criticidade === 'no_horario' || task.minutos_atrasado <= 10
+      return (
+        <div
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold border-2 shadow-sm',
+            isOk
+              ? 'bg-green-50 text-green-700 border-green-400 dark:bg-green-950/50 dark:text-green-400 dark:border-green-700'
+              : 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:border-red-800',
+          )}
+        >
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{task.concluidaEm}</span>
+          {task.minutos_atrasado > 0 && (
+            <span className="text-xs ml-1 font-normal opacity-90">({task.minutos_atrasado}m)</span>
+          )}
+        </div>
+      )
+    }
+
+    if (task.fechamento_confirmado && !task.concluida) {
+      return (
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold border-2 shadow-sm bg-slate-100 text-slate-500 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+          <XCircle className="w-4 h-4" />
+          <span>Não concluída</span>
+        </div>
+      )
+    }
+
+    if (!task.horario_inicio) {
+      return (
+        <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm font-medium gap-1.5">
+          <ListOrdered className="w-4 h-4" />
+          <span>Pendente</span>
+        </div>
+      )
+    }
+
+    const startMins = timeToMinutes(task.horario_inicio)
+
+    if (currentMinutes < startMins) {
+      return (
+        <div className="flex items-center text-slate-400 dark:text-slate-500 text-sm gap-1.5">
+          <Clock className="w-4 h-4" />
+          <span>Início {formatTime(task.horario_inicio)}</span>
+        </div>
+      )
+    }
+
+    if (task.horario_fim) {
+      const endMins = timeToMinutes(task.horario_fim)
+      if (currentMinutes > endMins) {
+        const minutesLate = currentMinutes - endMins
+        const isCritical = minutesLate > 60
+
+        return (
+          <div className="flex items-center text-red-500 dark:text-red-400 text-sm font-medium gap-1.5">
+            {isCritical ? (
+              <AlertCircle className="w-4 h-4" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            )}
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-y-1">
+              <span>Atrasada</span>
+              {isCritical ? (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-200 tracking-wider">
+                  🔴 CRÍTICO
+                </span>
+              ) : (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 tracking-wider">
+                  ⚠️ TOLERÂNCIA
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      }
+    }
+
+    return (
+      <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium gap-1.5 animate-pulse">
+        <Clock className="w-4 h-4" />
+        <span>Em andamento</span>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 p-8">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-muted-foreground font-medium">Carregando espelho da rotina...</p>
+      </div>
+    )
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-muted-foreground min-h-[300px] p-8">
+        <Clock className="w-12 h-12 mb-4 opacity-20" />
+        <p className="text-lg font-medium">Nenhuma rotina para este dia.</p>
+      </div>
+    )
+  }
+
+  const completedCount = tasks.filter((t) => t.concluida).length
+  const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
+
+  return (
+    <div className="p-4 sm:p-6 space-y-6">
+      <Card className="border-border/50 shadow-sm bg-card">
+        <CardHeader className="pb-4 bg-muted/10 border-b border-border/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:mb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-amber-500" />
+              Progresso do Colaborador
+            </CardTitle>
+            <span className="font-semibold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full w-fit">
+              Progresso: {completedCount}/{tasks.length} ({progressPercent}%)
+            </span>
+          </div>
+          <Progress value={progressPercent} className="h-2.5" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border">
+            {tasks.map((task) => {
+              const hasTime = !!task.horario_inicio
+              const startMins = hasTime ? timeToMinutes(task.horario_inicio) : 0
+
+              let isWithinWindow = false
+              if (!hasTime) {
+                isWithinWindow = true
+              } else if (task.horario_fim) {
+                const endMins = timeToMinutes(task.horario_fim)
+                isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
+              } else {
+                isWithinWindow = currentMinutes >= startMins
+              }
+
+              return (
+                <div
+                  key={task.id}
+                  className={cn(
+                    'p-4 sm:px-6 flex items-start sm:items-center gap-4 transition-colors',
+                    !isWithinWindow && !task.concluida && 'opacity-80 bg-muted/10',
+                    task.concluida &&
+                      (task.nivel_criticidade === 'no_horario' || task.minutos_atrasado <= 10) &&
+                      'bg-green-100 dark:bg-green-900/30',
+                    task.concluida &&
+                      task.nivel_criticidade !== 'no_horario' &&
+                      task.minutos_atrasado > 10 &&
+                      'bg-red-100 dark:bg-red-900/30',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'w-14 flex-shrink-0 text-center font-bold text-sm py-1.5 rounded border',
+                      hasTime
+                        ? 'bg-muted/50 text-muted-foreground border-border/50'
+                        : 'bg-primary/5 text-primary border-primary/20',
+                    )}
+                  >
+                    {hasTime ? formatTime(task.horario_inicio) : `${task.numero_sequencia}º`}
+                  </div>
+
+                  <div className="mt-1 sm:mt-0 flex-shrink-0 flex items-center gap-3">
+                    {task.observacao && <ScriptPopoverReadOnly text={task.observacao} />}
+                    <Checkbox
+                      checked={!!task.concluida}
+                      disabled={true}
+                      className={cn(
+                        'w-5 h-5 cursor-default',
+                        task.concluida &&
+                          'data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white data-[state=checked]:border-emerald-500 opacity-60',
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={cn(
+                            'text-base font-medium leading-tight',
+                            task.concluida && 'line-through text-muted-foreground',
+                          )}
+                        >
+                          {task.descricao_tarefa}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
+                        {hasTime ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatTime(task.horario_inicio)}
+                            {task.horario_fim
+                              ? ` - ${formatTime(task.horario_fim)}`
+                              : ' (sem prazo)'}
+                          </>
+                        ) : (
+                          <>
+                            <ListOrdered className="w-3.5 h-3.5" />
+                            Sob demanda
+                          </>
+                        )}
+                        <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] uppercase font-bold tracking-wider">
+                          {task.periodicidade}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="shrink-0 bg-background sm:bg-transparent rounded-md p-2 sm:p-0 border sm:border-none border-border/50">
+                      {renderTaskStatus(task)}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 function DashboardCard({ title, stats }: { title: string; stats: any }) {
   const radius = 36
@@ -178,6 +639,9 @@ export default function RelatorioRotinas() {
   const [cycleFilter, setCycleFilter] = useState('all')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
+
+  const [espelhoUser, setEspelhoUser] = useState<{ id: string; nome: string } | null>(null)
+  const [espelhoDate, setEspelhoDate] = useState<string>('')
 
   const [usersWithRoutines, setUsersWithRoutines] = useState<any[]>([])
   const [executions, setExecutions] = useState<any[]>([])
@@ -701,7 +1165,23 @@ export default function RelatorioRotinas() {
                 <TableBody>
                   {ranking.map((r, i) => (
                     <TableRow key={r.usuario_id}>
-                      <TableCell className="font-medium">{r.nome}</TableCell>
+                      <TableCell className="font-medium">
+                        <button
+                          onClick={() => {
+                            setEspelhoUser({ id: r.usuario_id, nome: r.nome })
+                            setEspelhoDate(
+                              dateFilter === 'custom' && customEnd
+                                ? customEnd
+                                : format(getBrtDate(), 'yyyy-MM-dd'),
+                            )
+                          }}
+                          className="hover:underline hover:text-primary flex items-center gap-1.5 text-left transition-colors font-semibold"
+                          title="Espelhar rotina do colaborador"
+                        >
+                          <Eye className="w-4 h-4 text-muted-foreground" />
+                          {r.nome}
+                        </button>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Progress value={r.percentual} className="w-[80px] h-2.5" />
@@ -935,6 +1415,35 @@ export default function RelatorioRotinas() {
           </CardContent>
         </Card>
       </div>
+
+      {espelhoUser && (
+        <Dialog open={!!espelhoUser} onOpenChange={(open) => !open && setEspelhoUser(null)}>
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden bg-background">
+            <DialogHeader className="p-6 pb-4 border-b bg-card">
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <Eye className="w-5 h-5 text-primary" />
+                Espelho da Rotina: {espelhoUser.nome}
+              </DialogTitle>
+              <DialogDescription>
+                Visualização em modo leitura. Exibe as tarefas, horários e status conforme o
+                colaborador enxerga.
+              </DialogDescription>
+              <div className="mt-4 flex items-center gap-3 bg-secondary/30 p-2 rounded-md w-fit border border-border/50">
+                <Label className="text-sm font-semibold">Data da Rotina:</Label>
+                <Input
+                  type="date"
+                  value={espelhoDate}
+                  onChange={(e) => setEspelhoDate(e.target.value)}
+                  className="w-auto h-8 text-sm"
+                />
+              </div>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto bg-muted/10 p-0">
+              <RotinaEspelhoContent usuarioId={espelhoUser.id} dateStr={espelhoDate} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
