@@ -10,8 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Award, CheckCircle2 } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Loader2, Trophy, X, Check, Eye, AlertTriangle } from 'lucide-react'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -67,8 +67,8 @@ export function EmployeeBonificacaoView() {
     return checkedItems.includes(itemId) || checkedItems.includes(itemIndex as any)
   }
 
-  const percent = items.length > 0 ? Math.round((checkedItems.length / items.length) * 100) : 0
-  const isEligible = checkedItems.length >= items.length && items.length > 0
+  const isEligible = checkedItems.length === 0 && items.length > 0
+  const hasFailed = checkedItems.length > 0
 
   return (
     <div className="space-y-6 mt-6">
@@ -105,40 +105,64 @@ export function EmployeeBonificacaoView() {
           <div className="lg:col-span-2 space-y-4">
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Meu Checklist Feijão com Arroz</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" /> Regras de Desclassificação
+                </CardTitle>
                 <CardDescription>
-                  Acompanhe sua avaliação de desempenho no mês selecionado.
+                  Se alguma destas ações for registrada contra você, o bônus será cancelado.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {items.map((item, index) => {
                     const checked = isChecked(item.id, index)
                     return (
                       <div
                         key={item.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${checked ? 'bg-emerald-50/50 border-emerald-200' : 'bg-white border-slate-100'}`}
+                        className={`flex items-center gap-4 p-4 rounded-xl border transition-colors shadow-sm ${checked ? 'bg-red-50/80 border-red-200' : 'bg-emerald-50/30 border-slate-100'}`}
                       >
-                        <Checkbox
-                          checked={checked}
-                          disabled
-                          className={
-                            checked
-                              ? 'data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600'
-                              : ''
-                          }
-                        />
-                        <Label
-                          className={`flex-1 font-medium ${checked ? 'text-emerald-900' : 'text-slate-700'}`}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border ${checked ? 'bg-red-500 border-red-600 text-white' : 'bg-emerald-100 border-emerald-200 text-emerald-600'}`}
                         >
-                          {item.descricao}
-                        </Label>
+                          {checked ? <X className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1">
+                          <Label
+                            className={`block font-semibold text-base ${checked ? 'text-red-900 line-through opacity-70' : 'text-slate-700'}`}
+                          >
+                            {item.descricao}
+                          </Label>
+                          {checked && (
+                            <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded mt-1 inline-block">
+                              Falha Registrada
+                            </span>
+                          )}
+                        </div>
+                        {item.explicacao && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="text-slate-400 hover:text-amber-500 focus:outline-none flex-shrink-0 bg-white p-2 rounded-full border shadow-sm transition-colors hover:bg-amber-50 hover:border-amber-200">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 z-[100] shadow-xl border-slate-200">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-sm text-slate-900 border-b pb-2">
+                                  {item.descricao}
+                                </h4>
+                                <p className="text-sm text-slate-600 leading-relaxed">
+                                  {item.explicacao}
+                                </p>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       </div>
                     )
                   })}
                   {items.length === 0 && (
-                    <p className="text-slate-500 text-sm py-4">
-                      Nenhum item configurado pela gestão.
+                    <p className="text-slate-500 text-sm py-8 text-center bg-slate-50 rounded-lg border border-dashed">
+                      Nenhuma regra configurada pela gestão.
                     </p>
                   )}
                 </div>
@@ -148,32 +172,58 @@ export function EmployeeBonificacaoView() {
 
           <div className="space-y-6">
             <Card
-              className={
+              className={`overflow-hidden shadow-md ${
                 isEligible
-                  ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200'
-                  : 'bg-slate-50 border-slate-200'
-              }
+                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-600 text-white'
+                  : hasFailed
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-slate-50 border-slate-200'
+              }`}
             >
-              <CardContent className="pt-6 text-center">
-                <div className="mb-4">
+              <CardContent className="pt-8 pb-8 text-center">
+                <div className="mb-6 relative">
                   <div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-sm border-4 border-white ${isEligible ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+                    className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg border-4 ${isEligible ? 'bg-white border-emerald-200 text-emerald-600' : hasFailed ? 'bg-red-100 border-white text-red-500' : 'bg-white border-slate-200 text-slate-300'}`}
                   >
-                    <Award className="w-10 h-10" />
+                    {hasFailed ? <X className="w-12 h-12" /> : <Trophy className="w-12 h-12" />}
                   </div>
+                  {isEligible && (
+                    <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow-sm animate-bounce">
+                      VITÓRIA
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-3xl font-bold text-slate-800 mb-1">{percent}%</h3>
-                <p className="text-slate-500 font-medium mb-6">Pontuação Atingida</p>
+                <h3
+                  className={`text-4xl font-extrabold mb-2 ${isEligible ? 'text-white drop-shadow-sm' : 'text-slate-800'}`}
+                >
+                  {isEligible ? 'R$ 350,00' : 'R$ 0,00'}
+                </h3>
+                <p
+                  className={`font-medium mb-8 ${isEligible ? 'text-emerald-100' : 'text-slate-500'}`}
+                >
+                  Bônus Feijão com Arroz
+                </p>
 
                 {isEligible ? (
-                  <div className="bg-emerald-100 text-emerald-800 p-4 rounded-lg flex flex-col items-center gap-2">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                    <p className="font-bold text-lg">Elegível ao Bônus!</p>
-                    <p className="text-sm font-medium">Bônus liberado.</p>
+                  <div className="bg-black/20 p-4 rounded-xl backdrop-blur-sm">
+                    <p className="font-bold text-lg mb-1">Qualificado! 🚀</p>
+                    <p className="text-sm text-emerald-50">
+                      Você manteve o padrão este mês e garantiu o seu bônus.
+                    </p>
+                  </div>
+                ) : hasFailed ? (
+                  <div className="bg-red-100 text-red-800 p-4 rounded-xl border border-red-200 shadow-inner">
+                    <p className="font-bold text-lg mb-1">Eliminado 🚨</p>
+                    <p className="text-sm font-medium">
+                      Foram registradas falhas contra você que desclassificam o bônus neste mês.
+                    </p>
                   </div>
                 ) : (
-                  <div className="bg-white border border-slate-200 p-4 rounded-lg text-slate-500">
-                    <p className="text-sm">Atinga 100% dos itens para liberar a bonificação.</p>
+                  <div className="bg-white border border-slate-200 p-4 rounded-xl text-slate-500">
+                    <p className="text-sm font-medium">
+                      Mantenha o padrão de qualidade e não acumule falhas para liberar a
+                      bonificação.
+                    </p>
                   </div>
                 )}
               </CardContent>

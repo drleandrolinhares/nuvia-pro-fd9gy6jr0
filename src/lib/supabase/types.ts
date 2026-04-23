@@ -1355,6 +1355,30 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_bonificacao_itens: {
+        Row: {
+          ativo: boolean
+          criado_em: string
+          descricao: string
+          id: string
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean
+          criado_em?: string
+          descricao: string
+          id?: string
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean
+          criado_em?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+        }
+        Relationships: []
+      }
       performance_pp_pdm: {
         Row: {
           atualizado_em: string
@@ -1989,6 +2013,7 @@ export type Database = {
           inicio_lanche_manha: string | null
           inicio_lanche_tarde: string | null
           nome: string
+          obrigatorio_bonificacao: boolean
           obrigatorio_pp_pdm: boolean
           ordem: number | null
           retorno_almoco: string | null
@@ -2016,6 +2041,7 @@ export type Database = {
           inicio_lanche_manha?: string | null
           inicio_lanche_tarde?: string | null
           nome: string
+          obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
           retorno_almoco?: string | null
@@ -2043,6 +2069,7 @@ export type Database = {
           inicio_lanche_manha?: string | null
           inicio_lanche_tarde?: string | null
           nome?: string
+          obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
           retorno_almoco?: string | null
@@ -2679,6 +2706,12 @@ export const Constants = {
 //   atingiu_meta: boolean (not null, default: false)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: performance_bonificacao_itens
+//   id: uuid (not null, default: gen_random_uuid())
+//   descricao: text (not null)
+//   ordem: integer (not null, default: 0)
+//   ativo: boolean (not null, default: true)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: performance_pp_pdm
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -2840,6 +2873,7 @@ export const Constants = {
 //   fim_lanche_tarde: time without time zone (nullable)
 //   horario_saida: time without time zone (nullable)
 //   obrigatorio_pp_pdm: boolean (not null, default: false)
+//   obrigatorio_bonificacao: boolean (not null, default: false)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
@@ -2988,6 +3022,8 @@ export const Constants = {
 //   PRIMARY KEY performance_bonificacao_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY performance_bonificacao_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   UNIQUE performance_bonificacao_usuario_id_mes_referencia_key: UNIQUE (usuario_id, mes_referencia)
+// Table: performance_bonificacao_itens
+//   PRIMARY KEY performance_bonificacao_itens_pkey: PRIMARY KEY (id)
 // Table: performance_pp_pdm
 //   PRIMARY KEY performance_pp_pdm_pkey: PRIMARY KEY (id)
 //   UNIQUE performance_pp_pdm_usuario_id_data_registro_key: UNIQUE (usuario_id, data_registro)
@@ -3258,6 +3294,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: performance_bonificacao
 //   Policy "performance_bonificacao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: performance_bonificacao_itens
+//   Policy "performance_bonificacao_itens_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: performance_pp_pdm
