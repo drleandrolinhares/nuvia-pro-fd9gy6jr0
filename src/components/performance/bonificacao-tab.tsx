@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -12,311 +9,293 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
+import { Loader2, Save, Award, CheckCircle2 } from 'lucide-react'
+import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CheckCircle2, Loader2, Save, XCircle, Award } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
-const CHECKLIST_ITEMS = [
-  { id: '1', label: 'Cumprimento rigoroso do horário (Pontualidade)' },
-  { id: '2', label: 'Assiduidade (Zero faltas injustificadas)' },
-  { id: '3', label: 'Uso correto do uniforme e EPIs' },
-  { id: '4', label: 'Organização e limpeza do setor' },
-  { id: '5', label: 'Preenchimento correto dos sistemas e planilhas' },
-  { id: '6', label: 'Comunicação adequada com pacientes e equipe' },
-  { id: '7', label: 'Proatividade na resolução de problemas' },
-  { id: '8', label: 'Participação ativa nas reuniões de alinhamento' },
-  { id: '9', label: 'Cumprimento das normas internas da clínica' },
+const ITEMS = [
+  '1. Pontualidade e Assiduidade',
+  '2. Organização do ambiente de trabalho',
+  '3. Uso correto dos EPIs e Uniforme',
+  '4. Cumprimento das rotinas diárias',
+  '5. Preenchimento correto do sistema',
+  '6. Atendimento cordial e proativo',
+  '7. Trabalho em equipe e cooperação',
+  '8. Zelo por materiais e equipamentos',
+  '9. Participação em reuniões e treinamentos',
 ]
 
-const BONUS_VALUE = 350.0
+function getPastMonths(count = 6) {
+  const dates = []
+  const now = new Date()
+  for (let i = 0; i < count; i++) {
+    const d = subMonths(now, i)
+    dates.push(format(d, 'yyyy-MM'))
+  }
+  return dates
+}
 
 export function BonificacaoTab() {
-  const { user } = useAuth()
-  const [month, setMonth] = useState(format(new Date(), 'yyyy-MM'))
-  const [checkedItems, setCheckedItems] = useState<string[]>([])
+  const { profile, user } = useAuth()
+  const isManager = profile?.role === 'admin' || profile?.role === 'gestor'
+
+  const pastMonths = getPastMonths()
+  const [selectedMonth, setSelectedMonth] = useState(pastMonths[0])
+  const [selectedUser, setSelectedUser] = useState<string>(isManager ? '' : user?.id || '')
+  const [users, setUsers] = useState<any[]>([])
+
+  const [checkedItems, setCheckedItems] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-
-  const monthOptions = Array.from({ length: 6 }).map((_, i) => {
-    const d = new Date()
-    d.setMonth(d.getMonth() - i)
-    return {
-      value: format(d, 'yyyy-MM'),
-      label: format(d, 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
-    }
-  })
+  const [recordId, setRecordId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user && month) {
-      loadData()
-    }
-  }, [user, month])
+    if (isManager) loadUsers()
+  }, [isManager])
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (selectedUser && selectedMonth) loadEvaluation()
+    else {
+      setCheckedItems([])
+      setRecordId(null)
+    }
+  }, [selectedUser, selectedMonth])
+
+  const loadUsers = async () => {
+    const { data } = await supabase.from('usuarios').select('id, nome').order('nome')
+    if (data) {
+      setUsers(data)
+      if (data.length > 0 && !selectedUser) setSelectedUser(data[0].id)
+    }
+  }
+
+  const loadEvaluation = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('performance_bonificacao' as any)
         .select('*')
-        .eq('usuario_id', user?.id)
-        .eq('mes_referencia', month)
+        .eq('usuario_id', selectedUser)
+        .eq('mes_referencia', selectedMonth)
         .maybeSingle()
 
-      if (error && error.code !== 'PGRST116') throw error
-
       if (data) {
+        setRecordId(data.id)
         setCheckedItems(data.itens_marcados || [])
       } else {
+        setRecordId(null)
         setCheckedItems([])
       }
-    } catch (error: any) {
-      toast.error('Erro ao carregar dados: ' + error.message)
+    } catch (e) {
+      console.error(e)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleToggle = (id: string, checked: boolean) => {
-    if (checked) {
-      setCheckedItems((prev) => [...prev, id])
-    } else {
-      setCheckedItems((prev) => prev.filter((itemId) => itemId !== id))
-    }
+  const handleToggle = (index: number) => {
+    if (!isManager) return
+    setCheckedItems((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    )
   }
 
   const handleSave = async () => {
-    if (!user) return
+    if (!selectedUser) return
     setSaving(true)
     try {
-      const is100Percent = checkedItems.length === CHECKLIST_ITEMS.length
-      const pontuacaoTotal = Math.round((checkedItems.length / CHECKLIST_ITEMS.length) * 100)
+      const is100Percent = checkedItems.length === ITEMS.length
+      const pontuacao = Math.round((checkedItems.length / ITEMS.length) * 100)
 
-      const { data: existing } = await supabase
-        .from('performance_bonificacao' as any)
-        .select('id')
-        .eq('usuario_id', user.id)
-        .eq('mes_referencia', month)
-        .maybeSingle()
-
-      if (existing) {
-        const { error } = await supabase
+      if (recordId) {
+        await supabase
           .from('performance_bonificacao' as any)
           .update({
             itens_marcados: checkedItems,
-            pontuacao_total: pontuacaoTotal,
+            pontuacao_total: pontuacao,
             atingiu_meta: is100Percent,
             atualizado_em: new Date().toISOString(),
           })
-          .eq('id', existing.id)
-        if (error) throw error
+          .eq('id', recordId)
       } else {
-        const { error } = await supabase.from('performance_bonificacao' as any).insert({
-          usuario_id: user.id,
-          mes_referencia: month,
-          itens_marcados: checkedItems,
-          pontuacao_total: pontuacaoTotal,
-          atingiu_meta: is100Percent,
-        })
-        if (error) throw error
+        const { data } = await supabase
+          .from('performance_bonificacao' as any)
+          .insert({
+            usuario_id: selectedUser,
+            mes_referencia: selectedMonth,
+            itens_marcados: checkedItems,
+            pontuacao_total: pontuacao,
+            atingiu_meta: is100Percent,
+          })
+          .select('id')
+          .single()
+        if (data) setRecordId(data.id)
       }
-
       toast.success('Avaliação salva com sucesso!')
-    } catch (error: any) {
-      toast.error('Erro ao salvar: ' + error.message)
+    } catch (e: any) {
+      toast.error('Erro ao salvar avaliação.')
     } finally {
       setSaving(false)
     }
   }
 
-  const percentComplete = Math.round((checkedItems.length / CHECKLIST_ITEMS.length) * 100)
-  const is100Percent = checkedItems.length === CHECKLIST_ITEMS.length
+  const percent = Math.round((checkedItems.length / ITEMS.length) * 100)
+  const isEligible = checkedItems.length === ITEMS.length
 
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Award className="h-6 w-6 text-amber-500" />
-          Bonificação Feijão com Arroz
-        </CardTitle>
-        <CardDescription>
-          Avalie os {CHECKLIST_ITEMS.length} itens fundamentais de engajamento. Ao atingir 100%,
-          você garante o bônus de R$ {BONUS_VALUE.toFixed(2).replace('.', ',')}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex flex-col gap-2 max-w-sm">
-          <Label className="text-slate-700">Mês de Referência</Label>
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="bg-white">
+    <div className="space-y-6 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        {isManager && (
+          <div className="flex-1">
+            <Label className="text-xs text-slate-500 mb-1 block">Colaborador</Label>
+            <Select value={selectedUser} onValueChange={setSelectedUser}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o colaborador" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="w-full sm:w-[250px]">
+          <Label className="text-xs text-slate-500 mb-1 block">Mês de Referência</Label>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger>
               <SelectValue placeholder="Selecione o mês" />
             </SelectTrigger>
             <SelectContent>
-              {monthOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
+              {pastMonths.map((m) => {
+                const [year, month] = m.split('-')
+                const date = new Date(parseInt(year), parseInt(month) - 1, 1)
+                return (
+                  <SelectItem key={m} value={m}>
+                    {format(date, 'MMMM / yyyy', { locale: ptBR }).replace(/^\w/, (c) =>
+                      c.toUpperCase(),
+                    )}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         </div>
+      </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4 bg-slate-50/50 p-6 rounded-xl border border-slate-100">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="bg-amber-100 text-amber-800 text-xs py-0.5 px-2 rounded-full font-bold">
-                  {checkedItems.length}/{CHECKLIST_ITEMS.length}
-                </span>
-                Checklist de Avaliação
-              </h3>
-              <div className="space-y-2">
-                {CHECKLIST_ITEMS.map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 cursor-pointer border border-transparent',
-                      checkedItems.includes(item.id)
-                        ? 'bg-white shadow-sm border-slate-200'
-                        : 'hover:bg-slate-100',
-                    )}
-                    onClick={() => handleToggle(item.id, !checkedItems.includes(item.id))}
-                  >
-                    <Checkbox
-                      id={`item-${item.id}`}
-                      checked={checkedItems.includes(item.id)}
-                      onCheckedChange={(checked) => handleToggle(item.id, checked as boolean)}
-                      className={cn(
-                        'h-5 w-5',
-                        checkedItems.includes(item.id)
-                          ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500'
-                          : '',
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <Label
-                      htmlFor={`item-${item.id}`}
-                      className={cn(
-                        'text-sm leading-tight cursor-pointer flex-1',
-                        checkedItems.includes(item.id)
-                          ? 'font-medium text-slate-900'
-                          : 'text-slate-600',
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {item.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <Card
-                className={cn(
-                  'border-2 transition-all duration-500 shadow-none overflow-hidden',
-                  is100Percent
-                    ? 'border-emerald-500 bg-emerald-50/50'
-                    : 'border-slate-200 bg-white',
-                )}
-              >
-                <div
-                  className={cn(
-                    'h-1 w-full transition-colors duration-500',
-                    is100Percent ? 'bg-emerald-500' : 'bg-slate-200',
-                  )}
-                />
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg text-slate-800">Resultado da Avaliação</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium text-slate-500">Progresso Atual</span>
-                      <span
-                        className={cn(
-                          'font-bold transition-colors',
-                          is100Percent ? 'text-emerald-600' : 'text-amber-600',
-                        )}
-                      >
-                        {percentComplete}%
-                      </span>
-                    </div>
-                    <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
+      {!selectedUser ? (
+        <div className="text-center py-12 text-slate-500">
+          Selecione um colaborador para ver a avaliação.
+        </div>
+      ) : loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Checklist Feijão com Arroz</CardTitle>
+                <CardDescription>Avalie o cumprimento dos 9 itens fundamentais.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {ITEMS.map((item, idx) => {
+                    const isChecked = checkedItems.includes(idx)
+                    return (
                       <div
-                        className={cn(
-                          'h-full transition-all duration-700 ease-out',
-                          is100Percent ? 'bg-emerald-500' : 'bg-amber-400',
-                        )}
-                        style={{ width: `${percentComplete}%` }}
-                      />
-                    </div>
-                  </div>
+                        key={idx}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                          isChecked
+                            ? 'bg-emerald-50/50 border-emerald-200'
+                            : 'bg-white border-slate-100'
+                        } ${isManager ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+                        onClick={() => handleToggle(idx)}
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => handleToggle(idx)}
+                          disabled={!isManager}
+                          className={
+                            isChecked
+                              ? 'data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600'
+                              : ''
+                          }
+                        />
+                        <Label
+                          className={`flex-1 font-medium ${isChecked ? 'text-emerald-900' : 'text-slate-700'} ${isManager ? 'cursor-pointer' : ''}`}
+                        >
+                          {item}
+                        </Label>
+                      </div>
+                    )
+                  })}
+                </div>
 
-                  <div className="flex items-start gap-4 pt-4 border-t border-slate-100">
-                    {is100Percent ? (
-                      <>
-                        <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                          <CheckCircle2 className="h-7 w-7" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-emerald-800 mb-1">Meta Atingida!</p>
-                          <p className="text-2xl font-black text-emerald-600 tracking-tight">
-                            R$ {BONUS_VALUE.toFixed(2).replace('.', ',')}
-                          </p>
-                          <p className="text-xs text-emerald-600/80 mt-1 font-medium">
-                            Bônus garantido para o mês.
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                          <XCircle className="h-7 w-7" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-700 mb-1">
-                            Meta em andamento
-                          </p>
-                          <p className="text-xs text-slate-500 font-medium">
-                            Faltam{' '}
-                            <span className="text-amber-600 font-bold">
-                              {CHECKLIST_ITEMS.length - checkedItems.length}
-                            </span>{' '}
-                            itens para atingir 100%.
-                          </p>
-                          <p className="text-xs text-slate-400 mt-2">
-                            Valor do bônus: R$ {BONUS_VALUE.toFixed(2).replace('.', ',')}
-                          </p>
-                        </div>
-                      </>
-                    )}
+                {isManager && (
+                  <div className="mt-6 flex justify-end">
+                    <Button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="bg-amber-600 hover:bg-amber-700 text-white gap-2 min-w-[150px]"
+                    >
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      Salvar Avaliação
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Button
-                onClick={handleSave}
-                disabled={loading || saving}
-                className="w-full gap-2 bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
-                size="lg"
-              >
-                {saving ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Save className="h-5 w-5" />
                 )}
-                {saving ? 'Salvando...' : 'Salvar Avaliação'}
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <div className="space-y-6">
+            <Card
+              className={
+                isEligible
+                  ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200'
+                  : 'bg-slate-50 border-slate-200'
+              }
+            >
+              <CardContent className="pt-6 text-center">
+                <div className="mb-4">
+                  <div
+                    className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-sm border-4 border-white ${isEligible ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}
+                  >
+                    <Award className="w-10 h-10" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-slate-800 mb-1">{percent}%</h3>
+                <p className="text-slate-500 font-medium mb-6">Pontuação Atingida</p>
+
+                {isEligible ? (
+                  <div className="bg-emerald-100 text-emerald-800 p-4 rounded-lg flex flex-col items-center gap-2">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                    <p className="font-bold text-lg">Elegível ao Bônus!</p>
+                    <p className="text-sm font-medium">Bônus de R$ 350,00 liberado.</p>
+                  </div>
+                ) : (
+                  <div className="bg-white border border-slate-200 p-4 rounded-lg text-slate-500">
+                    <p className="text-sm">
+                      Atinga 100% dos itens para liberar a bonificação de R$ 350,00.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

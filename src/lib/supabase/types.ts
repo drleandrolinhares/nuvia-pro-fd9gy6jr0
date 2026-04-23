@@ -1322,6 +1322,69 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_bonificacao: {
+        Row: {
+          atingiu_meta: boolean
+          atualizado_em: string
+          criado_em: string
+          id: string
+          itens_marcados: Json
+          mes_referencia: string
+          pontuacao_total: number
+          usuario_id: string
+        }
+        Insert: {
+          atingiu_meta?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          itens_marcados?: Json
+          mes_referencia: string
+          pontuacao_total?: number
+          usuario_id: string
+        }
+        Update: {
+          atingiu_meta?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          itens_marcados?: Json
+          mes_referencia?: string
+          pontuacao_total?: number
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      performance_pp_pdm: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data_registro: string
+          id: string
+          pontos_melhoria: string
+          pontos_positivos: string
+          usuario_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data_registro?: string
+          id?: string
+          pontos_melhoria: string
+          pontos_positivos: string
+          usuario_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data_registro?: string
+          id?: string
+          pontos_melhoria?: string
+          pontos_positivos?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       permissoes: {
         Row: {
           descricao: string | null
@@ -2604,6 +2667,23 @@ export const Constants = {
 //   data_cadastro: date (nullable, default: CURRENT_DATE)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: performance_bonificacao
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   mes_referencia: text (not null)
+//   itens_marcados: jsonb (not null, default: '[]'::jsonb)
+//   pontuacao_total: integer (not null, default: 0)
+//   atingiu_meta: boolean (not null, default: false)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: performance_pp_pdm
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   data_registro: date (not null, default: CURRENT_DATE)
+//   pontos_positivos: text (not null)
+//   pontos_melhoria: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -2900,6 +2980,14 @@ export const Constants = {
 //   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
 // Table: pacientes
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
+// Table: performance_bonificacao
+//   PRIMARY KEY performance_bonificacao_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY performance_bonificacao_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE performance_bonificacao_usuario_id_mes_referencia_key: UNIQUE (usuario_id, mes_referencia)
+// Table: performance_pp_pdm
+//   PRIMARY KEY performance_pp_pdm_pkey: PRIMARY KEY (id)
+//   UNIQUE performance_pp_pdm_usuario_id_data_registro_key: UNIQUE (usuario_id, data_registro)
+//   FOREIGN KEY performance_pp_pdm_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
@@ -3162,6 +3250,14 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: pacientes
 //   Policy "pacientes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: performance_bonificacao
+//   Policy "performance_bonificacao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: performance_pp_pdm
+//   Policy "performance_pp_pdm_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: permissoes
@@ -3613,6 +3709,10 @@ export const Constants = {
 // Table: orcamentos
 //   CREATE INDEX orcamentos_avaliacao_id_idx ON public.orcamentos USING btree (avaliacao_id)
 //   CREATE INDEX orcamentos_status_idx ON public.orcamentos USING btree (status)
+// Table: performance_bonificacao
+//   CREATE UNIQUE INDEX performance_bonificacao_usuario_id_mes_referencia_key ON public.performance_bonificacao USING btree (usuario_id, mes_referencia)
+// Table: performance_pp_pdm
+//   CREATE UNIQUE INDEX performance_pp_pdm_usuario_id_data_registro_key ON public.performance_pp_pdm USING btree (usuario_id, data_registro)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: produto_campos_valores
