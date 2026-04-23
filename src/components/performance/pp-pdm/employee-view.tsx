@@ -32,6 +32,10 @@ export function EmployeePPDMView() {
   const deadline = getCurrentDeadline()
   const weekRef = format(deadline, 'yyyy-MM-dd')
 
+  const now = new Date()
+  const isSaturday = now.getDay() === 6
+  const isBlocked = isSaturday && now.getHours() >= 12
+
   useEffect(() => {
     if (user) loadData()
   }, [user, weekRef])
@@ -142,9 +146,10 @@ export function EmployeePPDMView() {
               <Textarea
                 id="pp"
                 placeholder="O que deu certo nesta semana? Conquistas ou destaques?"
-                className="min-h-[220px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-base shadow-sm"
+                className="min-h-[220px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-base shadow-sm disabled:opacity-70"
                 value={pp}
                 onChange={(e) => setPp(e.target.value)}
+                disabled={isBlocked}
               />
             </div>
 
@@ -155,18 +160,26 @@ export function EmployeePPDMView() {
               <Textarea
                 id="pdm"
                 placeholder="O que pode ser melhorado? Desafios e gargalos da semana?"
-                className="min-h-[220px] resize-none border-rose-200 bg-rose-50/30 focus-visible:ring-rose-500 text-base shadow-sm"
+                className="min-h-[220px] resize-none border-rose-200 bg-rose-50/30 focus-visible:ring-rose-500 text-base shadow-sm disabled:opacity-70"
                 value={pdm}
                 onChange={(e) => setPdm(e.target.value)}
+                disabled={isBlocked}
               />
             </div>
+          </div>
+        )}
+
+        {isBlocked && (
+          <div className="bg-amber-50 text-amber-800 p-3 rounded-md border border-amber-200 mt-4 text-sm font-medium">
+            Envio bloqueado. O preenchimento se encerrou no sábado às 11:59h. O sistema será
+            reaberto na próxima semana.
           </div>
         )}
 
         <div className="flex justify-end pt-4 border-t border-slate-100">
           <Button
             onClick={handleSave}
-            disabled={loading || saving}
+            disabled={loading || saving || isBlocked}
             className="gap-2 bg-amber-600 hover:bg-amber-700 text-white min-w-[150px] shadow-sm"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

@@ -1989,6 +1989,7 @@ export type Database = {
           inicio_lanche_manha: string | null
           inicio_lanche_tarde: string | null
           nome: string
+          obrigatorio_pp_pdm: boolean
           ordem: number | null
           retorno_almoco: string | null
           role: string | null
@@ -2015,6 +2016,7 @@ export type Database = {
           inicio_lanche_manha?: string | null
           inicio_lanche_tarde?: string | null
           nome: string
+          obrigatorio_pp_pdm?: boolean
           ordem?: number | null
           retorno_almoco?: string | null
           role?: string | null
@@ -2041,6 +2043,7 @@ export type Database = {
           inicio_lanche_manha?: string | null
           inicio_lanche_tarde?: string | null
           nome?: string
+          obrigatorio_pp_pdm?: boolean
           ordem?: number | null
           retorno_almoco?: string | null
           role?: string | null
@@ -2836,6 +2839,7 @@ export const Constants = {
 //   inicio_lanche_tarde: time without time zone (nullable)
 //   fim_lanche_tarde: time without time zone (nullable)
 //   horario_saida: time without time zone (nullable)
+//   obrigatorio_pp_pdm: boolean (not null, default: false)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
