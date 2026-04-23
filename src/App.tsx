@@ -21,6 +21,7 @@ import Placeholder from './pages/Placeholder'
 import Compromissos from './pages/operacional/Compromissos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import RelatorioRotinas from './pages/operacional/RelatorioRotinas'
+import Performance from './pages/operacional/Performance'
 import NormasInternas from './pages/operacional/NormasInternas'
 import GestaoTerceiros from './pages/operacional/GestaoTerceiros'
 import Negociacao from './pages/comercial/Negociacao'
@@ -201,7 +202,7 @@ const AppRoutes = () => {
           path="/operacional/performance"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
-              <Placeholder />
+              <Performance />
             </ProtectedRoute>
           }
         />

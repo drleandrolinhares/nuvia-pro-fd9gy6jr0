@@ -1783,6 +1783,41 @@ export type Database = {
           },
         ]
       }
+      terceiros_historico: {
+        Row: {
+          acao: string
+          criado_em: string
+          detalhes: string | null
+          id: string
+          tarefa_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          criado_em?: string
+          detalhes?: string | null
+          id?: string
+          tarefa_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          criado_em?: string
+          detalhes?: string | null
+          id?: string
+          tarefa_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'terceiros_historico_tarefa_id_fkey'
+            columns: ['tarefa_id']
+            isOneToOne: false
+            referencedRelation: 'terceiros_tarefas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       terceiros_tarefas: {
         Row: {
           atualizado_em: string | null
@@ -2671,6 +2706,13 @@ export const Constants = {
 //   cor: text (not null, default: 'border-slate-700 bg-slate-800/50'::text)
 //   ordem: integer (not null, default: 0)
 //   criado_em: timestamp with time zone (nullable, default: now())
+// Table: terceiros_historico
+//   id: uuid (not null, default: gen_random_uuid())
+//   tarefa_id: uuid (not null)
+//   usuario_id: uuid (nullable)
+//   acao: text (not null)
+//   detalhes: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: terceiros_tarefas
 //   id: uuid (not null, default: gen_random_uuid())
 //   categoria_slug: text (not null)
@@ -2899,6 +2941,10 @@ export const Constants = {
 // Table: terceiros_colunas
 //   FOREIGN KEY terceiros_colunas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON UPDATE CASCADE ON DELETE CASCADE
 //   PRIMARY KEY terceiros_colunas_pkey: PRIMARY KEY (id)
+// Table: terceiros_historico
+//   PRIMARY KEY terceiros_historico_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY terceiros_historico_tarefa_id_fkey: FOREIGN KEY (tarefa_id) REFERENCES terceiros_tarefas(id) ON DELETE CASCADE
+//   FOREIGN KEY terceiros_historico_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: terceiros_tarefas
 //   FOREIGN KEY terceiros_tarefas_categoria_slug_fkey: FOREIGN KEY (categoria_slug) REFERENCES terceiros_categorias(slug) ON UPDATE CASCADE ON DELETE CASCADE
 //   PRIMARY KEY terceiros_tarefas_pkey: PRIMARY KEY (id)
@@ -3181,6 +3227,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: terceiros_colunas
 //   Policy "terceiros_colunas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: terceiros_historico
+//   Policy "terceiros_historico_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: terceiros_tarefas

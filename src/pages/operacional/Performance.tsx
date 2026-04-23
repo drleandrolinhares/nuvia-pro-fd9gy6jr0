@@ -1,0 +1,43 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PPEPDMTab } from '@/components/performance/pp-pdm-tab'
+import { BonificacaoTab } from '@/components/performance/bonificacao-tab'
+import { Target } from 'lucide-react'
+
+export default function Performance() {
+  return (
+    <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          <Target className="h-8 w-8 text-amber-500" />
+          Performance
+        </h1>
+        <p className="text-slate-500">
+          Acompanhe os indicadores de desempenho, feedbacks e bonificações da equipe.
+        </p>
+      </div>
+
+      <Tabs defaultValue="pp-pdm" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md mb-6 bg-slate-100/80 p-1 border">
+          <TabsTrigger
+            value="pp-pdm"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            PP e PDM
+          </TabsTrigger>
+          <TabsTrigger
+            value="bonificacao"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            Bonificação Feijão com Arroz
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="pp-pdm" className="animate-fade-in">
+          <PPEPDMTab />
+        </TabsContent>
+        <TabsContent value="bonificacao" className="animate-fade-in">
+          <BonificacaoTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
