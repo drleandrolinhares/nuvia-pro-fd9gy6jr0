@@ -1388,6 +1388,8 @@ export type Database = {
           criado_em: string
           data_registro: string
           id: string
+          nota_pdm: number | null
+          pdm_itens: Json | null
           pontos_melhoria: string
           pontos_positivos: string
           usuario_id: string
@@ -1397,6 +1399,8 @@ export type Database = {
           criado_em?: string
           data_registro?: string
           id?: string
+          nota_pdm?: number | null
+          pdm_itens?: Json | null
           pontos_melhoria: string
           pontos_positivos: string
           usuario_id: string
@@ -1406,6 +1410,8 @@ export type Database = {
           criado_em?: string
           data_registro?: string
           id?: string
+          nota_pdm?: number | null
+          pdm_itens?: Json | null
           pontos_melhoria?: string
           pontos_positivos?: string
           usuario_id?: string
@@ -2724,6 +2730,8 @@ export const Constants = {
 //   pontos_melhoria: text (not null)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   nota_pdm: integer (nullable, default: 0)
+//   pdm_itens: jsonb (nullable, default: '[]'::jsonb)
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)

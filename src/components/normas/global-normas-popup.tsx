@@ -46,7 +46,14 @@ export function GlobalNormasPopup() {
         .eq('usuario_id', user.id)
 
       const aceitesIds = new Set(aceites?.map((a) => a.norma_id) || [])
-      const pending = normas.filter((n) => !aceitesIds.has(n.id))
+
+      const pending = normas.filter((n) => {
+        if (aceitesIds.has(n.id)) return false
+        if (n.todos_usuarios === false && Array.isArray(n.usuarios_alvo)) {
+          return n.usuarios_alvo.includes(user.id)
+        }
+        return true
+      })
 
       setPendingNormas(pending)
     }

@@ -90,16 +90,14 @@ export function EmployeePPDMView() {
 
     for (const item of filledItems) {
       if (item.melhoria.trim() && !item.sugestao.trim()) {
-        toast.warning('Sugestão obrigatória!', {
-          description:
-            'Para cada Ponto de Melhoria, é obrigatório preencher uma Sugestão de Solução.',
+        toast.warning('Atenção: Sugestão Obrigatória!', {
+          description: `Você apontou um ponto de melhoria, mas não inseriu uma sugestão. É obrigatório preencher uma sugestão de melhoria para conseguir salvar o registro.`,
         })
         return
       }
       if (!item.melhoria.trim() && item.sugestao.trim()) {
-        toast.warning('Crítica obrigatória!', {
-          description:
-            'Você preencheu uma sugestão, mas esqueceu de descrever o Ponto de Melhoria.',
+        toast.warning('Atenção: Crítica Obrigatória!', {
+          description: `Você preencheu uma sugestão, mas esqueceu de descrever qual é o Ponto de Melhoria. Preencha ambos para prosseguir.`,
         })
         return
       }
@@ -142,7 +140,7 @@ export function EmployeePPDMView() {
       setNotaFinal(nota)
       toast.success(
         filledItems.length > 0
-          ? `Registros salvos! Nota PDM: ${nota}/10`
+          ? `Registros salvos! Sua Nota PDM foi: ${nota}/10 🎉`
           : 'Registros salvos com sucesso!',
       )
     } catch (e: any) {

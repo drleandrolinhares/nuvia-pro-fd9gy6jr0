@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -28,6 +30,8 @@ interface Norma {
   conteudo: string
   ativo: boolean
   criado_em: string
+  todos_usuarios?: boolean
+  usuarios_alvo?: string[]
 }
 
 interface Aceite {
@@ -59,6 +63,8 @@ export default function NormasInternas() {
 
   const [titulo, setTitulo] = useState('')
   const [conteudo, setConteudo] = useState('')
+  const [todosUsuarios, setTodosUsuarios] = useState(true)
+  const [usuariosAlvo, setUsuariosAlvo] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -95,12 +101,23 @@ export default function NormasInternas() {
     e.preventDefault()
     if (!titulo || !conteudo) return
 
+    if (!todosUsuarios && usuariosAlvo.length === 0) {
+      toast({
+        title: 'Atenção',
+        description: 'Selecione pelo menos um colaborador para receber a norma.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const { error } = await supabase.from('normas_internas').insert({
         titulo,
         conteudo,
         criado_por: user?.id,
+        todos_usuarios: todosUsuarios,
+        usuarios_alvo: usuariosAlvo,
       })
 
       if (error) throw error
@@ -109,6 +126,8 @@ export default function NormasInternas() {
       setView('lista')
       setTitulo('')
       setConteudo('')
+      setTodosUsuarios(true)
+      setUsuariosAlvo([])
       fetchData()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -147,13 +166,84 @@ export default function NormasInternas() {
                 <Label>Conteúdo da Norma</Label>
                 <Textarea
                   placeholder="Escreva aqui todas as orientações e regras..."
-                  className="min-h-[300px] resize-y"
+                  className="min-h-[200px] resize-y"
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
                   required
                 />
               </div>
-              <div className="flex justify-end gap-3">
+
+              <div className="space-y-4 pt-4 border-t">
+                <Label className="text-base text-slate-800">Público Alvo</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="todos"
+                    checked={todosUsuarios}
+                    onCheckedChange={(checked) => {
+                      setTodosUsuarios(checked)
+                      if (checked) setUsuariosAlvo([])
+                    }}
+                  />
+                  <Label htmlFor="todos" className="cursor-pointer">
+                    Enviar para todos os colaboradores ativos
+                  </Label>
+                </div>
+
+                {!todosUsuarios && (
+                  <div className="space-y-3 p-4 border border-slate-200 rounded-md bg-slate-50/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <Label className="text-slate-600">
+                        Selecione os colaboradores que receberão a norma:
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (usuariosAlvo.length === usuarios.length) {
+                            setUsuariosAlvo([])
+                          } else {
+                            setUsuariosAlvo(usuarios.map((u) => u.id))
+                          }
+                        }}
+                      >
+                        {usuariosAlvo.length === usuarios.length
+                          ? 'Desmarcar Todos'
+                          : 'Selecionar Todos'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-3 max-h-[300px] overflow-y-auto pr-2">
+                      {usuarios.map((u) => (
+                        <div
+                          key={u.id}
+                          className="flex items-center space-x-3 p-2.5 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-colors"
+                        >
+                          <Checkbox
+                            id={`user-${u.id}`}
+                            checked={usuariosAlvo.includes(u.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setUsuariosAlvo([...usuariosAlvo, u.id])
+                              } else {
+                                setUsuariosAlvo(usuariosAlvo.filter((id) => id !== u.id))
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`user-${u.id}`}
+                            className="cursor-pointer flex-1 truncate text-sm font-medium text-slate-700"
+                            title={u.nome}
+                          >
+                            {u.nome}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" type="button" onClick={() => setView('lista')}>
                   Cancelar
                 </Button>
@@ -171,8 +261,13 @@ export default function NormasInternas() {
       const aceitesDaNorma = aceites.filter((a) => a.norma_id === selectedNorma.id)
       const aceitesSet = new Set(aceitesDaNorma.map((a) => a.usuario_id))
 
-      const signedUsers = usuarios.filter((u) => aceitesSet.has(u.id))
-      const pendingUsers = usuarios.filter((u) => !aceitesSet.has(u.id))
+      let targetUsers = usuarios
+      if (selectedNorma.todos_usuarios === false && Array.isArray(selectedNorma.usuarios_alvo)) {
+        targetUsers = usuarios.filter((u) => selectedNorma.usuarios_alvo?.includes(u.id))
+      }
+
+      const signedUsers = targetUsers.filter((u) => aceitesSet.has(u.id))
+      const pendingUsers = targetUsers.filter((u) => !aceitesSet.has(u.id))
 
       return (
         <div className="space-y-6 animate-fade-in-up">
@@ -215,6 +310,12 @@ export default function NormasInternas() {
                 <Users className="size-5" />
                 Relatório de Assinaturas
               </CardTitle>
+              <CardDescription>
+                Público alvo:{' '}
+                {selectedNorma.todos_usuarios
+                  ? 'Todos os colaboradores'
+                  : 'Colaboradores selecionados'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="pendentes">
@@ -236,7 +337,7 @@ export default function NormasInternas() {
                   {pendingUsers.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
                       <CheckCircle2 className="size-12 text-emerald-500/50 mb-3" />
-                      <p>Todos os colaboradores ativos já assinaram esta norma.</p>
+                      <p>Todos os colaboradores selecionados já assinaram esta norma.</p>
                     </div>
                   ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -320,7 +421,12 @@ export default function NormasInternas() {
             <div className="grid gap-4">
               {normas.map((norma) => {
                 const totalAssinaturas = aceites.filter((a) => a.norma_id === norma.id).length
-                const totalPendentes = usuarios.length - totalAssinaturas
+
+                let targetCount = usuarios.length
+                if (norma.todos_usuarios === false && Array.isArray(norma.usuarios_alvo)) {
+                  targetCount = norma.usuarios_alvo.length
+                }
+                const totalPendentes = targetCount - totalAssinaturas
 
                 return (
                   <div
@@ -337,7 +443,8 @@ export default function NormasInternas() {
                         <h4 className="font-bold uppercase tracking-wide">{norma.titulo}</h4>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Criado em {format(new Date(norma.criado_em), 'dd/MM/yyyy')}
+                        Criado em {format(new Date(norma.criado_em), 'dd/MM/yyyy')} •{' '}
+                        {norma.todos_usuarios ? 'Todos' : `${targetCount} Selecionados`}
                       </p>
                     </div>
 
