@@ -46,7 +46,7 @@ export default function Compromissos() {
   const [eventoEditando, setEventoEditando] = useState<Compromisso | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const [activeTab, setActiveTab] = useState<FilterTab>('periodo')
+  const [activeTab, setActiveTab] = useState<FilterTab>('todos')
   const [selectedUser, setSelectedUser] = useState<string>('todos')
 
   const { toast } = useToast()
@@ -154,10 +154,12 @@ export default function Compromissos() {
     return filtered.sort((a, b) => {
       const startA = startOfDay(new Date(a.data_inicio + 'T12:00:00')).getTime()
       const startB = startOfDay(new Date(b.data_inicio + 'T12:00:00')).getTime()
-      if (startA !== startB) return startA - startB
+      if (startA !== startB) {
+        return isActiveTabArquivados ? startB - startA : startA - startB
+      }
       const timeA = a.hora_inicio || '00:00'
       const timeB = b.hora_inicio || '00:00'
-      return timeA.localeCompare(timeB)
+      return isActiveTabArquivados ? timeB.localeCompare(timeA) : timeA.localeCompare(timeB)
     })
   }, [eventos, selectedDate, activeTab, selectedUser])
 

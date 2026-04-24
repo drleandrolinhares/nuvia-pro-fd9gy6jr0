@@ -1233,6 +1233,8 @@ export type Database = {
           criado_por: string | null
           id: string
           titulo: string
+          todos_usuarios: boolean | null
+          usuarios_alvo: Json | null
         }
         Insert: {
           ativo?: boolean
@@ -1242,6 +1244,8 @@ export type Database = {
           criado_por?: string | null
           id?: string
           titulo: string
+          todos_usuarios?: boolean | null
+          usuarios_alvo?: Json | null
         }
         Update: {
           ativo?: boolean
@@ -1251,6 +1255,8 @@ export type Database = {
           criado_por?: string | null
           id?: string
           titulo?: string
+          todos_usuarios?: boolean | null
+          usuarios_alvo?: Json | null
         }
         Relationships: []
       }
@@ -2690,6 +2696,8 @@ export const Constants = {
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
 //   criado_por: uuid (nullable)
+//   todos_usuarios: boolean (nullable, default: true)
+//   usuarios_alvo: jsonb (nullable, default: '[]'::jsonb)
 // Table: orcamentos
 //   id: uuid (not null, default: gen_random_uuid())
 //   avaliacao_id: uuid (not null)
