@@ -22,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Archive, Loader2 } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Plus, Archive, Loader2, CalendarIcon, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +61,7 @@ export default function Compromissos() {
 
   const [activeTab, setActiveTab] = useState<FilterTab>('todos')
   const [selectedUser, setSelectedUser] = useState<string>('todos')
+  const [selectKey, setSelectKey] = useState(0)
 
   const { toast } = useToast()
   const { user, profile, permissions = [] } = useAuth() as any
@@ -84,6 +87,14 @@ export default function Compromissos() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const clearFilters = () => {
+    setActiveTab('todos')
+    setDateRange(undefined)
+    setSelectedUser('todos')
+    setCalendarMonth(new Date())
+    setSelectKey((prev) => prev + 1)
   }
 
   const handleAdd = () => {
@@ -206,6 +217,9 @@ export default function Compromissos() {
     )
   }
 
+  const hasActiveFilters =
+    activeTab !== 'todos' || dateRange !== undefined || selectedUser !== 'todos'
+
   return (
     <div className="flex h-full bg-slate-50/50">
       <div className="hidden w-[360px] overflow-y-auto border-r bg-white p-6 shadow-sm z-10 md:block">
@@ -214,11 +228,7 @@ export default function Compromissos() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setCalendarMonth(new Date())
-              setDateRange(undefined)
-              setActiveTab('todos')
-            }}
+            onClick={clearFilters}
             className="h-8 px-3 text-xs font-medium"
           >
             Hoje / Todos
@@ -231,6 +241,7 @@ export default function Compromissos() {
             selected={dateRange}
             onSelect={(range: DateRange | undefined) => {
               setDateRange(range)
+              setSelectKey((prev) => prev + 1)
               if (range?.from) {
                 setActiveTab('periodo')
               }
@@ -287,35 +298,81 @@ export default function Compromissos() {
             </Tabs>
 
             {activeTab === 'periodo' && (
-              <Select
-                onValueChange={(val) => {
-                  const today = startOfDay(new Date())
-                  let from, to
-                  if (val === 'semana') {
-                    from = startOfWeek(today, { weekStartsOn: 1 })
-                    to = endOfWeek(today, { weekStartsOn: 1 })
-                  } else if (val === 'quinzena') {
-                    from = today
-                    to = addDays(today, 14)
-                  } else if (val === 'mes') {
-                    from = startOfMonth(today)
-                    to = endOfMonth(today)
-                  }
-                  if (from && to) {
-                    setDateRange({ from, to })
-                    setCalendarMonth(from)
-                  }
-                }}
-              >
-                <SelectTrigger className="w-[180px] bg-white">
-                  <SelectValue placeholder="Períodos rápidos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semana">Semana atual</SelectItem>
-                  <SelectItem value="quinzena">Próximos 15 dias</SelectItem>
-                  <SelectItem value="mes">Mês atual</SelectItem>
-                </SelectContent>
-              </Select>
+              <>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={'outline'}
+                      className={cn(
+                        'w-[260px] justify-start text-left font-normal bg-white',
+                        !dateRange && 'text-slate-500',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to && dateRange.to.getTime() !== dateRange.from.getTime() ? (
+                          <>
+                            {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
+                            {format(dateRange.to, 'dd/MM/yyyy')}
+                          </>
+                        ) : (
+                          format(dateRange.from, 'dd/MM/yyyy')
+                        )
+                      ) : (
+                        <span>Selecione um período...</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from || calendarMonth}
+                      selected={dateRange}
+                      onSelect={(range: DateRange | undefined) => {
+                        setDateRange(range)
+                        setSelectKey((prev) => prev + 1)
+                        if (range?.from) {
+                          setCalendarMonth(range.from)
+                        }
+                      }}
+                      numberOfMonths={1}
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Select
+                  key={selectKey}
+                  onValueChange={(val) => {
+                    const today = startOfDay(new Date())
+                    let from, to
+                    if (val === 'semana') {
+                      from = startOfWeek(today, { weekStartsOn: 1 })
+                      to = endOfWeek(today, { weekStartsOn: 1 })
+                    } else if (val === 'quinzena') {
+                      from = today
+                      to = addDays(today, 14)
+                    } else if (val === 'mes') {
+                      from = startOfMonth(today)
+                      to = endOfMonth(today)
+                    }
+                    if (from && to) {
+                      setDateRange({ from, to })
+                      setCalendarMonth(from)
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px] bg-white">
+                    <SelectValue placeholder="Filtros rápidos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semana">Semana atual</SelectItem>
+                    <SelectItem value="quinzena">Próximos 15 dias</SelectItem>
+                    <SelectItem value="mes">Mês atual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
             )}
 
             {activeTab === 'usuario' && (canViewAll || usuarios.length > 1) && (
@@ -332,6 +389,17 @@ export default function Compromissos() {
                   ))}
                 </SelectContent>
               </Select>
+            )}
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                onClick={clearFilters}
+                className="text-slate-500 hover:text-slate-800 h-9 px-3 ml-auto"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Limpar Filtros
+              </Button>
             )}
           </div>
         </div>

@@ -3182,14 +3182,14 @@ export const Constants = {
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: compromissos
 //   Policy "compromissos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((usuario_id = auth.uid()) OR has_permission('Excluir Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR is_admin())
+//     USING: ((usuario_id = auth.uid()) OR has_permission('Excluir Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
 //   Policy "compromissos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('Criar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR is_admin())
+//     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('Criar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
 //   Policy "compromissos_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR has_permission('Visualizar Todos Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR is_admin())
 //   Policy "compromissos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR is_admin())
-//     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR is_admin())
+//     USING: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
+//     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
 // Table: configuracoes_negociacao
 //   Policy "configuracoes_negociacao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
