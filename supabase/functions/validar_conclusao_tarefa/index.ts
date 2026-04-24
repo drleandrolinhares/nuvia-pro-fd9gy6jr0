@@ -55,29 +55,21 @@ Deno.serve(async (req: Request) => {
       const inicioComTolerancia = inicioTotalMinutes - 5 // 5 minutos de antecedência
       const hInicioStr = tarefa.horario_inicio.substring(0, 5)
 
-      if (!tarefa.horario_fim) {
+      const [hFim, mFim] = tarefa.horario_fim ? tarefa.horario_fim.split(':').map(Number) : [0, 0]
+      const fimTotalMinutes = tarefa.horario_fim ? hFim * 60 + mFim : 0
+
+      if (!tarefa.horario_fim || inicioComTolerancia <= fimTotalMinutes) {
         valido = currentTotalMinutes >= inicioComTolerancia
-        if (!valido) {
-          mensagem = `Fora do horário permitido. Horário permitido: a partir de ${hInicioStr}`
-        }
       } else {
-        const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
-        const fimTotalMinutes = hFim * 60 + mFim
-
-        if (inicioComTolerancia <= fimTotalMinutes) {
-          valido =
-            currentTotalMinutes >= inicioComTolerancia && currentTotalMinutes <= fimTotalMinutes
+        if (currentTotalMinutes < inicioComTolerancia && currentTotalMinutes > fimTotalMinutes) {
+          valido = false
         } else {
-          // Caso a tarefa cruze a meia-noite
-          valido =
-            currentTotalMinutes >= inicioComTolerancia || currentTotalMinutes <= fimTotalMinutes
+          valido = true
         }
+      }
 
-        const hFimStr = tarefa.horario_fim.substring(0, 5)
-
-        if (!valido) {
-          mensagem = `Fora do horário permitido. Horário permitido: ${hInicioStr} - ${hFimStr}`
-        }
+      if (!valido) {
+        mensagem = `Muito cedo para concluir. Horário permitido: a partir de ${hInicioStr}`
       }
     }
 

@@ -50,7 +50,7 @@ export default function Compromissos() {
   const [selectedUser, setSelectedUser] = useState<string>('todos')
 
   const { toast } = useToast()
-  const { user, profile } = useAuth() as any
+  const { user, profile, permissions = [] } = useAuth() as any
 
   const [eventoParaDeletar, setEventoParaDeletar] = useState<string | null>(null)
 
@@ -180,6 +180,9 @@ export default function Compromissos() {
   }, [eventos])
 
   const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'gestor'
+  const canManageAll = isAdminOrManager || permissions.includes('Gerenciar Compromissos')
+  const canViewAll = canManageAll || permissions.includes('Visualizar Todos Compromissos')
+  const canEditAny = canManageAll || permissions.includes('Editar Compromissos')
   const currentUserId = user?.id
 
   if (loading) {
@@ -267,7 +270,7 @@ export default function Compromissos() {
               </TabsList>
             </Tabs>
 
-            {activeTab === 'usuario' && (
+            {activeTab === 'usuario' && (canViewAll || usuarios.length > 1) && (
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="w-[280px] bg-white">
                   <SelectValue placeholder="Selecione um colaborador" />
@@ -299,7 +302,7 @@ export default function Compromissos() {
                   evento={ev}
                   index={i}
                   isArquivado={activeTab === 'arquivados'}
-                  canModify={isAdminOrManager || ev.usuario_id === currentUserId}
+                  canModify={canEditAny || ev.usuario_id === currentUserId}
                   onEdit={handleEdit}
                   onDelete={handleDeleteClick}
                   onDuplicate={handleDuplicate}
