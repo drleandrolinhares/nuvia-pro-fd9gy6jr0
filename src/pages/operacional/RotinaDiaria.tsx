@@ -97,29 +97,24 @@ function ScriptPopover({ text }: { text: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] sm:w-[900px] max-w-4xl p-4 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 shadow-xl z-[9999]"
+        className="w-[calc(100vw-2rem)] sm:w-[900px] max-w-4xl p-5 bg-slate-200 dark:bg-slate-800 border-t-8 border-t-primary border-x-2 border-b-2 border-primary/40 shadow-2xl z-[9999] rounded-xl"
         side="bottom"
         align="start"
       >
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm flex items-center gap-2 text-slate-900 dark:text-slate-100">
-            <Eye className="w-4 h-4 text-primary" />
+        <div className="space-y-4">
+          <h4 className="font-bold text-base flex items-center gap-2 text-primary dark:text-primary">
+            <Eye className="w-5 h-5" />
             Script / Observação
           </h4>
-          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap bg-white/60 dark:bg-black/20 p-3 rounded-md border border-slate-200 dark:border-slate-700 max-h-[60vh] overflow-y-auto">
+          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap bg-slate-100 dark:bg-slate-900 p-4 rounded-lg border border-slate-300 dark:border-slate-700 max-h-[60vh] overflow-y-auto font-medium shadow-inner">
             {text}
           </p>
           <Button
             onClick={handleCopy}
             size="sm"
-            className="w-full font-medium bg-slate-200 hover:bg-slate-300 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100"
-            variant="secondary"
+            className="w-full font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
           >
-            {copied ? (
-              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <Copy className="w-4 h-4 mr-2" />
-            )}
+            {copied ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
             {copied ? 'Copiado!' : 'Copiar Texto'}
           </Button>
         </div>
