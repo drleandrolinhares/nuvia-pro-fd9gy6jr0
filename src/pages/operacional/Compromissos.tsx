@@ -298,45 +298,76 @@ export default function Compromissos() {
             </Tabs>
 
             {activeTab === 'periodo' && (
-              <>
+              <div className="flex flex-wrap items-center gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={'outline'}
                       className={cn(
-                        'w-[260px] justify-start text-left font-normal bg-white',
-                        !dateRange && 'text-slate-500',
+                        'w-[150px] justify-start text-left font-normal bg-white',
+                        !dateRange?.from && 'text-slate-500',
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateRange?.from ? (
-                        dateRange.to && dateRange.to.getTime() !== dateRange.from.getTime() ? (
-                          <>
-                            {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
-                            {format(dateRange.to, 'dd/MM/yyyy')}
-                          </>
-                        ) : (
-                          format(dateRange.from, 'dd/MM/yyyy')
-                        )
+                        format(dateRange.from, 'dd/MM/yyyy')
                       ) : (
-                        <span>Selecione um período...</span>
+                        <span>Data Inicial</span>
                       )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       initialFocus
-                      mode="range"
+                      mode="single"
                       defaultMonth={dateRange?.from || calendarMonth}
-                      selected={dateRange}
-                      onSelect={(range: DateRange | undefined) => {
-                        setDateRange(range)
+                      selected={dateRange?.from}
+                      onSelect={(date) => {
+                        setDateRange((prev) => ({
+                          from: date,
+                          to: prev?.to && date && prev.to < date ? date : prev?.to,
+                        }))
                         setSelectKey((prev) => prev + 1)
-                        if (range?.from) {
-                          setCalendarMonth(range.from)
+                        if (date) {
+                          setCalendarMonth(date)
                         }
                       }}
-                      numberOfMonths={1}
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <span className="text-slate-500 text-sm font-medium">até</span>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={'outline'}
+                      className={cn(
+                        'w-[150px] justify-start text-left font-normal bg-white',
+                        !dateRange?.to && 'text-slate-500',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : <span>Data Final</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="single"
+                      defaultMonth={dateRange?.to || dateRange?.from || calendarMonth}
+                      selected={dateRange?.to}
+                      onSelect={(date) => {
+                        setDateRange((prev) => ({
+                          from: prev?.from && date && prev.from > date ? date : prev?.from,
+                          to: date,
+                        }))
+                        setSelectKey((prev) => prev + 1)
+                      }}
+                      disabled={(date) =>
+                        dateRange?.from ? date < startOfDay(dateRange.from) : false
+                      }
                       locale={ptBR}
                     />
                   </PopoverContent>
@@ -372,7 +403,7 @@ export default function Compromissos() {
                     <SelectItem value="mes">Mês atual</SelectItem>
                   </SelectContent>
                 </Select>
-              </>
+              </div>
             )}
 
             {activeTab === 'usuario' && (canViewAll || usuarios.length > 1) && (
