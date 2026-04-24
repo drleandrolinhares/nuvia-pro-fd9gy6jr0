@@ -87,6 +87,12 @@ export default function ConfiguracaoRotinas() {
   const [targetDuplicateUser, setTargetDuplicateUser] = useState<string>('')
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false)
 
+  // Duplicate task state
+  const [duplicateTaskOpen, setDuplicateTaskOpen] = useState(false)
+  const [taskToDuplicate, setTaskToDuplicate] = useState<Task | null>(null)
+  const [targetUserForTask, setTargetUserForTask] = useState<string>('')
+  const [isDuplicatingTask, setIsDuplicatingTask] = useState(false)
+
   // Form state
   const [editId, setEditId] = useState<string | null>(null)
   const [descricao, setDescricao] = useState('')
@@ -317,6 +323,83 @@ export default function ConfiguracaoRotinas() {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       document.getElementById('input-descricao')?.focus()
     }, 100)
+  }
+
+  const handleOpenDuplicateTask = (task: Task) => {
+    setTaskToDuplicate(task)
+    setTargetUserForTask(selectedUser)
+    setDuplicateTaskOpen(true)
+  }
+
+  const handleDuplicateTask = async () => {
+    if (!taskToDuplicate || !targetUserForTask) return
+    setIsDuplicatingTask(true)
+    try {
+      let routineId = null
+      const { data: routine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', targetUserForTask)
+        .maybeSingle()
+
+      if (!routine) {
+        const { data: newRoutine, error: routineError } = await supabase
+          .from('rotinas_usuarios')
+          .insert({ usuario_id: targetUserForTask, ativa: true })
+          .select('id')
+          .single()
+        if (routineError) throw routineError
+        if (newRoutine) routineId = newRoutine.id
+      } else {
+        routineId = routine.id
+      }
+
+      if (!routineId) throw new Error('Não foi possível encontrar ou criar rotina do destino.')
+
+      const { data: maxSeqData } = await supabase
+        .from('tarefas_rotina')
+        .select('numero_sequencia')
+        .eq('rotina_id', routineId)
+        .order('numero_sequencia', { ascending: false })
+        .limit(1)
+
+      const nextSeq = maxSeqData && maxSeqData.length > 0 ? maxSeqData[0].numero_sequencia + 1 : 1
+
+      const taskData: any = {
+        rotina_id: routineId,
+        descricao_tarefa: taskToDuplicate.descricao_tarefa,
+        horario_inicio: taskToDuplicate.horario_inicio,
+        horario_fim: taskToDuplicate.horario_fim,
+        peso_percentual: Number(taskToDuplicate.peso_percentual),
+        numero_sequencia: nextSeq,
+        periodicidade: taskToDuplicate.periodicidade || 'diaria',
+        dias_semana: taskToDuplicate.dias_semana,
+        dia_mes: taskToDuplicate.dia_mes,
+        data_inicio_contagem: taskToDuplicate.data_inicio_contagem,
+        observacao: taskToDuplicate.observacao,
+        ativa: true,
+      }
+
+      const { error } = await supabase.from('tarefas_rotina').insert(taskData)
+      if (error) throw error
+
+      if (targetUserForTask === selectedUser) {
+        await loadRoutine(selectedUser)
+      }
+      await fetchUsers()
+
+      toast({ description: 'Tarefa duplicada com sucesso!' })
+      setDuplicateTaskOpen(false)
+      setTaskToDuplicate(null)
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao duplicar tarefa',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDuplicatingTask(false)
+    }
   }
 
   const handleDeleteTask = async (taskId: string) => {
@@ -898,8 +981,18 @@ export default function ConfiguracaoRotinas() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                  onClick={() => handleOpenDuplicateTask(task)}
+                                  title="Duplicar Tarefa"
+                                >
+                                  <Copy className="size-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
                                   onClick={() => handleEditTask(task)}
+                                  title="Editar Tarefa"
                                 >
                                   <Edit2 className="size-4" />
                                 </Button>
@@ -908,6 +1001,7 @@ export default function ConfiguracaoRotinas() {
                                   size="icon"
                                   className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                   onClick={() => handleDeleteTask(task.id)}
+                                  title="Excluir Tarefa"
                                 >
                                   <Trash2 className="size-4" />
                                 </Button>
@@ -935,6 +1029,65 @@ export default function ConfiguracaoRotinas() {
           </Card>
         </div>
       )}
+
+      {/* Dialog for Duplicating a Single Task */}
+      <Dialog open={duplicateTaskOpen} onOpenChange={setDuplicateTaskOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar Tarefa</DialogTitle>
+            <DialogDescription>
+              Selecione o colaborador de destino para esta tarefa. Você pode clonar para o próprio
+              colaborador ou enviar para outro.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="bg-muted p-3 rounded-md text-sm border border-border/50">
+              <span className="font-semibold block mb-1 uppercase tracking-wider text-xs text-primary">
+                Tarefa selecionada:
+              </span>
+              <span className="text-foreground">{taskToDuplicate?.descricao_tarefa}</span>
+            </div>
+            <div className="space-y-2">
+              <Label>Colaborador de destino</Label>
+              <Select value={targetUserForTask} onValueChange={setTargetUserForTask}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o destino..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{u.nome}</span>
+                        {u.id === selectedUser && (
+                          <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Clonar
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDuplicateTaskOpen(false)}
+              disabled={isDuplicatingTask}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDuplicateTask}
+              disabled={isDuplicatingTask || !targetUserForTask}
+            >
+              {isDuplicatingTask && <Loader2 className="size-4 mr-2 animate-spin" />}
+              {isDuplicatingTask ? 'Copiando...' : 'Confirmar Cópia'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
