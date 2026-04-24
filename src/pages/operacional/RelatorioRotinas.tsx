@@ -136,21 +136,26 @@ function ScriptPopoverReadOnly({ text }: { text: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] sm:w-[500px] p-4 z-[9999]"
+        className="w-[calc(100vw-2rem)] sm:w-[500px] p-4 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 shadow-xl z-[9999]"
         side="bottom"
         align="start"
       >
         <div className="space-y-3">
-          <h4 className="font-medium text-sm flex items-center gap-2">
+          <h4 className="font-medium text-sm flex items-center gap-2 text-slate-900 dark:text-slate-100">
             <Eye className="w-4 h-4 text-primary" />
             Script / Observação
           </h4>
-          <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-md border border-border/50 max-h-[40vh] overflow-y-auto">
+          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap bg-white/60 dark:bg-black/20 p-3 rounded-md border border-slate-200 dark:border-slate-700 max-h-[40vh] overflow-y-auto">
             {text}
           </p>
-          <Button onClick={handleCopy} size="sm" className="w-full font-medium" variant="secondary">
+          <Button
+            onClick={handleCopy}
+            size="sm"
+            className="w-full font-medium bg-slate-200 hover:bg-slate-300 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100"
+            variant="secondary"
+          >
             {copied ? (
-              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
+              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
             ) : (
               <Copy className="w-4 h-4 mr-2" />
             )}

@@ -741,11 +741,19 @@ export default function ConfiguracaoRotinas() {
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent
-                                      className="w-[calc(100vw-2rem)] max-w-[900px] text-sm whitespace-pre-wrap font-normal max-h-[80vh] overflow-y-auto"
+                                      className="w-[calc(100vw-2rem)] max-w-[900px] p-4 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 shadow-xl z-[9999]"
                                       side="bottom"
                                       align="start"
                                     >
-                                      {task.observacao}
+                                      <div className="space-y-3">
+                                        <h4 className="font-medium text-sm flex items-center gap-2 text-slate-900 dark:text-slate-100">
+                                          <Eye className="w-4 h-4 text-primary" />
+                                          Script / Observação
+                                        </h4>
+                                        <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap bg-white/60 dark:bg-black/20 p-3 rounded-md border border-slate-200 dark:border-slate-700 max-h-[60vh] overflow-y-auto font-normal">
+                                          {task.observacao}
+                                        </p>
+                                      </div>
                                     </PopoverContent>
                                   </Popover>
                                 )}
