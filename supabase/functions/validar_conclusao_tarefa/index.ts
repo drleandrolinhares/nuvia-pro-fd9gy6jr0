@@ -52,10 +52,11 @@ Deno.serve(async (req: Request) => {
     } else {
       const [hInicio, mInicio] = tarefa.horario_inicio.split(':').map(Number)
       const inicioTotalMinutes = hInicio * 60 + mInicio
+      const inicioComTolerancia = inicioTotalMinutes - 5 // 5 minutos de antecedência
       const hInicioStr = tarefa.horario_inicio.substring(0, 5)
 
       if (!tarefa.horario_fim) {
-        valido = currentTotalMinutes >= inicioTotalMinutes
+        valido = currentTotalMinutes >= inicioComTolerancia
         if (!valido) {
           mensagem = `Fora do horário permitido. Horário permitido: a partir de ${hInicioStr}`
         }
@@ -63,13 +64,13 @@ Deno.serve(async (req: Request) => {
         const [hFim, mFim] = tarefa.horario_fim.split(':').map(Number)
         const fimTotalMinutes = hFim * 60 + mFim
 
-        if (inicioTotalMinutes <= fimTotalMinutes) {
+        if (inicioComTolerancia <= fimTotalMinutes) {
           valido =
-            currentTotalMinutes >= inicioTotalMinutes && currentTotalMinutes <= fimTotalMinutes
+            currentTotalMinutes >= inicioComTolerancia && currentTotalMinutes <= fimTotalMinutes
         } else {
           // Caso a tarefa cruze a meia-noite
           valido =
-            currentTotalMinutes >= inicioTotalMinutes || currentTotalMinutes <= fimTotalMinutes
+            currentTotalMinutes >= inicioComTolerancia || currentTotalMinutes <= fimTotalMinutes
         }
 
         const hFimStr = tarefa.horario_fim.substring(0, 5)

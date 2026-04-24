@@ -1,5 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Plus, Trash2, Edit2, Copy, Save, Info, Loader2, CheckCircle2, Eye } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Copy,
+  Save,
+  Info,
+  Loader2,
+  CheckCircle2,
+  Eye,
+  Clock,
+} from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
@@ -53,6 +64,14 @@ type User = {
   nome: string
   role: string | null
   hasRoutine?: boolean
+  horario_entrada?: string | null
+  inicio_lanche_manha?: string | null
+  fim_lanche_manha?: string | null
+  saida_almoco?: string | null
+  retorno_almoco?: string | null
+  inicio_lanche_tarde?: string | null
+  fim_lanche_tarde?: string | null
+  horario_saida?: string | null
 }
 
 const timeToMinutes = (time: string | null) => {
@@ -108,7 +127,12 @@ export default function ConfiguracaoRotinas() {
   }, [selectedUser])
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase.from('usuarios').select('id, nome, role').order('nome')
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select(
+        'id, nome, role, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida',
+      )
+      .order('nome')
 
     if (error) {
       toast({
@@ -481,9 +505,74 @@ export default function ConfiguracaoRotinas() {
               )}
             </div>
           </div>
+          {selectedUser && (
+            <div className="mt-4 pt-4 border-t border-border/50 animate-fade-in">
+              {(() => {
+                const user = users.find((u) => u.id === selectedUser)
+                if (!user) return null
+
+                const formatH = (h: string | null | undefined) => (h ? h.substring(0, 5) : null)
+
+                const hours = [
+                  { label: 'Entrada', value: formatH(user.horario_entrada) },
+                  {
+                    label: 'Lanche Manhã',
+                    value:
+                      user.inicio_lanche_manha && user.fim_lanche_manha
+                        ? `${formatH(user.inicio_lanche_manha)} - ${formatH(user.fim_lanche_manha)}`
+                        : null,
+                  },
+                  {
+                    label: 'Almoço',
+                    value:
+                      user.saida_almoco && user.retorno_almoco
+                        ? `${formatH(user.saida_almoco)} - ${formatH(user.retorno_almoco)}`
+                        : null,
+                  },
+                  {
+                    label: 'Lanche Tarde',
+                    value:
+                      user.inicio_lanche_tarde && user.fim_lanche_tarde
+                        ? `${formatH(user.inicio_lanche_tarde)} - ${formatH(user.fim_lanche_tarde)}`
+                        : null,
+                  },
+                  { label: 'Saída', value: formatH(user.horario_saida) },
+                ].filter((h) => h.value)
+
+                if (hours.length === 0)
+                  return (
+                    <div className="text-sm text-muted-foreground italic flex items-center gap-2">
+                      <Info className="w-4 h-4" /> Nenhum horário de trabalho cadastrado para este
+                      colaborador.
+                    </div>
+                  )
+
+                return (
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center text-sm">
+                    <div className="font-semibold flex items-center gap-1.5 text-primary uppercase tracking-wider text-xs">
+                      <Clock className="w-4 h-4" />
+                      Jornada:
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {hours.map((h, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-1.5 bg-muted/40 px-2.5 py-1 rounded-md border border-border/50"
+                        >
+                          <span className="text-xs text-muted-foreground uppercase font-medium">
+                            {h.label}:
+                          </span>
+                          <span className="font-bold text-foreground">{h.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
         </CardHeader>
       </Card>
-
       {selectedUser && (
         <div className="space-y-6 animate-fade-in">
           <Card ref={formRef} className="border-border/50 shadow-sm transition-all duration-300">
@@ -741,7 +830,7 @@ export default function ConfiguracaoRotinas() {
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent
-                                      className="w-[calc(100vw-2rem)] max-w-[900px] p-5 bg-slate-200 dark:bg-slate-800 border-t-8 border-t-primary border-x-2 border-b-2 border-primary/40 shadow-2xl z-[9999] rounded-xl"
+                                      className="w-[calc(100vw-2rem)] max-w-[900px] p-5 bg-slate-200 dark:bg-slate-800 border-t-8 border-t-primary border-x-2 border-b-2 border-primary shadow-2xl z-[9999] rounded-xl"
                                       side="bottom"
                                       align="start"
                                     >

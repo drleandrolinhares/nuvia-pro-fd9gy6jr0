@@ -97,7 +97,7 @@ function ScriptPopover({ text }: { text: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] sm:w-[900px] max-w-4xl p-5 bg-slate-200 dark:bg-slate-800 border-t-8 border-t-primary border-x-2 border-b-2 border-primary/40 shadow-2xl z-[9999] rounded-xl"
+        className="w-[calc(100vw-2rem)] sm:w-[900px] max-w-4xl p-5 bg-slate-200 dark:bg-slate-800 border-t-8 border-t-primary border-x-2 border-b-2 border-primary shadow-2xl z-[9999] rounded-xl"
         side="bottom"
         align="start"
       >
@@ -945,7 +945,7 @@ export default function RotinaDiaria() {
 
     const startMins = timeToMinutes(task.horario_inicio)
 
-    if (currentMinutes < startMins) {
+    if (currentMinutes < startMins - 5) {
       return (
         <div className="flex items-center text-slate-400 dark:text-slate-500 text-sm gap-1.5">
           <Clock className="w-4 h-4" />
@@ -1072,13 +1072,13 @@ export default function RotinaDiaria() {
                     isWithinWindow = true
                   } else if (task.horario_fim) {
                     const endMins = timeToMinutes(task.horario_fim)
-                    isWithinWindow = currentMinutes >= startMins && currentMinutes <= endMins
+                    isWithinWindow = currentMinutes >= startMins - 5 && currentMinutes <= endMins
                   } else {
-                    isWithinWindow = currentMinutes >= startMins
+                    isWithinWindow = currentMinutes >= startMins - 5
                   }
 
                   const disabled =
-                    (hasTime && currentMinutes < startMins && !task.concluida) ||
+                    (hasTime && currentMinutes < startMins - 5 && !task.concluida) ||
                     isTimeLocked ||
                     isBeforeOpening
 
