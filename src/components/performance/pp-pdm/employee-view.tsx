@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Save, Clock, AlertTriangle } from 'lucide-react'
+import { Loader2, Save, Clock, AlertTriangle, Plus, Trash2, GraduationCap } from 'lucide-react'
 import { startOfWeek, addDays, isAfter, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -15,26 +15,27 @@ function getCurrentDeadline() {
   const sunday = startOfWeek(now, { weekStartsOn: 0 })
   const saturday = addDays(sunday, 6)
   saturday.setHours(11, 59, 0, 0)
+  return isAfter(now, saturday) ? addDays(saturday, 7) : saturday
+}
 
-  if (isAfter(now, saturday)) {
-    return addDays(saturday, 7)
-  }
-  return saturday
+interface PdmItem {
+  id: string
+  melhoria: string
+  sugestao: string
 }
 
 export function EmployeePPDMView() {
   const { user, profile } = useAuth()
   const [pp, setPp] = useState('')
-  const [pdm, setPdm] = useState('')
+  const [pdmLegacy, setPdmLegacy] = useState('')
+  const [pdmItems, setPdmItems] = useState<PdmItem[]>([{ id: '1', melhoria: '', sugestao: '' }])
+  const [notaFinal, setNotaFinal] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   const deadline = getCurrentDeadline()
   const weekRef = format(deadline, 'yyyy-MM-dd')
-
-  const now = new Date()
-  const isSaturday = now.getDay() === 6
-  const isBlocked = isSaturday && now.getHours() >= 12
+  const isBlocked = new Date().getDay() === 6 && new Date().getHours() >= 12
 
   useEffect(() => {
     if (user) loadData()
@@ -52,10 +53,20 @@ export function EmployeePPDMView() {
 
       if (data) {
         setPp(data.pontos_positivos || '')
-        setPdm(data.pontos_melhoria || '')
+        if (data.pdm_itens && Array.isArray(data.pdm_itens) && data.pdm_itens.length > 0) {
+          setPdmItems(data.pdm_itens)
+          setNotaFinal(data.nota_pdm)
+        } else if (
+          data.pontos_melhoria &&
+          data.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
+        ) {
+          setPdmLegacy(data.pontos_melhoria)
+        }
       } else {
         setPp('')
-        setPdm('')
+        setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
+        setPdmLegacy('')
+        setNotaFinal(null)
       }
     } catch (e: any) {
       console.error(e)
@@ -64,15 +75,44 @@ export function EmployeePPDMView() {
     }
   }
 
+  const handleChangeItem = (id: string, field: 'melhoria' | 'sugestao', value: string) => {
+    setPdmItems(pdmItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
   const handleSave = async () => {
     if (!user) return
-    if (!pp.trim() && !pdm.trim()) {
+    const filledItems = pdmItems.filter((item) => item.melhoria.trim() || item.sugestao.trim())
+
+    if (!pp.trim() && filledItems.length === 0 && !pdmLegacy.trim()) {
       toast.warning('Preencha ao menos um dos campos antes de salvar.')
       return
     }
 
+    for (const item of filledItems) {
+      if (item.melhoria.trim() && !item.sugestao.trim()) {
+        toast.warning('Sugestão obrigatória!', {
+          description:
+            'Para cada Ponto de Melhoria, é obrigatório preencher uma Sugestão de Solução.',
+        })
+        return
+      }
+      if (!item.melhoria.trim() && item.sugestao.trim()) {
+        toast.warning('Crítica obrigatória!', {
+          description:
+            'Você preencheu uma sugestão, mas esqueceu de descrever o Ponto de Melhoria.',
+        })
+        return
+      }
+    }
+
     setSaving(true)
     try {
+      const nota = Math.min(filledItems.length * 2, 10)
+      const pdmText =
+        filledItems.map((i) => `Melhoria: ${i.melhoria}\nSugestão: ${i.sugestao}`).join('\n\n') ||
+        pdmLegacy ||
+        'Nenhum ponto de melhoria registrado.'
+
       const { data: existing } = await supabase
         .from('performance_pp_pdm' as any)
         .select('id')
@@ -80,24 +120,31 @@ export function EmployeePPDMView() {
         .eq('data_registro', weekRef)
         .maybeSingle()
 
+      const payload = {
+        pontos_positivos: pp || 'Nenhum ponto positivo registrado.',
+        pontos_melhoria: pdmText,
+        pdm_itens: filledItems,
+        nota_pdm: nota,
+        atualizado_em: new Date().toISOString(),
+      }
+
       if (existing) {
         await supabase
           .from('performance_pp_pdm' as any)
-          .update({
-            pontos_positivos: pp,
-            pontos_melhoria: pdm,
-            atualizado_em: new Date().toISOString(),
-          })
+          .update(payload)
           .eq('id', existing.id)
       } else {
-        await supabase.from('performance_pp_pdm' as any).insert({
-          usuario_id: user.id,
-          data_registro: weekRef,
-          pontos_positivos: pp,
-          pontos_melhoria: pdm,
-        })
+        await supabase
+          .from('performance_pp_pdm' as any)
+          .insert({ usuario_id: user.id, data_registro: weekRef, ...payload })
       }
-      toast.success('Registros salvos com sucesso!')
+
+      setNotaFinal(nota)
+      toast.success(
+        filledItems.length > 0
+          ? `Registros salvos! Nota PDM: ${nota}/10`
+          : 'Registros salvos com sucesso!',
+      )
     } catch (e: any) {
       toast.error('Erro ao salvar.')
     } finally {
@@ -114,8 +161,8 @@ export function EmployeePPDMView() {
             <CardDescription>Registre suas considerações da semana atual.</CardDescription>
           </div>
           <div className="bg-amber-50 text-amber-800 text-sm font-medium px-3 py-1.5 rounded-md flex items-center gap-2 border border-amber-200 shadow-sm">
-            <Clock className="w-4 h-4" />
-            Prazo: {format(deadline, "EEEE', 'dd/MM' às 'HH:mm", { locale: ptBR })}
+            <Clock className="w-4 h-4" /> Prazo:{' '}
+            {format(deadline, "EEEE', 'dd/MM' às 'HH:mm", { locale: ptBR })}
           </div>
         </div>
       </CardHeader>
@@ -124,8 +171,7 @@ export function EmployeePPDMView() {
           <div className="bg-blue-50 text-blue-800 p-3 rounded-md flex items-start gap-2 border border-blue-200">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <p className="text-sm">
-              Você está marcado para o preenchimento obrigatório semanal. Envie suas considerações
-              até o prazo estipulado para evitar pendências no relatório.
+              Envie suas considerações até o prazo estipulado para evitar pendências no relatório.
             </p>
           </div>
         )}
@@ -135,44 +181,115 @@ export function EmployeePPDMView() {
             <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <Label
-                htmlFor="pp"
-                className="text-emerald-700 font-semibold flex items-center gap-2"
-              >
+              <Label className="text-emerald-700 font-semibold flex items-center gap-2">
                 Pontos Positivos (PP)
               </Label>
               <Textarea
-                id="pp"
                 placeholder="O que deu certo nesta semana? Conquistas ou destaques?"
-                className="min-h-[220px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-base shadow-sm disabled:opacity-70"
+                className="min-h-[200px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-base shadow-sm disabled:opacity-70"
                 value={pp}
                 onChange={(e) => setPp(e.target.value)}
                 disabled={isBlocked}
               />
             </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="pdm" className="text-rose-700 font-semibold flex items-center gap-2">
-                Pontos de Melhoria (PDM)
-              </Label>
-              <Textarea
-                id="pdm"
-                placeholder="O que pode ser melhorado? Desafios e gargalos da semana?"
-                className="min-h-[220px] resize-none border-rose-200 bg-rose-50/30 focus-visible:ring-rose-500 text-base shadow-sm disabled:opacity-70"
-                value={pdm}
-                onChange={(e) => setPdm(e.target.value)}
-                disabled={isBlocked}
-              />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-rose-700 font-semibold flex items-center gap-2">
+                  PDM e Soluções
+                </Label>
+                {notaFinal !== null && (
+                  <div className="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5" /> Nota PDM: {notaFinal}/10
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Para cada crítica, proponha uma solução (2 pontos cada, Máx: 10).
+              </p>
+
+              {pdmLegacy && pdmItems.length === 1 && !pdmItems[0].melhoria && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800 whitespace-pre-wrap">
+                  <strong>Registro Anterior:</strong>
+                  <br />
+                  {pdmLegacy}
+                </div>
+              )}
+
+              <div className="space-y-3 max-h-[400px] pr-2 overflow-y-auto overflow-x-hidden">
+                {pdmItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="relative p-3 border border-rose-100 bg-rose-50/20 rounded-lg space-y-3"
+                  >
+                    <div className="absolute top-2 right-2 text-xs font-medium text-rose-300">
+                      #{index + 1}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">Ponto de Melhoria (Crítica)</Label>
+                      <Textarea
+                        placeholder="Desafios da semana?"
+                        className="min-h-[60px] resize-none text-sm"
+                        value={item.melhoria}
+                        onChange={(e) => handleChangeItem(item.id, 'melhoria', e.target.value)}
+                        disabled={isBlocked}
+                      />
+                      <Label className="text-xs text-slate-600 mt-2 block">
+                        Sugestão de Solução
+                      </Label>
+                      <Textarea
+                        placeholder="Como melhorar isso?"
+                        className="min-h-[60px] resize-none text-sm border-emerald-100 focus-visible:ring-emerald-400"
+                        value={item.sugestao}
+                        onChange={(e) => handleChangeItem(item.id, 'sugestao', e.target.value)}
+                        disabled={isBlocked}
+                      />
+                    </div>
+                    <div className="flex justify-end pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-100 h-7 px-2 text-xs"
+                        onClick={() =>
+                          setPdmItems(
+                            pdmItems.length === 1
+                              ? [{ id: '1', melhoria: '', sugestao: '' }]
+                              : pdmItems.filter((i) => i.id !== item.id),
+                          )
+                        }
+                        disabled={isBlocked}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {!isBlocked && pdmItems.length < 5 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed text-rose-600 hover:text-rose-700 gap-2"
+                  onClick={() =>
+                    setPdmItems([
+                      ...pdmItems,
+                      { id: Math.random().toString(), melhoria: '', sugestao: '' },
+                    ])
+                  }
+                >
+                  <Plus className="w-4 h-4" /> Adicionar Ponto
+                </Button>
+              )}
             </div>
           </div>
         )}
 
         {isBlocked && (
           <div className="bg-amber-50 text-amber-800 p-3 rounded-md border border-amber-200 mt-4 text-sm font-medium">
-            Envio bloqueado. O preenchimento se encerrou no sábado às 11:59h. O sistema será
-            reaberto na próxima semana.
+            Envio bloqueado. O preenchimento se encerrou no sábado às 11:59h.
           </div>
         )}
 
@@ -182,7 +299,7 @@ export function EmployeePPDMView() {
             disabled={loading || saving || isBlocked}
             className="gap-2 bg-amber-600 hover:bg-amber-700 text-white min-w-[150px] shadow-sm"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{' '}
             Salvar Registros
           </Button>
         </div>
