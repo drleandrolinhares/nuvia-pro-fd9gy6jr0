@@ -56,15 +56,24 @@ Deno.serve(async (req: Request) => {
       const hInicioStr = tarefa.horario_inicio.substring(0, 5)
 
       const [hFim, mFim] = tarefa.horario_fim ? tarefa.horario_fim.split(':').map(Number) : [0, 0]
-      const fimTotalMinutes = tarefa.horario_fim ? hFim * 60 + mFim : 0
+      // O sistema agora permite conclusão a qualquer momento após o horário de início (com tolerância de 5 min)
+      // Não bloqueia mais tarefas concluídas após o horário final. O cálculo de criticidade cuidará de indicar atrasos.
 
-      if (!tarefa.horario_fim || inicioComTolerancia <= fimTotalMinutes) {
-        valido = currentTotalMinutes >= inicioComTolerancia
-      } else {
-        if (currentTotalMinutes < inicioComTolerancia && currentTotalMinutes > fimTotalMinutes) {
-          valido = false
-        } else {
+      // Avalia se cruza meia-noite (ex: 22:00 às 02:00)
+      const cruzaMeiaNoite = tarefa.horario_fim && hFim * 60 + mFim < hInicio * 60 + mInicio
+
+      if (cruzaMeiaNoite) {
+        const fimTotalMinutes = hFim * 60 + mFim
+        if (currentTotalMinutes <= fimTotalMinutes || currentTotalMinutes >= inicioComTolerancia) {
           valido = true
+        } else {
+          valido = false
+        }
+      } else {
+        if (currentTotalMinutes >= inicioComTolerancia) {
+          valido = true
+        } else {
+          valido = false
         }
       }
 

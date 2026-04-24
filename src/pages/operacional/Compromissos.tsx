@@ -1,6 +1,16 @@
 import { useState, useMemo, useEffect } from 'react'
-import { format, startOfDay, endOfDay } from 'date-fns'
+import {
+  format,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  addDays,
+} from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { DateRange } from 'react-day-picker'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -41,7 +51,8 @@ type FilterTab = 'periodo' | 'usuario' | 'todos' | 'arquivados'
 export default function Compromissos() {
   const [eventos, setEventos] = useState<Compromisso[]>([])
   const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([])
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventoEditando, setEventoEditando] = useState<Compromisso | null>(null)
   const [loading, setLoading] = useState(true)
@@ -140,12 +151,14 @@ export default function Compromissos() {
 
     let filtered = baseEvents
 
-    if (activeTab === 'periodo' && selectedDate) {
-      const target = startOfDay(selectedDate)
+    if (activeTab === 'periodo' && dateRange?.from) {
+      const filterFrom = startOfDay(dateRange.from)
+      const filterTo = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+
       filtered = filtered.filter((e) => {
         const start = startOfDay(new Date(e.data_inicio + 'T12:00:00'))
         const end = startOfDay(new Date(e.data_fim + 'T12:00:00'))
-        return target >= start && target <= end
+        return start <= filterTo && end >= filterFrom
       })
     } else if (activeTab === 'usuario' && selectedUser !== 'todos') {
       filtered = filtered.filter((e) => e.usuario_id === selectedUser)
@@ -161,7 +174,7 @@ export default function Compromissos() {
       const timeB = b.hora_inicio || '00:00'
       return isActiveTabArquivados ? timeB.localeCompare(timeA) : timeA.localeCompare(timeB)
     })
-  }, [eventos, selectedDate, activeTab, selectedUser])
+  }, [eventos, dateRange, activeTab, selectedUser])
 
   const eventDates = useMemo(() => {
     const dates: Date[] = []
@@ -202,27 +215,27 @@ export default function Compromissos() {
             variant="outline"
             size="sm"
             onClick={() => {
-              setSelectedDate(new Date())
-              setActiveTab('periodo')
+              setCalendarMonth(new Date())
+              setDateRange(undefined)
+              setActiveTab('todos')
             }}
             className="h-8 px-3 text-xs font-medium"
           >
-            Hoje
+            Hoje / Todos
           </Button>
         </div>
         <div className="rounded-xl border bg-slate-50/50 p-2 shadow-sm">
           <Calendar
-            mode="single"
-            month={selectedDate}
-            selected={selectedDate}
-            onSelect={(date: Date | undefined) => {
-              setSelectedDate(date || new Date())
-              setActiveTab('periodo')
+            mode="range"
+            month={calendarMonth}
+            selected={dateRange}
+            onSelect={(range: DateRange | undefined) => {
+              setDateRange(range)
+              if (range?.from) {
+                setActiveTab('periodo')
+              }
             }}
-            onMonthChange={(month: Date) => {
-              setSelectedDate(month)
-              setActiveTab('periodo')
-            }}
+            onMonthChange={setCalendarMonth}
             locale={ptBR}
             captionLayout="dropdown"
             fromYear={2020}
@@ -242,9 +255,12 @@ export default function Compromissos() {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-slate-800">
               Feed de Compromissos
-              {activeTab === 'periodo' && selectedDate && (
+              {activeTab === 'periodo' && dateRange?.from && (
                 <span className="ml-3 text-lg font-medium text-slate-500">
-                  - {format(selectedDate, "dd 'de' MMMM yyyy", { locale: ptBR })}
+                  - {format(dateRange.from, 'dd/MM/yyyy')}
+                  {dateRange.to && dateRange.to.getTime() !== dateRange.from.getTime()
+                    ? ` até ${format(dateRange.to, 'dd/MM/yyyy')}`
+                    : ''}
                 </span>
               )}
             </h2>
@@ -269,6 +285,38 @@ export default function Compromissos() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+
+            {activeTab === 'periodo' && (
+              <Select
+                onValueChange={(val) => {
+                  const today = startOfDay(new Date())
+                  let from, to
+                  if (val === 'semana') {
+                    from = startOfWeek(today, { weekStartsOn: 1 })
+                    to = endOfWeek(today, { weekStartsOn: 1 })
+                  } else if (val === 'quinzena') {
+                    from = today
+                    to = addDays(today, 14)
+                  } else if (val === 'mes') {
+                    from = startOfMonth(today)
+                    to = endOfMonth(today)
+                  }
+                  if (from && to) {
+                    setDateRange({ from, to })
+                    setCalendarMonth(from)
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px] bg-white">
+                  <SelectValue placeholder="Períodos rápidos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semana">Semana atual</SelectItem>
+                  <SelectItem value="quinzena">Próximos 15 dias</SelectItem>
+                  <SelectItem value="mes">Mês atual</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
 
             {activeTab === 'usuario' && (canViewAll || usuarios.length > 1) && (
               <Select value={selectedUser} onValueChange={setSelectedUser}>
