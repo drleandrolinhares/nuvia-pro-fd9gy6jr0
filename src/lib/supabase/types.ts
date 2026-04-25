@@ -285,6 +285,47 @@ export type Database = {
         }
         Relationships: []
       }
+      carteira_transacoes: {
+        Row: {
+          criado_em: string
+          descricao: string
+          id: string
+          mes_referencia: string
+          origem_id: string | null
+          tipo: string
+          usuario_id: string
+          valor: number
+        }
+        Insert: {
+          criado_em?: string
+          descricao: string
+          id?: string
+          mes_referencia: string
+          origem_id?: string | null
+          tipo: string
+          usuario_id: string
+          valor: number
+        }
+        Update: {
+          criado_em?: string
+          descricao?: string
+          id?: string
+          mes_referencia?: string
+          origem_id?: string | null
+          tipo?: string
+          usuario_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'carteira_transacoes_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'performance_bonificacao'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       colaboradores_detalhes: {
         Row: {
           agencia: string | null
@@ -2484,6 +2525,15 @@ export const Constants = {
 //   nome: text (not null)
 //   descricao: text (nullable)
 //   setor: text (nullable)
+// Table: carteira_transacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   tipo: text (not null)
+//   valor: numeric (not null)
+//   descricao: text (not null)
+//   mes_referencia: text (not null)
+//   origem_id: uuid (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: colaboradores_detalhes
 //   usuario_id: uuid (not null)
 //   banco: text (nullable)
@@ -2951,6 +3001,11 @@ export const Constants = {
 //   PRIMARY KEY cargo_permissoes_pkey: PRIMARY KEY (cargo_id, permissao_id)
 // Table: cargos
 //   PRIMARY KEY cargos_pkey: PRIMARY KEY (id)
+// Table: carteira_transacoes
+//   FOREIGN KEY carteira_transacoes_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES performance_bonificacao(id) ON DELETE CASCADE
+//   PRIMARY KEY carteira_transacoes_pkey: PRIMARY KEY (id)
+//   CHECK carteira_transacoes_tipo_check: CHECK ((tipo = ANY (ARRAY['credito'::text, 'debito'::text, 'saque'::text])))
+//   FOREIGN KEY carteira_transacoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -3151,6 +3206,15 @@ export const Constants = {
 //     USING: is_admin()
 //   Policy "cargos_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: carteira_transacoes
+//   Policy "carteira_transacoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('operacional_performance'::text))
+//   Policy "carteira_transacoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('operacional_performance'::text))
+//   Policy "carteira_transacoes_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('operacional_performance'::text))
+//   Policy "carteira_transacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR has_permission('operacional_performance'::text))
 // Table: colaboradores_detalhes
 //   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))
@@ -3722,6 +3786,30 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_sync_carteira_bonificacao()
+//   CREATE OR REPLACE FUNCTION public.trg_sync_carteira_bonificacao()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     -- Delete old automatic transactions for this origin to recreate them
+//     DELETE FROM public.carteira_transacoes WHERE origem_id = NEW.id;
+//
+//     -- Always insert the initial credit of 350 for the month
+//     INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
+//     VALUES (NEW.usuario_id, 'credito', 350, 'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia, NEW.mes_referencia, NEW.id);
+//
+//     -- If not eligible, insert the debit
+//     IF NOT NEW.atingiu_meta THEN
+//       INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
+//       VALUES (NEW.usuario_id, 'debito', 350, 'Débito: Desclassificação Bonificação Feijão com Arroz', NEW.mes_referencia, NEW.id);
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: compra_itens
@@ -3731,6 +3819,8 @@ export const Constants = {
 //   after_compra_status_change: CREATE TRIGGER after_compra_status_change AFTER UPDATE OF status ON public.compras FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
+// Table: performance_bonificacao
+//   sync_carteira_bonificacao_trigger: CREATE TRIGGER sync_carteira_bonificacao_trigger AFTER INSERT OR UPDATE ON public.performance_bonificacao FOR EACH ROW EXECUTE FUNCTION trg_sync_carteira_bonificacao()
 // Table: saida_produtos
 //   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
 // Table: usuarios

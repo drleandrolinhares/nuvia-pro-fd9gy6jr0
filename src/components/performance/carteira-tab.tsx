@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Wallet, ArrowUpRight, ArrowDownRight, DollarSign, Plus } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   Table,
@@ -33,18 +33,52 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 
+function getPastMonths(count = 12) {
+  const dates = []
+  const now = new Date()
+  for (let i = 0; i < count; i++) {
+    const d = subMonths(now, i)
+    dates.push(format(d, 'yyyy-MM'))
+  }
+  return dates
+}
+
+const ORIGENS_PREDEFINIDAS = [
+  {
+    id: 'feijao_arroz_credito',
+    nome: 'Crédito: Bonificação Feijão com Arroz',
+    tipo: 'credito',
+    valorPadrao: 350,
+  },
+  {
+    id: 'feijao_arroz_debito',
+    nome: 'Débito: Bonificação Feijão com Arroz',
+    tipo: 'debito',
+    valorPadrao: 350,
+  },
+  { id: 'meta_extra', nome: 'Bônus: Meta Extra Atingida', tipo: 'credito', valorPadrao: 150 },
+  { id: 'outros', nome: 'Outro (Lançamento Avulso)', tipo: 'credito', valorPadrao: null },
+]
+
 export function CarteiraTab() {
   const { user, profile } = useAuth()
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'gestor'
   const [users, setUsers] = useState<any[]>([])
   const [selectedUser, setSelectedUser] = useState<string>(user?.id || '')
+
+  const pastMonths = getPastMonths()
+  const [selectedMonth, setSelectedMonth] = useState(pastMonths[0])
+
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [balance, setBalance] = useState(0)
+  const [potencialTotal, setPotencialTotal] = useState(0)
+  const [perdasTotal, setPerdasTotal] = useState(0)
 
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false)
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false)
 
+  const [manualOrigem, setManualOrigem] = useState('outros')
   const [manualDesc, setManualDesc] = useState('')
   const [manualValor, setManualValor] = useState('')
   const [manualTipo, setManualTipo] = useState<'credito' | 'debito'>('credito')
@@ -62,33 +96,53 @@ export function CarteiraTab() {
   }, [isAdmin])
 
   useEffect(() => {
-    if (selectedUser) {
-      loadTransactions(selectedUser)
+    if (selectedUser && selectedMonth) {
+      loadTransactions(selectedUser, selectedMonth)
     }
-  }, [selectedUser])
+  }, [selectedUser, selectedMonth])
+
+  const handleOrigemChange = (val: string) => {
+    setManualOrigem(val)
+    const origem = ORIGENS_PREDEFINIDAS.find((o) => o.id === val)
+    if (origem && origem.valorPadrao !== null) {
+      setManualTipo(origem.tipo as 'credito' | 'debito')
+      setManualValor(origem.valorPadrao.toString())
+      setManualDesc(origem.nome)
+    } else {
+      setManualValor('')
+      setManualDesc('')
+    }
+  }
 
   const loadUsers = async () => {
     const { data } = await supabase.from('usuarios').select('id, nome').order('nome')
     if (data) setUsers(data)
   }
 
-  const loadTransactions = async (userId: string) => {
+  const loadTransactions = async (userId: string, month: string) => {
     setLoading(true)
     const { data, error } = await supabase
       .from('carteira_transacoes')
       .select('*')
       .eq('usuario_id', userId)
+      .eq('mes_referencia', month)
       .order('criado_em', { ascending: false })
 
     if (error) {
       toast.error('Erro ao carregar transações')
     } else if (data) {
       setTransactions(data)
-      const total = data.reduce((acc, curr) => {
-        if (curr.tipo === 'credito') return acc + Number(curr.valor)
-        return acc - Number(curr.valor)
-      }, 0)
-      setBalance(total)
+      let pot = 0
+      let per = 0
+      let sq = 0
+      data.forEach((t) => {
+        if (t.tipo === 'credito') pot += Number(t.valor)
+        else if (t.tipo === 'debito') per += Number(t.valor)
+        else if (t.tipo === 'saque') sq += Number(t.valor)
+      })
+      setPotencialTotal(pot)
+      setPerdasTotal(per)
+      setBalance(pot - per - sq)
     }
     setLoading(false)
   }
@@ -99,13 +153,12 @@ export function CarteiraTab() {
       return
     }
 
-    const mesAtual = format(new Date(), 'yyyy-MM')
     const { error } = await supabase.from('carteira_transacoes').insert({
       usuario_id: selectedUser,
       tipo: 'saque',
       valor: balance,
       descricao: 'Saque Efetuado: Resgate de Saldo',
-      mes_referencia: mesAtual,
+      mes_referencia: selectedMonth,
     })
 
     if (error) {
@@ -113,7 +166,7 @@ export function CarteiraTab() {
     } else {
       toast.success('Saque registrado com sucesso!')
       setIsSaqueDialogOpen(false)
-      loadTransactions(selectedUser)
+      loadTransactions(selectedUser, selectedMonth)
     }
   }
 
@@ -122,13 +175,12 @@ export function CarteiraTab() {
       toast.error('Preencha todos os campos.')
       return
     }
-    const mesAtual = format(new Date(), 'yyyy-MM')
     const { error } = await supabase.from('carteira_transacoes').insert({
       usuario_id: selectedUser,
       tipo: manualTipo,
       valor: Number(manualValor.replace(',', '.')),
       descricao: manualDesc,
-      mes_referencia: mesAtual,
+      mes_referencia: selectedMonth,
     })
 
     if (error) {
@@ -138,62 +190,117 @@ export function CarteiraTab() {
       setIsManualDialogOpen(false)
       setManualDesc('')
       setManualValor('')
-      loadTransactions(selectedUser)
+      setManualOrigem('outros')
+      loadTransactions(selectedUser, selectedMonth)
     }
   }
 
   return (
     <div className="space-y-6">
-      {isAdmin && (
-        <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <Label className="font-semibold text-slate-700 whitespace-nowrap">
-            Visualizar Carteira de:
-          </Label>
-          <Select value={selectedUser} onValueChange={setSelectedUser}>
-            <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="Selecione um colaborador" />
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-start sm:items-center">
+        {isAdmin && (
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <Label className="text-xs text-slate-500">Visualizar Colaborador</Label>
+            <Select value={selectedUser} onValueChange={setSelectedUser}>
+              <SelectTrigger className="w-full sm:w-[250px]">
+                <SelectValue placeholder="Selecione um colaborador" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1 w-full sm:w-auto">
+          <Label className="text-xs text-slate-500">Mês de Referência</Label>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.nome}
-                </SelectItem>
-              ))}
+              {pastMonths.map((m) => {
+                const [year, month] = m.split('-')
+                const date = new Date(parseInt(year), parseInt(month) - 1, 1)
+                return (
+                  <SelectItem key={m} value={m}>
+                    {format(date, 'MMMM / yyyy', { locale: ptBR }).replace(/^\w/, (c) =>
+                      c.toUpperCase(),
+                    )}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         </div>
-      )}
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg border-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-emerald-50 border-emerald-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium text-slate-200 flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-amber-500" />
-              Saldo Disponível
+            <CardTitle className="text-sm font-medium text-emerald-800 flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4" />
+              Ganhos do Mês
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold tracking-tight mb-4">
-              R$ {balance.toFixed(2).replace('.', ',')}
+            <div className="text-2xl font-bold text-emerald-600">
+              R$ {potencialTotal.toFixed(2).replace('.', ',')}
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsSaqueDialogOpen(true)}
-                disabled={balance <= 0 || (!isAdmin && selectedUser !== user?.id)}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full shadow-md"
-              >
-                <DollarSign className="w-4 h-4 mr-2" />
-                Solicitar Saque
-              </Button>
-            </div>
+            <p className="text-xs text-emerald-600/80 mt-1">Total de bonificações alcançadas</p>
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 md:col-span-2 shadow-sm border-slate-200">
+        <Card className="bg-red-50 border-red-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-800 flex items-center gap-2">
+              <ArrowDownRight className="w-4 h-4" />
+              Perdas Acumuladas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              R$ {perdasTotal.toFixed(2).replace('.', ',')}
+            </div>
+            <p className="text-xs text-red-600/80 mt-1">Descontos ou metas não batidas</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-200 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-amber-500" />
+                Saldo Atual
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold tracking-tight mb-2">
+              R$ {balance.toFixed(2).replace('.', ',')}
+            </div>
+            <Button
+              onClick={() => setIsSaqueDialogOpen(true)}
+              disabled={balance <= 0 || (!isAdmin && selectedUser !== user?.id)}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full h-8 text-sm mt-2"
+            >
+              <DollarSign className="w-3 h-3 mr-1" />
+              Solicitar Saque
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-lg text-slate-800">Extrato de Conta Corrente</CardTitle>
-              <CardDescription>Histórico de bonificações, descontos e saques</CardDescription>
+              <CardTitle className="text-lg text-slate-800">Extrato Consolidado</CardTitle>
+              <CardDescription>Acompanhe todos os lançamentos do mês selecionado</CardDescription>
             </div>
             {isAdmin && (
               <Button size="sm" variant="outline" onClick={() => setIsManualDialogOpen(true)}>
@@ -303,33 +410,62 @@ export function CarteiraTab() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Tipo de Lançamento</Label>
-              <Select value={manualTipo} onValueChange={(v: any) => setManualTipo(v)}>
+              <Label>Origem da Movimentação</Label>
+              <Select value={manualOrigem} onValueChange={handleOrigemChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="credito">Crédito (+)</SelectItem>
-                  <SelectItem value="debito">Débito (-)</SelectItem>
+                  {ORIGENS_PREDEFINIDAS.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Valor (R$)</Label>
-              <Input
-                type="number"
-                placeholder="0.00"
-                step="0.01"
-                value={manualValor}
-                onChange={(e) => setManualValor(e.target.value)}
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select
+                  value={manualTipo}
+                  onValueChange={(v: any) => setManualTipo(v)}
+                  disabled={manualOrigem !== 'outros'}
+                >
+                  <SelectTrigger
+                    className={manualOrigem !== 'outros' ? 'bg-slate-100 opacity-70' : ''}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="credito">Crédito (+)</SelectItem>
+                    <SelectItem value="debito">Débito (-)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor (R$)</Label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  step="0.01"
+                  value={manualValor}
+                  onChange={(e) => setManualValor(e.target.value)}
+                  readOnly={manualOrigem !== 'outros'}
+                  className={manualOrigem !== 'outros' ? 'bg-slate-100 opacity-70' : ''}
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
-              <Label>Descrição (Origem)</Label>
+              <Label>Descrição Detalhada</Label>
               <Input
                 placeholder="Ex: Bônus extra por meta atingida"
                 value={manualDesc}
                 onChange={(e) => setManualDesc(e.target.value)}
+                readOnly={manualOrigem !== 'outros'}
+                className={manualOrigem !== 'outros' ? 'bg-slate-100 opacity-70' : ''}
               />
             </div>
           </div>
