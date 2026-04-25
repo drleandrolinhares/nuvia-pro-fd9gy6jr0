@@ -31,7 +31,6 @@ import {
   endOfMonth,
   startOfDay,
   endOfDay,
-  parseISO,
   startOfWeek,
   endOfWeek,
 } from 'date-fns'
@@ -50,25 +49,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-
-const getBrtDate = (d: Date = new Date()) => {
-  return new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
-}
-
-const getLocalDateString = (d: Date = getBrtDate()) => {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
-
-const timeToMinutes = (time: string | null) => {
-  if (!time) return 0
-  const [h, m] = time.split(':').map(Number)
-  return h * 60 + m
-}
-
-const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,6 +70,25 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
 import { XCircle, ListOrdered, Eye, Copy, AlertCircle } from 'lucide-react'
+
+const getBrtDate = (d: Date = new Date()) => {
+  return new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+}
+
+const getLocalDateString = (d: Date = getBrtDate()) => {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+const timeToMinutes = (time: string | null) => {
+  if (!time) return 0
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+const formatTime = (time: string | null) => (time ? time.substring(0, 5) : '')
 
 type Task = {
   id: string
@@ -630,7 +629,7 @@ const chartConfig = {
   },
 }
 
-export default function RelatorioRotinas() {
+export function RelatorioRotinasTab() {
   const { profile } = useAuth()
 
   const [userFilter, setUserFilter] = useState('all')
@@ -1025,11 +1024,13 @@ export default function RelatorioRotinas() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">Torre de Comando</h1>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Torre de Comando (Relatório de Rotinas)
+            </h2>
             {isLive && (
               <Badge
                 variant="outline"

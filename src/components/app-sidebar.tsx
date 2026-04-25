@@ -91,13 +91,6 @@ const navData = [
         ],
       },
       {
-        title: 'Relatório de Rotinas',
-        url: '/operacional/relatorio-rotinas',
-        icon: FileBarChart,
-        showRole: ['admin', 'gestor'],
-        permission: ['operacional_relatorio_rotinas', 'Acessar Relatório de Rotinas'],
-      },
-      {
         title: 'Gestão de Terceiros',
         icon: ClipboardList,
         permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],

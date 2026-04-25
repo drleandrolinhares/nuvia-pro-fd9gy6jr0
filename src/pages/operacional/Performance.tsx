@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PPEPDMTab } from '@/components/performance/pp-pdm-tab'
 import { BonificacaoTab } from '@/components/performance/bonificacao-tab'
 import { CarteiraTab } from '@/components/performance/carteira-tab'
+import { RelatorioRotinasTab } from '@/components/performance/relatorio-rotinas-tab'
 import { Target } from 'lucide-react'
 
 export default function Performance() {
@@ -13,29 +14,35 @@ export default function Performance() {
           Performance
         </h1>
         <p className="text-slate-500">
-          Acompanhe os indicadores de desempenho, feedbacks e bonificações da equipe.
+          Acompanhe os indicadores de desempenho, feedbacks, bonificações e rotinas da equipe.
         </p>
       </div>
 
       <Tabs defaultValue="carteira" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-3xl mb-6 bg-slate-100/80 p-1 border">
+        <TabsList className="flex w-full overflow-x-auto max-w-4xl mb-6 bg-slate-100/80 p-1 border">
           <TabsTrigger
             value="carteira"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             Carteira
           </TabsTrigger>
           <TabsTrigger
             value="pp-pdm"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             PP e PDM
           </TabsTrigger>
           <TabsTrigger
             value="bonificacao"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             Bonificação Feijão com Arroz
+          </TabsTrigger>
+          <TabsTrigger
+            value="relatorio-rotinas"
+            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            Relatório de Rotinas
           </TabsTrigger>
         </TabsList>
         <TabsContent value="carteira" className="animate-fade-in">
@@ -46,6 +53,9 @@ export default function Performance() {
         </TabsContent>
         <TabsContent value="bonificacao" className="animate-fade-in">
           <BonificacaoTab />
+        </TabsContent>
+        <TabsContent value="relatorio-rotinas" className="animate-fade-in">
+          <RelatorioRotinasTab />
         </TabsContent>
       </Tabs>
     </div>
