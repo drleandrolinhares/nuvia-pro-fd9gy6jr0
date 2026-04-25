@@ -108,7 +108,7 @@ export default function Colaboradores() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
 
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('todos')
+  const [statusFilter, setStatusFilter] = useState<string>('ativo')
   const [cargoFilter, setCargoFilter] = useState<string>('todos')
 
   const [sheetOpen, setSheetOpen] = useState(false)

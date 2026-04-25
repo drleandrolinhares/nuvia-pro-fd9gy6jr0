@@ -2072,7 +2072,7 @@ export type Database = {
           obrigatorio_bonificacao: boolean
           obrigatorio_pp_pdm: boolean
           ordem: number | null
-          possui_carteira: boolean | null
+          possui_carteira: boolean
           retorno_almoco: string | null
           role: string | null
           saida_almoco: string | null
@@ -2101,7 +2101,7 @@ export type Database = {
           obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
-          possui_carteira?: boolean | null
+          possui_carteira?: boolean
           retorno_almoco?: string | null
           role?: string | null
           saida_almoco?: string | null
@@ -2130,7 +2130,7 @@ export type Database = {
           obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
-          possui_carteira?: boolean | null
+          possui_carteira?: boolean
           retorno_almoco?: string | null
           role?: string | null
           saida_almoco?: string | null
@@ -2947,6 +2947,7 @@ export const Constants = {
 //   horario_saida: time without time zone (nullable)
 //   obrigatorio_pp_pdm: boolean (not null, default: false)
 //   obrigatorio_bonificacao: boolean (not null, default: false)
+//   possui_carteira: boolean (not null, default: true)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
@@ -3795,7 +3796,16 @@ export const Constants = {
 //    LANGUAGE plpgsql
 //    SECURITY DEFINER
 //   AS $function$
+//   DECLARE
+//     v_possui_carteira boolean;
 //   BEGIN
+//     -- Check if user has carteira
+//     SELECT possui_carteira INTO v_possui_carteira FROM public.usuarios WHERE id = NEW.usuario_id;
+//
+//     IF COALESCE(v_possui_carteira, true) = false THEN
+//       RETURN NEW;
+//     END IF;
+//
 //     -- Delete old automatic transactions for this origin to recreate them
 //     DELETE FROM public.carteira_transacoes WHERE origem_id = NEW.id;
 //
