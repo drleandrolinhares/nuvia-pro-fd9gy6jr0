@@ -80,6 +80,7 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     data_admissao: data.data_admissao || null,
     salario: data.salario || null,
     status: data.status || 'ativo',
+    possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
     horario_entrada: data.horario_entrada || null,
     inicio_lanche_manha: data.inicio_lanche_manha || null,
     fim_lanche_manha: data.fim_lanche_manha || null,

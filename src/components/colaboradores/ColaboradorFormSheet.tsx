@@ -80,6 +80,7 @@ export default function ColaboradorFormSheet({
             ...usuario,
             password: '',
             ...det,
+            possui_carteira: usuario.possui_carteira ?? true,
             emergencia_nome: em.nome,
             emergencia_telefone: em.telefone,
             emergencia_parentesco: em.parentesco,
@@ -87,7 +88,7 @@ export default function ColaboradorFormSheet({
         })
         .finally(() => setLoading(false))
     } else {
-      reset({ status: 'ativo' })
+      reset({ status: 'ativo', possui_carteira: true })
     }
   }, [isOpen, isEdit, usuario, reset])
 
