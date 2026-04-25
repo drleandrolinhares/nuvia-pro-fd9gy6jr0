@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PPEPDMTab } from '@/components/performance/pp-pdm-tab'
 import { BonificacaoTab } from '@/components/performance/bonificacao-tab'
+import { CarteiraTab } from '@/components/performance/carteira-tab'
 import { Target } from 'lucide-react'
 
 export default function Performance() {
@@ -38,13 +39,7 @@ export default function Performance() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="carteira" className="animate-fade-in">
-          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-slate-200 border-dashed">
-            <h2 className="text-xl font-semibold text-slate-700 mb-2">Carteira</h2>
-            <p className="text-slate-500 text-center max-w-md">
-              Área reservada para as futuras funcionalidades da Carteira. Em breve você poderá
-              configurar e visualizar estes dados aqui.
-            </p>
-          </div>
+          <CarteiraTab />
         </TabsContent>
         <TabsContent value="pp-pdm" className="animate-fade-in">
           <PPEPDMTab />
