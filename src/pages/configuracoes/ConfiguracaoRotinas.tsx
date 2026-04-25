@@ -97,7 +97,7 @@ export default function ConfiguracaoRotinas() {
   // Bulk duplicate state
   const [selectedTasks, setSelectedTasks] = useState<string[]>([])
   const [bulkDuplicateOpen, setBulkDuplicateOpen] = useState(false)
-  const [targetUserForBulk, setTargetUserForBulk] = useState<string>('')
+  const [targetUsersForBulk, setTargetUsersForBulk] = useState<string[]>([])
   const [isBulkDuplicating, setIsBulkDuplicating] = useState(false)
 
   // Form state
@@ -412,68 +412,72 @@ export default function ConfiguracaoRotinas() {
   }
 
   const handleBulkDuplicate = async () => {
-    if (selectedTasks.length === 0 || !targetUserForBulk) return
+    if (selectedTasks.length === 0 || targetUsersForBulk.length === 0) return
     setIsBulkDuplicating(true)
     try {
-      let routineId = null
-      const { data: routine } = await supabase
-        .from('rotinas_usuarios')
-        .select('id')
-        .eq('usuario_id', targetUserForBulk)
-        .maybeSingle()
-
-      if (!routine) {
-        const { data: newRoutine, error: routineError } = await supabase
-          .from('rotinas_usuarios')
-          .insert({ usuario_id: targetUserForBulk, ativa: true })
-          .select('id')
-          .single()
-        if (routineError) throw routineError
-        if (newRoutine) routineId = newRoutine.id
-      } else {
-        routineId = routine.id
-      }
-
-      if (!routineId) throw new Error('Não foi possível encontrar ou criar rotina do destino.')
-
-      const { data: maxSeqData } = await supabase
-        .from('tarefas_rotina')
-        .select('numero_sequencia')
-        .eq('rotina_id', routineId)
-        .order('numero_sequencia', { ascending: false })
-        .limit(1)
-
-      const nextSeq = maxSeqData && maxSeqData.length > 0 ? maxSeqData[0].numero_sequencia + 1 : 1
-
       const tasksToDuplicate = currentTasks.filter((t) => selectedTasks.includes(t.id))
 
-      const tasksData = tasksToDuplicate.map((t, index) => ({
-        rotina_id: routineId,
-        descricao_tarefa: t.descricao_tarefa,
-        horario_inicio: t.horario_inicio,
-        horario_fim: t.horario_fim,
-        peso_percentual: Number(t.peso_percentual),
-        numero_sequencia: nextSeq + index,
-        periodicidade: t.periodicidade || 'diaria',
-        dias_semana: t.dias_semana,
-        dia_mes: t.dia_mes,
-        data_inicio_contagem: t.data_inicio_contagem,
-        observacao: t.observacao,
-        ativa: true,
-      }))
+      for (const targetUserId of targetUsersForBulk) {
+        let routineId = null
+        const { data: routine } = await supabase
+          .from('rotinas_usuarios')
+          .select('id')
+          .eq('usuario_id', targetUserId)
+          .maybeSingle()
 
-      const { error } = await supabase.from('tarefas_rotina').insert(tasksData)
-      if (error) throw error
+        if (!routine) {
+          const { data: newRoutine, error: routineError } = await supabase
+            .from('rotinas_usuarios')
+            .insert({ usuario_id: targetUserId, ativa: true })
+            .select('id')
+            .single()
+          if (routineError) throw routineError
+          if (newRoutine) routineId = newRoutine.id
+        } else {
+          routineId = routine.id
+        }
 
-      if (targetUserForBulk === selectedUser) {
+        if (!routineId) throw new Error('Não foi possível encontrar ou criar rotina do destino.')
+
+        const { data: maxSeqData } = await supabase
+          .from('tarefas_rotina')
+          .select('numero_sequencia')
+          .eq('rotina_id', routineId)
+          .order('numero_sequencia', { ascending: false })
+          .limit(1)
+
+        const nextSeq = maxSeqData && maxSeqData.length > 0 ? maxSeqData[0].numero_sequencia + 1 : 1
+
+        const tasksData = tasksToDuplicate.map((t, index) => ({
+          rotina_id: routineId,
+          descricao_tarefa: t.descricao_tarefa,
+          horario_inicio: t.horario_inicio,
+          horario_fim: t.horario_fim,
+          peso_percentual: Number(t.peso_percentual),
+          numero_sequencia: nextSeq + index,
+          periodicidade: t.periodicidade || 'diaria',
+          dias_semana: t.dias_semana,
+          dia_mes: t.dia_mes,
+          data_inicio_contagem: t.data_inicio_contagem,
+          observacao: t.observacao,
+          ativa: true,
+        }))
+
+        const { error } = await supabase.from('tarefas_rotina').insert(tasksData)
+        if (error) throw error
+      }
+
+      if (targetUsersForBulk.includes(selectedUser)) {
         await loadRoutine(selectedUser)
       }
       await fetchUsers()
 
-      toast({ description: `${tasksToDuplicate.length} tarefas duplicadas com sucesso!` })
+      toast({
+        description: `${tasksToDuplicate.length} tarefas duplicadas com sucesso para ${targetUsersForBulk.length} colaborador(es)!`,
+      })
       setBulkDuplicateOpen(false)
       setSelectedTasks([])
-      setTargetUserForBulk('')
+      setTargetUsersForBulk([])
     } catch (error: any) {
       toast({
         title: 'Erro ao duplicar tarefas',
@@ -1227,31 +1231,65 @@ export default function ConfiguracaoRotinas() {
           <DialogHeader>
             <DialogTitle>Duplicar {selectedTasks.length} Tarefas</DialogTitle>
             <DialogDescription>
-              Selecione o colaborador de destino para enviar as tarefas selecionadas em lote.
+              Selecione os colaboradores de destino para enviar as tarefas selecionadas em lote.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label>Colaborador de destino</Label>
-              <Select value={targetUserForBulk} onValueChange={setTargetUserForBulk}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o destino..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{u.nome}</span>
-                        {u.id === selectedUser && (
-                          <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                            Clonar
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label>Colaboradores de destino</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    if (targetUsersForBulk.length === users.length) {
+                      setTargetUsersForBulk([])
+                    } else {
+                      setTargetUsersForBulk(users.map((u) => u.id))
+                    }
+                  }}
+                >
+                  {targetUsersForBulk.length === users.length ? 'Desmarcar todos' : 'Marcar todos'}
+                </Button>
+              </div>
+              <div className="border border-border/50 rounded-md p-2 h-[200px] overflow-y-auto space-y-1 bg-background/50">
+                {users.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-md transition-colors"
+                  >
+                    <Checkbox
+                      id={`bulk-user-${u.id}`}
+                      checked={targetUsersForBulk.includes(u.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setTargetUsersForBulk([...targetUsersForBulk, u.id])
+                        } else {
+                          setTargetUsersForBulk(targetUsersForBulk.filter((id) => id !== u.id))
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`bulk-user-${u.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2"
+                    >
+                      <span>{u.nome}</span>
+                      {u.id === selectedUser && (
+                        <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                          Clonar
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {targetUsersForBulk.length > 0 && (
+                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  {targetUsersForBulk.length} colaborador(es) selecionado(s)
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -1264,7 +1302,7 @@ export default function ConfiguracaoRotinas() {
             </Button>
             <Button
               onClick={handleBulkDuplicate}
-              disabled={isBulkDuplicating || !targetUserForBulk}
+              disabled={isBulkDuplicating || targetUsersForBulk.length === 0}
             >
               {isBulkDuplicating && <Loader2 className="size-4 mr-2 animate-spin" />}
               {isBulkDuplicating ? 'Copiando...' : 'Confirmar Cópia'}
