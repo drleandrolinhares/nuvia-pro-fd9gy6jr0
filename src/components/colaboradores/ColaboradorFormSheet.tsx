@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Switch } from '@/components/ui/switch'
 import {
   Sheet,
   SheetContent,
@@ -56,7 +57,7 @@ export default function ColaboradorFormSheet({
     formState: { errors },
   } = useForm<ColaboradorFormData>({
     resolver: zodResolver(colaboradorSchema),
-    defaultValues: { status: 'ativo' },
+    defaultValues: { status: 'ativo', possui_carteira: true },
   })
 
   const watchCargo = useWatch({ control, name: 'cargo_id' })
@@ -96,6 +97,7 @@ export default function ColaboradorFormSheet({
       const payload = {
         id: usuario?.id,
         ...data,
+        possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
         horario_entrada: data.horario_entrada || null,
         inicio_lanche_manha: data.inicio_lanche_manha || null,
         fim_lanche_manha: data.fim_lanche_manha || null,
@@ -328,6 +330,23 @@ export default function ColaboradorFormSheet({
                   </Field>
                   <Field label="Salário" error={errors.salario}>
                     <Input type="number" step="0.01" {...register('salario')} />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Possui Carteira Digital?" error={errors.possui_carteira}>
+                    <Controller
+                      name="possui_carteira"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Habilitado)' : 'Não (Desabilitado)'}
+                          </span>
+                        </div>
+                      )}
+                    />
                   </Field>
                 </div>
               </TabsContent>
