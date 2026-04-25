@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -87,11 +88,17 @@ export default function ConfiguracaoRotinas() {
   const [targetDuplicateUser, setTargetDuplicateUser] = useState<string>('')
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false)
 
-  // Duplicate task state
+  // Single task duplicate state
   const [duplicateTaskOpen, setDuplicateTaskOpen] = useState(false)
   const [taskToDuplicate, setTaskToDuplicate] = useState<Task | null>(null)
   const [targetUserForTask, setTargetUserForTask] = useState<string>('')
   const [isDuplicatingTask, setIsDuplicatingTask] = useState(false)
+
+  // Bulk duplicate state
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
+  const [bulkDuplicateOpen, setBulkDuplicateOpen] = useState(false)
+  const [targetUserForBulk, setTargetUserForBulk] = useState<string>('')
+  const [isBulkDuplicating, setIsBulkDuplicating] = useState(false)
 
   // Form state
   const [editId, setEditId] = useState<string | null>(null)
@@ -116,6 +123,7 @@ export default function ConfiguracaoRotinas() {
       setNumeroSequencia(currentTasks.length + 1)
     }
   }, [currentTasks, editId])
+
   const [loadingTasks, setLoadingTasks] = useState(false)
   const [savingTask, setSavingTask] = useState(false)
 
@@ -127,6 +135,7 @@ export default function ConfiguracaoRotinas() {
     if (selectedUser) {
       loadRoutine(selectedUser)
       resetForm()
+      setSelectedTasks([])
     } else {
       setCurrentTasks([])
     }
@@ -402,12 +411,87 @@ export default function ConfiguracaoRotinas() {
     }
   }
 
+  const handleBulkDuplicate = async () => {
+    if (selectedTasks.length === 0 || !targetUserForBulk) return
+    setIsBulkDuplicating(true)
+    try {
+      let routineId = null
+      const { data: routine } = await supabase
+        .from('rotinas_usuarios')
+        .select('id')
+        .eq('usuario_id', targetUserForBulk)
+        .maybeSingle()
+
+      if (!routine) {
+        const { data: newRoutine, error: routineError } = await supabase
+          .from('rotinas_usuarios')
+          .insert({ usuario_id: targetUserForBulk, ativa: true })
+          .select('id')
+          .single()
+        if (routineError) throw routineError
+        if (newRoutine) routineId = newRoutine.id
+      } else {
+        routineId = routine.id
+      }
+
+      if (!routineId) throw new Error('Não foi possível encontrar ou criar rotina do destino.')
+
+      const { data: maxSeqData } = await supabase
+        .from('tarefas_rotina')
+        .select('numero_sequencia')
+        .eq('rotina_id', routineId)
+        .order('numero_sequencia', { ascending: false })
+        .limit(1)
+
+      const nextSeq = maxSeqData && maxSeqData.length > 0 ? maxSeqData[0].numero_sequencia + 1 : 1
+
+      const tasksToDuplicate = currentTasks.filter((t) => selectedTasks.includes(t.id))
+
+      const tasksData = tasksToDuplicate.map((t, index) => ({
+        rotina_id: routineId,
+        descricao_tarefa: t.descricao_tarefa,
+        horario_inicio: t.horario_inicio,
+        horario_fim: t.horario_fim,
+        peso_percentual: Number(t.peso_percentual),
+        numero_sequencia: nextSeq + index,
+        periodicidade: t.periodicidade || 'diaria',
+        dias_semana: t.dias_semana,
+        dia_mes: t.dia_mes,
+        data_inicio_contagem: t.data_inicio_contagem,
+        observacao: t.observacao,
+        ativa: true,
+      }))
+
+      const { error } = await supabase.from('tarefas_rotina').insert(tasksData)
+      if (error) throw error
+
+      if (targetUserForBulk === selectedUser) {
+        await loadRoutine(selectedUser)
+      }
+      await fetchUsers()
+
+      toast({ description: `${tasksToDuplicate.length} tarefas duplicadas com sucesso!` })
+      setBulkDuplicateOpen(false)
+      setSelectedTasks([])
+      setTargetUserForBulk('')
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao duplicar tarefas',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsBulkDuplicating(false)
+    }
+  }
+
   const handleDeleteTask = async (taskId: string) => {
     try {
       const { error } = await supabase.from('tarefas_rotina').delete().eq('id', taskId)
       if (error) throw error
       await loadRoutine(selectedUser)
       await fetchUsers()
+      setSelectedTasks(selectedTasks.filter((id) => id !== taskId))
       toast({ description: 'Tarefa excluída com sucesso!' })
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
@@ -541,12 +625,12 @@ export default function ConfiguracaoRotinas() {
                   <DialogTrigger asChild>
                     <Button variant="outline" className="shrink-0">
                       <Copy className="size-4 mr-2" />
-                      Duplicar
+                      Duplicar Rotina
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Duplicar Rotina</DialogTitle>
+                      <DialogTitle>Duplicar Rotina Completa</DialogTitle>
                       <DialogDescription>
                         Copie a rotina atual para outro colaborador. As tarefas existentes do
                         destino serão sobrescritas.
@@ -842,6 +926,24 @@ export default function ConfiguracaoRotinas() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {selectedTasks.length > 0 && (
+                <div className="flex items-center justify-between bg-primary/5 p-3 rounded-md mb-4 border border-primary/20 animate-fade-in">
+                  <span className="text-sm font-medium text-primary">
+                    {selectedTasks.length}{' '}
+                    {selectedTasks.length === 1 ? 'tarefa selecionada' : 'tarefas selecionadas'}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => setSelectedTasks([])}>
+                      Limpar Seleção
+                    </Button>
+                    <Button size="sm" onClick={() => setBulkDuplicateOpen(true)}>
+                      <Copy className="size-4 mr-2" />
+                      Duplicar Selecionadas
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {loadingTasks ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-center">
                   <Loader2 className="size-8 animate-spin mb-4" />
@@ -858,6 +960,21 @@ export default function ConfiguracaoRotinas() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[40px] text-center">
+                          <Checkbox
+                            checked={
+                              currentTasks.length > 0 &&
+                              selectedTasks.length === currentTasks.length
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedTasks(currentTasks.map((t) => t.id))
+                              } else {
+                                setSelectedTasks([])
+                              }
+                            }}
+                          />
+                        </TableHead>
                         <TableHead className="w-[140px]">Horário / Seq.</TableHead>
                         <TableHead>Descrição da Tarefa</TableHead>
                         <TableHead>Periodicidade</TableHead>
@@ -879,7 +996,22 @@ export default function ConfiguracaoRotinas() {
                           return a.numero_sequencia - b.numero_sequencia
                         })
                         .map((task) => (
-                          <TableRow key={task.id}>
+                          <TableRow
+                            key={task.id}
+                            className={selectedTasks.includes(task.id) ? 'bg-muted/30' : ''}
+                          >
+                            <TableCell className="text-center">
+                              <Checkbox
+                                checked={selectedTasks.includes(task.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedTasks([...selectedTasks, task.id])
+                                  } else {
+                                    setSelectedTasks(selectedTasks.filter((id) => id !== task.id))
+                                  }
+                                }}
+                              />
+                            </TableCell>
                             <TableCell>
                               {task.horario_inicio ? (
                                 <Badge
@@ -1084,6 +1216,58 @@ export default function ConfiguracaoRotinas() {
             >
               {isDuplicatingTask && <Loader2 className="size-4 mr-2 animate-spin" />}
               {isDuplicatingTask ? 'Copiando...' : 'Confirmar Cópia'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for Bulk Duplicating Multiple Tasks */}
+      <Dialog open={bulkDuplicateOpen} onOpenChange={setBulkDuplicateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar {selectedTasks.length} Tarefas</DialogTitle>
+            <DialogDescription>
+              Selecione o colaborador de destino para enviar as tarefas selecionadas em lote.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Colaborador de destino</Label>
+              <Select value={targetUserForBulk} onValueChange={setTargetUserForBulk}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o destino..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{u.nome}</span>
+                        {u.id === selectedUser && (
+                          <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Clonar
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBulkDuplicateOpen(false)}
+              disabled={isBulkDuplicating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleBulkDuplicate}
+              disabled={isBulkDuplicating || !targetUserForBulk}
+            >
+              {isBulkDuplicating && <Loader2 className="size-4 mr-2 animate-spin" />}
+              {isBulkDuplicating ? 'Copiando...' : 'Confirmar Cópia'}
             </Button>
           </DialogFooter>
         </DialogContent>
