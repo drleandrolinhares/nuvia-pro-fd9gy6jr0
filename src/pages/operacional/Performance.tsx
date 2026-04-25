@@ -16,8 +16,14 @@ export default function Performance() {
         </p>
       </div>
 
-      <Tabs defaultValue="pp-pdm" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mb-6 bg-slate-100/80 p-1 border">
+      <Tabs defaultValue="carteira" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 max-w-3xl mb-6 bg-slate-100/80 p-1 border">
+          <TabsTrigger
+            value="carteira"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            Carteira
+          </TabsTrigger>
           <TabsTrigger
             value="pp-pdm"
             className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
@@ -31,6 +37,15 @@ export default function Performance() {
             Bonificação Feijão com Arroz
           </TabsTrigger>
         </TabsList>
+        <TabsContent value="carteira" className="animate-fade-in">
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-slate-200 border-dashed">
+            <h2 className="text-xl font-semibold text-slate-700 mb-2">Carteira</h2>
+            <p className="text-slate-500 text-center max-w-md">
+              Área reservada para as futuras funcionalidades da Carteira. Em breve você poderá
+              configurar e visualizar estes dados aqui.
+            </p>
+          </div>
+        </TabsContent>
         <TabsContent value="pp-pdm" className="animate-fade-in">
           <PPEPDMTab />
         </TabsContent>
