@@ -68,7 +68,12 @@ export function SorrisoDosSonhosTab() {
   const [indicacoes, setIndicacoes] = useState<any[]>([])
   const [pacientes, setPacientes] = useState<any[]>([])
   const [usuarios, setUsuarios] = useState<any[]>([])
-  const [config, setConfig] = useState({ id: '', valor_bonus: 100, meta_indicacoes: 2 })
+  const [config, setConfig] = useState({
+    id: '',
+    valor_bonus: 100,
+    meta_indicacoes: 2,
+    usuarios_elegiveis: [] as string[],
+  })
   const [loading, setLoading] = useState(true)
 
   // Modals
@@ -96,8 +101,11 @@ export function SorrisoDosSonhosTab() {
   const [nomeIndicado, setNomeIndicado] = useState('')
   const [telefoneIndicado, setTelefoneIndicado] = useState('')
   const [colaboradorId, setColaboradorId] = useState('')
-  const [valorPremio, setValorPremio] = useState('')
-  const [editConfig, setEditConfig] = useState({ valor_bonus: 100, meta_indicacoes: 2 })
+  const [editConfig, setEditConfig] = useState({
+    valor_bonus: 100,
+    meta_indicacoes: 2,
+    usuarios_elegiveis: [] as string[],
+  })
 
   const fetchData = async () => {
     setLoading(true)
@@ -125,10 +133,14 @@ export function SorrisoDosSonhosTab() {
       setUsuarios(usuRes.data || [])
 
       if (configRes.data) {
-        setConfig(configRes.data)
+        setConfig({
+          ...configRes.data,
+          usuarios_elegiveis: configRes.data.usuarios_elegiveis || [],
+        })
         setEditConfig({
           valor_bonus: configRes.data.valor_bonus,
           meta_indicacoes: configRes.data.meta_indicacoes,
+          usuarios_elegiveis: configRes.data.usuarios_elegiveis || [],
         })
       }
     } catch (error: any) {
@@ -173,13 +185,11 @@ export function SorrisoDosSonhosTab() {
         .from('sorriso_dos_sonhos_indicacoes' as any)
         .update({
           status: 'fechado',
-          valor_premio_paciente: Number(valorPremio) || 0,
           data_fechamento: new Date().toISOString().split('T')[0],
         })
         .eq('id', selectedIndicacao.id)
       toast({ title: 'Indicação fechada com sucesso!' })
       setIsCloseModalOpen(false)
-      setValorPremio('')
       setSelectedIndicacao(null)
       setConfirmClose(false)
       fetchData()
@@ -256,6 +266,7 @@ export function SorrisoDosSonhosTab() {
   const fechadas = filteredData.filter((i) => i.status === 'fechado').length
   const fechadasPorColab = filteredData
     .filter((i) => i.status === 'fechado')
+    .filter((i) => !config.id || config.usuarios_elegiveis?.includes(i.colaborador_id))
     .reduce(
       (acc, curr) => {
         if (curr.colaborador_id) acc[curr.colaborador_id] = (acc[curr.colaborador_id] || 0) + 1
@@ -270,7 +281,11 @@ export function SorrisoDosSonhosTab() {
 
   // Chart Data
   const chartData = useMemo(() => {
-    return usuarios
+    const elegiveis = !config.id
+      ? usuarios
+      : usuarios.filter((u) => config.usuarios_elegiveis?.includes(u.id))
+
+    return elegiveis
       .map((u) => {
         const userInds = (
           periodFilter !== 'todos'
@@ -363,6 +378,36 @@ export function SorrisoDosSonhosTab() {
                       setEditConfig((p) => ({ ...p, meta_indicacoes: Number(e.target.value) }))
                     }
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Usuários Elegíveis para a Campanha</Label>
+                  <div className="border rounded-md p-3 max-h-48 overflow-y-auto space-y-3 bg-slate-50/50">
+                    {usuarios.map((u) => (
+                      <div key={u.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`user-${u.id}`}
+                          checked={editConfig.usuarios_elegiveis.includes(u.id)}
+                          onCheckedChange={(checked) => {
+                            setEditConfig((prev) => ({
+                              ...prev,
+                              usuarios_elegiveis: checked
+                                ? [...prev.usuarios_elegiveis, u.id]
+                                : prev.usuarios_elegiveis.filter((id) => id !== u.id),
+                            }))
+                          }}
+                        />
+                        <label
+                          htmlFor={`user-${u.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {u.nome}
+                        </label>
+                      </div>
+                    ))}
+                    {usuarios.length === 0 && (
+                      <span className="text-sm text-slate-500">Nenhum colaborador encontrado.</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -629,16 +674,7 @@ export function SorrisoDosSonhosTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Prêmio do Paciente Indicador (R$)</Label>
-              <Input
-                type="number"
-                value={valorPremio}
-                onChange={(e) => setValorPremio(e.target.value)}
-                placeholder="Ex: 50"
-              />
-            </div>
-            <div className="flex items-center space-x-2 rounded-md border border-amber-200 bg-amber-50 p-4 mt-2">
+            <div className="flex items-center space-x-2 rounded-md border border-amber-200 bg-amber-50 p-4">
               <Checkbox
                 id="confirm"
                 checked={confirmClose}

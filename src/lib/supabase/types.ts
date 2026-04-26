@@ -1790,6 +1790,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sorriso_dos_sonhos_config: {
+        Row: {
+          atualizado_em: string
+          id: string
+          meta_indicacoes: number
+          valor_bonus: number
+        }
+        Insert: {
+          atualizado_em?: string
+          id?: string
+          meta_indicacoes?: number
+          valor_bonus?: number
+        }
+        Update: {
+          atualizado_em?: string
+          id?: string
+          meta_indicacoes?: number
+          valor_bonus?: number
+        }
+        Relationships: []
+      }
       sorriso_dos_sonhos_indicacoes: {
         Row: {
           atualizado_em: string
@@ -2917,6 +2938,11 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: sorriso_dos_sonhos_config
+//   id: uuid (not null, default: gen_random_uuid())
+//   valor_bonus: numeric (not null, default: 100)
+//   meta_indicacoes: integer (not null, default: 2)
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: sorriso_dos_sonhos_indicacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   paciente_indicador_id: uuid (nullable)
@@ -3201,6 +3227,8 @@ export const Constants = {
 // Table: salas
 //   UNIQUE salas_nome_key: UNIQUE (nome)
 //   PRIMARY KEY salas_pkey: PRIMARY KEY (id)
+// Table: sorriso_dos_sonhos_config
+//   PRIMARY KEY sorriso_dos_sonhos_config_pkey: PRIMARY KEY (id)
 // Table: sorriso_dos_sonhos_indicacoes
 //   FOREIGN KEY sorriso_dos_sonhos_indicacoes_colaborador_id_fkey: FOREIGN KEY (colaborador_id) REFERENCES usuarios(id) ON DELETE SET NULL
 //   FOREIGN KEY sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey: FOREIGN KEY (paciente_indicador_id) REFERENCES pacientes(id) ON DELETE CASCADE
@@ -3514,6 +3542,14 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "salas_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: sorriso_dos_sonhos_config
+//   Policy "allow_insert_config" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "allow_read_config" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "allow_update_config" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: sorriso_dos_sonhos_indicacoes
 //   Policy "sorriso_dos_sonhos_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -3968,6 +4004,8 @@ export const Constants = {
 //   CREATE INDEX rotinas_usuarios_usuario_id_idx ON public.rotinas_usuarios USING btree (usuario_id)
 // Table: salas
 //   CREATE UNIQUE INDEX salas_nome_key ON public.salas USING btree (nome)
+// Table: sorriso_dos_sonhos_config
+//   CREATE UNIQUE INDEX sorriso_dos_sonhos_config_single_row ON public.sorriso_dos_sonhos_config USING btree ((true))
 // Table: tamanhos_implante
 //   CREATE UNIQUE INDEX tamanhos_implante_nome_key ON public.tamanhos_implante USING btree (nome)
 // Table: tarefas_rotina
