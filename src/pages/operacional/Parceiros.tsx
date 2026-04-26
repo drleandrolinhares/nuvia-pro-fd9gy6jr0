@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
@@ -50,12 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-const TITLES: Record<string, string> = {
-  laboratorios: 'Laboratórios',
-  radiologia: 'Radiologia',
-  outros: 'Outros',
-}
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const CARD_COLORS = [
   { value: 'bg-slate-700', label: 'Padrão' },
@@ -89,9 +83,9 @@ const getCardBg = (cor: string | null) => {
   return cor
 }
 
-export default function GestaoTerceiros() {
+export default function Parceiros() {
   const { user } = useAuth()
-  const { categoriaSlug } = useParams<{ categoriaSlug: string }>()
+  const [categoriaSlug, setCategoriaSlug] = useState('laboratorios')
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
   const [colunas, setColunas] = useState<TerceiroColuna[]>([])
   const [historico, setHistorico] = useState<TerceiroHistorico[]>([])
@@ -320,11 +314,9 @@ export default function GestaoTerceiros() {
 
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">
-            {TITLES[categoriaSlug || ''] || 'Gestão de Terceiros'}
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-100">PARCEIROS</h1>
           <p className="text-sm text-slate-400">
             Gerencie trabalhos e serviços externos (laboratórios, clínicas).
           </p>
@@ -334,133 +326,161 @@ export default function GestaoTerceiros() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4">
-        <div className="flex gap-6 h-full min-w-max">
-          {colunas.map((col) => (
-            <div
-              key={col.id}
-              className={`w-[320px] shrink-0 flex flex-col rounded-xl border ${col.cor} p-4`}
-              onDrop={(e) => onDrop(e, col.id)}
-              onDragOver={onDragOver}
-            >
-              <div className="flex justify-between items-center mb-4 group min-h-12 bg-[#0a1128] rounded-md px-4 py-2 border border-[#1e293b] shadow-md">
-                {editingColId === col.id ? (
-                  <div className="flex items-center gap-1 w-full">
-                    <Input
-                      value={editColTitle}
-                      onChange={(e) => setEditColTitle(e.target.value)}
-                      className="h-8 text-sm bg-blue-950 border-blue-900 text-[#d4af37] px-2 font-bold uppercase tracking-wide"
-                      autoFocus
-                      onKeyDown={(e) => e.key === 'Enter' && saveCol(col.id)}
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/20"
-                      onClick={() => saveCol(col.id)}
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-slate-400 hover:bg-slate-800"
-                      onClick={() => setEditingColId(null)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="font-bold text-[#d4af37] flex items-center gap-2 text-sm uppercase tracking-wider">
-                      {col.titulo}
-                      <button
-                        onClick={() => {
-                          setEditingColId(col.id)
-                          setEditColTitle(col.titulo)
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#d4af37]/70 hover:text-[#d4af37]"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                    </h3>
-                    <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-medium border border-blue-800/50">
-                      {tarefas.filter((t) => t.status === col.id).length}
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                {tarefas
-                  .filter((t) => t.status === col.id)
-                  .map((t) => (
-                    <div
-                      key={t.id}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, t.id)}
-                      onClick={() => openModal(t)}
-                      className={cn(
-                        'p-4 rounded-lg cursor-grab hover:brightness-110 transition-all shadow-md flex flex-col gap-1',
-                        getCardBg(t.cor),
-                      )}
-                    >
-                      <div className="flex justify-between items-start gap-2 mb-1">
-                        <h4 className="font-bold text-white text-base leading-tight line-clamp-2 flex-1 uppercase">
-                          {t.paciente_nome || 'SEM PACIENTE'}
-                        </h4>
-                        <GripVertical className="w-4 h-4 text-white/50 shrink-0" />
-                      </div>
-
-                      {t.titulo && (
-                        <div className="text-sm text-white/90 mb-2 font-medium line-clamp-2">
-                          {t.titulo}
-                        </div>
-                      )}
-
-                      {t.etiquetas && t.etiquetas.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {t.etiquetas.map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className={cn(
-                                'text-[10px] px-1.5 py-0.5 rounded font-medium text-white shadow-sm border border-white/10',
-                                tag.cor,
-                              )}
-                            >
-                              {tag.nome}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {t.terceiro_nome && (
-                        <div className="flex items-center text-xs text-white/80 mb-1 mt-1">
-                          <Building2 className="w-3 h-3 mr-1 shrink-0" />
-                          <span className="truncate">{t.terceiro_nome}</span>
-                        </div>
-                      )}
-
-                      {t.data_prevista && (
-                        <div className="flex items-center mt-2 pt-2 border-t border-white/20 text-xs text-white/90 font-medium">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          Agendado: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </div>
-          ))}
-
-          <div
-            onClick={() => setIsNewColModalOpen(true)}
-            className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-slate-600 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
+      <Tabs
+        value={categoriaSlug}
+        onValueChange={setCategoriaSlug}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-900/50 p-1 border border-slate-800 shrink-0">
+          <TabsTrigger
+            value="laboratorios"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
           >
-            <Plus className="w-8 h-8 text-slate-400 mb-2" />
-            <span className="text-slate-400 font-medium">Nova Etapa</span>
+            LABORATÓRIOS
+          </TabsTrigger>
+          <TabsTrigger
+            value="radiologia"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
+          >
+            RADIOLOGIA
+          </TabsTrigger>
+          <TabsTrigger
+            value="outros"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
+          >
+            OUTROS
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex-1 overflow-x-auto pb-4">
+          <div className="flex gap-6 h-full min-w-max">
+            {colunas.map((col) => (
+              <div
+                key={col.id}
+                className={`w-[320px] shrink-0 flex flex-col rounded-xl border ${col.cor} p-4`}
+                onDrop={(e) => onDrop(e, col.id)}
+                onDragOver={onDragOver}
+              >
+                <div className="flex justify-between items-center mb-4 group min-h-12 bg-[#0a1128] rounded-md px-4 py-2 border border-[#1e293b] shadow-md">
+                  {editingColId === col.id ? (
+                    <div className="flex items-center gap-1 w-full">
+                      <Input
+                        value={editColTitle}
+                        onChange={(e) => setEditColTitle(e.target.value)}
+                        className="h-8 text-sm bg-blue-950 border-blue-900 text-[#d4af37] px-2 font-bold uppercase tracking-wide"
+                        autoFocus
+                        onKeyDown={(e) => e.key === 'Enter' && saveCol(col.id)}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/20"
+                        onClick={() => saveCol(col.id)}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-slate-400 hover:bg-slate-800"
+                        onClick={() => setEditingColId(null)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-bold text-[#d4af37] flex items-center gap-2 text-sm uppercase tracking-wider">
+                        {col.titulo}
+                        <button
+                          onClick={() => {
+                            setEditingColId(col.id)
+                            setEditColTitle(col.titulo)
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-[#d4af37]/70 hover:text-[#d4af37]"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      </h3>
+                      <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-medium border border-blue-800/50">
+                        {tarefas.filter((t) => t.status === col.id).length}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                  {tarefas
+                    .filter((t) => t.status === col.id)
+                    .map((t) => (
+                      <div
+                        key={t.id}
+                        draggable
+                        onDragStart={(e) => onDragStart(e, t.id)}
+                        onClick={() => openModal(t)}
+                        className={cn(
+                          'p-4 rounded-lg cursor-grab hover:brightness-110 transition-all shadow-md flex flex-col gap-1',
+                          getCardBg(t.cor),
+                        )}
+                      >
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <h4 className="font-bold text-white text-base leading-tight line-clamp-2 flex-1 uppercase">
+                            {t.paciente_nome || 'SEM PACIENTE'}
+                          </h4>
+                          <GripVertical className="w-4 h-4 text-white/50 shrink-0" />
+                        </div>
+
+                        {t.titulo && (
+                          <div className="text-sm text-white/90 mb-2 font-medium line-clamp-2">
+                            {t.titulo}
+                          </div>
+                        )}
+
+                        {t.etiquetas && t.etiquetas.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {t.etiquetas.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className={cn(
+                                  'text-[10px] px-1.5 py-0.5 rounded font-medium text-white shadow-sm border border-white/10',
+                                  tag.cor,
+                                )}
+                              >
+                                {tag.nome}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {t.terceiro_nome && (
+                          <div className="flex items-center text-xs text-white/80 mb-1 mt-1">
+                            <Building2 className="w-3 h-3 mr-1 shrink-0" />
+                            <span className="truncate">{t.terceiro_nome}</span>
+                          </div>
+                        )}
+
+                        {t.data_prevista && (
+                          <div className="flex items-center mt-2 pt-2 border-t border-white/20 text-xs text-white/90 font-medium">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            Agendado:{' '}
+                            {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+
+            <div
+              onClick={() => setIsNewColModalOpen(true)}
+              className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-slate-600 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
+            >
+              <Plus className="w-8 h-8 text-slate-400 mb-2" />
+              <span className="text-slate-400 font-medium">Nova Etapa</span>
+            </div>
           </div>
         </div>
-      </div>
+      </Tabs>
 
       <Dialog open={isNewColModalOpen} onOpenChange={setIsNewColModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">

@@ -76,7 +76,7 @@ const navData = [
         hideRole: ['admin', 'gestor', 'CEO', 'SÓCIA', 'ceo', 'sócia'],
       },
       {
-        title: 'Performance',
+        title: 'PERFORMANCE',
         url: '/operacional/performance',
         icon: BarChart3,
         permission: ['operacional_performance', 'Acessar Performance'],
@@ -91,14 +91,10 @@ const navData = [
         ],
       },
       {
-        title: 'Gestão de Terceiros',
+        title: 'PARCEIROS',
+        url: '/operacional/parceiros',
         icon: ClipboardList,
         permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],
-        subItems: [
-          { title: 'Laboratórios', url: '/operacional/terceiros/laboratorios' },
-          { title: 'Radiologia', url: '/operacional/terceiros/radiologia' },
-          { title: 'Outros', url: '/operacional/terceiros/outros' },
-        ],
       },
     ],
   },

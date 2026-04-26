@@ -22,7 +22,7 @@ import Compromissos from './pages/operacional/Compromissos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import Performance from './pages/operacional/Performance'
 import NormasInternas from './pages/operacional/NormasInternas'
-import GestaoTerceiros from './pages/operacional/GestaoTerceiros'
+import Parceiros from './pages/operacional/Parceiros'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
@@ -211,10 +211,10 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/operacional/terceiros/:categoriaSlug"
+          path="/operacional/parceiros"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_terceiros']}>
-              <GestaoTerceiros />
+              <Parceiros />
             </ProtectedRoute>
           }
         />

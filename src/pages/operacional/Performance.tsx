@@ -12,8 +12,8 @@ export default function Performance() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <Target className="h-8 w-8 text-amber-500" />
-          Performance
-        </h1>
+          PERFORMANCE
+        </h1>{' '}
         <p className="text-slate-500">
           Acompanhe os indicadores de desempenho, feedbacks, bonificações e rotinas da equipe.
         </p>
