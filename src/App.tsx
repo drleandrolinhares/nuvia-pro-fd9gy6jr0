@@ -20,6 +20,7 @@ import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
 import FeriadosAusencias from './pages/configuracoes/FeriadosAusencias'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
+import SAC from './pages/operacional/SAC'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
@@ -177,7 +178,7 @@ const AppRoutes = () => {
           path="/operacional/sac"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_sac']}>
-              <Placeholder />
+              <SAC />
             </ProtectedRoute>
           }
         />
