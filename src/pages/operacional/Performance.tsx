@@ -3,6 +3,7 @@ import { PPEPDMTab } from '@/components/performance/pp-pdm-tab'
 import { BonificacaoTab } from '@/components/performance/bonificacao-tab'
 import { CarteiraTab } from '@/components/performance/carteira-tab'
 import { RelatorioRotinasTab } from '@/components/performance/relatorio-rotinas-tab'
+import { SorrisoDosSonhosTab } from '@/components/performance/sorriso-dos-sonhos-tab'
 import { Target } from 'lucide-react'
 
 export default function Performance() {
@@ -19,30 +20,36 @@ export default function Performance() {
       </div>
 
       <Tabs defaultValue="carteira" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto max-w-4xl mb-6 bg-slate-100/80 p-1 border">
+        <TabsList className="flex w-full overflow-x-auto max-w-5xl mb-6 bg-slate-100/80 p-1 border">
           <TabsTrigger
             value="carteira"
-            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             Carteira
           </TabsTrigger>
           <TabsTrigger
             value="pp-pdm"
-            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             PP e PDM
           </TabsTrigger>
           <TabsTrigger
             value="bonificacao"
-            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             Bonificação Feijão com Arroz
           </TabsTrigger>
           <TabsTrigger
             value="relatorio-rotinas"
-            className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             Relatório de Rotinas
+          </TabsTrigger>
+          <TabsTrigger
+            value="sorriso-dos-sonhos"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            Sorriso dos Sonhos
           </TabsTrigger>
         </TabsList>
         <TabsContent value="carteira" className="animate-fade-in">
@@ -56,6 +63,9 @@ export default function Performance() {
         </TabsContent>
         <TabsContent value="relatorio-rotinas" className="animate-fade-in">
           <RelatorioRotinasTab />
+        </TabsContent>
+        <TabsContent value="sorriso-dos-sonhos" className="animate-fade-in">
+          <SorrisoDosSonhosTab />
         </TabsContent>
       </Tabs>
     </div>
