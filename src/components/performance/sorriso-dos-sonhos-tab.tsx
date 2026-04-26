@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,59 +31,109 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, CheckCircle2, Users, Trophy, DollarSign, Loader2 } from 'lucide-react'
-import { format } from 'date-fns'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import {
+  Search,
+  Plus,
+  CheckCircle2,
+  Users,
+  Trophy,
+  DollarSign,
+  Loader2,
+  Settings,
+  Trash2,
+  Filter,
+} from 'lucide-react'
+import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO } from 'date-fns'
 
 export function SorrisoDosSonhosTab() {
   const [indicacoes, setIndicacoes] = useState<any[]>([])
   const [pacientes, setPacientes] = useState<any[]>([])
   const [usuarios, setUsuarios] = useState<any[]>([])
+  const [config, setConfig] = useState({ id: '', valor_bonus: 100, meta_indicacoes: 2 })
   const [loading, setLoading] = useState(true)
+
+  // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false)
-  const [selectedIndicacao, setSelectedIndicacao] = useState<any>(null)
-  const [search, setSearch] = useState('')
-  const { toast } = useToast()
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
-  // Form states
+  // Selections
+  const [selectedIndicacao, setSelectedIndicacao] = useState<any>(null)
+  const [indicacaoToDelete, setIndicacaoToDelete] = useState<any>(null)
+  const [confirmClose, setConfirmClose] = useState(false)
+
+  // Filters
+  const [search, setSearch] = useState('')
+  const [colaboradorFilter, setColaboradorFilter] = useState('todos')
+  const [periodFilter, setPeriodFilter] = useState('todos')
+
+  const { toast } = useToast()
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
+
+  // Forms
   const [pacienteId, setPacienteId] = useState('')
   const [nomeIndicado, setNomeIndicado] = useState('')
   const [telefoneIndicado, setTelefoneIndicado] = useState('')
   const [colaboradorId, setColaboradorId] = useState('')
   const [valorPremio, setValorPremio] = useState('')
+  const [editConfig, setEditConfig] = useState({ valor_bonus: 100, meta_indicacoes: 2 })
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [indRes, pacRes, usuRes] = await Promise.all([
+      const [indRes, pacRes, usuRes, configRes] = await Promise.all([
         supabase
           .from('sorriso_dos_sonhos_indicacoes' as any)
-          .select(`
-          *,
-          paciente:pacientes!paciente_indicador_id(nome),
-          colaborador:usuarios!colaborador_id(nome)
-        `)
+          .select(
+            `*, paciente:pacientes!paciente_indicador_id(nome), colaborador:usuarios!colaborador_id(nome)`,
+          )
           .order('criado_em', { ascending: false }),
         supabase.from('pacientes').select('id, nome').order('nome'),
         supabase.from('usuarios').select('id, nome').eq('status', 'ativo').order('nome'),
+        supabase
+          .from('sorriso_dos_sonhos_config' as any)
+          .select('*')
+          .limit(1)
+          .maybeSingle(),
       ])
 
-      // Ignore 42P01 error during first render if table doesn't exist yet
       if (indRes.error && indRes.error.code !== '42P01') throw indRes.error
-      if (pacRes.error) throw pacRes.error
-      if (usuRes.error) throw usuRes.error
 
       setIndicacoes(indRes.data || [])
       setPacientes(pacRes.data || [])
       setUsuarios(usuRes.data || [])
-    } catch (error: any) {
-      if (error.code !== '42P01') {
-        toast({
-          title: 'Erro ao carregar dados',
-          description: error.message,
-          variant: 'destructive',
+
+      if (configRes.data) {
+        setConfig(configRes.data)
+        setEditConfig({
+          valor_bonus: configRes.data.valor_bonus,
+          meta_indicacoes: configRes.data.meta_indicacoes,
         })
       }
+    } catch (error: any) {
+      if (error.code !== '42P01')
+        toast({ title: 'Erro ao carregar', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -93,22 +144,16 @@ export function SorrisoDosSonhosTab() {
   }, [])
 
   const handleAdd = async () => {
-    if (!pacienteId || !nomeIndicado || !colaboradorId) {
-      toast({ title: 'Preencha os campos obrigatórios', variant: 'destructive' })
-      return
-    }
-
+    if (!pacienteId || !nomeIndicado || !colaboradorId)
+      return toast({ title: 'Preencha os campos obrigatórios', variant: 'destructive' })
     try {
-      const { error } = await supabase.from('sorriso_dos_sonhos_indicacoes' as any).insert({
+      await supabase.from('sorriso_dos_sonhos_indicacoes' as any).insert({
         paciente_indicador_id: pacienteId,
         nome_indicado: nomeIndicado,
         telefone_indicado: telefoneIndicado,
         colaborador_id: colaboradorId,
         status: 'pendente',
       })
-
-      if (error) throw error
-
       toast({ title: 'Indicação registrada com sucesso!' })
       setIsAddModalOpen(false)
       setPacienteId('')
@@ -122,10 +167,9 @@ export function SorrisoDosSonhosTab() {
   }
 
   const handleClose = async () => {
-    if (!selectedIndicacao) return
-
+    if (!selectedIndicacao || !confirmClose) return
     try {
-      const { error } = await supabase
+      await supabase
         .from('sorriso_dos_sonhos_indicacoes' as any)
         .update({
           status: 'fechado',
@@ -133,47 +177,210 @@ export function SorrisoDosSonhosTab() {
           data_fechamento: new Date().toISOString().split('T')[0],
         })
         .eq('id', selectedIndicacao.id)
-
-      if (error) throw error
-
       toast({ title: 'Indicação fechada com sucesso!' })
       setIsCloseModalOpen(false)
       setValorPremio('')
       setSelectedIndicacao(null)
+      setConfirmClose(false)
       fetchData()
     } catch (error: any) {
       toast({ title: 'Erro ao fechar', description: error.message, variant: 'destructive' })
     }
   }
 
-  const totais = indicacoes.length
-  const fechadas = indicacoes.filter((i) => i.status === 'fechado').length
+  const handleDelete = async () => {
+    if (!indicacaoToDelete) return
+    try {
+      await supabase
+        .from('sorriso_dos_sonhos_indicacoes' as any)
+        .delete()
+        .eq('id', indicacaoToDelete.id)
+      toast({ title: 'Indicação excluída' })
+      setIsDeleteModalOpen(false)
+      setIndicacaoToDelete(null)
+      fetchData()
+    } catch (error: any) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
+    }
+  }
 
-  const fechadasPorColab = indicacoes
+  const handleSaveConfig = async () => {
+    try {
+      if (config.id) {
+        await supabase
+          .from('sorriso_dos_sonhos_config' as any)
+          .update(editConfig)
+          .eq('id', config.id)
+      } else {
+        await supabase.from('sorriso_dos_sonhos_config' as any).insert(editConfig)
+      }
+      toast({ title: 'Configurações salvas' })
+      setIsConfigModalOpen(false)
+      fetchData()
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar configurações',
+        description: error.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Filtering
+  const filteredData = useMemo(() => {
+    let data = indicacoes
+    if (periodFilter === 'este_mes') {
+      const start = startOfMonth(new Date())
+      const end = endOfMonth(new Date())
+      data = data.filter((i) => isWithinInterval(parseISO(i.criado_em), { start, end }))
+    } else if (periodFilter === 'mes_passado') {
+      const start = startOfMonth(subMonths(new Date(), 1))
+      const end = endOfMonth(subMonths(new Date(), 1))
+      data = data.filter((i) => isWithinInterval(parseISO(i.criado_em), { start, end }))
+    }
+    if (colaboradorFilter !== 'todos') {
+      data = data.filter((i) => i.colaborador_id === colaboradorFilter)
+    }
+    if (search) {
+      data = data.filter(
+        (i) =>
+          i.nome_indicado?.toLowerCase().includes(search.toLowerCase()) ||
+          i.paciente?.nome?.toLowerCase().includes(search.toLowerCase()),
+      )
+    }
+    return data
+  }, [indicacoes, periodFilter, colaboradorFilter, search])
+
+  // KPIs
+  const totais = filteredData.length
+  const fechadas = filteredData.filter((i) => i.status === 'fechado').length
+  const fechadasPorColab = filteredData
     .filter((i) => i.status === 'fechado')
     .reduce(
       (acc, curr) => {
-        if (curr.colaborador_id) {
-          acc[curr.colaborador_id] = (acc[curr.colaborador_id] || 0) + 1
-        }
+        if (curr.colaborador_id) acc[curr.colaborador_id] = (acc[curr.colaborador_id] || 0) + 1
         return acc
       },
       {} as Record<string, number>,
     )
-
-  const bonusTotal = Object.values(fechadasPorColab).reduce((sum, count) => {
-    return sum + Math.floor(count / 2) * 100
-  }, 0)
-
-  const filteredIndicacoes = indicacoes.filter(
-    (i) =>
-      i.nome_indicado?.toLowerCase().includes(search.toLowerCase()) ||
-      i.paciente?.nome?.toLowerCase().includes(search.toLowerCase()) ||
-      i.colaborador?.nome?.toLowerCase().includes(search.toLowerCase()),
+  const bonusTotal = Object.values(fechadasPorColab).reduce(
+    (sum, count) => sum + Math.floor(count / config.meta_indicacoes) * config.valor_bonus,
+    0,
   )
+
+  // Chart Data
+  const chartData = useMemo(() => {
+    return usuarios
+      .map((u) => {
+        const userInds = (
+          periodFilter !== 'todos'
+            ? indicacoes.filter((i) => {
+                const d = parseISO(i.criado_em)
+                const s =
+                  periodFilter === 'este_mes'
+                    ? startOfMonth(new Date())
+                    : startOfMonth(subMonths(new Date(), 1))
+                const e =
+                  periodFilter === 'este_mes'
+                    ? endOfMonth(new Date())
+                    : endOfMonth(subMonths(new Date(), 1))
+                return isWithinInterval(d, { start: s, end: e })
+              })
+            : indicacoes
+        ).filter((i) => i.colaborador_id === u.id)
+
+        const indicadas = userInds.length
+        const concluidas = userInds.filter((i) => i.status === 'fechado').length
+        return { name: u.nome.split(' ')[0], indicadas, fechadas: concluidas }
+      })
+      .filter((d) => d.indicadas > 0)
+      .sort((a, b) => b.fechadas - a.fechadas)
+  }, [usuarios, indicacoes, periodFilter])
 
   return (
     <div className="space-y-6">
+      {/* Top Bar with Filters */}
+      <div className="flex flex-wrap items-center gap-3 bg-white/50 p-4 rounded-lg border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-slate-500" />
+          <span className="text-sm font-medium text-slate-700">Filtros:</span>
+        </div>
+        <Select value={colaboradorFilter} onValueChange={setColaboradorFilter}>
+          <SelectTrigger className="w-[200px] bg-white">
+            <SelectValue placeholder="Colaborador" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os colaboradores</SelectItem>
+            {usuarios.map((u) => (
+              <SelectItem key={u.id} value={u.id}>
+                {u.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={periodFilter} onValueChange={setPeriodFilter}>
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todo o período</SelectItem>
+            <SelectItem value="este_mes">Este mês</SelectItem>
+            <SelectItem value="mes_passado">Mês passado</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {isAdmin && (
+          <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="ml-auto bg-white">
+                <Settings className="h-4 w-4 mr-2" /> Regras do Bônus
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Configurar Regras de Premiação</DialogTitle>
+                <DialogDescription>
+                  Ajuste os valores e metas para a bonificação da equipe.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label>Valor do Bônus (R$)</Label>
+                  <Input
+                    type="number"
+                    value={editConfig.valor_bonus}
+                    onChange={(e) =>
+                      setEditConfig((p) => ({ ...p, valor_bonus: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>A cada quantas indicações fechadas?</Label>
+                  <Input
+                    type="number"
+                    value={editConfig.meta_indicacoes}
+                    onChange={(e) =>
+                      setEditConfig((p) => ({ ...p, meta_indicacoes: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsConfigModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={handleSaveConfig}
+                >
+                  Salvar Regras
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-none shadow-sm bg-white/70">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -184,7 +391,6 @@ export function SorrisoDosSonhosTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-800">{totais}</div>
-            <p className="text-xs text-slate-500">Cadastradas no programa</p>
           </CardContent>
         </Card>
 
@@ -197,30 +403,54 @@ export function SorrisoDosSonhosTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{fechadas}</div>
-            <p className="text-xs text-slate-500">Tratamentos iniciados</p>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm bg-white/70">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Bônus da Equipe</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Bônus Calculado</CardTitle>
             <Trophy className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">
               R$ {bonusTotal.toFixed(2).replace('.', ',')}
             </div>
-            <p className="text-xs text-slate-500">Acumulado (R$100 a cada 2 fechadas)</p>
+            <p className="text-xs text-slate-500 mt-1">
+              R${config.valor_bonus} a cada {config.meta_indicacoes} fechadas
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      {colaboradorFilter === 'todos' && chartData.length > 0 && (
+        <Card className="border-none shadow-sm bg-white/70">
+          <CardHeader>
+            <CardTitle className="text-lg">Desempenho Individual da Equipe</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                indicadas: { label: 'Indicações', color: '#f59e0b' },
+                fechadas: { label: 'Fechadas', color: '#10b981' },
+              }}
+            >
+              <BarChart data={chartData} height={250}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="indicadas" fill="var(--color-indicadas)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="fechadas" fill="var(--color-fechadas)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-none shadow-sm bg-white/70">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6">
-          <div>
-            <CardTitle className="text-xl">Controle de Indicações</CardTitle>
-            <CardDescription>Acompanhe e gerencie o programa Sorriso dos Sonhos</CardDescription>
-          </div>
+          <CardTitle className="text-xl">Controle de Indicações</CardTitle>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
@@ -234,8 +464,7 @@ export function SorrisoDosSonhosTab() {
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-amber-500 hover:bg-amber-600 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Indicação
+                  <Plus className="h-4 w-4 mr-2" /> Nova Indicação
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -249,7 +478,7 @@ export function SorrisoDosSonhosTab() {
                     </Label>
                     <Select value={pacienteId} onValueChange={setPacienteId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o paciente" />
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
                         {pacientes.map((p) => (
@@ -264,19 +493,7 @@ export function SorrisoDosSonhosTab() {
                     <Label>
                       Nome do Indicado <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      value={nomeIndicado}
-                      onChange={(e) => setNomeIndicado(e.target.value)}
-                      placeholder="Nome da pessoa indicada"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Telefone do Indicado</Label>
-                    <Input
-                      value={telefoneIndicado}
-                      onChange={(e) => setTelefoneIndicado(e.target.value)}
-                      placeholder="(00) 00000-0000"
-                    />
+                    <Input value={nomeIndicado} onChange={(e) => setNomeIndicado(e.target.value)} />
                   </div>
                   <div className="grid gap-2">
                     <Label>
@@ -284,7 +501,7 @@ export function SorrisoDosSonhosTab() {
                     </Label>
                     <Select value={colaboradorId} onValueChange={setColaboradorId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o colaborador" />
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
                         {usuarios.map((u) => (
@@ -300,10 +517,7 @@ export function SorrisoDosSonhosTab() {
                   <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button
-                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                    onClick={handleAdd}
-                  >
+                  <Button className="bg-amber-500 text-white" onClick={handleAdd}>
                     Salvar Registro
                   </Button>
                 </DialogFooter>
@@ -320,23 +534,23 @@ export function SorrisoDosSonhosTab() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="w-[120px]">Data</TableHead>
-                  <TableHead>Paciente Indicador</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Indicador</TableHead>
                   <TableHead>Indicado</TableHead>
                   <TableHead>Colaborador</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
-                  <TableHead className="w-[160px] text-right">Ações</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredIndicacoes.length === 0 ? (
+                {filteredData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-slate-500 h-32">
                       Nenhuma indicação encontrada.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredIndicacoes.map((ind) => (
+                  filteredData.map((ind) => (
                     <TableRow key={ind.id}>
                       <TableCell className="text-slate-600">
                         {format(new Date(ind.criado_em), 'dd/MM/yyyy')}
@@ -344,9 +558,8 @@ export function SorrisoDosSonhosTab() {
                       <TableCell className="font-medium text-slate-900">
                         {ind.paciente?.nome}
                       </TableCell>
-                      <TableCell>
-                        <div className="font-medium text-slate-700">{ind.nome_indicado}</div>
-                        <div className="text-xs text-slate-500">{ind.telefone_indicado || '-'}</div>
+                      <TableCell className="font-medium text-slate-700">
+                        {ind.nome_indicado}
                       </TableCell>
                       <TableCell className="text-slate-600">{ind.colaborador?.nome}</TableCell>
                       <TableCell>
@@ -367,26 +580,35 @@ export function SorrisoDosSonhosTab() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {ind.status === 'pendente' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 h-8"
-                            onClick={() => {
-                              setSelectedIndicacao(ind)
-                              setIsCloseModalOpen(true)
-                            }}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Fechar
-                          </Button>
-                        )}
-                        {ind.status === 'fechado' && ind.valor_premio_paciente > 0 && (
-                          <div className="text-xs text-emerald-600 font-medium flex items-center justify-end px-2 py-1 bg-emerald-50 rounded-md inline-flex border border-emerald-100">
-                            <DollarSign className="h-3 w-3 mr-0.5" />
-                            {ind.valor_premio_paciente}
-                          </div>
-                        )}
+                        <div className="flex justify-end items-center gap-2">
+                          {ind.status === 'pendente' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => {
+                                setSelectedIndicacao(ind)
+                                setIsCloseModalOpen(true)
+                                setConfirmClose(false)
+                              }}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" /> Fechar
+                            </Button>
+                          )}
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                setIndicacaoToDelete(ind)
+                                setIsDeleteModalOpen(true)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -402,7 +624,7 @@ export function SorrisoDosSonhosTab() {
           <DialogHeader>
             <DialogTitle>Confirmar Fechamento</DialogTitle>
             <DialogDescription>
-              Marcar o tratamento como fechado para{' '}
+              Marcar tratamento como fechado para{' '}
               <strong>{selectedIndicacao?.nome_indicado}</strong>.
             </DialogDescription>
           </DialogHeader>
@@ -415,10 +637,19 @@ export function SorrisoDosSonhosTab() {
                 onChange={(e) => setValorPremio(e.target.value)}
                 placeholder="Ex: 50"
               />
-              <p className="text-xs text-slate-500 mt-1">
-                Valor que <strong>{selectedIndicacao?.paciente?.nome}</strong> ganhará pela
-                indicação.
-              </p>
+            </div>
+            <div className="flex items-center space-x-2 rounded-md border border-amber-200 bg-amber-50 p-4 mt-2">
+              <Checkbox
+                id="confirm"
+                checked={confirmClose}
+                onCheckedChange={(c) => setConfirmClose(c as boolean)}
+              />
+              <label
+                htmlFor="confirm"
+                className="text-sm font-medium leading-none text-amber-900 cursor-pointer"
+              >
+                Ação Dupla: Confirmo que o tratamento foi efetivamente fechado no sistema.
+              </label>
             </div>
           </div>
           <DialogFooter>
@@ -426,15 +657,37 @@ export function SorrisoDosSonhosTab() {
               Cancelar
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 text-white"
+              disabled={!confirmClose}
               onClick={handleClose}
             >
-              <CheckCircle2 className="h-4 w-4 mr-2" />
               Confirmar Fechamento
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Indicação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza? Esta ação não pode ser desfeita. A indicação de{' '}
+              <strong>{indicacaoToDelete?.nome_indicado}</strong> será removida permanentemente do
+              sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDelete}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

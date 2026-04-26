@@ -1790,6 +1790,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sorriso_dos_sonhos_indicacoes: {
+        Row: {
+          atualizado_em: string
+          colaborador_id: string | null
+          criado_em: string
+          data_fechamento: string | null
+          id: string
+          nome_indicado: string
+          paciente_indicador_id: string | null
+          status: string
+          telefone_indicado: string | null
+          valor_premio_paciente: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          colaborador_id?: string | null
+          criado_em?: string
+          data_fechamento?: string | null
+          id?: string
+          nome_indicado: string
+          paciente_indicador_id?: string | null
+          status?: string
+          telefone_indicado?: string | null
+          valor_premio_paciente?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          colaborador_id?: string | null
+          criado_em?: string
+          data_fechamento?: string | null
+          id?: string
+          nome_indicado?: string
+          paciente_indicador_id?: string | null
+          status?: string
+          telefone_indicado?: string | null
+          valor_premio_paciente?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_colaborador_id_fkey'
+            columns: ['colaborador_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey'
+            columns: ['paciente_indicador_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       tamanhos_implante: {
         Row: {
           data_criacao: string | null
@@ -2863,6 +2917,17 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: sorriso_dos_sonhos_indicacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   paciente_indicador_id: uuid (nullable)
+//   nome_indicado: text (not null)
+//   telefone_indicado: text (nullable)
+//   colaborador_id: uuid (nullable)
+//   status: text (not null, default: 'pendente'::text)
+//   valor_premio_paciente: numeric (nullable, default: 0)
+//   data_fechamento: date (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: tamanhos_implante
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -3136,6 +3201,10 @@ export const Constants = {
 // Table: salas
 //   UNIQUE salas_nome_key: UNIQUE (nome)
 //   PRIMARY KEY salas_pkey: PRIMARY KEY (id)
+// Table: sorriso_dos_sonhos_indicacoes
+//   FOREIGN KEY sorriso_dos_sonhos_indicacoes_colaborador_id_fkey: FOREIGN KEY (colaborador_id) REFERENCES usuarios(id) ON DELETE SET NULL
+//   FOREIGN KEY sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey: FOREIGN KEY (paciente_indicador_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY sorriso_dos_sonhos_indicacoes_pkey: PRIMARY KEY (id)
 // Table: tamanhos_implante
 //   UNIQUE tamanhos_implante_nome_key: UNIQUE (nome)
 //   PRIMARY KEY tamanhos_implante_pkey: PRIMARY KEY (id)
@@ -3445,6 +3514,10 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //   Policy "salas_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: sorriso_dos_sonhos_indicacoes
+//   Policy "sorriso_dos_sonhos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: tamanhos_implante
 //   Policy "tamanhos_implante_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
