@@ -22,12 +22,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { parseISO } from 'date-fns'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const MESES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+]
 
 const Index = () => {
   const { user } = useAuth()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
-  const [aniversariantes, setAniversariantes] = useState<any[]>([])
+  const [todosUsuarios, setTodosUsuarios] = useState<any[]>([])
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
+  const [possuiCarteira, setPossuiCarteira] = useState(false)
   const [saldoAtual, setSaldoAtual] = useState(0)
   const [saldoPerdido, setSaldoPerdido] = useState(0)
   const { dataVersion, invalidateCache } = useCache()
@@ -40,22 +64,34 @@ const Index = () => {
     }
 
     if (user) {
-      const { data: transacoes } = await supabase
-        .from('carteira_transacoes')
-        .select('tipo, valor')
-        .eq('usuario_id', user.id)
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('possui_carteira')
+        .eq('id', user.id)
+        .single()
 
-      if (transacoes) {
-        let creditos = 0
-        let debitos = 0
-        let saques = 0
-        transacoes.forEach((t) => {
-          if (t.tipo === 'credito') creditos += Number(t.valor)
-          else if (t.tipo === 'debito') debitos += Number(t.valor)
-          else if (t.tipo === 'saque') saques += Number(t.valor)
-        })
-        setSaldoAtual(creditos - debitos - saques)
-        setSaldoPerdido(debitos)
+      if (userData) {
+        setPossuiCarteira(userData.possui_carteira)
+      }
+
+      if (userData?.possui_carteira) {
+        const { data: transacoes } = await supabase
+          .from('carteira_transacoes')
+          .select('tipo, valor')
+          .eq('usuario_id', user.id)
+
+        if (transacoes) {
+          let creditos = 0
+          let debitos = 0
+          let saques = 0
+          transacoes.forEach((t) => {
+            if (t.tipo === 'credito') creditos += Number(t.valor)
+            else if (t.tipo === 'debito') debitos += Number(t.valor)
+            else if (t.tipo === 'saque') saques += Number(t.valor)
+          })
+          setSaldoAtual(creditos - debitos - saques)
+          setSaldoPerdido(debitos)
+        }
       }
 
       const { data: usuarios } = await supabase
@@ -65,38 +101,7 @@ const Index = () => {
         .not('data_nascimento', 'is', null)
 
       if (usuarios) {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const currentMonth = today.getMonth()
-
-        const aniversariantesMes = usuarios
-          .filter((u) => {
-            if (!u.data_nascimento) return false
-            const birthDate = parseISO(u.data_nascimento)
-            const birthDateLocal = new Date(
-              birthDate.getTime() + birthDate.getTimezoneOffset() * 60000,
-            )
-            return birthDateLocal.getMonth() === currentMonth
-          })
-          .map((u) => {
-            const birthDate = parseISO(u.data_nascimento!)
-            const birthDateLocal = new Date(
-              birthDate.getTime() + birthDate.getTimezoneOffset() * 60000,
-            )
-            const day = birthDateLocal.getDate()
-            const thisYearBirthday = new Date(today.getFullYear(), currentMonth, day)
-            const diff = thisYearBirthday.getTime() - today.getTime()
-            const isPast = diff < 0
-
-            return {
-              ...u,
-              day,
-              isPast,
-            }
-          })
-          .sort((a, b) => a.day - b.day)
-
-        setAniversariantes(aniversariantesMes)
+        setTodosUsuarios(usuarios)
       }
     }
 
@@ -147,6 +152,39 @@ const Index = () => {
     })
   }, [produtos])
 
+  const aniversariantes = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const currentMonth = today.getMonth()
+
+    return todosUsuarios
+      .filter((u) => {
+        if (!u.data_nascimento) return false
+        const birthDate = parseISO(u.data_nascimento)
+        const birthDateLocal = new Date(birthDate.getTime() + birthDate.getTimezoneOffset() * 60000)
+        return birthDateLocal.getMonth() === selectedMonth
+      })
+      .map((u) => {
+        const birthDate = parseISO(u.data_nascimento!)
+        const birthDateLocal = new Date(birthDate.getTime() + birthDate.getTimezoneOffset() * 60000)
+        const day = birthDateLocal.getDate()
+
+        let isPast = false
+        if (selectedMonth === currentMonth) {
+          isPast = day < today.getDate()
+        } else if (selectedMonth < currentMonth) {
+          isPast = true
+        }
+
+        return {
+          ...u,
+          day,
+          isPast,
+        }
+      })
+      .sort((a, b) => a.day - b.day)
+  }, [todosUsuarios, selectedMonth])
+
   const { itemsAvisos } = useMemo(() => {
     const itemsLowStock = produtosDashboard.filter(
       (p) => (p.quantidade_estoque || 0) <= (p.quantidade_minima || 0),
@@ -172,50 +210,76 @@ const Index = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Saldo Atual
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center">
-            <div className="text-4xl font-bold text-foreground">
-              {loading
-                ? '...'
-                : `R$ ${saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-              Saldo disponível na carteira
-            </p>
-          </CardContent>
-        </Card>
+        {possuiCarteira && (
+          <>
+            <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  Saldo Atual
+                </CardTitle>
+                <Wallet className="h-4 w-4 text-emerald-500" />
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center">
+                <div className="text-4xl font-bold text-foreground">
+                  {loading
+                    ? '...'
+                    : `R$ ${saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                </div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
+                  Saldo disponível na carteira
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Saldo Perdido
-            </CardTitle>
-            <TrendingDown className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center">
-            <div className="text-4xl font-bold text-destructive">
-              {loading
-                ? '...'
-                : `R$ ${saldoPerdido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-              Penalidades e descontos
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  Saldo Perdido
+                </CardTitle>
+                <TrendingDown className="h-4 w-4 text-destructive" />
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center">
+                <div className="text-4xl font-bold text-destructive">
+                  {loading
+                    ? '...'
+                    : `R$ ${saldoPerdido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                </div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
+                  Penalidades e descontos
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
+        <Card
+          className={cn(
+            'border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]',
+            !possuiCarteira && 'md:col-span-1',
+          )}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Aniversariantes do Mês
-            </CardTitle>
-            <Cake className="h-4 w-4 text-amber-500" />
+            <div className="flex items-center gap-2 overflow-hidden">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground truncate">
+                Aniversariantes
+              </CardTitle>
+              <Cake className="h-4 w-4 text-amber-500 shrink-0" />
+            </div>
+            <Select
+              value={selectedMonth.toString()}
+              onValueChange={(v) => setSelectedMonth(parseInt(v))}
+            >
+              <SelectTrigger className="w-[110px] h-7 text-xs ml-2">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {MESES.map((mes, idx) => (
+                  <SelectItem key={idx} value={idx.toString()} className="text-xs">
+                    {mes}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {loading ? (
@@ -244,18 +308,20 @@ const Index = () => {
                         Dia {a.day.toString().padStart(2, '0')}
                       </p>
                     </div>
-                    {!a.isPast && a.day === new Date().getDate() && (
-                      <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] uppercase">
-                        Hoje!
-                      </Badge>
-                    )}
+                    {!a.isPast &&
+                      selectedMonth === new Date().getMonth() &&
+                      a.day === new Date().getDate() && (
+                        <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] uppercase shrink-0">
+                          Hoje!
+                        </Badge>
+                      )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="flex h-full items-center justify-center">
-                <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">
-                  Nenhum aniversariante
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium text-center">
+                  Nenhum aniversariante neste mês
                 </p>
               </div>
             )}
@@ -314,11 +380,14 @@ const Index = () => {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <Button
+              asChild
               variant="outline"
               className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border hover:bg-secondary/10 hover:text-secondary hover:border-secondary transition-colors"
             >
-              <Calendar className="mr-2 h-4 w-4" />
-              Compromissos de Hoje
+              <Link to="/perfil">
+                <Calendar className="mr-2 h-4 w-4" />
+                Compromissos de Hoje
+              </Link>
             </Button>
             <Button
               asChild
