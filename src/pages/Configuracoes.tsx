@@ -4,7 +4,6 @@ import {
   Shield,
   SlidersHorizontal,
   HardDrive,
-  Truck,
   Database,
   Percent,
   DollarSign,
@@ -13,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
 import { PermissoesTab } from './configuracoes/PermissoesTab'
-import { FornecedoresTab } from './configuracoes/FornecedoresTab'
 import CadastrosBasicos from './admin/CadastrosBasicos'
 import DescontosPorPrazo from './configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './configuracoes/EntradaEFaixas'
@@ -27,21 +25,18 @@ export default function Configuracoes() {
   const canViewUsuarios = isAdmin || permissions.includes('configuracoes_usuarios')
   const canViewPermissoes = isAdmin || permissions.includes('configuracoes_permissoes')
   const canViewParametros = isAdmin || permissions.includes('configuracoes_parametros')
-  const canViewFornecedores = isAdmin || permissions.includes('configuracoes_fornecedores')
   const canViewCadastros = isAdmin
   const canViewNegociacao = isAdmin
 
   const defaultTab = canViewGeral
     ? 'geral'
-    : canViewFornecedores
-      ? 'fornecedores'
-      : canViewUsuarios
-        ? 'usuarios'
-        : canViewPermissoes
-          ? 'permissoes'
-          : canViewCadastros
-            ? 'cadastros'
-            : 'parametros'
+    : canViewUsuarios
+      ? 'usuarios'
+      : canViewPermissoes
+        ? 'permissoes'
+        : canViewCadastros
+          ? 'cadastros'
+          : 'parametros'
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -86,14 +81,6 @@ export default function Configuracoes() {
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
               <SlidersHorizontal className="size-4 mr-2" /> PARÂMETROS
-            </TabsTrigger>
-          )}
-          {canViewFornecedores && (
-            <TabsTrigger
-              value="fornecedores"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
-            >
-              <Truck className="size-4 mr-2" /> FORNECEDORES
             </TabsTrigger>
           )}
           {canViewCadastros && (
@@ -175,12 +162,6 @@ export default function Configuracoes() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        )}
-
-        {canViewFornecedores && (
-          <TabsContent value="fornecedores" className="m-0">
-            <FornecedoresTab />
           </TabsContent>
         )}
 

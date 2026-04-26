@@ -104,7 +104,6 @@ const AppRoutes = () => {
                 'configuracoes_usuarios',
                 'configuracoes_permissoes',
                 'configuracoes_parametros',
-                'configuracoes_fornecedores',
               ]}
             >
               <Configuracoes />

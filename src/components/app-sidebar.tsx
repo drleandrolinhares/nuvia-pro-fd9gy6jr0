@@ -162,7 +162,7 @@ const navData = [
         permission: ['configuracoes_fornecedores'],
       },
       {
-        title: 'CONFIGURAÇÃO DE ROTINAS',
+        title: 'ROTINA',
         url: '/configuracoes/rotinas',
         icon: ListTodo,
         showRole: ['admin'],
