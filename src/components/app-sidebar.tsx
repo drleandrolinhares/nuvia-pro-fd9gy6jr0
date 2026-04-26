@@ -131,7 +131,7 @@ const navData = [
     defaultOpen: true,
     items: [
       {
-        title: 'Estoque',
+        title: 'ESTOQUE',
         url: '/estoque',
         icon: Package,
         permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
@@ -146,13 +146,7 @@ const navData = [
         title: 'PARÂMETROS GERAIS',
         url: '/configuracoes',
         icon: SlidersHorizontal,
-        permission: [
-          'configuracoes_geral',
-          'configuracoes_usuarios',
-          'configuracoes_permissoes',
-          'configuracoes_parametros',
-          'configuracoes_fornecedores',
-        ],
+        permission: ['configuracoes_usuarios', 'configuracoes_permissoes'],
       },
       { title: 'COLABORADORES', url: '/colaboradores', icon: Users, showRole: ['admin'] },
       {

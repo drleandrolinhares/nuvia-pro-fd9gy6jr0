@@ -1,13 +1,4 @@
-import {
-  Settings2,
-  Users,
-  Shield,
-  SlidersHorizontal,
-  HardDrive,
-  Database,
-  Percent,
-  DollarSign,
-} from 'lucide-react'
+import { Users, Shield, Database, Percent, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
@@ -21,22 +12,18 @@ export default function Configuracoes() {
   const { profile, permissions } = useAuth()
   const isAdmin = profile?.role === 'admin'
 
-  const canViewGeral = isAdmin || permissions.includes('configuracoes_geral')
   const canViewUsuarios = isAdmin || permissions.includes('configuracoes_usuarios')
   const canViewPermissoes = isAdmin || permissions.includes('configuracoes_permissoes')
-  const canViewParametros = isAdmin || permissions.includes('configuracoes_parametros')
   const canViewCadastros = isAdmin
   const canViewNegociacao = isAdmin
 
-  const defaultTab = canViewGeral
-    ? 'geral'
-    : canViewUsuarios
-      ? 'usuarios'
-      : canViewPermissoes
-        ? 'permissoes'
-        : canViewCadastros
-          ? 'cadastros'
-          : 'parametros'
+  const defaultTab = canViewUsuarios
+    ? 'usuarios'
+    : canViewPermissoes
+      ? 'permissoes'
+      : canViewCadastros
+        ? 'cadastros'
+        : 'descontos'
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -51,14 +38,6 @@ export default function Configuracoes() {
 
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="bg-muted/50 p-1 mb-6 flex-wrap h-auto">
-          {canViewGeral && (
-            <TabsTrigger
-              value="geral"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
-            >
-              <Settings2 className="size-4 mr-2" /> GERAL
-            </TabsTrigger>
-          )}
           {canViewUsuarios && (
             <TabsTrigger
               value="usuarios"
@@ -73,14 +52,6 @@ export default function Configuracoes() {
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
               <Shield className="size-4 mr-2" /> CARGOS E PERMISSÕES
-            </TabsTrigger>
-          )}
-          {canViewParametros && (
-            <TabsTrigger
-              value="parametros"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
-            >
-              <SlidersHorizontal className="size-4 mr-2" /> PARÂMETROS
             </TabsTrigger>
           )}
           {canViewCadastros && (
@@ -109,29 +80,6 @@ export default function Configuracoes() {
           )}
         </TabsList>
 
-        {canViewGeral && (
-          <TabsContent value="geral" className="m-0">
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader>
-                <CardTitle className="uppercase tracking-wider">Informações da Clínica</CardTitle>
-                <CardDescription>
-                  Gerencie os dados principais da sua unidade Nuvia.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="flex size-16 items-center justify-center rounded-full bg-muted mb-4">
-                    <HardDrive className="size-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-bold uppercase tracking-wider mb-2">
-                    Módulo em Desenvolvimento
-                  </h3>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
-
         {canViewUsuarios && (
           <TabsContent value="usuarios" className="m-0">
             <UsuariosTab />
@@ -141,27 +89,6 @@ export default function Configuracoes() {
         {canViewPermissoes && (
           <TabsContent value="permissoes" className="m-0">
             <PermissoesTab />
-          </TabsContent>
-        )}
-
-        {canViewParametros && (
-          <TabsContent value="parametros" className="m-0">
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader>
-                <CardTitle className="uppercase tracking-wider">Parâmetros do Sistema</CardTitle>
-                <CardDescription>Configurações técnicas e de integração.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="flex size-16 items-center justify-center rounded-full bg-muted mb-4">
-                    <SlidersHorizontal className="size-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-bold uppercase tracking-wider mb-2">
-                    Módulo em Desenvolvimento
-                  </h3>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         )}
 
