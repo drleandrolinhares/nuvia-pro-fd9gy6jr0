@@ -569,7 +569,7 @@ function DashboardCard({ title, stats }: { title: string; stats: any }) {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="text-xl font-bold">{stats.globalPercentual.toFixed(0)}%</span>
+              <span className="text-xl font-bold">{(stats.globalPercentual || 0).toFixed(0)}%</span>
             </div>
           </div>
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-2">
@@ -589,7 +589,7 @@ function DashboardCard({ title, stats }: { title: string; stats: any }) {
                     <span className="truncate pr-2 text-muted-foreground" title={u.nome}>
                       {i + 1}. {u.nome.split(' ')[0]}
                     </span>
-                    <span className="font-medium">{u.percentual.toFixed(0)}%</span>
+                    <span className="font-medium">{(u.percentual || 0).toFixed(0)}%</span>
                   </div>
                 ))
               ) : (
@@ -608,7 +608,7 @@ function DashboardCard({ title, stats }: { title: string; stats: any }) {
                     <span className="truncate pr-2 text-muted-foreground" title={u.nome}>
                       {i + 1}. {u.nome.split(' ')[0]}
                     </span>
-                    <span className="font-medium">{u.percentual.toFixed(0)}%</span>
+                    <span className="font-medium">{(u.percentual || 0).toFixed(0)}%</span>
                   </div>
                 ))
               ) : (
@@ -872,6 +872,7 @@ export function RelatorioRotinasTab() {
             usuario_id: u.id,
             nome: u.nome,
             percentual: 0,
+            notaQualidade: 0,
             isFechado: false,
             dataFechamento: null,
             ultimaAcao: null,
@@ -987,7 +988,7 @@ export function RelatorioRotinasTab() {
     const avgPercent = ranking.reduce((acc, r) => acc + r.percentual, 0) / ranking.length
     const allFechado = ranking.every((r) => r.isFechado)
 
-    const avgNota = ranking.reduce((acc, r) => acc + r.notaQualidade, 0) / ranking.length
+    const avgNota = ranking.reduce((acc, r) => acc + (r.notaQualidade || 0), 0) / ranking.length
 
     return {
       nome: 'Todos os Usuários (Média)',
@@ -1204,8 +1205,10 @@ export function RelatorioRotinasTab() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Progress value={r.percentual} className="w-[80px] h-2.5" />
-                          <span className="text-sm font-semibold">{r.percentual.toFixed(1)}%</span>
+                          <Progress value={r.percentual || 0} className="w-[80px] h-2.5" />
+                          <span className="text-sm font-semibold">
+                            {(r.percentual || 0).toFixed(1)}%
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1213,14 +1216,14 @@ export function RelatorioRotinasTab() {
                           <span
                             className={cn(
                               'text-sm font-bold px-2 py-0.5 rounded-md',
-                              r.notaQualidade >= 8
+                              (r.notaQualidade || 0) >= 8
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : r.notaQualidade >= 6
+                                : (r.notaQualidade || 0) >= 6
                                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
                             )}
                           >
-                            {r.notaQualidade.toFixed(1)}
+                            {(r.notaQualidade || 0).toFixed(1)}
                           </span>
                         </div>
                       </TableCell>
@@ -1285,7 +1288,7 @@ export function RelatorioRotinasTab() {
                   <div className="flex items-center gap-6 w-full justify-center">
                     <div className="flex flex-col items-center">
                       <span className="text-4xl font-black text-primary drop-shadow-sm">
-                        {selectedDetails.percentual.toFixed(1)}%
+                        {(selectedDetails.percentual || 0).toFixed(1)}%
                       </span>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mt-1 text-center">
                         Conclusão
@@ -1298,14 +1301,14 @@ export function RelatorioRotinasTab() {
                       <span
                         className={cn(
                           'text-4xl font-black drop-shadow-sm',
-                          selectedDetails.notaQualidade >= 8
+                          (selectedDetails.notaQualidade || 0) >= 8
                             ? 'text-green-500'
-                            : selectedDetails.notaQualidade >= 6
+                            : (selectedDetails.notaQualidade || 0) >= 6
                               ? 'text-amber-500'
                               : 'text-red-500',
                         )}
                       >
-                        {selectedDetails.notaQualidade.toFixed(1)}
+                        {(selectedDetails.notaQualidade || 0).toFixed(1)}
                       </span>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mt-1 text-center">
                         Nota de
