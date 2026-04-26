@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Wallet, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react'
+import { Wallet, ArrowUpRight, ArrowDownRight, DollarSign, RefreshCw } from 'lucide-react'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -92,6 +92,19 @@ export function CarteiraTab() {
     if (data) setUsers(data)
   }
 
+  const handleGerarAdiantamentos = async () => {
+    try {
+      setLoading(true)
+      await supabase.rpc('gerar_adiantamento_mes_inovacao', { p_mes: selectedMonth })
+      await supabase.rpc('gerar_adiantamento_mes_sorriso', { p_mes: selectedMonth })
+      toast.success('Adiantamentos gerados com sucesso!')
+      loadTransactions(selectedUser, selectedMonth)
+    } catch (e) {
+      toast.error('Erro ao gerar adiantamentos.')
+      setLoading(false)
+    }
+  }
+
   const loadTransactions = async (userId: string, month: string) => {
     setLoading(true)
     const { data, error } = await supabase
@@ -145,46 +158,60 @@ export function CarteiraTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-start sm:items-center">
-        {isAdmin && (
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-start sm:items-end justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
+          {isAdmin && (
+            <div className="flex flex-col gap-1 w-full sm:w-auto">
+              <Label className="text-xs text-slate-500">Visualizar Colaborador</Label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-full sm:w-[250px]">
+                  <SelectValue placeholder="Selecione um colaborador" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1 w-full sm:w-auto">
-            <Label className="text-xs text-slate-500">Visualizar Colaborador</Label>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="w-full sm:w-[250px]">
-                <SelectValue placeholder="Selecione um colaborador" />
+            <Label className="text-xs text-slate-500">Mês de Referência</Label>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
-                {users.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.nome}
-                  </SelectItem>
-                ))}
+                {pastMonths.map((m) => {
+                  const [year, month] = m.split('-')
+                  const date = new Date(parseInt(year), parseInt(month) - 1, 1)
+                  return (
+                    <SelectItem key={m} value={m}>
+                      {format(date, 'MMMM / yyyy', { locale: ptBR }).replace(/^\w/, (c) =>
+                        c.toUpperCase(),
+                      )}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>
-        )}
-
-        <div className="flex flex-col gap-1 w-full sm:w-auto">
-          <Label className="text-xs text-slate-500">Mês de Referência</Label>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {pastMonths.map((m) => {
-                const [year, month] = m.split('-')
-                const date = new Date(parseInt(year), parseInt(month) - 1, 1)
-                return (
-                  <SelectItem key={m} value={m}>
-                    {format(date, 'MMMM / yyyy', { locale: ptBR }).replace(/^\w/, (c) =>
-                      c.toUpperCase(),
-                    )}
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
         </div>
+
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto text-amber-700 border-amber-200 hover:bg-amber-50"
+            onClick={handleGerarAdiantamentos}
+            disabled={loading}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Gerar Adiantamentos
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

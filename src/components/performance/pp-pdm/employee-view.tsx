@@ -6,9 +6,25 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Loader2, Save, Clock, AlertTriangle, Plus, Trash2, GraduationCap } from 'lucide-react'
+import {
+  Loader2,
+  Save,
+  Clock,
+  AlertTriangle,
+  Plus,
+  Trash2,
+  GraduationCap,
+  Info,
+} from 'lucide-react'
 import { startOfWeek, addDays, isAfter, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 function getCurrentDeadline() {
   const now = new Date()
@@ -26,6 +42,7 @@ interface PdmItem {
 
 export function EmployeePPDMView() {
   const { user, profile } = useAuth()
+  const [recordId, setRecordId] = useState<string | null>(null)
   const [pp, setPp] = useState('')
   const [pdmLegacy, setPdmLegacy] = useState('')
   const [pdmItems, setPdmItems] = useState<PdmItem[]>([{ id: '1', melhoria: '', sugestao: '' }])
@@ -55,6 +72,7 @@ export function EmployeePPDMView() {
         .maybeSingle()
 
       if (data) {
+        setRecordId(data.id)
         setPp(data.pontos_positivos || '')
         setInovacoes(data.inovacoes || '')
         setPpValidado(data.pp_validado || false)
@@ -69,6 +87,7 @@ export function EmployeePPDMView() {
           setPdmLegacy(data.pontos_melhoria)
         }
       } else {
+        setRecordId(null)
         setPp('')
         setInovacoes('')
         setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
@@ -86,6 +105,30 @@ export function EmployeePPDMView() {
 
   const handleChangeItem = (id: string, field: 'melhoria' | 'sugestao', value: string) => {
     setPdmItems(pdmItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
+  const handleUndo = async () => {
+    if (!recordId) return
+    setSaving(true)
+    try {
+      await supabase
+        .from('performance_pp_pdm' as any)
+        .delete()
+        .eq('id', recordId)
+      setRecordId(null)
+      setPp('')
+      setInovacoes('')
+      setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
+      setPdmLegacy('')
+      setNotaFinal(null)
+      setPpValidado(false)
+      setInovacaoValidada(false)
+      toast.success('Envio desfeito com sucesso!')
+    } catch (e: any) {
+      toast.error('Erro ao desfazer envio.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleSave = async () => {
@@ -145,10 +188,14 @@ export function EmployeePPDMView() {
           .from('performance_pp_pdm' as any)
           .update(payload)
           .eq('id', existing.id)
+        setRecordId(existing.id)
       } else {
-        await supabase
+        const { data: inserted } = await supabase
           .from('performance_pp_pdm' as any)
           .insert({ usuario_id: user.id, data_registro: weekRef, ...payload })
+          .select('id')
+          .single()
+        if (inserted) setRecordId(inserted.id)
       }
 
       setNotaFinal(nota)
@@ -169,7 +216,50 @@ export function EmployeePPDMView() {
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
-            <CardTitle className="text-xl">Meus PP e PDM</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl">Meus PP e PDM</CardTitle>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                  >
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Regras de Pontuação - PP e PDM</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 text-sm text-slate-600 mt-2">
+                    <p>
+                      <strong>PDM (Pontos de Melhoria):</strong> Cada item registrado com uma
+                      Crítica e uma Sugestão de Solução bem definidas vale <strong>2 pontos</strong>
+                      . (Máx: 10 pontos)
+                    </p>
+                    <p>
+                      <strong>PP (Pontos Positivos):</strong> Quando um ponto positivo é registrado
+                      e <strong>validado pelo gestor</strong>, o sistema adiciona{' '}
+                      <strong>2 pontos</strong> extras à sua nota.
+                    </p>
+                    <p>
+                      <strong>Teto da Nota:</strong> A pontuação total (PDM + PP) é limitada a{' '}
+                      <strong>10 pontos</strong>.
+                    </p>
+                    <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
+                      <p className="text-amber-800">
+                        <strong>Inovações:</strong> Funcionam separadamente da nota. Inovações
+                        validadas pelo gestor garantem a manutenção do bônus de{' '}
+                        <strong>R$ 100,00</strong> no extrato da sua carteira no final do mês. Caso
+                        nenhuma inovação seja validada no mês, o adiantamento de R$ 100,00 será
+                        estornado.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <CardDescription>Registre suas considerações da semana atual.</CardDescription>
           </div>
           <div className="bg-amber-50 text-amber-800 text-sm font-medium px-3 py-1.5 rounded-md flex items-center gap-2 border border-amber-200 shadow-sm">
@@ -334,11 +424,21 @@ export function EmployeePPDMView() {
           </div>
         )}
 
-        <div className="flex justify-end pt-4 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row justify-end pt-4 border-t border-slate-100 gap-3">
+          {recordId && !isBlocked && !ppValidado && !inovacaoValidada && (
+            <Button
+              variant="outline"
+              onClick={handleUndo}
+              disabled={loading || saving}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 w-full sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Desfazer Envio
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={loading || saving || isBlocked}
-            className="gap-2 bg-amber-600 hover:bg-amber-700 text-white min-w-[150px] shadow-sm"
+            className="gap-2 bg-amber-600 hover:bg-amber-700 text-white min-w-[150px] shadow-sm w-full sm:w-auto"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{' '}
             Salvar Registros

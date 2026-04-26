@@ -1470,10 +1470,13 @@ export type Database = {
           criado_em: string
           data_registro: string
           id: string
+          inovacao_validada: boolean | null
+          inovacoes: string | null
           nota_pdm: number | null
           pdm_itens: Json | null
           pontos_melhoria: string
           pontos_positivos: string
+          pp_validado: boolean | null
           usuario_id: string
         }
         Insert: {
@@ -1481,10 +1484,13 @@ export type Database = {
           criado_em?: string
           data_registro?: string
           id?: string
+          inovacao_validada?: boolean | null
+          inovacoes?: string | null
           nota_pdm?: number | null
           pdm_itens?: Json | null
           pontos_melhoria: string
           pontos_positivos: string
+          pp_validado?: boolean | null
           usuario_id: string
         }
         Update: {
@@ -1492,10 +1498,13 @@ export type Database = {
           criado_em?: string
           data_registro?: string
           id?: string
+          inovacao_validada?: boolean | null
+          inovacoes?: string | null
           nota_pdm?: number | null
           pdm_itens?: Json | null
           pontos_melhoria?: string
           pontos_positivos?: string
+          pp_validado?: boolean | null
           usuario_id?: string
         }
         Relationships: []
@@ -2426,12 +2435,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gerar_adiantamento_mes_inovacao: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       gerar_adiantamento_mes_sorriso: {
         Args: { p_mes: string }
         Returns: undefined
       }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      processar_fechamento_mes_inovacao: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       processar_fechamento_mes_sorriso: {
         Args: { p_mes: string }
         Returns: undefined
@@ -2927,6 +2944,9 @@ export const Constants = {
 //   atualizado_em: timestamp with time zone (not null, default: now())
 //   nota_pdm: integer (nullable, default: 0)
 //   pdm_itens: jsonb (nullable, default: '[]'::jsonb)
+//   inovacoes: text (nullable, default: ''::text)
+//   pp_validado: boolean (nullable, default: false)
+//   inovacao_validada: boolean (nullable, default: false)
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -3728,6 +3748,29 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION gerar_adiantamento_mes_inovacao(text)
+//   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_inovacao(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//   BEGIN
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF NOT EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
+//         AND descricao = 'Adiantamento de Inovação'
+//       ) THEN
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//         VALUES (v_user.id, 'credito', 100, 'Adiantamento de Inovação', p_mes);
+//       END IF;
+//     END LOOP;
+//   END;
+//   $function$
+//
 // FUNCTION gerar_adiantamento_mes_sorriso(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_sorriso(p_mes text)
 //    RETURNS void
@@ -3813,6 +3856,45 @@ export const Constants = {
 //
 //     SELECT role INTO v_role FROM public.usuarios WHERE id = auth.uid();
 //     RETURN v_role = 'admin';
+//   END;
+//   $function$
+//
+// FUNCTION processar_fechamento_mes_inovacao(text)
+//   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_inovacao(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//     v_count integer;
+//   BEGIN
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
+//         AND descricao = 'Adiantamento de Inovação'
+//       ) THEN
+//         IF NOT EXISTS (
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
+//           AND (descricao = 'Ajuste de Inovação (nenhuma validada)' OR descricao = 'Estorno de Adiantamento de Inovação (nenhuma validada)')
+//         ) THEN
+//           SELECT COUNT(*) INTO v_count
+//           FROM public.performance_pp_pdm
+//           WHERE usuario_id = v_user.id
+//             AND inovacao_validada = true
+//             AND to_char(data_registro::date, 'YYYY-MM') = p_mes;
+//
+//           IF v_count = 0 THEN
+//             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//             VALUES (v_user.id, 'debito', 100, 'Estorno de Adiantamento de Inovação (nenhuma validada)', p_mes);
+//           END IF;
+//         END IF;
+//       END IF;
+//     END LOOP;
 //   END;
 //   $function$
 //
