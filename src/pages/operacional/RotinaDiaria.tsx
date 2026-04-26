@@ -505,6 +505,8 @@ export default function RotinaDiaria() {
   const [horarioSaida, setHorarioSaida] = useState<string | null>(null)
   const [horarioEntrada, setHorarioEntrada] = useState<string | null>(null)
   const [isTimeLocked, setIsTimeLocked] = useState(false)
+  const [isTrabalhoHoje, setIsTrabalhoHoje] = useState(true)
+  const [motivoFolga, setMotivoFolga] = useState('')
 
   const autoCloseRoutine = async (currentTasks: Task[], userId: string, dateStr: string) => {
     const closedAt = new Date().toISOString()
@@ -596,13 +598,49 @@ export default function RotinaDiaria() {
     try {
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('horario_saida, horario_entrada')
+        .select('horario_saida, horario_entrada, dias_trabalho')
         .eq('id', user.id)
         .single()
 
       if (usuario) {
         setHorarioSaida(usuario.horario_saida)
         setHorarioEntrada(usuario.horario_entrada)
+      }
+
+      const diasTrabalho = (usuario as any)?.dias_trabalho || [1, 2, 3, 4, 5]
+
+      const realToday = new Date()
+      const today = getBrtDate(realToday)
+      const currentDayOfWeek = today.getDay()
+      const currentDayOfMonth = today.getDate()
+      const todayDateStr = getLocalDateString(today)
+
+      const { data: ausencias } = await supabase
+        .from('ausencias')
+        .select('*')
+        .eq('data', todayDateStr)
+      const isFeriadoGlobal = ausencias?.find((a) => !a.usuario_id)
+      const isAusenciaUsuario = ausencias?.find((a) => a.usuario_id === user.id)
+
+      if (!diasTrabalho.includes(currentDayOfWeek)) {
+        setIsTrabalhoHoje(false)
+        setMotivoFolga('Hoje não é um dia configurado na sua jornada de trabalho.')
+        setTasks([])
+        return
+      }
+
+      if (isFeriadoGlobal) {
+        setIsTrabalhoHoje(false)
+        setMotivoFolga(`Feriado ou Recesso: ${isFeriadoGlobal.descricao}`)
+        setTasks([])
+        return
+      }
+
+      if (isAusenciaUsuario) {
+        setIsTrabalhoHoje(false)
+        setMotivoFolga(`Ausência Programada: ${isAusenciaUsuario.descricao}`)
+        setTasks([])
+        return
       }
 
       const { data: routine } = await supabase
@@ -629,12 +667,6 @@ export default function RotinaDiaria() {
         setTasks([])
         return
       }
-
-      const realToday = new Date()
-      const today = getBrtDate(realToday)
-      const currentDayOfWeek = today.getDay()
-      const currentDayOfMonth = today.getDate()
-      const todayDateStr = getLocalDateString(today)
 
       let timeLocked = false
       if (usuario?.horario_saida) {
@@ -980,6 +1012,24 @@ export default function RotinaDiaria() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
         <p className="text-muted-foreground font-medium">Carregando rotina diária...</p>
+      </div>
+    )
+  }
+
+  if (!isTrabalhoHoje) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 max-w-4xl flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mb-4">
+          <CheckCircle2 className="w-10 h-10" />
+        </div>
+        <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400">
+          Dia de Folga / Exceção
+        </h2>
+        <p className="text-muted-foreground text-center max-w-md font-medium">{motivoFolga}</p>
+        <p className="text-sm text-slate-500 text-center max-w-sm mt-2">
+          Sua rotina diária não foi gerada hoje para proteger suas métricas de desempenho. Aproveite
+          o seu dia!
+        </p>
       </div>
     )
   }

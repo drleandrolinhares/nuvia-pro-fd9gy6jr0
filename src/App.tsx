@@ -17,6 +17,7 @@ import RegistroUsuarios from './pages/admin/RegistroUsuarios'
 import DescontosPorPrazo from './pages/configuracoes/DescontosPorPrazo'
 import ConfiguracaoRotinas from './pages/configuracoes/ConfiguracaoRotinas'
 import EntradaEFaixas from './pages/configuracoes/EntradaEFaixas'
+import FeriadosAusencias from './pages/configuracoes/FeriadosAusencias'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
@@ -158,6 +159,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]}>
               <EntradaEFaixas />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/ausencias"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <FeriadosAusencias />
             </ProtectedRoute>
           }
         />

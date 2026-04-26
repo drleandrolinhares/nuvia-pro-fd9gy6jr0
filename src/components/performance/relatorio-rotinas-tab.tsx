@@ -708,6 +708,7 @@ export function RelatorioRotinasTab() {
 
   const [usersWithRoutines, setUsersWithRoutines] = useState<any[]>([])
   const [executions, setExecutions] = useState<any[]>([])
+  const [ausencias, setAusencias] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [isLive, setIsLive] = useState(true)
   const [dashboardExecutions, setDashboardExecutions] = useState<any[]>([])
@@ -719,7 +720,7 @@ export function RelatorioRotinasTab() {
         .select(`
           usuario_id,
           usuarios:usuario_id (
-            id, nome, role
+            id, nome, role, dias_trabalho
           )
         `)
         .eq('ativa', true)
@@ -787,10 +788,14 @@ export function RelatorioRotinasTab() {
         query = query.eq('tarefas_rotina.periodicidade', cycleFilter)
       }
 
-      const { data, error } = await query
+      const [{ data, error }, { data: ausData }] = await Promise.all([
+        query,
+        supabase.from('ausencias').select('*').gte('data', startStr).lte('data', endStr),
+      ])
 
       if (error) throw error
       setExecutions(data || [])
+      setAusencias(ausData || [])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -922,11 +927,12 @@ export function RelatorioRotinasTab() {
         usersToDisplay.set(e.usuario_id, {
           id: e.usuario_id,
           nome: uObj?.nome || 'Desconhecido',
-        })
+          dias_trabalho: uObj?.dias_trabalho,
+        } as any)
       }
     })
 
-    let filteredUsers = Array.from(usersToDisplay.values())
+    let filteredUsers = Array.from(usersToDisplay.values()) as any[]
     if (userFilter !== 'all') {
       filteredUsers = filteredUsers.filter((u) => u.id === userFilter)
     }
@@ -935,6 +941,23 @@ export function RelatorioRotinasTab() {
       .map((u) => {
         const userExecs = byUser[u.id] || []
 
+        let isFolgaHoje = false
+        if (dateFilter === 'hoje') {
+          const today = getBrtDate()
+          const currentDayOfWeek = today.getDay()
+          const diasTrabalho = u.dias_trabalho || [1, 2, 3, 4, 5]
+          const isFeriadoGlobal = ausencias.find(
+            (a) => !a.usuario_id && a.data === format(today, 'yyyy-MM-dd'),
+          )
+          const isAusencia = ausencias.find(
+            (a) => a.usuario_id === u.id && a.data === format(today, 'yyyy-MM-dd'),
+          )
+
+          if (!diasTrabalho.includes(currentDayOfWeek) || isFeriadoGlobal || isAusencia) {
+            isFolgaHoje = true
+          }
+        }
+
         if (userExecs.length === 0) {
           return {
             usuario_id: u.id,
@@ -942,10 +965,11 @@ export function RelatorioRotinasTab() {
             percentual: 0,
             notaQualidade: 0,
             isFechado: false,
+            isFolgaHoje,
             dataFechamento: null,
             ultimaAcao: null,
             inatividadeMinutos: -1,
-            inatividadeTexto: 'Não iniciado',
+            inatividadeTexto: isFolgaHoje ? 'Folga / Exceção' : 'Não iniciado',
             stats: {
               concluidas: 0,
               tolerancia: 0,
@@ -1053,6 +1077,7 @@ export function RelatorioRotinasTab() {
           percentual,
           notaQualidade,
           isFechado,
+          isFolgaHoje,
           dataFechamento: latestFechamento,
           ultimaAcao,
           inatividadeMinutos,
@@ -1306,39 +1331,56 @@ export function RelatorioRotinasTab() {
                         </button>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Progress value={r.percentual || 0} className="w-[80px] h-2.5" />
-                          <span className="text-sm font-semibold">
-                            {(r.percentual || 0).toFixed(1)}%
-                          </span>
-                        </div>
+                        {r.isFolgaHoje ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-500/10 text-blue-600 border-blue-200"
+                          >
+                            Folga / Exceção
+                          </Badge>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <Progress value={r.percentual || 0} className="w-[80px] h-2.5" />
+                            <span className="text-sm font-semibold">
+                              {(r.percentual || 0).toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              'text-sm font-bold px-2 py-0.5 rounded-md',
-                              (r.notaQualidade || 0) >= 8
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : (r.notaQualidade || 0) >= 6
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                            )}
-                          >
-                            {(r.notaQualidade || 0).toFixed(1)}
-                          </span>
-                        </div>
+                        {r.isFolgaHoje ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                'text-sm font-bold px-2 py-0.5 rounded-md',
+                                (r.notaQualidade || 0) >= 8
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : (r.notaQualidade || 0) >= 6
+                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                              )}
+                            >
+                              {(r.notaQualidade || 0).toFixed(1)}
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`text-sm flex items-center gap-1.5 ${r.inatividadeMinutos > 120 ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}
+                          className={`text-sm flex items-center gap-1.5 ${r.inatividadeMinutos > 120 && !r.isFolgaHoje ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}
                         >
-                          {r.inatividadeMinutos > 120 && <AlertTriangle className="w-3.5 h-3.5" />}
+                          {r.inatividadeMinutos > 120 && !r.isFolgaHoje && (
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                          )}
                           {r.inatividadeTexto}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {r.isFechado ? (
+                        {r.isFolgaHoje ? (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        ) : r.isFechado ? (
                           <div className="flex flex-col items-end gap-1">
                             <Badge
                               variant="outline"

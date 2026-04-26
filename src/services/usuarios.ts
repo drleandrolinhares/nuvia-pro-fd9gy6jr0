@@ -89,6 +89,7 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     inicio_lanche_tarde: data.inicio_lanche_tarde || null,
     fim_lanche_tarde: data.fim_lanche_tarde || null,
     horario_saida: data.horario_saida || null,
+    dias_trabalho: data.dias_trabalho || [1, 2, 3, 4, 5],
   })
   if (userError) throw userError
 

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -81,6 +82,7 @@ export default function ColaboradorFormSheet({
             password: '',
             ...det,
             possui_carteira: usuario.possui_carteira ?? true,
+            dias_trabalho: (usuario as any).dias_trabalho ?? [1, 2, 3, 4, 5],
             emergencia_nome: em.nome,
             emergencia_telefone: em.telefone,
             emergencia_parentesco: em.parentesco,
@@ -353,6 +355,44 @@ export default function ColaboradorFormSheet({
               </TabsContent>
 
               <TabsContent value="jornada" className="space-y-4 mt-4">
+                <Field label="Dias de Trabalho" error={errors.dias_trabalho}>
+                  <Controller
+                    name="dias_trabalho"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="flex gap-2 flex-wrap mt-1">
+                        {[
+                          { label: 'Dom', val: 0 },
+                          { label: 'Seg', val: 1 },
+                          { label: 'Ter', val: 2 },
+                          { label: 'Qua', val: 3 },
+                          { label: 'Qui', val: 4 },
+                          { label: 'Sex', val: 5 },
+                          { label: 'Sáb', val: 6 },
+                        ].map((d) => {
+                          const isSelected = field.value?.includes(d.val)
+                          return (
+                            <Badge
+                              key={d.val}
+                              variant={isSelected ? 'default' : 'outline'}
+                              className="cursor-pointer px-3 py-1 hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                const curr = field.value || []
+                                if (isSelected) {
+                                  field.onChange(curr.filter((x: number) => x !== d.val))
+                                } else {
+                                  field.onChange([...curr, d.val])
+                                }
+                              }}
+                            >
+                              {d.label}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    )}
+                  />
+                </Field>
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Horário de Entrada" error={errors.horario_entrada}>
                     <Input type="time" {...register('horario_entrada')} />
