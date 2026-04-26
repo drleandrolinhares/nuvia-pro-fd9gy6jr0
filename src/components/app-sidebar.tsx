@@ -150,7 +150,7 @@ const navData = [
         icon: SlidersHorizontal,
         permission: ['configuracoes_usuarios', 'configuracoes_permissoes'],
       },
-      { title: 'COLABORADORES', url: '/colaboradores', icon: Users, showRole: ['admin'] },
+      { title: 'USUÁRIOS', url: '/usuarios', icon: Users, showRole: ['admin'] },
       {
         title: 'FORNECEDORES',
         url: '/fornecedores',

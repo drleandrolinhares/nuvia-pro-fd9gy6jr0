@@ -44,12 +44,12 @@ export function UsuariosTab() {
           <div>
             <CardTitle className="uppercase tracking-wider">Gestão de Usuários e RH</CardTitle>
             <CardDescription>
-              Gerencie os colaboradores, acessos e detalhes administrativos.
+              Gerencie os usuários, acessos e detalhes administrativos.
             </CardDescription>
           </div>
           <Button size="sm" className="uppercase tracking-wider text-xs font-bold" asChild>
             <Link to="/admin/registro">
-              <UserPlus className="size-4 mr-2" /> Novo Colaborador
+              <UserPlus className="size-4 mr-2" /> Novo Usuário
             </Link>
           </Button>
         </CardHeader>
@@ -58,7 +58,7 @@ export function UsuariosTab() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Usuário</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -68,13 +68,13 @@ export function UsuariosTab() {
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      Carregando colaboradores...
+                      Carregando usuários...
                     </TableCell>
                   </TableRow>
                 ) : usuarios.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      Nenhum colaborador encontrado.
+                      Nenhum usuário encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -141,7 +141,7 @@ export function UsuariosTab() {
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
         <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader className="mb-6">
-            <SheetTitle className="uppercase tracking-wider">Detalhes do Colaborador</SheetTitle>
+            <SheetTitle className="uppercase tracking-wider">Detalhes do Usuário</SheetTitle>
             <SheetDescription>
               Informações administrativas e de RH para {selectedUser?.nome}.
             </SheetDescription>

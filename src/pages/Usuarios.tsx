@@ -102,7 +102,7 @@ const calculateTotalHours = (u: ExtendedUsuario) => {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
 }
 
-export default function Colaboradores() {
+export default function Usuarios() {
   const [usuarios, setUsuarios] = useState<ExtendedUsuario[]>([])
   const [cargos, setCargos] = useState<Tables<'cargos'>[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,7 +147,7 @@ export default function Colaboradores() {
       }
     } catch (error) {
       console.error(error)
-      toast.error('Erro ao carregar colaboradores')
+      toast.error('Erro ao carregar usuários')
     } finally {
       setLoading(false)
     }
@@ -235,8 +235,8 @@ export default function Colaboradores() {
           Acesso Negado
         </h2>
         <p className="text-muted-foreground max-w-md text-center">
-          Você não possui permissão para gerenciar colaboradores. Solicite acesso ao administrador
-          do sistema.
+          Você não possui permissão para gerenciar usuários. Solicite acesso ao administrador do
+          sistema.
         </p>
       </div>
     )
@@ -279,7 +279,7 @@ export default function Colaboradores() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Gestão de Colaboradores
+              Gestão de Usuários
             </h1>
             <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
               Visualize e gerencie a equipe da clínica.
@@ -291,7 +291,7 @@ export default function Colaboradores() {
           className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Novo Colaborador
+          Novo Usuário
         </Button>
       </div>
 
@@ -340,7 +340,7 @@ export default function Colaboradores() {
             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
               <TableRow>
                 <TableHead className="w-8 px-1"></TableHead>
-                <TableHead className="px-2">Colaborador</TableHead>
+                <TableHead className="px-2">Usuário</TableHead>
                 <TableHead className="px-2">Cargo</TableHead>
                 <TableHead
                   className="px-1 text-[11px] whitespace-nowrap text-center"
@@ -400,7 +400,7 @@ export default function Colaboradores() {
                   <TableCell colSpan={14} className="text-center py-10 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <UserX className="w-8 h-8 opacity-20" />
-                      <p>Nenhum colaborador encontrado.</p>
+                      <p>Nenhum usuário encontrado.</p>
                     </div>
                   </TableCell>
                 </TableRow>

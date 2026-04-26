@@ -9,7 +9,7 @@ import Layout from './components/Layout'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
 import Configuracoes from './pages/Configuracoes'
-import Colaboradores from './pages/Colaboradores'
+import Usuarios from './pages/Usuarios'
 import Fornecedores from './pages/Fornecedores'
 import Perfil from './pages/Perfil'
 import CadastrosBasicos from './pages/admin/CadastrosBasicos'
@@ -106,11 +106,12 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/colaboradores" element={<Navigate to="/usuarios" replace />} />
         <Route
-          path="/colaboradores"
+          path="/usuarios"
           element={
             <ProtectedRoute allowedRoles={[]}>
-              <Colaboradores />
+              <Usuarios />
             </ProtectedRoute>
           }
         />

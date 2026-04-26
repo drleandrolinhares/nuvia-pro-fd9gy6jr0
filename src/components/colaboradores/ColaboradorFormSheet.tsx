@@ -126,11 +126,11 @@ export default function ColaboradorFormSheet({
         if (pwError) throw new Error(pwError.message || 'Erro ao atualizar a senha')
       }
 
-      toast.success(`Colaborador ${isEdit ? 'atualizado' : 'cadastrado'} com sucesso!`)
+      toast.success(`Usuário ${isEdit ? 'atualizado' : 'cadastrado'} com sucesso!`)
       onSuccess()
       onClose()
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao salvar colaborador')
+      toast.error(error.message || 'Erro ao salvar usuário')
     } finally {
       setSaving(false)
     }
@@ -174,8 +174,8 @@ export default function ColaboradorFormSheet({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="sm:max-w-[600px] w-full overflow-y-auto">
         <SheetHeader className="mb-4">
-          <SheetTitle>{isEdit ? 'Editar' : 'Novo'} Colaborador</SheetTitle>
-          <SheetDescription>Preencha os dados do colaborador abaixo.</SheetDescription>
+          <SheetTitle>{isEdit ? 'Editar' : 'Novo'} Usuário</SheetTitle>
+          <SheetDescription>Preencha os dados do usuário abaixo.</SheetDescription>
         </SheetHeader>
 
         {loading ? (
