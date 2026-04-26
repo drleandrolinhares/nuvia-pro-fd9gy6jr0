@@ -720,24 +720,10 @@ export default function ConfiguracaoRotinas() {
                 const hours = [
                   { label: 'Entrada', value: formatH(user.horario_entrada) },
                   {
-                    label: 'L. Manhã',
-                    value:
-                      user.inicio_lanche_manha && user.fim_lanche_manha
-                        ? `${formatH(user.inicio_lanche_manha)} - ${formatH(user.fim_lanche_manha)}`
-                        : null,
-                  },
-                  {
                     label: 'Almoço',
                     value:
                       user.saida_almoco && user.retorno_almoco
                         ? `${formatH(user.saida_almoco)} - ${formatH(user.retorno_almoco)}`
-                        : null,
-                  },
-                  {
-                    label: 'L. Tarde',
-                    value:
-                      user.inicio_lanche_tarde && user.fim_lanche_tarde
-                        ? `${formatH(user.inicio_lanche_tarde)} - ${formatH(user.fim_lanche_tarde)}`
                         : null,
                   },
                   { label: 'Saída', value: formatH(user.horario_saida) },
