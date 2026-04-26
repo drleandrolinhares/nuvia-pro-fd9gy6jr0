@@ -64,6 +64,7 @@ type User = {
   id: string
   nome: string
   role: string | null
+  status?: string | null
   hasRoutine?: boolean
   horario_entrada?: string | null
   inicio_lanche_manha?: string | null
@@ -145,8 +146,9 @@ export default function ConfiguracaoRotinas() {
     const { data, error } = await supabase
       .from('usuarios')
       .select(
-        'id, nome, role, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida',
+        'id, nome, role, status, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida',
       )
+      .eq('status', 'ativo')
       .order('nome')
 
     if (error) {
@@ -174,7 +176,7 @@ export default function ConfiguracaoRotinas() {
     const filtered = data
       .filter((u) => {
         const role = u.role?.toLowerCase() || ''
-        return !role.includes('ceo') && !role.includes('socia')
+        return !role.includes('ceo') && !role.includes('socia') && !role.includes('admin')
       })
       .map((u) => ({
         ...u,
