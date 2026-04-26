@@ -583,11 +583,11 @@ export default function ConfiguracaoRotinas() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase">
+      <div className="bg-slate-900 border-l-4 border-amber-500 p-4 sm:p-6 rounded-lg shadow-sm mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
           Configuração de Rotinas
         </h1>
-        <p className="text-muted-foreground uppercase text-sm font-medium tracking-wider mt-1">
+        <p className="text-slate-400 uppercase text-sm sm:text-base font-medium tracking-wider mt-1">
           Gerenciamento de tarefas diárias por colaborador
         </p>
       </div>
@@ -669,7 +669,12 @@ export default function ConfiguracaoRotinas() {
                       <Button variant="outline" onClick={() => setIsDuplicateDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button onClick={handleDuplicate}>Confirmar Duplicação</Button>
+                      <Button
+                        className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold"
+                        onClick={handleDuplicate}
+                      >
+                        Confirmar Duplicação
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -892,7 +897,11 @@ export default function ConfiguracaoRotinas() {
                 <div
                   className={`md:col-span-3 ${periodicidade === 'semanal' ? 'md:col-start-10' : periodicidade === 'quinzenal' ? 'md:col-start-10' : periodicidade === 'mensal' ? 'md:col-start-10' : 'md:col-start-10'} flex gap-2 w-full justify-end`}
                 >
-                  <Button onClick={handleAddOrUpdateTask} disabled={savingTask} className="w-full">
+                  <Button
+                    onClick={handleAddOrUpdateTask}
+                    disabled={savingTask}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold uppercase tracking-wider"
+                  >
                     {savingTask ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : editId ? (
@@ -1153,7 +1162,7 @@ export default function ConfiguracaoRotinas() {
               <div className="mt-6 flex justify-end">
                 <Button
                   size="lg"
-                  className="bg-green-600 hover:bg-green-700 text-white font-semibold uppercase tracking-wider"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold uppercase tracking-wider"
                   onClick={handleSaveRoutine}
                   disabled={currentTasks.length === 0 || loadingTasks}
                 >
@@ -1217,6 +1226,7 @@ export default function ConfiguracaoRotinas() {
             <Button
               onClick={handleDuplicateTask}
               disabled={isDuplicatingTask || !targetUserForTask}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold"
             >
               {isDuplicatingTask && <Loader2 className="size-4 mr-2 animate-spin" />}
               {isDuplicatingTask ? 'Copiando...' : 'Confirmar Cópia'}
@@ -1303,6 +1313,7 @@ export default function ConfiguracaoRotinas() {
             <Button
               onClick={handleBulkDuplicate}
               disabled={isBulkDuplicating || targetUsersForBulk.length === 0}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold"
             >
               {isBulkDuplicating && <Loader2 className="size-4 mr-2 animate-spin" />}
               {isBulkDuplicating ? 'Copiando...' : 'Confirmar Cópia'}

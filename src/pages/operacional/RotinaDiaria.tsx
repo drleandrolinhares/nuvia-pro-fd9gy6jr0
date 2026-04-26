@@ -112,7 +112,7 @@ function ScriptPopover({ text }: { text: string }) {
           <Button
             onClick={handleCopy}
             size="sm"
-            className="w-full font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+            className="w-full font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-sm uppercase tracking-wider"
           >
             {copied ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
             {copied ? 'Copiado!' : 'Copiar Texto'}
@@ -218,19 +218,23 @@ function ResumoFechamento({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="bg-slate-900 border-l-4 border-amber-500 p-4 sm:p-6 rounded-lg shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={onCancel}
           disabled={isSaving}
-          className="shrink-0"
+          className="shrink-0 text-slate-400 hover:text-white hover:bg-slate-800"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Fechamento de Rotina</h1>
-          <p className="text-muted-foreground mt-1">Resumo consolidado das atividades do dia.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
+            Fechamento de Rotina
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm sm:text-base font-medium tracking-wider uppercase">
+            Resumo consolidado das atividades do dia.
+          </p>
         </div>
       </div>
 
@@ -460,7 +464,7 @@ function ResumoFechamento({
             <AlertDialogTrigger asChild>
               <Button
                 disabled={!hasConfirmed || isSaving}
-                className="w-full sm:w-auto font-bold tracking-wide"
+                className="w-full sm:w-auto font-bold tracking-wide bg-amber-500 hover:bg-amber-600 text-slate-900"
               >
                 {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 CONFIRMAR FECHAMENTO
@@ -478,7 +482,7 @@ function ResumoFechamento({
                 <AlertDialogCancel>Voltar e Revisar</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleConfirm}
-                  className="bg-primary text-primary-foreground"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold"
                 >
                   Sim, Encerrar Rotina
                 </AlertDialogAction>
@@ -1098,18 +1102,20 @@ export default function RotinaDiaria() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-6xl space-y-6 animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+      <div className="bg-slate-900 border-l-4 border-amber-500 p-4 sm:p-6 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Rotina Diária</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
+            Rotina Diária
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm sm:text-base font-medium tracking-wider uppercase">
             Gerencie e acompanhe as tarefas operacionais do dia.
           </p>
         </div>
-        <div className="text-left sm:text-right bg-muted/30 p-3 rounded-lg border border-border/50">
+        <div className="text-left sm:text-right bg-slate-800/50 p-3 rounded-lg border border-slate-700">
           <div className="text-2xl font-bold text-amber-500 tracking-wider">
             {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
           </div>
-          <div className="text-sm text-muted-foreground capitalize">
+          <div className="text-sm text-slate-400 capitalize">
             {now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
           </div>
         </div>
@@ -1317,7 +1323,7 @@ export default function RotinaDiaria() {
                 size="lg"
                 disabled={!allTasksHandled || isBeforeOpening}
                 onClick={() => setIsClosing(true)}
-                className="w-full sm:w-auto font-bold tracking-wide"
+                className="w-full sm:w-auto font-bold tracking-wide bg-amber-500 hover:bg-amber-600 text-slate-900"
               >
                 FECHAR ROTINA DO DIA
               </Button>
