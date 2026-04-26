@@ -21,7 +21,11 @@ export function ConfigBonificacaoView() {
   const loadData = async () => {
     setLoading(true)
     const [{ data: uData }, { data: iData }] = await Promise.all([
-      supabase.from('usuarios').select('id, nome, obrigatorio_bonificacao').order('nome'),
+      supabase
+        .from('usuarios')
+        .select('id, nome, obrigatorio_bonificacao')
+        .eq('status', 'ativo')
+        .order('nome'),
       supabase
         .from('performance_bonificacao_itens' as any)
         .select('*')

@@ -18,6 +18,7 @@ export function ConfigPPDMView() {
     const { data } = await supabase
       .from('usuarios')
       .select('id, nome, obrigatorio_pp_pdm')
+      .eq('status', 'ativo')
       .order('nome')
     if (data) setUsers(data)
     setLoading(false)
