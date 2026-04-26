@@ -142,9 +142,8 @@ const navData = [
     title: 'CONFIGURAÇÕES',
     icon: Shield,
     items: [
-      { title: 'Cadastros Básicos', url: '/admin/cadastros', icon: Database, showRole: ['admin'] },
       {
-        title: 'Parâmetros Gerais',
+        title: 'PARÂMETROS GERAIS',
         url: '/configuracoes',
         icon: SlidersHorizontal,
         permission: [
@@ -155,27 +154,18 @@ const navData = [
           'configuracoes_fornecedores',
         ],
       },
-      { title: 'Colaboradores', url: '/colaboradores', icon: Users, showRole: ['admin'] },
+      { title: 'COLABORADORES', url: '/colaboradores', icon: Users, showRole: ['admin'] },
       {
-        title: 'Fornecedores',
+        title: 'FORNECEDORES',
         url: '/fornecedores',
         icon: Truck,
         permission: ['configuracoes_fornecedores'],
       },
       {
-        title: 'Configuração de Rotinas',
+        title: 'CONFIGURAÇÃO DE ROTINAS',
         url: '/configuracoes/rotinas',
         icon: ListTodo,
         showRole: ['admin'],
-      },
-      {
-        title: 'NEGOCIAÇÃO DADOS',
-        icon: FileText,
-        showRole: ['admin'],
-        subItems: [
-          { title: 'Descontos por Prazo', url: '/configuracoes/descontos' },
-          { title: 'Entrada Padrão e Faixas', url: '/configuracoes/faixas' },
-        ],
       },
     ],
   },

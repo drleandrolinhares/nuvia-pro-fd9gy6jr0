@@ -1,9 +1,22 @@
-import { Settings2, Users, Shield, SlidersHorizontal, HardDrive, Truck } from 'lucide-react'
+import {
+  Settings2,
+  Users,
+  Shield,
+  SlidersHorizontal,
+  HardDrive,
+  Truck,
+  Database,
+  Percent,
+  DollarSign,
+} from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
 import { PermissoesTab } from './configuracoes/PermissoesTab'
 import { FornecedoresTab } from './configuracoes/FornecedoresTab'
+import CadastrosBasicos from './admin/CadastrosBasicos'
+import DescontosPorPrazo from './configuracoes/DescontosPorPrazo'
+import EntradaEFaixas from './configuracoes/EntradaEFaixas'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Configuracoes() {
@@ -15,6 +28,8 @@ export default function Configuracoes() {
   const canViewPermissoes = isAdmin || permissions.includes('configuracoes_permissoes')
   const canViewParametros = isAdmin || permissions.includes('configuracoes_parametros')
   const canViewFornecedores = isAdmin || permissions.includes('configuracoes_fornecedores')
+  const canViewCadastros = isAdmin
+  const canViewNegociacao = isAdmin
 
   const defaultTab = canViewGeral
     ? 'geral'
@@ -24,7 +39,9 @@ export default function Configuracoes() {
         ? 'usuarios'
         : canViewPermissoes
           ? 'permissoes'
-          : 'parametros'
+          : canViewCadastros
+            ? 'cadastros'
+            : 'parametros'
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -44,7 +61,7 @@ export default function Configuracoes() {
               value="geral"
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
-              <Settings2 className="size-4 mr-2" /> Geral
+              <Settings2 className="size-4 mr-2" /> GERAL
             </TabsTrigger>
           )}
           {canViewUsuarios && (
@@ -52,7 +69,7 @@ export default function Configuracoes() {
               value="usuarios"
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
-              <Users className="size-4 mr-2" /> Usuários e RH
+              <Users className="size-4 mr-2" /> USUÁRIOS E RH
             </TabsTrigger>
           )}
           {canViewPermissoes && (
@@ -60,7 +77,7 @@ export default function Configuracoes() {
               value="permissoes"
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
-              <Shield className="size-4 mr-2" /> Cargos e Permissões
+              <Shield className="size-4 mr-2" /> CARGOS E PERMISSÕES
             </TabsTrigger>
           )}
           {canViewParametros && (
@@ -68,7 +85,7 @@ export default function Configuracoes() {
               value="parametros"
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
-              <SlidersHorizontal className="size-4 mr-2" /> Parâmetros
+              <SlidersHorizontal className="size-4 mr-2" /> PARÂMETROS
             </TabsTrigger>
           )}
           {canViewFornecedores && (
@@ -76,7 +93,31 @@ export default function Configuracoes() {
               value="fornecedores"
               className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
             >
-              <Truck className="size-4 mr-2" /> Fornecedores
+              <Truck className="size-4 mr-2" /> FORNECEDORES
+            </TabsTrigger>
+          )}
+          {canViewCadastros && (
+            <TabsTrigger
+              value="cadastros"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+            >
+              <Database className="size-4 mr-2" /> CADASTROS BÁSICOS
+            </TabsTrigger>
+          )}
+          {canViewNegociacao && (
+            <TabsTrigger
+              value="descontos"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+            >
+              <Percent className="size-4 mr-2" /> DESCONTOS POR PRAZO
+            </TabsTrigger>
+          )}
+          {canViewNegociacao && (
+            <TabsTrigger
+              value="faixas"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+            >
+              <DollarSign className="size-4 mr-2" /> ENTRADA E FAIXAS
             </TabsTrigger>
           )}
         </TabsList>
@@ -140,6 +181,33 @@ export default function Configuracoes() {
         {canViewFornecedores && (
           <TabsContent value="fornecedores" className="m-0">
             <FornecedoresTab />
+          </TabsContent>
+        )}
+
+        {canViewCadastros && (
+          <TabsContent
+            value="cadastros"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+          >
+            <CadastrosBasicos />
+          </TabsContent>
+        )}
+
+        {canViewNegociacao && (
+          <TabsContent
+            value="descontos"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+          >
+            <DescontosPorPrazo />
+          </TabsContent>
+        )}
+
+        {canViewNegociacao && (
+          <TabsContent
+            value="faixas"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+          >
+            <EntradaEFaixas />
           </TabsContent>
         )}
       </Tabs>
