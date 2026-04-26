@@ -384,7 +384,7 @@ const Index = () => {
               variant="outline"
               className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border hover:bg-secondary/10 hover:text-secondary hover:border-secondary transition-colors"
             >
-              <Link to="/perfil">
+              <Link to="/operacional/comunicados">
                 <Calendar className="mr-2 h-4 w-4" />
                 Compromissos de Hoje
               </Link>

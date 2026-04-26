@@ -56,7 +56,7 @@ import { useAuth } from '@/hooks/use-auth'
 const navData = [
   {
     title: 'SISTEMA',
-    items: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
+    items: [{ title: 'DASHBOARD', url: '/', icon: LayoutDashboard }],
   },
   {
     title: 'OPERACIONAL',
