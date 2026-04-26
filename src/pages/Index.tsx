@@ -8,6 +8,7 @@ import {
   Wallet,
   TrendingDown,
   Cake,
+  LayoutDashboard,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -197,16 +198,23 @@ const Index = () => {
 
   return (
     <div className="space-y-8 animate-fade-in-up relative">
-      <div className="absolute top-0 right-0 z-10">
+      <div className="absolute top-6 right-6 z-10">
         <SyncIndicator isSyncing={loading} />
       </div>
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase pr-24 sm:pr-0">
-          Dashboard Nuvia
-        </h1>
-        <p className="text-muted-foreground uppercase text-sm font-medium tracking-wider mt-1">
-          Visão Geral da Gestão de Estoque e Rotinas.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <LayoutDashboard className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase pr-24 sm:pr-0">
+              Dashboard Nuvia
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Visão Geral da Gestão de Estoque e Rotinas.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -382,7 +390,7 @@ const Index = () => {
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border bg-muted/30 hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all"
+              className="w-full justify-start h-12 uppercase tracking-wider font-bold border-transparent bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
             >
               <Link to="/operacional/comunicados">
                 <Calendar className="mr-2 h-4 w-4" />
@@ -392,7 +400,7 @@ const Index = () => {
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border bg-muted/30 hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all"
+              className="w-full justify-start h-12 uppercase tracking-wider font-bold border-transparent bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
             >
               <Link to="/estoque">
                 <RefreshCcw className="mr-2 h-4 w-4" />

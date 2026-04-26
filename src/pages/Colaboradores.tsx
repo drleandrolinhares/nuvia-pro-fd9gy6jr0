@@ -255,16 +255,39 @@ export default function Colaboradores() {
 
   return (
     <div className="p-6 md:p-8 max-w-full mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            Gestão de Colaboradores
-          </h1>
-          <p className="text-muted-foreground mt-1">Visualize e gerencie a equipe da clínica.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6 text-amber-500"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
+              Gestão de Colaboradores
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Visualize e gerencie a equipe da clínica.
+            </p>
+          </div>
         </div>
         <Button
           onClick={handleNew}
-          className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-colors"
+          className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Colaborador

@@ -314,14 +314,22 @@ export default function Parceiros() {
 
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
-      <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 uppercase">PARCEIROS</h1>
-          <p className="text-sm text-slate-500">
-            Gerencie trabalhos e serviços externos (laboratórios, clínicas).
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm mb-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <User className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">PARCEIROS</h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Gerencie trabalhos e serviços externos (laboratórios, clínicas).
+            </p>
+          </div>
         </div>
-        <Button onClick={() => openModal()} className="bg-amber-600 hover:bg-amber-700 text-white">
+        <Button
+          onClick={() => openModal()}
+          className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+        >
           <Plus className="w-4 h-4 mr-2" /> Novo Registro
         </Button>
       </div>
@@ -331,22 +339,22 @@ export default function Parceiros() {
         onValueChange={setCategoriaSlug}
         className="flex flex-col flex-1 overflow-hidden"
       >
-        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-100 p-1 border border-slate-200 shrink-0">
+        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-200/50 p-1 rounded-lg shrink-0">
           <TabsTrigger
             value="laboratorios"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
           >
             LABORATÓRIOS
           </TabsTrigger>
           <TabsTrigger
             value="radiologia"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
           >
             RADIOLOGIA
           </TabsTrigger>
           <TabsTrigger
             value="outros"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
           >
             OUTROS
           </TabsTrigger>
@@ -508,7 +516,7 @@ export default function Parceiros() {
             </Button>
             <Button
               onClick={handleCreateCol}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
             >
               Criar Etapa
             </Button>
@@ -712,7 +720,10 @@ export default function Parceiros() {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700">
+              <Button
+                onClick={handleSave}
+                className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+              >
                 Salvar Alterações
               </Button>
             </div>

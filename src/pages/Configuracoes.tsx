@@ -27,21 +27,28 @@ export default function Configuracoes() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase">
-          Configurações do Sistema
-        </h1>
-        <p className="text-muted-foreground uppercase text-sm font-medium tracking-wider mt-1">
-          Parâmetros Globais Nuvia Odontologia
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <Shield className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
+              Configurações do Sistema
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Parâmetros Globais Nuvia Odontologia
+            </p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="bg-muted/50 p-1 mb-6 flex-wrap h-auto">
+        <TabsList className="bg-slate-200/50 p-1 mb-6 flex-wrap h-auto rounded-lg gap-2">
           {canViewUsuarios && (
             <TabsTrigger
               value="usuarios"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Users className="size-4 mr-2" /> USUÁRIOS E RH
             </TabsTrigger>
@@ -49,7 +56,7 @@ export default function Configuracoes() {
           {canViewPermissoes && (
             <TabsTrigger
               value="permissoes"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Shield className="size-4 mr-2" /> CARGOS E PERMISSÕES
             </TabsTrigger>
@@ -57,7 +64,7 @@ export default function Configuracoes() {
           {canViewCadastros && (
             <TabsTrigger
               value="cadastros"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Database className="size-4 mr-2" /> CADASTROS BÁSICOS
             </TabsTrigger>
@@ -65,7 +72,7 @@ export default function Configuracoes() {
           {canViewNegociacao && (
             <TabsTrigger
               value="descontos"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Percent className="size-4 mr-2" /> DESCONTOS POR PRAZO
             </TabsTrigger>
@@ -73,7 +80,7 @@ export default function Configuracoes() {
           {canViewNegociacao && (
             <TabsTrigger
               value="faixas"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-background data-[state=active]:text-secondary flex-1 sm:flex-none"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <DollarSign className="size-4 mr-2" /> ENTRADA E FAIXAS
             </TabsTrigger>

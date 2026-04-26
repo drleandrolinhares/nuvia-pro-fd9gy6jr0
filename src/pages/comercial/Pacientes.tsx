@@ -13,7 +13,7 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table'
-import { Search } from 'lucide-react'
+import { Search, Users } from 'lucide-react'
 
 function formatarDataLocal(dataStr: string | null) {
   if (!dataStr) return '-'
@@ -57,8 +57,18 @@ function PacientesList() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Pacientes</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <Users className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">Pacientes</h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Gestão de Pacientes da Clínica
+            </p>
+          </div>
+        </div>
       </div>
       <Card>
         <CardHeader>
@@ -71,7 +81,11 @@ function PacientesList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <Button variant="outline" size="icon">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white transition-all shadow-sm border-transparent"
+            >
               <Search className="w-4 h-4" />
             </Button>
           </div>

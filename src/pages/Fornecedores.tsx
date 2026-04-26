@@ -102,14 +102,39 @@ export default function Fornecedores() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Fornecedores</h1>
-          <p className="text-slate-500 text-sm">
-            Gerencie os fornecedores e suas credenciais de acesso.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6 text-amber-500"
+            >
+              <path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11" />
+              <path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2" />
+              <circle cx="7" cy="18" r="2" />
+              <path d="M15 18H9" />
+              <circle cx="17" cy="18" r="2" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">Fornecedores</h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Gerencie os fornecedores e suas credenciais de acesso.
+            </p>
+          </div>
         </div>
-        <Button onClick={() => handleOpenModal()} className="gap-2">
+        <Button
+          onClick={() => handleOpenModal()}
+          className="gap-2 bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+        >
           <Plus className="w-4 h-4" /> Novo Fornecedor
         </Button>
       </div>

@@ -51,35 +51,45 @@ export default function ControleComissoes() {
 
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-amber-500/10 rounded-lg">
-          <Landmark className="w-6 h-6 text-amber-500" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Controle de Comissões
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie as regras, acompanhe pagamentos e veja o histórico de comissionamento da
-            equipe.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <Landmark className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
+              Controle de Comissões
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Gerencie regras, pagamentos e histórico de comissionamento.
+            </p>
+          </div>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-3 mb-6 h-auto">
+        <TabsList className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-3 mb-6 h-auto bg-slate-200/50 p-1 rounded-lg gap-2">
           {showMinhasComissoes && (
-            <TabsTrigger value="minhas" className="py-2">
+            <TabsTrigger
+              value="minhas"
+              className="py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all"
+            >
               {isAdmin ? 'Relatório Geral' : 'Minhas Comissões'}
             </TabsTrigger>
           )}
           {isAdmin && (
-            <TabsTrigger value="fechamento" className="py-2">
+            <TabsTrigger
+              value="fechamento"
+              className="py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all"
+            >
               Fechamento
             </TabsTrigger>
           )}
           {isAdmin && (
-            <TabsTrigger value="configuracoes" className="py-2">
+            <TabsTrigger
+              value="configuracoes"
+              className="py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all"
+            >
               Configurações
             </TabsTrigger>
           )}
@@ -107,11 +117,17 @@ export default function ControleComissoes() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="dentista" className="w-full">
-                    <TabsList className="w-full grid grid-cols-1 md:grid-cols-2 mb-6 h-auto">
-                      <TabsTrigger value="dentista" className="py-2">
+                    <TabsList className="w-full grid grid-cols-1 md:grid-cols-2 mb-6 h-auto bg-slate-200/50 p-1 rounded-lg gap-2">
+                      <TabsTrigger
+                        value="dentista"
+                        className="py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all"
+                      >
                         Dentista Avaliador
                       </TabsTrigger>
-                      <TabsTrigger value="crc" className="py-2">
+                      <TabsTrigger
+                        value="crc"
+                        className="py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all"
+                      >
                         CRC Comercial
                       </TabsTrigger>
                     </TabsList>
