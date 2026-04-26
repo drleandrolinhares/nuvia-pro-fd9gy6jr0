@@ -311,10 +311,17 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
       if (!t.concluida) {
         somaNotas += 0
       } else {
-        const atraso = t.minutos_atrasado || 0
-        if (atraso <= 5) somaNotas += 10
-        else if (atraso <= 15) somaNotas += 8
-        else if (atraso <= 30) somaNotas += 5
+        let dynamicDelay = t.minutos_atrasado || 0
+        if (t.concluidaEm && t.horario_inicio) {
+          const concluidaMins = timeToMinutes(t.concluidaEm)
+          const compareTime = timeToMinutes(t.horario_fim || t.horario_inicio)
+          const diff = concluidaMins - compareTime
+          dynamicDelay = diff > 0 ? diff : 0
+        }
+
+        if (dynamicDelay <= 5) somaNotas += 10
+        else if (dynamicDelay <= 15) somaNotas += 8
+        else if (dynamicDelay <= 30) somaNotas += 5
         else somaNotas += 2
       }
     })
@@ -323,12 +330,16 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
 
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
-      const isGreen =
-        task.nivel_criticidade === 'no_horario' ||
-        (!task.nivel_criticidade && task.minutos_atrasado <= 5)
-      const isYellow =
-        task.nivel_criticidade === 'tolerancia' ||
-        (!task.nivel_criticidade && task.minutos_atrasado > 5 && task.minutos_atrasado <= 30)
+      let dynamicDelay = task.minutos_atrasado || 0
+      if (task.horario_inicio) {
+        const concluidaMins = timeToMinutes(task.concluidaEm)
+        const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+        const diff = concluidaMins - compareTime
+        dynamicDelay = diff > 0 ? diff : 0
+      }
+
+      const isGreen = dynamicDelay <= 5
+      const isYellow = dynamicDelay > 5 && dynamicDelay <= 30
 
       return (
         <div
@@ -343,8 +354,8 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>{task.concluidaEm}</span>
-          {task.minutos_atrasado > 0 && (
-            <span className="text-xs ml-1 font-normal opacity-90">({task.minutos_atrasado}m)</span>
+          {dynamicDelay > 0 && (
+            <span className="text-xs ml-1 font-normal opacity-90">({dynamicDelay}m)</span>
           )}
         </div>
       )
@@ -480,20 +491,23 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
                 isWithinWindow = currentMinutes >= startMins
               }
 
-              const isGreen =
-                task.concluida &&
-                (task.nivel_criticidade === 'no_horario' ||
-                  (!task.nivel_criticidade && task.minutos_atrasado <= 5))
-              const isYellow =
-                task.concluida &&
-                (task.nivel_criticidade === 'tolerancia' ||
-                  (!task.nivel_criticidade &&
-                    task.minutos_atrasado > 5 &&
-                    task.minutos_atrasado <= 30))
+              let dynamicDelay = task.minutos_atrasado || 0
+              if (task.concluidaEm && task.horario_inicio) {
+                const concluidaMins = timeToMinutes(task.concluidaEm)
+                const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                const diff = concluidaMins - compareTime
+                dynamicDelay = diff > 0 ? diff : 0
+              } else if (!task.concluida && task.horario_inicio) {
+                const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                const diff = currentMinutes - compareTime
+                dynamicDelay = diff > 0 ? diff : 0
+              }
+
+              const isGreen = task.concluida && dynamicDelay <= 5
+              const isYellow = task.concluida && dynamicDelay > 5 && dynamicDelay <= 30
               const isRed =
-                task.concluida &&
-                (task.nivel_criticidade === 'critico' ||
-                  (!task.nivel_criticidade && task.minutos_atrasado > 30))
+                (task.concluida && dynamicDelay > 30) ||
+                (!task.concluida && (task.fechamento_confirmado || dynamicDelay > 30))
 
               return (
                 <div
@@ -754,7 +768,9 @@ export function RelatorioRotinasTab() {
           *,
           tarefas_rotina!inner (
             peso_percentual,
-            periodicidade
+            periodicidade,
+            horario_inicio,
+            horario_fim
           ),
           usuarios:usuario_id (
             nome
@@ -792,7 +808,9 @@ export function RelatorioRotinasTab() {
         *,
         tarefas_rotina!inner (
           peso_percentual,
-          periodicidade
+          periodicidade,
+          horario_inicio,
+          horario_fim
         ),
         usuarios:usuario_id (
           nome
@@ -978,22 +996,56 @@ export function RelatorioRotinasTab() {
           }
         }
 
-        const concluidas = userExecs.filter((e) => e.concluida).length
-        const tolerancia = userExecs.filter((e) => e.nivel_criticidade === 'tolerancia').length
-        const criticas = userExecs.filter((e) => e.nivel_criticidade === 'critico').length
-        const naoConcluidas = userExecs.filter((e) => !e.concluida).length
-        const noHorario = userExecs.filter((e) => e.nivel_criticidade === 'no_horario').length
+        const statsObj = {
+          concluidas: 0,
+          tolerancia: 0,
+          criticas: 0,
+          naoConcluidas: 0,
+          noHorario: 0,
+        }
+
+        let somaNotas = 0
+
+        userExecs.forEach((e) => {
+          if (!e.concluida) {
+            statsObj.naoConcluidas++
+            return
+          }
+          statsObj.concluidas++
+
+          let dynamicDelay = e.minutos_atrasado || 0
+          if (e.timestamp_conclusao && e.tarefas_rotina?.horario_inicio) {
+            const d = getBrtDate(new Date(e.timestamp_conclusao))
+            const concluidaMins = d.getHours() * 60 + d.getMinutes()
+            const compareTime = timeToMinutes(
+              e.tarefas_rotina.horario_fim || e.tarefas_rotina.horario_inicio,
+            )
+            const diff = concluidaMins - compareTime
+            dynamicDelay = diff > 0 ? diff : 0
+          }
+
+          if (dynamicDelay <= 5) {
+            statsObj.noHorario++
+            somaNotas += 10
+          } else if (dynamicDelay <= 15) {
+            statsObj.tolerancia++
+            somaNotas += 8
+          } else if (dynamicDelay <= 30) {
+            statsObj.tolerancia++
+            somaNotas += 5
+          } else {
+            statsObj.criticas++
+            somaNotas += 2
+          }
+        })
 
         const totalAcoes = userExecs.length
-        const somaNotas = userExecs.reduce((acc, curr) => {
-          if (!curr.concluida) return acc + 0
-          const atraso = curr.minutos_atrasado || 0
-          if (atraso <= 5) return acc + 10
-          if (atraso <= 15) return acc + 8
-          if (atraso <= 30) return acc + 5
-          return acc + 2
-        }, 0)
         const notaQualidade = totalAcoes > 0 ? somaNotas / totalAcoes : 0
+        const concluidas = statsObj.concluidas
+        const tolerancia = statsObj.tolerancia
+        const criticas = statsObj.criticas
+        const naoConcluidas = statsObj.naoConcluidas
+        const noHorario = statsObj.noHorario
 
         return {
           usuario_id: u.id,

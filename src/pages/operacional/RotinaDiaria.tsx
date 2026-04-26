@@ -162,26 +162,33 @@ function ResumoFechamento({
           type: 'notCompleted',
         })
       } else {
-        const atraso = t.minutos_atrasado || 0
-        if (atraso <= 5) somaNotas += 10
-        else if (atraso <= 15) somaNotas += 8
-        else if (atraso <= 30) somaNotas += 5
+        let dynamicDelay = t.minutos_atrasado || 0
+        if (t.concluidaEm && t.horario_inicio) {
+          const concluidaMins = timeToMinutes(t.concluidaEm)
+          const compareTime = timeToMinutes(t.horario_fim || t.horario_inicio)
+          const diff = concluidaMins - compareTime
+          dynamicDelay = diff > 0 ? diff : 0
+        }
+
+        if (dynamicDelay <= 5) somaNotas += 10
+        else if (dynamicDelay <= 15) somaNotas += 8
+        else if (dynamicDelay <= 30) somaNotas += 5
         else somaNotas += 2
 
-        if (t.nivel_criticidade === 'no_horario') {
+        if (dynamicDelay <= 5) {
           onTime++
-        } else if (t.nivel_criticidade === 'tolerancia') {
+        } else if (dynamicDelay <= 30) {
           tolerance++
           delays.push({
             id: t.id,
             descricao: t.descricao_tarefa,
-            delayStr: `${t.minutos_atrasado} min atrasado`,
+            delayStr: `${dynamicDelay} min atrasado`,
             type: 'tolerance',
           })
-        } else if (t.nivel_criticidade === 'critico') {
+        } else {
           critical++
-          const h = Math.floor(t.minutos_atrasado / 60)
-          const m = t.minutos_atrasado % 60
+          const h = Math.floor(dynamicDelay / 60)
+          const m = dynamicDelay % 60
           const timeStr = h > 0 ? `${h}h ${m}min` : `${m} min`
           delays.push({
             id: t.id,
@@ -938,10 +945,17 @@ export default function RotinaDiaria() {
       if (!t.concluida) {
         somaNotas += 0
       } else {
-        const atraso = t.minutos_atrasado || 0
-        if (atraso <= 5) somaNotas += 10
-        else if (atraso <= 15) somaNotas += 8
-        else if (atraso <= 30) somaNotas += 5
+        let dynamicDelay = t.minutos_atrasado || 0
+        if (t.concluidaEm && t.horario_inicio) {
+          const concluidaMins = timeToMinutes(t.concluidaEm)
+          const compareTime = timeToMinutes(t.horario_fim || t.horario_inicio)
+          const diff = concluidaMins - compareTime
+          dynamicDelay = diff > 0 ? diff : 0
+        }
+
+        if (dynamicDelay <= 5) somaNotas += 10
+        else if (dynamicDelay <= 15) somaNotas += 8
+        else if (dynamicDelay <= 30) somaNotas += 5
         else somaNotas += 2
       }
     })
@@ -996,12 +1010,16 @@ export default function RotinaDiaria() {
 
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
-      const isGreen =
-        task.nivel_criticidade === 'no_horario' ||
-        (!task.nivel_criticidade && task.minutos_atrasado <= 5)
-      const isYellow =
-        task.nivel_criticidade === 'tolerancia' ||
-        (!task.nivel_criticidade && task.minutos_atrasado > 5 && task.minutos_atrasado <= 30)
+      let dynamicDelay = task.minutos_atrasado || 0
+      if (task.horario_inicio) {
+        const concluidaMins = timeToMinutes(task.concluidaEm)
+        const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+        const diff = concluidaMins - compareTime
+        dynamicDelay = diff > 0 ? diff : 0
+      }
+
+      const isGreen = dynamicDelay <= 5
+      const isYellow = dynamicDelay > 5 && dynamicDelay <= 30
 
       return (
         <div
@@ -1182,20 +1200,23 @@ export default function RotinaDiaria() {
                     isTimeLocked ||
                     isBeforeOpening
 
-                  const isGreen =
-                    task.concluida &&
-                    (task.nivel_criticidade === 'no_horario' ||
-                      (!task.nivel_criticidade && task.minutos_atrasado <= 5))
-                  const isYellow =
-                    task.concluida &&
-                    (task.nivel_criticidade === 'tolerancia' ||
-                      (!task.nivel_criticidade &&
-                        task.minutos_atrasado > 5 &&
-                        task.minutos_atrasado <= 30))
+                  let dynamicDelay = task.minutos_atrasado || 0
+                  if (task.concluidaEm && task.horario_inicio) {
+                    const concluidaMins = timeToMinutes(task.concluidaEm)
+                    const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                    const diff = concluidaMins - compareTime
+                    dynamicDelay = diff > 0 ? diff : 0
+                  } else if (!task.concluida && task.horario_inicio) {
+                    const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                    const diff = currentMinutes - compareTime
+                    dynamicDelay = diff > 0 ? diff : 0
+                  }
+
+                  const isGreen = task.concluida && dynamicDelay <= 5
+                  const isYellow = task.concluida && dynamicDelay > 5 && dynamicDelay <= 30
                   const isRed =
-                    task.concluida &&
-                    (task.nivel_criticidade === 'critico' ||
-                      (!task.nivel_criticidade && task.minutos_atrasado > 30))
+                    (task.concluida && dynamicDelay > 30) ||
+                    (!task.concluida && (task.fechamento_confirmado || dynamicDelay > 30))
 
                   return (
                     <div
