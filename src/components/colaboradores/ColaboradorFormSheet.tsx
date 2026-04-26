@@ -58,7 +58,7 @@ export default function ColaboradorFormSheet({
     formState: { errors },
   } = useForm<ColaboradorFormData>({
     resolver: zodResolver(colaboradorSchema),
-    defaultValues: { status: 'ativo', possui_carteira: true },
+    defaultValues: { status: 'ativo', possui_carteira: true, exigir_rotina: true },
   })
 
   const watchCargo = useWatch({ control, name: 'cargo_id' })
@@ -82,6 +82,7 @@ export default function ColaboradorFormSheet({
             password: '',
             ...det,
             possui_carteira: usuario.possui_carteira ?? true,
+            exigir_rotina: usuario.exigir_rotina ?? true,
             dias_trabalho: (usuario as any).dias_trabalho ?? [1, 2, 3, 4, 5],
             emergencia_nome: em.nome,
             emergencia_telefone: em.telefone,
@@ -90,7 +91,7 @@ export default function ColaboradorFormSheet({
         })
         .finally(() => setLoading(false))
     } else {
-      reset({ status: 'ativo', possui_carteira: true })
+      reset({ status: 'ativo', possui_carteira: true, exigir_rotina: true })
     }
   }, [isOpen, isEdit, usuario, reset])
 
@@ -101,6 +102,7 @@ export default function ColaboradorFormSheet({
         id: usuario?.id,
         ...data,
         possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
+        exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
         horario_entrada: data.horario_entrada || null,
         inicio_lanche_manha: data.inicio_lanche_manha || null,
         fim_lanche_manha: data.fim_lanche_manha || null,
@@ -346,6 +348,20 @@ export default function ColaboradorFormSheet({
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                           <span className="text-sm text-muted-foreground">
                             {field.value ? 'Sim (Habilitado)' : 'Não (Desabilitado)'}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Field>
+                  <Field label="Exigir Rotina Diária?" error={errors.exigir_rotina}>
+                    <Controller
+                      name="exigir_rotina"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Com rotina)' : 'Não (Sem rotina)'}
                           </span>
                         </div>
                       )}

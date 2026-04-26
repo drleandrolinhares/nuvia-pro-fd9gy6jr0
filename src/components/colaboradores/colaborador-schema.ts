@@ -40,6 +40,7 @@ export const colaboradorSchema = z
     fim_lanche_tarde: z.string().optional().nullable(),
     horario_saida: z.string().optional().nullable(),
     possui_carteira: z.boolean().optional().default(true),
+    exigir_rotina: z.boolean().optional().default(true),
     dias_trabalho: z.array(z.number()).optional().default([1, 2, 3, 4, 5]),
   })
   .refine((data) => !!data.id || (data.password && data.password.length >= 6), {

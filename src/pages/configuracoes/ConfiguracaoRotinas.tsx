@@ -75,6 +75,7 @@ type User = {
   inicio_lanche_tarde?: string | null
   fim_lanche_tarde?: string | null
   horario_saida?: string | null
+  exigir_rotina?: boolean
 }
 
 const timeToMinutes = (time: string | null) => {
@@ -147,7 +148,7 @@ export default function ConfiguracaoRotinas() {
     const { data, error } = await supabase
       .from('usuarios')
       .select(
-        'id, nome, role, status, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida',
+        'id, nome, role, status, horario_entrada, inicio_lanche_manha, fim_lanche_manha, saida_almoco, retorno_almoco, inicio_lanche_tarde, fim_lanche_tarde, horario_saida, exigir_rotina',
       )
       .eq('status', 'ativo')
       .order('nome')
@@ -175,10 +176,7 @@ export default function ConfiguracaoRotinas() {
     )
 
     const filtered = data
-      .filter((u) => {
-        const role = u.role?.toLowerCase() || ''
-        return !role.includes('ceo') && !role.includes('socia') && !role.includes('admin')
-      })
+      .filter((u) => u.exigir_rotina !== false)
       .map((u) => ({
         ...u,
         hasRoutine: usersWithRoutine.has(u.id),

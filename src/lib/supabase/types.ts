@@ -2175,6 +2175,7 @@ export type Database = {
           dias_trabalho: Json | null
           email: string
           endereco: string | null
+          exigir_rotina: boolean
           fim_lanche_manha: string | null
           fim_lanche_tarde: string | null
           horario_entrada: string | null
@@ -2205,6 +2206,7 @@ export type Database = {
           dias_trabalho?: Json | null
           email: string
           endereco?: string | null
+          exigir_rotina?: boolean
           fim_lanche_manha?: string | null
           fim_lanche_tarde?: string | null
           horario_entrada?: string | null
@@ -2235,6 +2237,7 @@ export type Database = {
           dias_trabalho?: Json | null
           email?: string
           endereco?: string | null
+          exigir_rotina?: boolean
           fim_lanche_manha?: string | null
           fim_lanche_tarde?: string | null
           horario_entrada?: string | null
@@ -3096,6 +3099,7 @@ export const Constants = {
 //   obrigatorio_pp_pdm: boolean (not null, default: false)
 //   obrigatorio_bonificacao: boolean (not null, default: false)
 //   possui_carteira: boolean (not null, default: true)
+//   exigir_rotina: boolean (not null, default: true)
 //   dias_trabalho: jsonb (nullable, default: '[1, 2, 3, 4, 5]'::jsonb)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())

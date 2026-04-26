@@ -1,0 +1,1 @@
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS exigir_rotina BOOLEAN NOT NULL DEFAULT true;
