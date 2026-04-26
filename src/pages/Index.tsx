@@ -5,6 +5,9 @@ import {
   RefreshCcw,
   AlertCircle,
   Box,
+  Wallet,
+  TrendingDown,
+  Cake,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,10 +17,19 @@ import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
 import { useCache } from '@/hooks/use-cache'
+import { useAuth } from '@/hooks/use-auth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { parseISO } from 'date-fns'
 
 const Index = () => {
+  const { user } = useAuth()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
+  const [aniversariantes, setAniversariantes] = useState<any[]>([])
+  const [saldoAtual, setSaldoAtual] = useState(0)
+  const [saldoPerdido, setSaldoPerdido] = useState(0)
   const { dataVersion, invalidateCache } = useCache()
 
   const loadData = async () => {
@@ -26,12 +38,74 @@ const Index = () => {
     if (data) {
       setProdutos(data)
     }
+
+    if (user) {
+      const { data: transacoes } = await supabase
+        .from('carteira_transacoes')
+        .select('tipo, valor')
+        .eq('usuario_id', user.id)
+
+      if (transacoes) {
+        let creditos = 0
+        let debitos = 0
+        let saques = 0
+        transacoes.forEach((t) => {
+          if (t.tipo === 'credito') creditos += Number(t.valor)
+          else if (t.tipo === 'debito') debitos += Number(t.valor)
+          else if (t.tipo === 'saque') saques += Number(t.valor)
+        })
+        setSaldoAtual(creditos - debitos - saques)
+        setSaldoPerdido(debitos)
+      }
+
+      const { data: usuarios } = await supabase
+        .from('usuarios')
+        .select('id, nome, data_nascimento, avatar_url')
+        .eq('status', 'ativo')
+        .not('data_nascimento', 'is', null)
+
+      if (usuarios) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const currentMonth = today.getMonth()
+
+        const aniversariantesMes = usuarios
+          .filter((u) => {
+            if (!u.data_nascimento) return false
+            const birthDate = parseISO(u.data_nascimento)
+            const birthDateLocal = new Date(
+              birthDate.getTime() + birthDate.getTimezoneOffset() * 60000,
+            )
+            return birthDateLocal.getMonth() === currentMonth
+          })
+          .map((u) => {
+            const birthDate = parseISO(u.data_nascimento!)
+            const birthDateLocal = new Date(
+              birthDate.getTime() + birthDate.getTimezoneOffset() * 60000,
+            )
+            const day = birthDateLocal.getDate()
+            const thisYearBirthday = new Date(today.getFullYear(), currentMonth, day)
+            const diff = thisYearBirthday.getTime() - today.getTime()
+            const isPast = diff < 0
+
+            return {
+              ...u,
+              day,
+              isPast,
+            }
+          })
+          .sort((a, b) => a.day - b.day)
+
+        setAniversariantes(aniversariantesMes)
+      }
+    }
+
     setLoading(false)
   }
 
   useEffect(() => {
     loadData()
-  }, [dataVersion])
+  }, [dataVersion, user])
 
   useEffect(() => {
     const channel = supabase
@@ -73,24 +147,12 @@ const Index = () => {
     })
   }, [produtos])
 
-  const { capitalInvestido, unidadesTotais, avisosEstoque, itemsAvisos } = useMemo(() => {
-    let cap = 0
-    let uni = 0
-
-    produtosDashboard.forEach((p) => {
-      const valor = (p.custo_unitario || 0) * (p.quantidade_estoque || 0)
-      cap += valor
-      uni += p.quantidade_estoque || 0
-    })
-
+  const { itemsAvisos } = useMemo(() => {
     const itemsLowStock = produtosDashboard.filter(
       (p) => (p.quantidade_estoque || 0) <= (p.quantidade_minima || 0),
     )
 
     return {
-      capitalInvestido: cap,
-      unidadesTotais: uni,
-      avisosEstoque: itemsLowStock.length,
       itemsAvisos: itemsLowStock,
     }
   }, [produtosDashboard])
@@ -110,54 +172,93 @@ const Index = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Avisos de Estoque
+              Saldo Atual
             </CardTitle>
-            <ArrowDownRight className="h-4 w-4 text-emerald-500" />
+            <Wallet className="h-4 w-4 text-emerald-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{loading ? '...' : avisosEstoque}</div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-              Itens precisam de reposição
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Capital Investido
-            </CardTitle>
-            <CircleDollarSign className="h-4 w-4 text-secondary" />
-          </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col justify-center">
             <div className="text-4xl font-bold text-foreground">
               {loading
                 ? '...'
-                : `R$ ${capitalInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                : `R$ ${saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-              Valor em estoque clínico
+              Saldo disponível na carteira
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Itens em Estoque
+              Saldo Perdido
             </CardTitle>
-            <Box className="h-4 w-4 text-indigo-500" />
+            <TrendingDown className="h-4 w-4 text-destructive" />
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              {loading ? '...' : unidadesTotais.toLocaleString('pt-BR')}
+          <CardContent className="flex-1 flex flex-col justify-center">
+            <div className="text-4xl font-bold text-destructive">
+              {loading
+                ? '...'
+                : `R$ ${saldoPerdido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-              Total de unidades disponíveis
+              Penalidades e descontos
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[200px]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Aniversariantes do Mês
+            </CardTitle>
+            <Cake className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Carregando...</div>
+            ) : aniversariantes.length > 0 ? (
+              <div className="space-y-3">
+                {aniversariantes.map((a) => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      'flex items-center gap-3',
+                      a.isPast ? 'opacity-50 grayscale' : '',
+                    )}
+                  >
+                    <Avatar className="size-8 border border-border">
+                      <AvatarImage
+                        src={
+                          a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
+                        }
+                      />
+                      <AvatarFallback>{a.nome.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium truncate">{a.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Dia {a.day.toString().padStart(2, '0')}
+                      </p>
+                    </div>
+                    {!a.isPast && a.day === new Date().getDate() && (
+                      <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] uppercase">
+                        Hoje!
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">
+                  Nenhum aniversariante
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
