@@ -55,8 +55,10 @@ import { useAuth } from '@/hooks/use-auth'
 
 const navData = [
   {
-    title: 'SISTEMA',
-    items: [{ title: 'DASHBOARD', url: '/', icon: LayoutDashboard }],
+    title: 'DASHBOARD',
+    url: '/',
+    icon: LayoutDashboard,
+    isDirectLink: true,
   },
   {
     title: 'OPERACIONAL',
@@ -177,7 +179,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-sidebar-border">
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 mb-6">
         <Link to="/" className="flex items-center gap-3 px-2 py-2">
           <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
             <CloudCog className="size-6" />
@@ -191,7 +193,7 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
           const role = profile?.role || 'visualizacao'
 
@@ -199,46 +201,47 @@ export function AppSidebar() {
             return null
           }
 
-          const filteredItems = group.items.filter((item: any) => {
-            if (
-              item.hideRole &&
-              item.hideRole.some((r: string) => r.toLowerCase() === role?.toLowerCase())
+          if (group.isDirectLink) {
+            return (
+              <SidebarGroup key={group.title} className="py-0 mb-4">
+                <SidebarGroupLabel
+                  asChild
+                  className="cursor-pointer hover:bg-sidebar-accent/50 rounded-md py-5"
+                >
+                  <Link
+                    to={group.url}
+                    className="flex w-full items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase"
+                  >
+                    {group.icon && <group.icon className="size-4 text-amber-500" />}
+                    {group.title}
+                  </Link>
+                </SidebarGroupLabel>
+              </SidebarGroup>
             )
-              return false
+          }
 
-            if (role === 'admin') return true
-            if (item.permission) {
-              if (Array.isArray(item.permission)) {
-                return item.permission.some((p: string) => permissions.includes(p))
+          const filteredItems =
+            group.items?.filter((item: any) => {
+              if (
+                item.hideRole &&
+                item.hideRole.some((r: string) => r.toLowerCase() === role?.toLowerCase())
+              )
+                return false
+
+              if (role === 'admin') return true
+              if (item.permission) {
+                if (Array.isArray(item.permission)) {
+                  return item.permission.some((p: string) => permissions.includes(p))
+                }
+                return permissions.includes(item.permission)
               }
-              return permissions.includes(item.permission)
-            }
-            if (item.showRole && !item.showRole.includes(role)) return false
-            return true
-          })
+              if (item.showRole && !item.showRole.includes(role)) return false
+              return true
+            }) || []
 
           if (filteredItems.length === 0) return null
 
-          const SingleItemIcon = filteredItems[0]?.icon
-
-          return filteredItems.length === 1 && !group.icon ? (
-            <SidebarGroup key={group.title} className="py-2">
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === filteredItems[0].url}
-                    className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground font-semibold"
-                  >
-                    <Link to={filteredItems[0].url}>
-                      {SingleItemIcon && <SingleItemIcon />}
-                      <span>{filteredItems[0].title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-          ) : (
+          return (
             <Collapsible
               key={group.title}
               defaultOpen={group.defaultOpen}
@@ -268,7 +271,7 @@ export function AppSidebar() {
                             <Collapsible key={item.title} className="group/sub" defaultOpen>
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full">
+                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent text-white/90 hover:text-white w-full">
                                     <div className="flex items-center gap-2">
                                       {ItemIcon && <ItemIcon />}
                                       <span>{item.title}</span>
@@ -283,7 +286,7 @@ export function AppSidebar() {
                                         <SidebarMenuSubButton
                                           asChild
                                           isActive={location.pathname === sub.url}
-                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold py-1.5 h-auto"
+                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white/80 hover:text-white data-[active=true]:font-bold py-1.5 h-auto"
                                         >
                                           <Link to={sub.url}>
                                             <span>{sub.title}</span>
@@ -303,7 +306,7 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               asChild
                               isActive={location.pathname === item.url}
-                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
+                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white/80 hover:text-white data-[active=true]:font-bold"
                             >
                               <Link to={item.url}>
                                 {ItemIcon && <ItemIcon />}

@@ -382,7 +382,7 @@ const Index = () => {
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border hover:bg-secondary/10 hover:text-secondary hover:border-secondary transition-colors"
+              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border bg-muted/30 hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all"
             >
               <Link to="/operacional/comunicados">
                 <Calendar className="mr-2 h-4 w-4" />
@@ -392,7 +392,7 @@ const Index = () => {
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border hover:bg-secondary/10 hover:text-secondary hover:border-secondary transition-colors"
+              className="w-full justify-start h-12 uppercase tracking-wider font-semibold border-border bg-muted/30 hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all"
             >
               <Link to="/estoque">
                 <RefreshCcw className="mr-2 h-4 w-4" />
