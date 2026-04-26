@@ -931,6 +931,23 @@ export default function RotinaDiaria() {
   const completedCount = tasks.filter((t) => t.concluida).length
   const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
 
+  const notaQualidade = useMemo(() => {
+    if (tasks.length === 0) return 0
+    let somaNotas = 0
+    tasks.forEach((t) => {
+      if (!t.concluida) {
+        somaNotas += 0
+      } else {
+        const atraso = t.minutos_atrasado || 0
+        if (atraso <= 5) somaNotas += 10
+        else if (atraso <= 15) somaNotas += 8
+        else if (atraso <= 30) somaNotas += 5
+        else somaNotas += 2
+      }
+    })
+    return somaNotas / tasks.length
+  }, [tasks])
+
   const allTasksHandled =
     tasks.length > 0 &&
     tasks.every((t) => {
@@ -979,14 +996,22 @@ export default function RotinaDiaria() {
 
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
-      const isOk = task.minutos_atrasado <= 10
+      const isGreen =
+        task.nivel_criticidade === 'no_horario' ||
+        (!task.nivel_criticidade && task.minutos_atrasado <= 5)
+      const isYellow =
+        task.nivel_criticidade === 'tolerancia' ||
+        (!task.nivel_criticidade && task.minutos_atrasado > 5 && task.minutos_atrasado <= 30)
+
       return (
         <div
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold border-2 shadow-sm transform -rotate-2',
-            isOk
+            isGreen
               ? 'bg-green-50 text-green-700 border-green-400 dark:bg-green-950/50 dark:text-green-400 dark:border-green-700'
-              : 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:border-red-800',
+              : isYellow
+                ? 'bg-amber-50 text-amber-700 border-amber-400 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-700'
+                : 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:border-red-800',
           )}
         >
           <CheckCircle2 className="w-4 h-4" />
@@ -1116,9 +1141,23 @@ export default function RotinaDiaria() {
                   <CheckCircle2 className="w-5 h-5 text-amber-500" />
                   Progresso das Tarefas
                 </CardTitle>
-                <span className="font-semibold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full w-fit">
-                  Progresso: {completedCount}/{tasks.length} ({progressPercent}%)
-                </span>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="font-semibold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full w-fit">
+                    Progresso: {completedCount}/{tasks.length} ({progressPercent}%)
+                  </span>
+                  <span
+                    className={cn(
+                      'font-bold text-sm px-3 py-1 rounded-full w-fit border',
+                      notaQualidade >= 8
+                        ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                        : notaQualidade >= 6
+                          ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+                          : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
+                    )}
+                  >
+                    Nota Atual: {(notaQualidade || 0).toFixed(1)}
+                  </span>
+                </div>
               </div>
               <Progress value={progressPercent} className="h-2.5" />
             </CardHeader>
@@ -1143,6 +1182,21 @@ export default function RotinaDiaria() {
                     isTimeLocked ||
                     isBeforeOpening
 
+                  const isGreen =
+                    task.concluida &&
+                    (task.nivel_criticidade === 'no_horario' ||
+                      (!task.nivel_criticidade && task.minutos_atrasado <= 5))
+                  const isYellow =
+                    task.concluida &&
+                    (task.nivel_criticidade === 'tolerancia' ||
+                      (!task.nivel_criticidade &&
+                        task.minutos_atrasado > 5 &&
+                        task.minutos_atrasado <= 30))
+                  const isRed =
+                    task.concluida &&
+                    (task.nivel_criticidade === 'critico' ||
+                      (!task.nivel_criticidade && task.minutos_atrasado > 30))
+
                   return (
                     <div
                       key={task.id}
@@ -1151,12 +1205,9 @@ export default function RotinaDiaria() {
                         !isWithinWindow &&
                           !task.concluida &&
                           'opacity-80 bg-muted/10 hover:bg-muted/30',
-                        task.concluida &&
-                          task.minutos_atrasado <= 10 &&
-                          'bg-green-100 dark:bg-green-900/30',
-                        task.concluida &&
-                          task.minutos_atrasado > 10 &&
-                          'bg-red-100 dark:bg-red-900/30',
+                        isGreen && 'bg-green-100 dark:bg-green-900/30',
+                        isYellow && 'bg-amber-100 dark:bg-amber-900/30',
+                        isRed && 'bg-red-100 dark:bg-red-900/30',
                         !task.concluida && isWithinWindow && 'hover:bg-muted/30',
                       )}
                     >
