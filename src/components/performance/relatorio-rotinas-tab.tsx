@@ -301,6 +301,26 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
     currentMinutes = 0
   }
 
+  const completedCount = tasks.filter((t) => t.concluida).length
+  const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
+
+  const notaQualidade = useMemo(() => {
+    if (tasks.length === 0) return 0
+    let somaNotas = 0
+    tasks.forEach((t) => {
+      if (!t.concluida) {
+        somaNotas += 0
+      } else {
+        const atraso = t.minutos_atrasado || 0
+        if (atraso <= 5) somaNotas += 10
+        else if (atraso <= 15) somaNotas += 8
+        else if (atraso <= 30) somaNotas += 5
+        else somaNotas += 2
+      }
+    })
+    return somaNotas / tasks.length
+  }, [tasks])
+
   const renderTaskStatus = (task: Task) => {
     if (task.concluidaEm) {
       const isGreen =
@@ -414,26 +434,6 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
       </div>
     )
   }
-
-  const completedCount = tasks.filter((t) => t.concluida).length
-  const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
-
-  const notaQualidade = useMemo(() => {
-    if (tasks.length === 0) return 0
-    let somaNotas = 0
-    tasks.forEach((t) => {
-      if (!t.concluida) {
-        somaNotas += 0
-      } else {
-        const atraso = t.minutos_atrasado || 0
-        if (atraso <= 5) somaNotas += 10
-        else if (atraso <= 15) somaNotas += 8
-        else if (atraso <= 30) somaNotas += 5
-        else somaNotas += 2
-      }
-    })
-    return somaNotas / tasks.length
-  }, [tasks])
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
