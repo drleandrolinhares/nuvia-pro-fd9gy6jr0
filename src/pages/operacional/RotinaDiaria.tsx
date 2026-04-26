@@ -53,6 +53,9 @@ type Task = {
   minutos_atrasado: number
   nivel_criticidade: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida' | null
   fechamento_confirmado: boolean
+
+  isAnticipated?: boolean
+  originalDateStr?: string
 }
 
 const timeToMinutes = (time: string | null) => {
@@ -72,6 +75,53 @@ const getLocalDateString = (d: Date = getBrtDate()) => {
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
+}
+
+const isWorkingDay = (date: Date, diasTrabalho: number[], ausencias: any[], userId: string) => {
+  const dayOfWeek = date.getDay()
+  if (!diasTrabalho.includes(dayOfWeek)) return false
+
+  const dateStr = getLocalDateString(date)
+  const isFeriadoGlobal = ausencias?.find((a: any) => !a.usuario_id && a.data === dateStr)
+  const isAusenciaUsuario = ausencias?.find(
+    (a: any) => a.usuario_id === userId && a.data === dateStr,
+  )
+
+  if (isFeriadoGlobal || isAusenciaUsuario) return false
+
+  return true
+}
+
+const evaluateTasksForDate = (date: Date, tarefas: any[]) => {
+  const currentDayOfWeek = date.getDay()
+  const currentDayOfMonth = date.getDate()
+
+  return tarefas.filter((t: any) => {
+    const p = t.periodicidade || 'diaria'
+    if (p === 'diaria') return true
+    if (p === 'semanal') {
+      return (
+        t.dias_semana && Array.isArray(t.dias_semana) && t.dias_semana.includes(currentDayOfWeek)
+      )
+    }
+    if (p === 'mensal') {
+      const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+      const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
+      return targetDay === currentDayOfMonth
+    }
+    if (p === 'quinzenal') {
+      if (!t.data_inicio_contagem) return false
+      const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
+      const startDate = new Date(year, month - 1, day)
+      const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      const diffTime = targetDateOnly.getTime() - startDate.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays < 0) return false
+      return diffDays % 15 === 0
+    }
+    return true
+  })
 }
 
 function ScriptPopover({ text }: { text: string }) {
@@ -612,15 +662,22 @@ export default function RotinaDiaria() {
       const realToday = new Date()
       const today = getBrtDate(realToday)
       const currentDayOfWeek = today.getDay()
-      const currentDayOfMonth = today.getDate()
       const todayDateStr = getLocalDateString(today)
+
+      const next15Days = new Date(today)
+      next15Days.setDate(today.getDate() + 15)
+      const next15DaysStr = getLocalDateString(next15Days)
 
       const { data: ausencias } = await supabase
         .from('ausencias')
         .select('*')
-        .eq('data', todayDateStr)
-      const isFeriadoGlobal = ausencias?.find((a) => !a.usuario_id)
-      const isAusenciaUsuario = ausencias?.find((a) => a.usuario_id === user.id)
+        .gte('data', todayDateStr)
+        .lte('data', next15DaysStr)
+
+      const isFeriadoGlobal = ausencias?.find((a) => !a.usuario_id && a.data === todayDateStr)
+      const isAusenciaUsuario = ausencias?.find(
+        (a) => a.usuario_id === user.id && a.data === todayDateStr,
+      )
 
       if (!diasTrabalho.includes(currentDayOfWeek)) {
         setIsTrabalhoHoje(false)
@@ -678,34 +735,42 @@ export default function RotinaDiaria() {
         }
       }
 
-      const tarefasFiltradas = tarefas.filter((t) => {
-        const p = t.periodicidade || 'diaria'
-        if (p === 'diaria') return true
-        if (p === 'semanal') {
-          return (
-            t.dias_semana &&
-            Array.isArray(t.dias_semana) &&
-            t.dias_semana.includes(currentDayOfWeek)
-          )
-        }
-        if (p === 'mensal') {
-          const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
-          const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
-          return targetDay === currentDayOfMonth
-        }
-        if (p === 'quinzenal') {
-          if (!t.data_inicio_contagem) return false
-          const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
-          const startDate = new Date(year, month - 1, day)
-          const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-          const diffTime = todayDate.getTime() - startDate.getTime()
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      const nonWorkingDays: Date[] = []
+      let checkDate = new Date(today)
+      checkDate.setDate(today.getDate() + 1)
 
-          if (diffDays < 0) return false
-          return diffDays % 15 === 0
+      while (true) {
+        if (isWorkingDay(checkDate, diasTrabalho, ausencias || [], user.id)) {
+          break
         }
-        return true
+        nonWorkingDays.push(new Date(checkDate))
+        checkDate.setDate(checkDate.getDate() + 1)
+        if (nonWorkingDays.length > 14) break
+      }
+
+      const tasksToday = evaluateTasksForDate(today, tarefas)
+      const anticipatedTasks: any[] = []
+
+      nonWorkingDays.forEach((nwd) => {
+        const tasksForNwd = evaluateTasksForDate(nwd, tarefas)
+        tasksForNwd.forEach((t) => {
+          if (
+            !tasksToday.find((td: any) => td.id === t.id) &&
+            !anticipatedTasks.find((at: any) => at.id === t.id)
+          ) {
+            anticipatedTasks.push({
+              ...t,
+              isAnticipated: true,
+              originalDateStr: getLocalDateString(nwd),
+            })
+          }
+        })
       })
+
+      const tarefasFiltradas = [
+        ...tasksToday.map((t: any) => ({ ...t, isAnticipated: false })),
+        ...anticipatedTasks,
+      ]
 
       const { data: execucoes } = await supabase
         .from('execucoes_rotina')
@@ -748,6 +813,8 @@ export default function RotinaDiaria() {
           minutos_atrasado: exec?.minutos_atrasado || 0,
           nivel_criticidade: exec?.nivel_criticidade || null,
           fechamento_confirmado: exec?.fechamento_confirmado || false,
+          isAnticipated: t.isAnticipated,
+          originalDateStr: t.originalDateStr,
         }
       })
 
@@ -1327,6 +1394,15 @@ export default function RotinaDiaria() {
                             >
                               {task.descricao_tarefa}
                             </label>
+                            {task.isAnticipated && task.originalDateStr && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 ml-2 text-[10px] tracking-wider px-1.5 py-0"
+                              >
+                                Antecipada de{' '}
+                                {format(new Date(task.originalDateStr + 'T12:00:00'), 'dd/MM')}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
                             {hasTime ? (

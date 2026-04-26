@@ -47,6 +47,41 @@ export type Database = {
           },
         ]
       }
+      ausencias: {
+        Row: {
+          criado_em: string
+          data: string
+          descricao: string
+          id: string
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          criado_em?: string
+          data: string
+          descricao: string
+          id?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          criado_em?: string
+          data?: string
+          descricao?: string
+          id?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ausencias_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       avaliacoes: {
         Row: {
           atualizado_em: string | null
@@ -2137,6 +2172,7 @@ export type Database = {
           criado_em: string | null
           data_admissao: string | null
           data_nascimento: string | null
+          dias_trabalho: Json | null
           email: string
           endereco: string | null
           fim_lanche_manha: string | null
@@ -2166,6 +2202,7 @@ export type Database = {
           criado_em?: string | null
           data_admissao?: string | null
           data_nascimento?: string | null
+          dias_trabalho?: Json | null
           email: string
           endereco?: string | null
           fim_lanche_manha?: string | null
@@ -2195,6 +2232,7 @@ export type Database = {
           criado_em?: string | null
           data_admissao?: string | null
           data_nascimento?: string | null
+          dias_trabalho?: Json | null
           email?: string
           endereco?: string | null
           fim_lanche_manha?: string | null
@@ -2568,6 +2606,13 @@ export const Constants = {
 //   timestamp_cliente: timestamp with time zone (not null)
 //   valido: boolean (not null)
 //   mensagem: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+// Table: ausencias
+//   id: uuid (not null, default: gen_random_uuid())
+//   data: date (not null)
+//   descricao: text (not null)
+//   tipo: text (not null, default: 'feriado'::text)
+//   usuario_id: uuid (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
@@ -3051,6 +3096,7 @@ export const Constants = {
 //   obrigatorio_pp_pdm: boolean (not null, default: false)
 //   obrigatorio_bonificacao: boolean (not null, default: false)
 //   possui_carteira: boolean (not null, default: true)
+//   dias_trabalho: jsonb (nullable, default: '[1, 2, 3, 4, 5]'::jsonb)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
@@ -3085,6 +3131,9 @@ export const Constants = {
 //   PRIMARY KEY auditoria_tarefas_rotina_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY auditoria_tarefas_rotina_tarefa_id_fkey: FOREIGN KEY (tarefa_id) REFERENCES tarefas_rotina(id) ON DELETE CASCADE
 //   FOREIGN KEY auditoria_tarefas_rotina_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: ausencias
+//   PRIMARY KEY ausencias_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY ausencias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: avaliacoes
 //   FOREIGN KEY avaliacoes_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY avaliacoes_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
@@ -3293,6 +3342,10 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "auditoria_tarefas_rotina_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: ausencias
+//   Policy "ausencias_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: avaliacoes
 //   Policy "avaliacoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true

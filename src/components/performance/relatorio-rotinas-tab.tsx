@@ -110,6 +110,56 @@ type Task = {
   minutos_atrasado: number
   nivel_criticidade: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida' | null
   fechamento_confirmado: boolean
+
+  isAnticipated?: boolean
+  originalDateStr?: string
+}
+
+const isWorkingDay = (date: Date, diasTrabalho: number[], ausencias: any[], userId: string) => {
+  const dayOfWeek = date.getDay()
+  if (!diasTrabalho.includes(dayOfWeek)) return false
+
+  const dateStr = getLocalDateString(date)
+  const isFeriadoGlobal = ausencias?.find((a: any) => !a.usuario_id && a.data === dateStr)
+  const isAusenciaUsuario = ausencias?.find(
+    (a: any) => a.usuario_id === userId && a.data === dateStr,
+  )
+
+  if (isFeriadoGlobal || isAusenciaUsuario) return false
+
+  return true
+}
+
+const evaluateTasksForDate = (date: Date, tarefas: any[]) => {
+  const currentDayOfWeek = date.getDay()
+  const currentDayOfMonth = date.getDate()
+
+  return tarefas.filter((t: any) => {
+    const p = t.periodicidade || 'diaria'
+    if (p === 'diaria') return true
+    if (p === 'semanal') {
+      return (
+        t.dias_semana && Array.isArray(t.dias_semana) && t.dias_semana.includes(currentDayOfWeek)
+      )
+    }
+    if (p === 'mensal') {
+      const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+      const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
+      return targetDay === currentDayOfMonth
+    }
+    if (p === 'quinzenal') {
+      if (!t.data_inicio_contagem) return false
+      const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
+      const startDate = new Date(year, month - 1, day)
+      const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      const diffTime = targetDateOnly.getTime() - startDate.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays < 0) return false
+      return diffDays % 15 === 0
+    }
+    return true
+  })
 }
 
 function ScriptPopoverReadOnly({ text }: { text: string }) {
@@ -196,35 +246,54 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
 
         const [year, month, day] = dateStr.split('-').map(Number)
         const targetDate = new Date(year, month - 1, day)
-        const currentDayOfWeek = targetDate.getDay()
-        const currentDayOfMonth = targetDate.getDate()
 
-        const tarefasFiltradas = tarefas.filter((t) => {
-          const p = t.periodicidade || 'diaria'
-          if (p === 'diaria') return true
-          if (p === 'semanal') {
-            return (
-              t.dias_semana &&
-              Array.isArray(t.dias_semana) &&
-              t.dias_semana.includes(currentDayOfWeek)
-            )
+        const next15Days = new Date(targetDate)
+        next15Days.setDate(targetDate.getDate() + 15)
+        const next15DaysStr = getLocalDateString(next15Days)
+
+        const [{ data: usuario }, { data: ausencias }] = await Promise.all([
+          supabase.from('usuarios').select('dias_trabalho').eq('id', usuarioId).single(),
+          supabase.from('ausencias').select('*').gte('data', dateStr).lte('data', next15DaysStr),
+        ])
+
+        const diasTrabalho = usuario?.dias_trabalho || [1, 2, 3, 4, 5]
+
+        const nonWorkingDays: Date[] = []
+        let checkDate = new Date(targetDate)
+        checkDate.setDate(targetDate.getDate() + 1)
+
+        while (true) {
+          if (isWorkingDay(checkDate, diasTrabalho, ausencias || [], usuarioId)) {
+            break
           }
-          if (p === 'mensal') {
-            const lastDayOfMonth = new Date(year, month, 0).getDate()
-            const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
-            return targetDay === currentDayOfMonth
-          }
-          if (p === 'quinzenal') {
-            if (!t.data_inicio_contagem) return false
-            const [iy, im, id] = t.data_inicio_contagem.split('-').map(Number)
-            const startDate = new Date(iy, im - 1, id)
-            const diffTime = targetDate.getTime() - startDate.getTime()
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-            if (diffDays < 0) return false
-            return diffDays % 15 === 0
-          }
-          return true
+          nonWorkingDays.push(new Date(checkDate))
+          checkDate.setDate(checkDate.getDate() + 1)
+          if (nonWorkingDays.length > 14) break
+        }
+
+        const tasksTarget = evaluateTasksForDate(targetDate, tarefas)
+        const anticipatedTasks: any[] = []
+
+        nonWorkingDays.forEach((nwd) => {
+          const tasksForNwd = evaluateTasksForDate(nwd, tarefas)
+          tasksForNwd.forEach((t: any) => {
+            if (
+              !tasksTarget.find((td: any) => td.id === t.id) &&
+              !anticipatedTasks.find((at: any) => at.id === t.id)
+            ) {
+              anticipatedTasks.push({
+                ...t,
+                isAnticipated: true,
+                originalDateStr: getLocalDateString(nwd),
+              })
+            }
+          })
         })
+
+        const tarefasFiltradas = [
+          ...tasksTarget.map((t: any) => ({ ...t, isAnticipated: false })),
+          ...anticipatedTasks,
+        ]
 
         const { data: execucoes } = await supabase
           .from('execucoes_rotina')
@@ -267,6 +336,8 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
             minutos_atrasado: exec?.minutos_atrasado || 0,
             nivel_criticidade: exec?.nivel_criticidade || null,
             fechamento_confirmado: exec?.fechamento_confirmado || false,
+            isAnticipated: t.isAnticipated,
+            originalDateStr: t.originalDateStr,
           }
         })
 
@@ -555,6 +626,15 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
                         >
                           {task.descricao_tarefa}
                         </span>
+                        {task.isAnticipated && task.originalDateStr && (
+                          <Badge
+                            variant="outline"
+                            className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 ml-2 text-[10px] tracking-wider px-1.5 py-0"
+                          >
+                            Antecipada de{' '}
+                            {format(new Date(task.originalDateStr + 'T12:00:00'), 'dd/MM')}
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground gap-1.5 font-medium bg-muted/50 w-fit px-2 py-0.5 rounded-md">
                         {hasTime ? (
