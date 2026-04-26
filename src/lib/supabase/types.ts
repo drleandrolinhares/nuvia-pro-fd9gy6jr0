@@ -3099,8 +3099,8 @@ export const Constants = {
 //   obrigatorio_pp_pdm: boolean (not null, default: false)
 //   obrigatorio_bonificacao: boolean (not null, default: false)
 //   possui_carteira: boolean (not null, default: true)
-//   exigir_rotina: boolean (not null, default: true)
 //   dias_trabalho: jsonb (nullable, default: '[1, 2, 3, 4, 5]'::jsonb)
+//   exigir_rotina: boolean (not null, default: true)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
