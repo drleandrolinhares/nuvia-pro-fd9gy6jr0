@@ -1795,18 +1795,21 @@ export type Database = {
           atualizado_em: string
           id: string
           meta_indicacoes: number
+          usuarios_elegiveis: Json | null
           valor_bonus: number
         }
         Insert: {
           atualizado_em?: string
           id?: string
           meta_indicacoes?: number
+          usuarios_elegiveis?: Json | null
           valor_bonus?: number
         }
         Update: {
           atualizado_em?: string
           id?: string
           meta_indicacoes?: number
+          usuarios_elegiveis?: Json | null
           valor_bonus?: number
         }
         Relationships: []
@@ -2943,6 +2946,7 @@ export const Constants = {
 //   valor_bonus: numeric (not null, default: 100)
 //   meta_indicacoes: integer (not null, default: 2)
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   usuarios_elegiveis: jsonb (nullable, default: '[]'::jsonb)
 // Table: sorriso_dos_sonhos_indicacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   paciente_indicador_id: uuid (nullable)

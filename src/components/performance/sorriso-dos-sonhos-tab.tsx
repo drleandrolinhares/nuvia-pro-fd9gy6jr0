@@ -110,6 +110,13 @@ export function SorrisoDosSonhosTab() {
   const fetchData = async () => {
     setLoading(true)
     try {
+      if (isAdmin) {
+        const currentMonth = format(new Date(), 'yyyy-MM')
+        const prevMonth = format(subMonths(new Date(), 1), 'yyyy-MM')
+        supabase.rpc('gerar_adiantamento_mes_sorriso' as any, { p_mes: currentMonth }).then()
+        supabase.rpc('processar_fechamento_mes_sorriso' as any, { p_mes: prevMonth }).then()
+      }
+
       const [indRes, pacRes, usuRes, configRes] = await Promise.all([
         supabase
           .from('sorriso_dos_sonhos_indicacoes' as any)
@@ -453,7 +460,9 @@ export function SorrisoDosSonhosTab() {
 
         <Card className="border-none shadow-sm bg-white/70">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Bônus Calculado</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">
+              Bônus Gerado (Total)
+            </CardTitle>
             <Trophy className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
@@ -461,7 +470,8 @@ export function SorrisoDosSonhosTab() {
               R$ {bonusTotal.toFixed(2).replace('.', ',')}
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              R${config.valor_bonus} a cada {config.meta_indicacoes} fechadas
+              R${config.valor_bonus} a cada {config.meta_indicacoes} fechadas (Inclui R$ 200
+              antecipados)
             </p>
           </CardContent>
         </Card>
