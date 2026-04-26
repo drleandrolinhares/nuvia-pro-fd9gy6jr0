@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FileText, UserPlus } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useConfigData } from '@/hooks/use-config-data'
 import {
   Sheet,
@@ -80,13 +81,30 @@ export function UsuariosTab() {
                   usuarios.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell>
-                        <div className="font-medium">{u.nome}</div>
-                        <div className="text-xs text-muted-foreground">{u.email}</div>
-                        {u.cpf && (
-                          <div className="text-[10px] text-muted-foreground mt-0.5">
-                            CPF: {u.cpf}
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 border border-amber-500/20 shadow-sm hidden sm:flex">
+                            <AvatarFallback className="bg-slate-900 text-amber-500 text-xs font-bold uppercase">
+                              {u.nome
+                                ?.split(' ')
+                                .map((n: string) => n[0])
+                                .slice(0, 2)
+                                .join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-bold text-sm uppercase tracking-wide">
+                              {u.nome}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-medium">
+                              {u.email}
+                            </div>
+                            {u.cpf && (
+                              <div className="text-[10px] text-muted-foreground mt-0.5 font-medium tracking-wider">
+                                CPF: {u.cpf}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="uppercase tracking-wider text-[10px]">

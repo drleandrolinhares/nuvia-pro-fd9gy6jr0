@@ -429,11 +429,24 @@ export default function Colaboradores() {
                         )}
                       </TableCell>
                       <TableCell className="px-2">
-                        <div className="font-medium text-xs text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                          {usuario.nome}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">
-                          {usuario.cpf || 'Sem CPF'}
+                        <div className="flex items-center gap-3 py-1">
+                          <Avatar className="h-9 w-9 border border-amber-500/20 shadow-sm hidden sm:flex">
+                            <AvatarFallback className="bg-slate-900 text-amber-500 text-xs font-bold uppercase">
+                              {usuario.nome
+                                .split(' ')
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-bold text-xs text-slate-900 dark:text-slate-100 whitespace-nowrap uppercase tracking-wide">
+                              {usuario.nome}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground truncate max-w-[120px] font-medium tracking-wider">
+                              {usuario.cpf || 'SEM CPF'}
+                            </div>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="px-2">

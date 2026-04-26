@@ -11,6 +11,7 @@ import {
   Eye,
   Clock,
 } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
@@ -604,22 +605,34 @@ export default function ConfiguracaoRotinas() {
               </CardDescription>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
               <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="w-full sm:w-[300px]">
-                  <SelectValue placeholder="Selecione..." />
+                <SelectTrigger className="w-full sm:w-[350px] lg:w-[450px] h-12 text-base font-medium">
+                  <SelectValue placeholder="Selecione o colaborador..." />
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{u.nome}</span>
-                        {u.hasRoutine && (
-                          <span className="flex items-center text-emerald-600 text-xs font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                            <CheckCircle2 className="size-3 mr-1" />
-                            Configurado
-                          </span>
-                        )}
+                    <SelectItem key={u.id} value={u.id} className="py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 border border-amber-500/20">
+                          <AvatarFallback className="bg-amber-500/10 text-amber-600 text-xs font-bold">
+                            {u.nome
+                              .split(' ')
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join('')
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">{u.nome}</span>
+                          {u.hasRoutine && (
+                            <span className="flex items-center text-emerald-600 text-[10px] font-medium uppercase tracking-wider mt-0.5">
+                              <CheckCircle2 className="size-3 mr-1" />
+                              Rotina Configurada
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
@@ -629,8 +642,11 @@ export default function ConfiguracaoRotinas() {
               {selectedUser && currentTasks.length > 0 && (
                 <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="shrink-0">
-                      <Copy className="size-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      className="h-12 shrink-0 border-border/50 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <Copy className="size-4 mr-2 text-amber-500" />
                       Duplicar Rotina
                     </Button>
                   </DialogTrigger>
@@ -652,11 +668,21 @@ export default function ConfiguracaoRotinas() {
                           {users
                             .filter((u) => u.id !== selectedUser)
                             .map((u) => (
-                              <SelectItem key={u.id} value={u.id}>
+                              <SelectItem key={u.id} value={u.id} className="py-2">
                                 <div className="flex items-center gap-2">
-                                  <span>{u.nome}</span>
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback className="bg-slate-900 text-amber-500 text-[10px] font-bold">
+                                      {u.nome
+                                        .split(' ')
+                                        .map((n) => n[0])
+                                        .slice(0, 2)
+                                        .join('')
+                                        .toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-sm">{u.nome}</span>
                                   {u.hasRoutine && (
-                                    <span className="flex items-center text-amber-600 text-xs font-medium bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                                    <span className="flex items-center text-amber-600 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 px-1.5 py-0.5 rounded-full ml-2">
                                       <CheckCircle2 className="size-3 mr-1" />
                                       Substituir
                                     </span>
@@ -684,7 +710,7 @@ export default function ConfiguracaoRotinas() {
             </div>
           </div>
           {selectedUser && (
-            <div className="mt-4 pt-4 border-t border-border/50 animate-fade-in">
+            <div className="mt-6 pt-6 border-t border-border/50 animate-fade-in">
               {(() => {
                 const user = users.find((u) => u.id === selectedUser)
                 if (!user) return null
@@ -694,7 +720,7 @@ export default function ConfiguracaoRotinas() {
                 const hours = [
                   { label: 'Entrada', value: formatH(user.horario_entrada) },
                   {
-                    label: 'Lanche Manhã',
+                    label: 'L. Manhã',
                     value:
                       user.inicio_lanche_manha && user.fim_lanche_manha
                         ? `${formatH(user.inicio_lanche_manha)} - ${formatH(user.fim_lanche_manha)}`
@@ -708,7 +734,7 @@ export default function ConfiguracaoRotinas() {
                         : null,
                   },
                   {
-                    label: 'Lanche Tarde',
+                    label: 'L. Tarde',
                     value:
                       user.inicio_lanche_tarde && user.fim_lanche_tarde
                         ? `${formatH(user.inicio_lanche_tarde)} - ${formatH(user.fim_lanche_tarde)}`
@@ -717,33 +743,65 @@ export default function ConfiguracaoRotinas() {
                   { label: 'Saída', value: formatH(user.horario_saida) },
                 ].filter((h) => h.value)
 
-                if (hours.length === 0)
-                  return (
-                    <div className="text-sm text-muted-foreground italic flex items-center gap-2">
-                      <Info className="w-4 h-4" /> Nenhum horário de trabalho cadastrado para este
-                      colaborador.
-                    </div>
-                  )
-
                 return (
-                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center text-sm">
-                    <div className="font-semibold flex items-center gap-1.5 text-primary uppercase tracking-wider text-xs">
-                      <Clock className="w-4 h-4" />
-                      Jornada:
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {hours.map((h, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-1.5 bg-muted/40 px-2.5 py-1 rounded-md border border-border/50"
-                        >
-                          <span className="text-xs text-muted-foreground uppercase font-medium">
-                            {h.label}:
-                          </span>
-                          <span className="font-bold text-foreground">{h.value}</span>
+                  <div className="bg-slate-900 border-l-4 border-amber-500 p-5 rounded-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16 border-2 border-amber-500/20 shadow-inner bg-slate-800">
+                        <AvatarFallback className="bg-transparent text-amber-500 font-bold text-xl">
+                          {user.nome
+                            .split(' ')
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join('')
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1.5">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-wider leading-none">
+                          {user.nome}
+                        </h2>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-amber-500 border-amber-500/30 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5"
+                          >
+                            {user.role === 'admin' ? 'Administrador' : user.role || 'Colaborador'}
+                          </Badge>
+                          {user.hasRoutine && (
+                            <span className="flex items-center text-emerald-400 text-xs font-semibold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                              <CheckCircle2 className="size-3 mr-1" />
+                              Rotina Ativa
+                            </span>
+                          )}
                         </div>
-                      ))}
+                      </div>
                     </div>
+
+                    {hours.length > 0 ? (
+                      <div className="flex flex-col gap-2.5 bg-slate-800/60 p-4 rounded-lg w-full lg:w-auto border border-slate-700/50">
+                        <div className="font-bold flex items-center gap-2 text-slate-300 uppercase tracking-widest text-xs">
+                          <Clock className="w-4 h-4 text-amber-500" />
+                          Jornada de Trabalho
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {hours.map((h, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1.5 rounded-md border border-slate-700/50 shadow-sm"
+                            >
+                              <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">
+                                {h.label}:
+                              </span>
+                              <span className="text-xs font-bold text-amber-50">{h.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-400 italic flex items-center gap-2 bg-slate-800/60 p-4 rounded-lg border border-slate-700/50 w-full lg:w-auto">
+                        <Info className="w-4 h-4 text-amber-500" /> Nenhum horário cadastrado.
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -1202,11 +1260,21 @@ export default function ConfiguracaoRotinas() {
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
+                    <SelectItem key={u.id} value={u.id} className="py-2">
                       <div className="flex items-center gap-2">
-                        <span>{u.nome}</span>
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="bg-slate-900 text-amber-500 text-[10px] font-bold">
+                            {u.nome
+                              .split(' ')
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join('')
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-sm">{u.nome}</span>
                         {u.id === selectedUser && (
-                          <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="flex items-center text-primary text-[10px] font-bold bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-2">
                             Clonar
                           </span>
                         )}
@@ -1284,11 +1352,21 @@ export default function ConfiguracaoRotinas() {
                     />
                     <label
                       htmlFor={`bulk-user-${u.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-3"
                     >
-                      <span>{u.nome}</span>
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-slate-900 text-amber-500 text-xs font-bold">
+                          {u.nome
+                            .split(' ')
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join('')
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-bold text-sm tracking-wide">{u.nome}</span>
                       {u.id === selectedUser && (
-                        <span className="flex items-center text-primary text-[10px] font-medium bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="flex items-center text-primary text-[10px] font-bold bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider ml-auto">
                           Clonar
                         </span>
                       )}
