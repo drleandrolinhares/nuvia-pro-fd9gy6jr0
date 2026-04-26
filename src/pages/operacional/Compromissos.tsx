@@ -221,8 +221,8 @@ export default function Compromissos() {
     activeTab !== 'todos' || dateRange !== undefined || selectedUser !== 'todos'
 
   return (
-    <div className="flex h-full bg-slate-50/50">
-      <div className="hidden w-[360px] overflow-y-auto border-r bg-white p-6 shadow-sm z-10 md:block">
+    <div className="flex h-full bg-slate-50/50 rounded-lg border border-border overflow-hidden">
+      <div className="hidden w-[360px] overflow-y-auto border-r bg-white p-6 z-10 md:block">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">Calendário</h2>
           <Button
@@ -262,7 +262,7 @@ export default function Compromissos() {
       </div>
 
       <div className="relative flex flex-1 flex-col overflow-hidden">
-        <div className="z-10 flex flex-col gap-4 border-b bg-white p-6 shadow-sm">
+        <div className="z-10 flex flex-col gap-4 border-b bg-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-slate-800">
               Feed de Compromissos

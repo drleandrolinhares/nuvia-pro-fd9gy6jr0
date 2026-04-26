@@ -531,18 +531,5 @@ export default function NormasInternas() {
     )
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase">
-          Normas Internas
-        </h1>
-        <p className="text-muted-foreground uppercase text-sm font-medium tracking-wider mt-1">
-          {isAdmin ? 'Gestão de Documentos e Compliance' : 'Meus Documentos Oficiais'}
-        </p>
-      </div>
-
-      {isAdmin ? renderAdminView() : renderUserView()}
-    </div>
-  )
+  return <div className="space-y-6">{isAdmin ? renderAdminView() : renderUserView()}</div>
 }

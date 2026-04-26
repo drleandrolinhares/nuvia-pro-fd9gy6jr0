@@ -83,12 +83,9 @@ const navData = [
       },
       {
         title: 'COMUNICADOS',
+        url: '/operacional/comunicados',
         icon: Bell,
         permission: ['operacional_comunicados', 'Acessar Comunicados'],
-        subItems: [
-          { title: 'Compromissos', url: '/operacional/comunicados/compromissos' },
-          { title: 'Normas Internas', url: '/operacional/comunicados/normas-internas' },
-        ],
       },
       {
         title: 'PARCEIROS',

@@ -313,11 +313,11 @@ export default function Parceiros() {
   }
 
   return (
-    <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6">
+    <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">PARCEIROS</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-bold text-slate-900 uppercase">PARCEIROS</h1>
+          <p className="text-sm text-slate-500">
             Gerencie trabalhos e serviços externos (laboratórios, clínicas).
           </p>
         </div>
@@ -331,22 +331,22 @@ export default function Parceiros() {
         onValueChange={setCategoriaSlug}
         className="flex flex-col flex-1 overflow-hidden"
       >
-        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-900/50 p-1 border border-slate-800 shrink-0">
+        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-100 p-1 border border-slate-200 shrink-0">
           <TabsTrigger
             value="laboratorios"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
           >
             LABORATÓRIOS
           </TabsTrigger>
           <TabsTrigger
             value="radiologia"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
           >
             RADIOLOGIA
           </TabsTrigger>
           <TabsTrigger
             value="outros"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-slate-800 data-[state=active]:text-amber-500 text-slate-400"
+            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm text-slate-600 font-medium uppercase"
           >
             OUTROS
           </TabsTrigger>
@@ -473,10 +473,10 @@ export default function Parceiros() {
 
             <div
               onClick={() => setIsNewColModalOpen(true)}
-              className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-slate-600 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
+              className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-300 bg-slate-100/50 hover:bg-slate-200/50 hover:border-slate-400 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
             >
-              <Plus className="w-8 h-8 text-slate-400 mb-2" />
-              <span className="text-slate-400 font-medium">Nova Etapa</span>
+              <Plus className="w-8 h-8 text-slate-500 mb-2" />
+              <span className="text-slate-500 font-medium">Nova Etapa</span>
             </div>
           </div>
         </div>
