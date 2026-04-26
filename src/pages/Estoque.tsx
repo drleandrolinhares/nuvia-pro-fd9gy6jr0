@@ -333,27 +333,12 @@ export default function Estoque() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-slate-900/5 p-1 h-auto flex flex-wrap max-w-fit">
-          <TabsTrigger
-            value="produtos"
-            className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
-          >
-            Produtos
-          </TabsTrigger>
+        <TabsList className="flex flex-wrap max-w-fit justify-start">
+          <TabsTrigger value="produtos">Produtos</TabsTrigger>
           {canManage && (
             <>
-              <TabsTrigger
-                value="fornecedores"
-                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
-              >
-                Fornecedores
-              </TabsTrigger>
-              <TabsTrigger
-                value="compras"
-                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold px-6 py-2 rounded-md transition-all"
-              >
-                Compras
-              </TabsTrigger>
+              <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
+              <TabsTrigger value="compras">Compras</TabsTrigger>
             </>
           )}
         </TabsList>

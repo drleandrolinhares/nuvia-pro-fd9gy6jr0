@@ -179,7 +179,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-sidebar-border">
-      <SidebarHeader className="p-4 mb-6">
+      <SidebarHeader className="p-4 mb-8">
         <Link to="/" className="flex items-center gap-3 px-2 py-2">
           <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
             <CloudCog className="size-6" />
@@ -203,17 +203,16 @@ export function AppSidebar() {
 
           if (group.isDirectLink) {
             return (
-              <SidebarGroup key={group.title} className="py-0 mb-4">
+              <SidebarGroup key={group.title} className="py-1 mb-2">
                 <SidebarGroupLabel
                   asChild
-                  className="cursor-pointer hover:bg-sidebar-accent/50 rounded-md py-5"
+                  className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
                 >
-                  <Link
-                    to={group.url}
-                    className="flex w-full items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase"
-                  >
-                    {group.icon && <group.icon className="size-4 text-amber-500" />}
-                    {group.title}
+                  <Link to={group.url} className="flex w-full items-center justify-between py-2">
+                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase">
+                      {group.icon && <group.icon className="size-4 text-amber-500" />}
+                      {group.title}
+                    </div>
                   </Link>
                 </SidebarGroupLabel>
               </SidebarGroup>
@@ -253,11 +252,11 @@ export function AppSidebar() {
                   className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
                 >
                   <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
-                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500">
+                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase">
                       {group.icon && <group.icon className="size-4 text-amber-500" />}
                       {group.title}
                     </div>
-                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-sidebar-foreground/50" />
+                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-amber-500/50" />
                   </CollapsibleTrigger>
                 </SidebarGroupLabel>
                 <CollapsibleContent>
@@ -271,12 +270,12 @@ export function AppSidebar() {
                             <Collapsible key={item.title} className="group/sub" defaultOpen>
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent text-white/90 hover:text-white w-full">
+                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent text-white hover:text-white w-full font-medium">
                                     <div className="flex items-center gap-2">
                                       {ItemIcon && <ItemIcon />}
                                       <span>{item.title}</span>
                                     </div>
-                                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/sub:rotate-90" />
+                                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/sub:rotate-90 text-white/50" />
                                   </SidebarMenuButton>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
@@ -286,7 +285,7 @@ export function AppSidebar() {
                                         <SidebarMenuSubButton
                                           asChild
                                           isActive={location.pathname === sub.url}
-                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white/80 hover:text-white data-[active=true]:font-bold py-1.5 h-auto"
+                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white hover:text-white data-[active=true]:font-bold py-1.5 h-auto font-medium"
                                         >
                                           <Link to={sub.url}>
                                             <span>{sub.title}</span>
@@ -306,7 +305,7 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               asChild
                               isActive={location.pathname === item.url}
-                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white/80 hover:text-white data-[active=true]:font-bold"
+                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white hover:text-white data-[active=true]:font-bold font-medium"
                             >
                               <Link to={item.url}>
                                 {ItemIcon && <ItemIcon />}

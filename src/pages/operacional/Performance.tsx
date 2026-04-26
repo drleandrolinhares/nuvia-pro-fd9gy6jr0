@@ -8,47 +8,36 @@ import { Target } from 'lucide-react'
 
 export default function Performance() {
   return (
-    <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-          <Target className="h-8 w-8 text-amber-500" />
-          PERFORMANCE
-        </h1>{' '}
-        <p className="text-slate-500">
-          Acompanhe os indicadores de desempenho, feedbacks, bonificações e rotinas da equipe.
-        </p>
+    <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
+        <div className="flex items-start gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white pr-24 sm:pr-0 flex items-center gap-3 uppercase">
+              <Target className="h-8 w-8 text-amber-500" />
+              Performance
+            </h1>
+            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
+              Acompanhe os indicadores de desempenho, feedbacks, bonificações e rotinas da equipe.
+            </p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="carteira" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto max-w-5xl mb-6 bg-slate-100/80 p-1 border">
-          <TabsTrigger
-            value="carteira"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
+        <TabsList className="flex w-full overflow-x-auto max-w-5xl mb-6 justify-start">
+          <TabsTrigger value="carteira" className="whitespace-nowrap">
             Carteira
           </TabsTrigger>
-          <TabsTrigger
-            value="pp-pdm"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="pp-pdm" className="whitespace-nowrap">
             PP e PDM
           </TabsTrigger>
-          <TabsTrigger
-            value="bonificacao"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="bonificacao" className="whitespace-nowrap">
             Bonificação Feijão com Arroz
           </TabsTrigger>
-          <TabsTrigger
-            value="relatorio-rotinas"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="relatorio-rotinas" className="whitespace-nowrap">
             Relatório de Rotinas
           </TabsTrigger>
-          <TabsTrigger
-            value="sorriso-dos-sonhos"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="sorriso-dos-sonhos" className="whitespace-nowrap">
             Sorriso dos Sonhos
           </TabsTrigger>
         </TabsList>
