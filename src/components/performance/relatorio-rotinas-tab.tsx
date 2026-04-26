@@ -933,10 +933,22 @@ export function RelatorioRotinasTab() {
         const naoConcluidas = userExecs.filter((e) => !e.concluida).length
         const noHorario = userExecs.filter((e) => e.nivel_criticidade === 'no_horario').length
 
+        const totalAcoes = userExecs.length
+        const somaNotas = userExecs.reduce((acc, curr) => {
+          if (!curr.concluida) return acc + 0
+          const atraso = curr.minutos_atrasado || 0
+          if (atraso <= 5) return acc + 10
+          if (atraso <= 15) return acc + 8
+          if (atraso <= 30) return acc + 5
+          return acc + 2
+        }, 0)
+        const notaQualidade = totalAcoes > 0 ? somaNotas / totalAcoes : 0
+
         return {
           usuario_id: u.id,
           nome: u.nome,
           percentual,
+          notaQualidade,
           isFechado,
           dataFechamento: latestFechamento,
           ultimaAcao,
@@ -951,7 +963,10 @@ export function RelatorioRotinasTab() {
           },
         }
       })
-      .sort((a, b) => b.percentual - a.percentual)
+      .sort((a, b) => {
+        if (b.percentual !== a.percentual) return b.percentual - a.percentual
+        return b.notaQualidade - a.notaQualidade
+      })
   }, [executions, usersWithRoutines, userFilter])
 
   const selectedDetails = useMemo(() => {
@@ -972,9 +987,12 @@ export function RelatorioRotinasTab() {
     const avgPercent = ranking.reduce((acc, r) => acc + r.percentual, 0) / ranking.length
     const allFechado = ranking.every((r) => r.isFechado)
 
+    const avgNota = ranking.reduce((acc, r) => acc + r.notaQualidade, 0) / ranking.length
+
     return {
       nome: 'Todos os Usuários (Média)',
       percentual: avgPercent,
+      notaQualidade: avgNota,
       isFechado: allFechado,
       dataFechamento: null,
       stats: globalStats,
@@ -1159,6 +1177,7 @@ export function RelatorioRotinasTab() {
                   <TableRow className="bg-secondary/30">
                     <TableHead>Colaborador</TableHead>
                     <TableHead>Conclusão</TableHead>
+                    <TableHead>Qualidade</TableHead>
                     <TableHead>Última Ação</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
@@ -1187,6 +1206,22 @@ export function RelatorioRotinasTab() {
                         <div className="flex items-center gap-3">
                           <Progress value={r.percentual} className="w-[80px] h-2.5" />
                           <span className="text-sm font-semibold">{r.percentual.toFixed(1)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'text-sm font-bold px-2 py-0.5 rounded-md',
+                              r.notaQualidade >= 8
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : r.notaQualidade >= 6
+                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                            )}
+                          >
+                            {r.notaQualidade.toFixed(1)}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1225,7 +1260,7 @@ export function RelatorioRotinasTab() {
                   ))}
                   {ranking.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                         {loading
                           ? 'Carregando dados...'
                           : 'Nenhum dado encontrado para o período/ciclo selecionado.'}
@@ -1247,12 +1282,38 @@ export function RelatorioRotinasTab() {
             {selectedDetails ? (
               <>
                 <div className="flex flex-col items-center justify-center p-6 bg-secondary/50 rounded-xl border border-border/50">
-                  <span className="text-5xl font-black text-primary drop-shadow-sm">
-                    {selectedDetails.percentual.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mt-2">
-                    Conclusão Final
-                  </span>
+                  <div className="flex items-center gap-6 w-full justify-center">
+                    <div className="flex flex-col items-center">
+                      <span className="text-4xl font-black text-primary drop-shadow-sm">
+                        {selectedDetails.percentual.toFixed(1)}%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mt-1 text-center">
+                        Conclusão
+                        <br />
+                        Final
+                      </span>
+                    </div>
+                    <div className="h-12 w-px bg-border/50"></div>
+                    <div className="flex flex-col items-center">
+                      <span
+                        className={cn(
+                          'text-4xl font-black drop-shadow-sm',
+                          selectedDetails.notaQualidade >= 8
+                            ? 'text-green-500'
+                            : selectedDetails.notaQualidade >= 6
+                              ? 'text-amber-500'
+                              : 'text-red-500',
+                        )}
+                      >
+                        {selectedDetails.notaQualidade.toFixed(1)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mt-1 text-center">
+                        Nota de
+                        <br />
+                        Qualidade
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-4 px-2">

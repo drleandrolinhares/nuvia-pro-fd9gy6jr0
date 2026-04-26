@@ -144,6 +144,7 @@ function ResumoFechamento({
     let tolerance = 0
     let critical = 0
     let notCompleted = 0
+    let somaNotas = 0
     const delays: {
       id: string
       descricao: string
@@ -161,6 +162,12 @@ function ResumoFechamento({
           type: 'notCompleted',
         })
       } else {
+        const atraso = t.minutos_atrasado || 0
+        if (atraso <= 5) somaNotas += 10
+        else if (atraso <= 15) somaNotas += 8
+        else if (atraso <= 30) somaNotas += 5
+        else somaNotas += 2
+
         if (t.nivel_criticidade === 'no_horario') {
           onTime++
         } else if (t.nivel_criticidade === 'tolerancia') {
@@ -186,7 +193,9 @@ function ResumoFechamento({
       }
     })
 
-    return { onTime, tolerance, critical, notCompleted, delays }
+    const notaQualidade = tasks.length > 0 ? somaNotas / tasks.length : 0
+
+    return { onTime, tolerance, critical, notCompleted, delays, notaQualidade }
   }, [tasks])
 
   const total = tasks.length
@@ -275,42 +284,94 @@ function ResumoFechamento({
 
         <Card className="shadow-sm border-border/50 flex flex-col">
           <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
-            <CardTitle className="text-lg text-center">Percentual Final</CardTitle>
+            <CardTitle className="text-lg text-center">Desempenho Geral</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 flex-1 flex flex-col items-center justify-center">
-            <div className="relative flex items-center justify-center w-32 h-32">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
-                  strokeWidth="10"
-                  fill="transparent"
-                  className="text-muted/30"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="currentColor"
-                  strokeWidth="10"
-                  fill="transparent"
-                  strokeDasharray={`${2 * Math.PI * 40}`}
-                  strokeDashoffset={`${2 * Math.PI * 40 * (1 - progressPercent / 100)}`}
-                  strokeLinecap="round"
-                  className={cn(
-                    'transition-all duration-1000 ease-out',
-                    progressPercent >= 80
-                      ? 'text-emerald-500'
-                      : progressPercent >= 50
-                        ? 'text-amber-500'
-                        : 'text-red-500',
-                  )}
-                />
-              </svg>
-              <div className="absolute flex items-center justify-center text-3xl font-bold">
-                {progressPercent}%
+          <CardContent className="p-6 flex-1 flex flex-col items-center justify-center gap-6">
+            <div className="flex gap-4 sm:gap-6 items-center w-full justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="relative flex items-center justify-center w-24 h-24">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      className="text-muted/30"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - progressPercent / 100)}`}
+                      strokeLinecap="round"
+                      className={cn(
+                        'transition-all duration-1000 ease-out',
+                        progressPercent >= 80
+                          ? 'text-emerald-500'
+                          : progressPercent >= 50
+                            ? 'text-amber-500'
+                            : 'text-red-500',
+                      )}
+                    />
+                  </svg>
+                  <div className="absolute flex items-center justify-center text-2xl font-bold">
+                    {progressPercent}%
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center">
+                  Conclusão
+                </span>
+              </div>
+
+              <div className="w-px h-20 bg-border/50"></div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="relative flex items-center justify-center w-24 h-24">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      className="text-muted/30"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - stats.notaQualidade / 10)}`}
+                      strokeLinecap="round"
+                      className={cn(
+                        'transition-all duration-1000 ease-out',
+                        stats.notaQualidade >= 8
+                          ? 'text-blue-500'
+                          : stats.notaQualidade >= 6
+                            ? 'text-amber-500'
+                            : 'text-red-500',
+                      )}
+                    />
+                  </svg>
+                  <div className="absolute flex items-center justify-center text-2xl font-bold">
+                    {stats.notaQualidade.toFixed(1)}
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center">
+                  Nota
+                  <br />
+                  Qualidade
+                </span>
               </div>
             </div>
           </CardContent>

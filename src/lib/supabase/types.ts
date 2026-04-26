@@ -2385,8 +2385,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gerar_adiantamento_mes_sorriso: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      processar_fechamento_mes_sorriso: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
     }
     Enums: {
       nivel_criticidade_enum: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida'
@@ -3663,6 +3671,34 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION gerar_adiantamento_mes_sorriso(text)
+//   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_sorriso(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//     v_config RECORD;
+//   BEGIN
+//     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
+//
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
+//         IF NOT EXISTS (
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
+//           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
+//         ) THEN
+//           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//           VALUES (v_user.id, 'credito', 200, 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)', p_mes);
+//         END IF;
+//       END IF;
+//     END LOOP;
+//   END;
+//   $function$
+//
 // FUNCTION has_permission(text)
 //   CREATE OR REPLACE FUNCTION public.has_permission(permission_name text)
 //    RETURNS boolean
@@ -3720,6 +3756,57 @@ export const Constants = {
 //
 //     SELECT role INTO v_role FROM public.usuarios WHERE id = auth.uid();
 //     RETURN v_role = 'admin';
+//   END;
+//   $function$
+//
+// FUNCTION processar_fechamento_mes_sorriso(text)
+//   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_sorriso(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//     v_config RECORD;
+//     v_count integer;
+//     v_falta integer;
+//     v_valor_debito numeric;
+//     v_valor_por_indicacao numeric;
+//   BEGIN
+//     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
+//     v_valor_por_indicacao := COALESCE(v_config.valor_bonus, 100) / COALESCE(v_config.meta_indicacoes, 2);
+//
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
+//         IF EXISTS (
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
+//           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
+//         ) THEN
+//           IF NOT EXISTS (
+//             SELECT 1 FROM public.carteira_transacoes
+//             WHERE usuario_id = v_user.id
+//             AND mes_referencia = p_mes
+//             AND descricao = 'Ajuste de Meta (não atingimento das 4 indicações)'
+//           ) THEN
+//             SELECT COUNT(*) INTO v_count
+//             FROM public.sorriso_dos_sonhos_indicacoes
+//             WHERE colaborador_id = v_user.id
+//               AND status = 'fechado'
+//               AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes;
+//
+//             IF v_count < 4 THEN
+//               v_falta := 4 - v_count;
+//               v_valor_debito := v_falta * v_valor_por_indicacao;
+//
+//               INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//               VALUES (v_user.id, 'debito', v_valor_debito, 'Ajuste de Meta (não atingimento das 4 indicações)', p_mes);
+//             END IF;
+//           END IF;
+//         END IF;
+//       END IF;
+//     END LOOP;
 //   END;
 //   $function$
 //
@@ -3903,6 +3990,51 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_sorriso_fechamento()
+//   CREATE OR REPLACE FUNCTION public.trg_sorriso_fechamento()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_count integer;
+//     v_mes text;
+//     v_config RECORD;
+//     v_meta integer;
+//     v_valor numeric;
+//   BEGIN
+//     IF OLD.status IS DISTINCT FROM 'fechado' AND NEW.status = 'fechado' THEN
+//       IF NEW.data_fechamento IS NULL THEN
+//         NEW.data_fechamento := CURRENT_DATE;
+//       END IF;
+//
+//       v_mes := to_char(NEW.data_fechamento::date, 'YYYY-MM');
+//
+//       SELECT COUNT(*) INTO v_count
+//       FROM public.sorriso_dos_sonhos_indicacoes
+//       WHERE colaborador_id = NEW.colaborador_id
+//         AND status = 'fechado'
+//         AND to_char(data_fechamento::date, 'YYYY-MM') = v_mes;
+//
+//       SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
+//       v_meta := COALESCE(v_config.meta_indicacoes, 2);
+//       v_valor := COALESCE(v_config.valor_bonus, 100);
+//
+//       IF v_count > 4 AND MOD(v_count - 4, v_meta) = 0 THEN
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
+//         VALUES (
+//           NEW.colaborador_id,
+//           'credito',
+//           v_valor,
+//           'Bônus Adicional: ' || v_count || 'ª Indicação (Programa Sorriso dos Sonhos)',
+//           v_mes,
+//           NULL
+//         );
+//       END IF;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_sync_carteira_bonificacao()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_carteira_bonificacao()
 //    RETURNS trigger
@@ -3949,6 +4081,8 @@ export const Constants = {
 //   sync_carteira_bonificacao_trigger: CREATE TRIGGER sync_carteira_bonificacao_trigger AFTER INSERT OR UPDATE ON public.performance_bonificacao FOR EACH ROW EXECUTE FUNCTION trg_sync_carteira_bonificacao()
 // Table: saida_produtos
 //   after_saida_produto_change: CREATE TRIGGER after_saida_produto_change AFTER INSERT OR DELETE OR UPDATE ON public.saida_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_saida()
+// Table: sorriso_dos_sonhos_indicacoes
+//   trg_sorriso_fechamento_after: CREATE TRIGGER trg_sorriso_fechamento_after AFTER UPDATE ON public.sorriso_dos_sonhos_indicacoes FOR EACH ROW EXECUTE FUNCTION trg_sorriso_fechamento()
 // Table: usuarios
 //   trg_ativar_cascata_dentista_avaliador_insert: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_insert AFTER INSERT ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 //   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, cargo_secundario_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
