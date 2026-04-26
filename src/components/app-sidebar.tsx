@@ -71,7 +71,7 @@ const navData = [
         permission: ['operacional_sac', 'Acessar SAC'],
       },
       {
-        title: 'Rotina Diária',
+        title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
         permission: ['operacional_rotina', 'Acessar Rotina Diária'],
