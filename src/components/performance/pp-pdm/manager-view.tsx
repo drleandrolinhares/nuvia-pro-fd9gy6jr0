@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Switch } from '@/components/ui/switch'
+import { toast } from 'sonner'
 import { format, startOfWeek, addDays, isAfter } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -45,6 +47,7 @@ function getPastSaturdays(count = 10) {
 export function ManagerPPDMView() {
   const pastWeeks = getPastSaturdays(10)
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0])
+  const [isGenerating, setIsGenerating] = useState(false)
   const [users, setUsers] = useState<any[]>([])
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,6 +105,99 @@ export function ManagerPPDMView() {
     setLoading(false)
   }
 
+  const handleTogglePP = async (id: string, currentVal: boolean, currentNota: number) => {
+    const newVal = !currentVal
+    let newNota = currentNota || 0
+    if (newVal) {
+      newNota = Math.min(newNota + 2, 10)
+    } else {
+      newNota = Math.max(newNota - 2, 0)
+    }
+
+    const { error } = await supabase
+      .from('performance_pp_pdm' as any)
+      .update({ pp_validado: newVal, nota_pdm: newNota })
+      .eq('id', id)
+
+    if (!error) {
+      toast.success(newVal ? 'Ponto Positivo validado!' : 'Ponto Positivo invalidado!')
+      loadData()
+    }
+  }
+
+  const handleToggleInovacao = async (
+    id: string,
+    currentVal: boolean,
+    userId: string,
+    date: string,
+  ) => {
+    const newVal = !currentVal
+    const { error } = await supabase
+      .from('performance_pp_pdm' as any)
+      .update({ inovacao_validada: newVal })
+      .eq('id', id)
+
+    if (!error) {
+      const month = date.substring(0, 7)
+      if (newVal) {
+        const { data: countData } = await supabase
+          .from('performance_pp_pdm' as any)
+          .select('id')
+          .eq('usuario_id', userId)
+          .like('data_registro', `${month}%`)
+          .eq('inovacao_validada', true)
+
+        const count = countData ? countData.length : 0
+        if (count > 1) {
+          await supabase.from('carteira_transacoes').insert({
+            usuario_id: userId,
+            tipo: 'credito',
+            valor: 100,
+            descricao: `Bônus: Inovação Validada extra (${count}ª do mês)`,
+            mes_referencia: month,
+            origem_id: id,
+          })
+        }
+      } else {
+        await supabase
+          .from('carteira_transacoes')
+          .delete()
+          .eq('origem_id', id)
+          .like('descricao', 'Bônus: Inovação Validada extra%')
+      }
+      toast.success(newVal ? 'Inovação validada!' : 'Inovação invalidada!')
+      loadData()
+    }
+  }
+
+  const handleGerarAdiantamentoInovacao = async () => {
+    setIsGenerating(true)
+    const month = selectedWeek.substring(0, 7)
+    try {
+      const { error } = await supabase.rpc('gerar_adiantamento_mes_inovacao', { p_mes: month })
+      if (error) throw error
+      toast.success(`Adiantamentos de Inovação gerados para ${month}`)
+    } catch (e: any) {
+      toast.error('Erro ao gerar adiantamentos: ' + e.message)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleProcessarFechamentoInovacao = async () => {
+    setIsGenerating(true)
+    const month = selectedWeek.substring(0, 7)
+    try {
+      const { error } = await supabase.rpc('processar_fechamento_mes_inovacao', { p_mes: month })
+      if (error) throw error
+      toast.success(`Fechamento de Inovações processado para ${month}`)
+    } catch (e: any) {
+      toast.error('Erro ao processar fechamento: ' + e.message)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   return (
     <div className="space-y-6 mt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -109,18 +205,39 @@ export function ManagerPPDMView() {
           <h2 className="text-lg font-bold text-slate-800">Painel de Acompanhamento</h2>
           <p className="text-sm text-slate-500">Visualize as entregas semanais obrigatórias</p>
         </div>
-        <Select value={selectedWeek} onValueChange={setSelectedWeek}>
-          <SelectTrigger className="w-[280px]">
-            <SelectValue placeholder="Selecione a semana" />
-          </SelectTrigger>
-          <SelectContent>
-            {pastWeeks.map((w) => (
-              <SelectItem key={w} value={w}>
-                Semana ref. {format(new Date(w + 'T12:00:00'), 'dd/MM/yyyy')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Selecione a semana" />
+            </SelectTrigger>
+            <SelectContent>
+              {pastWeeks.map((w) => (
+                <SelectItem key={w} value={w}>
+                  Semana ref. {format(new Date(w + 'T12:00:00'), 'dd/MM/yyyy')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 justify-end mb-4 mt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleGerarAdiantamentoInovacao}
+          disabled={isGenerating}
+        >
+          Gerar Adiantamento Inovação (Mês)
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleProcessarFechamentoInovacao}
+          disabled={isGenerating}
+        >
+          Fechamento Inovação (Mês)
+        </Button>
       </div>
 
       {loading ? (
@@ -297,14 +414,57 @@ export function ManagerPPDMView() {
                           {submission && (
                             <div className="space-y-6 pt-4">
                               <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
-                                <h4 className="font-bold text-emerald-800 mb-2">
-                                  Pontos Positivos (PP)
-                                </h4>
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-bold text-emerald-800">
+                                    Pontos Positivos (PP)
+                                  </h4>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-emerald-700">
+                                      Validar PP (+2 pts)?
+                                    </span>
+                                    <Switch
+                                      checked={submission.pp_validado}
+                                      onCheckedChange={() =>
+                                        handleTogglePP(
+                                          submission.id,
+                                          submission.pp_validado,
+                                          submission.nota_pdm,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
                                 <p className="text-sm text-emerald-900 whitespace-pre-wrap">
                                   {submission.pontos_positivos ||
                                     'Nenhum ponto positivo registrado.'}
                                 </p>
                               </div>
+
+                              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-bold text-blue-800">Inovações</h4>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-blue-700">
+                                      Aprovar Inovação?
+                                    </span>
+                                    <Switch
+                                      checked={submission.inovacao_validada}
+                                      onCheckedChange={() =>
+                                        handleToggleInovacao(
+                                          submission.id,
+                                          submission.inovacao_validada,
+                                          submission.usuario_id,
+                                          submission.data_registro,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-sm text-blue-900 whitespace-pre-wrap">
+                                  {submission.inovacoes || 'Nenhuma inovação registrada.'}
+                                </p>
+                              </div>
+
                               <div className="p-4 rounded-lg bg-rose-50 border border-rose-100">
                                 <div className="flex items-center justify-between mb-4">
                                   <h4 className="font-bold text-rose-800">

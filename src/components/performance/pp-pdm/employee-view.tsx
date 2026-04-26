@@ -29,7 +29,10 @@ export function EmployeePPDMView() {
   const [pp, setPp] = useState('')
   const [pdmLegacy, setPdmLegacy] = useState('')
   const [pdmItems, setPdmItems] = useState<PdmItem[]>([{ id: '1', melhoria: '', sugestao: '' }])
+  const [inovacoes, setInovacoes] = useState('')
   const [notaFinal, setNotaFinal] = useState<number | null>(null)
+  const [ppValidado, setPpValidado] = useState(false)
+  const [inovacaoValidada, setInovacaoValidada] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -53,6 +56,9 @@ export function EmployeePPDMView() {
 
       if (data) {
         setPp(data.pontos_positivos || '')
+        setInovacoes(data.inovacoes || '')
+        setPpValidado(data.pp_validado || false)
+        setInovacaoValidada(data.inovacao_validada || false)
         if (data.pdm_itens && Array.isArray(data.pdm_itens) && data.pdm_itens.length > 0) {
           setPdmItems(data.pdm_itens)
           setNotaFinal(data.nota_pdm)
@@ -64,9 +70,12 @@ export function EmployeePPDMView() {
         }
       } else {
         setPp('')
+        setInovacoes('')
         setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
         setPdmLegacy('')
         setNotaFinal(null)
+        setPpValidado(false)
+        setInovacaoValidada(false)
       }
     } catch (e: any) {
       console.error(e)
@@ -83,7 +92,7 @@ export function EmployeePPDMView() {
     if (!user) return
     const filledItems = pdmItems.filter((item) => item.melhoria.trim() || item.sugestao.trim())
 
-    if (!pp.trim() && filledItems.length === 0 && !pdmLegacy.trim()) {
+    if (!pp.trim() && filledItems.length === 0 && !pdmLegacy.trim() && !inovacoes.trim()) {
       toast.warning('Preencha ao menos um dos campos antes de salvar.')
       return
     }
@@ -105,7 +114,11 @@ export function EmployeePPDMView() {
 
     setSaving(true)
     try {
-      const nota = Math.min(filledItems.length * 2, 10)
+      let nota = Math.min(filledItems.length * 2, 10)
+      if (ppValidado) {
+        nota = Math.min(nota + 2, 10)
+      }
+
       const pdmText =
         filledItems.map((i) => `Melhoria: ${i.melhoria}\nSugestão: ${i.sugestao}`).join('\n\n') ||
         pdmLegacy ||
@@ -121,6 +134,7 @@ export function EmployeePPDMView() {
       const payload = {
         pontos_positivos: pp || 'Nenhum ponto positivo registrado.',
         pontos_melhoria: pdmText,
+        inovacoes: inovacoes || '',
         pdm_itens: filledItems,
         nota_pdm: nota,
         atualizado_em: new Date().toISOString(),
@@ -180,17 +194,46 @@ export function EmployeePPDMView() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <Label className="text-emerald-700 font-semibold flex items-center gap-2">
-                Pontos Positivos (PP)
-              </Label>
-              <Textarea
-                placeholder="O que deu certo nesta semana? Conquistas ou destaques?"
-                className="min-h-[200px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-base shadow-sm disabled:opacity-70"
-                value={pp}
-                onChange={(e) => setPp(e.target.value)}
-                disabled={isBlocked}
-              />
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-emerald-700 font-semibold flex items-center gap-2">
+                    Pontos Positivos (PP)
+                  </Label>
+                  {ppValidado && (
+                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs font-bold">
+                      Validado (+2 pts)
+                    </span>
+                  )}
+                </div>
+                <Textarea
+                  placeholder="O que deu certo nesta semana? Conquistas ou destaques?"
+                  className="min-h-[150px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-sm shadow-sm disabled:opacity-70"
+                  value={pp}
+                  onChange={(e) => setPp(e.target.value)}
+                  disabled={isBlocked}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-blue-700 font-semibold flex items-center gap-2">
+                    Inovações
+                  </Label>
+                  {inovacaoValidada && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold">
+                      Validado (R$ 100)
+                    </span>
+                  )}
+                </div>
+                <Textarea
+                  placeholder="Sugestões de implementações: ação, equipamento, comportamento..."
+                  className="min-h-[150px] resize-none border-blue-200 bg-blue-50/30 focus-visible:ring-blue-500 text-sm shadow-sm disabled:opacity-70"
+                  value={inovacoes}
+                  onChange={(e) => setInovacoes(e.target.value)}
+                  disabled={isBlocked}
+                />
+              </div>
             </div>
 
             <div className="space-y-4">
