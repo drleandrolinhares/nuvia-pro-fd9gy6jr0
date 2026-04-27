@@ -1530,6 +1530,36 @@ export type Database = {
         }
         Relationships: []
       }
+      precificacao_custos_fixos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          criado_em: string
+          descricao: string
+          id: string
+          ordem: number
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          descricao: string
+          id?: string
+          ordem?: number
+          valor?: number
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+          valor?: number
+        }
+        Relationships: []
+      }
       produto_campos_valores: {
         Row: {
           atualizado_em: string
@@ -3081,6 +3111,14 @@ export const Constants = {
 //   nome: text (not null)
 //   descricao: text (nullable)
 //   modulo: text (nullable)
+// Table: precificacao_custos_fixos
+//   id: uuid (not null, default: gen_random_uuid())
+//   descricao: text (not null)
+//   valor: numeric (not null, default: 0)
+//   ordem: integer (not null, default: 0)
+//   ativo: boolean (not null, default: true)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: produto_campos_valores
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3442,6 +3480,8 @@ export const Constants = {
 // Table: permissoes
 //   UNIQUE permissoes_nome_key: UNIQUE (nome)
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
+// Table: precificacao_custos_fixos
+//   PRIMARY KEY precificacao_custos_fixos_pkey: PRIMARY KEY (id)
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
@@ -3757,6 +3797,10 @@ export const Constants = {
 //     USING: is_admin()
 //   Policy "permissoes_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: precificacao_custos_fixos
+//   Policy "precificacao_custos_fixos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: produto_campos_valores
 //   Policy "produto_campos_valores_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true

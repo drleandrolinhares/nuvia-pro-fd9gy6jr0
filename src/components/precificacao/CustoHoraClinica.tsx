@@ -47,9 +47,9 @@ function CurrencyInput({ value, onChange }: { value: number; onChange: (v: numbe
 
   return (
     <div className="relative flex items-center">
-      <span className="absolute left-3 text-slate-500 font-medium">R$</span>
+      <span className="absolute left-3 text-slate-400 font-medium">R$</span>
       <Input
-        className="pl-10 text-right bg-transparent border-transparent hover:border-slate-700 focus:bg-slate-900 h-9 font-medium shadow-none"
+        className="pl-10 text-right bg-slate-900/50 border-slate-800 hover:border-slate-600 focus:bg-slate-800 focus:border-amber-500/50 h-9 font-medium shadow-sm text-slate-200 focus:text-white transition-colors"
         value={formatDisplay(inputValue)}
         onChange={handleChange}
         placeholder="0,00"
@@ -182,7 +182,7 @@ export function CustoHoraClinica() {
                   <Input
                     value={custo.descricao}
                     onChange={(e) => updateCusto(custo.id, 'descricao', e.target.value)}
-                    className="bg-transparent border-transparent hover:border-slate-700 focus:bg-slate-900 h-9 font-medium shadow-none"
+                    className="bg-slate-900/50 border-slate-800 hover:border-slate-600 focus:bg-slate-800 focus:border-amber-500/50 h-9 font-medium shadow-sm text-slate-200 focus:text-white transition-colors"
                     placeholder="Ex: Aluguel..."
                   />
                 </td>
