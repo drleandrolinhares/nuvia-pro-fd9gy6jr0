@@ -310,6 +310,8 @@ const Index = () => {
                                 ? 'bg-red-500/20 text-red-400 border border-red-500/20'
                                 : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20',
                             )}
+                          >
+                            {d.tipo}
                           </span>
                           <span className="font-medium">
                             Prazo:{' '}
@@ -362,7 +364,11 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
                   {MESES.map((mes, idx) => (
-                    <SelectItem key={idx} value={idx.toString()} className="text-xs focus:bg-slate-800 focus:text-slate-100">
+                    <SelectItem
+                      key={idx}
+                      value={idx.toString()}
+                      className="text-xs focus:bg-slate-800 focus:text-slate-100"
+                    >
                       {mes}
                     </SelectItem>
                   ))}
@@ -388,7 +394,9 @@ const Index = () => {
                             a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
                           }
                         />
-                        <AvatarFallback className="bg-slate-800 text-slate-300">{a.nome.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="bg-slate-800 text-slate-300">
+                          {a.nome.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 overflow-hidden">
                         <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
