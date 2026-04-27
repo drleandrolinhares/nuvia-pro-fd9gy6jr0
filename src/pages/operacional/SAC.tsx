@@ -314,33 +314,33 @@ export default function SACPage() {
       <div className="border border-slate-800 bg-slate-900 rounded-md shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>TIPO</TableHead>
-              <TableHead>DATA RECEBIMENTO</TableHead>
-              <TableHead>LIMITE CONTATO</TableHead>
-              <TableHead>PACIENTE</TableHead>
-              <TableHead>QUEM RECEBEU</TableHead>
-              <TableHead>QUEM RESOLVE</TableHead>
-              <TableHead>STATUS</TableHead>
-              <TableHead className="w-[100px] text-right">AÇÕES</TableHead>
+            <TableRow className="hover:bg-transparent border-slate-800">
+              <TableHead className="text-slate-300">TIPO</TableHead>
+              <TableHead className="text-slate-300">DATA RECEBIMENTO</TableHead>
+              <TableHead className="text-slate-300">LIMITE CONTATO</TableHead>
+              <TableHead className="text-slate-300">PACIENTE</TableHead>
+              <TableHead className="text-slate-300">QUEM RECEBEU</TableHead>
+              <TableHead className="text-slate-300">QUEM RESOLVE</TableHead>
+              <TableHead className="text-slate-300">STATUS</TableHead>
+              <TableHead className="w-[100px] text-right text-slate-300">AÇÕES</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
+              <TableRow className="hover:bg-transparent border-slate-800">
                 <TableCell colSpan={8} className="text-center h-24">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
                 </TableCell>
               </TableRow>
             ) : demandas.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+              <TableRow className="hover:bg-transparent border-slate-800">
+                <TableCell colSpan={8} className="text-center h-24 text-slate-400">
                   Nenhuma demanda registrada.
                 </TableCell>
               </TableRow>
             ) : (
               demandas.map((d) => (
-                <TableRow key={d.id}>
+                <TableRow key={d.id} className="hover:bg-transparent border-slate-800">
                   <TableCell>
                     <span
                       className={cn(
@@ -353,11 +353,15 @@ export default function SACPage() {
                       {d.tipo === 'reclamacao' ? 'RECLAMAÇÃO' : 'SUGESTÃO'}
                     </span>
                   </TableCell>
-                  <TableCell>{format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>{format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="font-medium">{d.paciente_nome}</TableCell>
-                  <TableCell>{d.quem_recebeu?.nome || '-'}</TableCell>
-                  <TableCell>{d.quem_resolve?.nome || '-'}</TableCell>
+                  <TableCell className="text-slate-100">
+                    {format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
+                  </TableCell>
+                  <TableCell className="text-slate-100">
+                    {format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-100">{d.paciente_nome}</TableCell>
+                  <TableCell className="text-slate-100">{d.quem_recebeu?.nome || '-'}</TableCell>
+                  <TableCell className="text-slate-100">{d.quem_resolve?.nome || '-'}</TableCell>
                   <TableCell>
                     <span
                       className={cn(
@@ -372,11 +376,21 @@ export default function SACPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(d)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(d)}
+                        className="text-slate-300 hover:text-slate-100 hover:bg-slate-800"
+                      >
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(d.id)}>
-                        <Trash2 className="w-4 h-4 text-red-500" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(d.id)}
+                        className="text-red-500 hover:text-red-400 hover:bg-slate-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
