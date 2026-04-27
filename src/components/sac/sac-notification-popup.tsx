@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Loader2 } from 'lucide-react'
 import { parseISO, format } from 'date-fns'
 
 export function SacNotificationPopup() {
@@ -20,6 +20,7 @@ export function SacNotificationPopup() {
   const [pendingDemandas, setPendingDemandas] = useState<any[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [ciente, setCiente] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
   const { toast } = useToast()
 
   const fetchPending = async () => {
@@ -92,17 +93,28 @@ export function SacNotificationPopup() {
   const currentDemanda = pendingDemandas[currentIndex]
 
   const handleConfirm = async () => {
-    if (!currentDemanda || !user) return
+    if (!currentDemanda || !user || isConfirming) return
 
+    setIsConfirming(true)
     try {
-      const { error } = await supabase.from('sac_historico').insert({
-        demanda_id: currentDemanda.id,
-        usuario_id: user.id,
-        acao: 'Ciência',
-        detalhes: 'Usuário deu ciência na nova demanda atribuída',
-      })
+      // First check if already exists to prevent duplicate insertion
+      const { data: existing } = await supabase
+        .from('sac_historico')
+        .select('id')
+        .eq('demanda_id', currentDemanda.id)
+        .eq('usuario_id', user.id)
+        .eq('acao', 'Ciência')
+        .maybeSingle()
 
-      if (error) throw error
+      if (!existing) {
+        const { error } = await supabase.from('sac_historico').insert({
+          demanda_id: currentDemanda.id,
+          usuario_id: user.id,
+          acao: 'Ciência',
+          detalhes: 'Usuário deu ciência na nova demanda atribuída',
+        })
+        if (error) throw error
+      }
 
       toast({ title: 'Ciência registrada com sucesso' })
       setCiente(false)
@@ -116,6 +128,8 @@ export function SacNotificationPopup() {
       }
     } catch (e: any) {
       toast({ title: 'Erro ao registrar ciência', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -187,11 +201,18 @@ export function SacNotificationPopup() {
 
         <DialogFooter className="sm:justify-stretch">
           <Button
-            disabled={!ciente}
+            disabled={!ciente || isConfirming}
             onClick={handleConfirm}
             className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-widest transition-all disabled:opacity-50 disabled:bg-slate-700 disabled:text-slate-500"
           >
-            Confirmar Ciência
+            {isConfirming ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Confirmando...
+              </span>
+            ) : (
+              'Confirmar Ciência'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
