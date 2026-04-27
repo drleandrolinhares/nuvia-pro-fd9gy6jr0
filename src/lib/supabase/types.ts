@@ -1816,6 +1816,48 @@ export type Database = {
           },
         ]
       }
+      sac_historico: {
+        Row: {
+          acao: string
+          criado_em: string
+          demanda_id: string
+          detalhes: string | null
+          id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          criado_em?: string
+          demanda_id: string
+          detalhes?: string | null
+          id?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          criado_em?: string
+          demanda_id?: string
+          detalhes?: string | null
+          id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sac_historico_demanda_id_fkey'
+            columns: ['demanda_id']
+            isOneToOne: false
+            referencedRelation: 'sac_demandas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'sac_historico_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       saida_produtos: {
         Row: {
           criado_em: string | null
@@ -3067,6 +3109,13 @@ export const Constants = {
 //   status: text (not null, default: 'recebido'::text)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: sac_historico
+//   id: uuid (not null, default: gen_random_uuid())
+//   demanda_id: uuid (not null)
+//   usuario_id: uuid (nullable)
+//   acao: text (not null)
+//   detalhes: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3375,6 +3424,10 @@ export const Constants = {
 //   FOREIGN KEY sac_demandas_quem_resolve_id_fkey: FOREIGN KEY (quem_resolve_id) REFERENCES usuarios(id) ON DELETE SET NULL
 //   CHECK sac_demandas_status_check: CHECK ((status = ANY (ARRAY['recebido'::text, 'sendo_tratado'::text, 'resolvido'::text])))
 //   CHECK sac_demandas_tipo_check: CHECK ((tipo = ANY (ARRAY['reclamacao'::text, 'sugestao'::text])))
+// Table: sac_historico
+//   FOREIGN KEY sac_historico_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES sac_demandas(id) ON DELETE CASCADE
+//   PRIMARY KEY sac_historico_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY sac_historico_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 // Table: saida_produtos
 //   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
@@ -3689,6 +3742,10 @@ export const Constants = {
 //     USING: true
 // Table: sac_demandas
 //   Policy "sac_demandas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: sac_historico
+//   Policy "sac_historico_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: saida_produtos

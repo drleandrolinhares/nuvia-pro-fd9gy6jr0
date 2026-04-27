@@ -254,9 +254,9 @@ export default function SACPage() {
                   <History className="w-4 h-4 mr-2" /> Rastrear Edições
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col bg-slate-900 border-slate-800 text-slate-100">
                 <DialogHeader>
-                  <DialogTitle>Histórico de Edições</DialogTitle>
+                  <DialogTitle className="text-slate-100">Histórico de Edições</DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto flex-1 mt-4">
                   <Table>
@@ -322,9 +322,11 @@ export default function SACPage() {
                   <CheckCircle2 className="w-4 h-4 mr-2" /> Histórico de Soluções
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col bg-slate-900 border-slate-800 text-slate-100">
                 <DialogHeader>
-                  <DialogTitle>Demandas Concluídas (Resolvidas)</DialogTitle>
+                  <DialogTitle className="text-slate-100">
+                    Demandas Concluídas (Resolvidas)
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto flex-1 mt-4">
                   <Table>
@@ -398,9 +400,11 @@ export default function SACPage() {
                   <Plus className="w-4 h-4" /> Nova Demanda
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-800 text-slate-100">
                 <DialogHeader>
-                  <DialogTitle>{editingId ? 'Editar' : 'Nova'} Demanda</DialogTitle>
+                  <DialogTitle className="text-slate-100">
+                    {editingId ? 'Editar' : 'Nova'} Demanda
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -410,20 +414,30 @@ export default function SACPage() {
                         name="tipo"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Tipo</FormLabel>
+                            <FormLabel className="text-slate-200">Tipo</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               value={field.value}
                               disabled={!!editingId}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
                                   <SelectValue placeholder="Selecione" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="reclamacao">Reclamação</SelectItem>
-                                <SelectItem value="sugestao">Sugestão</SelectItem>
+                              <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                <SelectItem
+                                  value="reclamacao"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Reclamação
+                                </SelectItem>
+                                <SelectItem
+                                  value="sugestao"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Sugestão
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -435,17 +449,35 @@ export default function SACPage() {
                         name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Status</FormLabel>
+                            <FormLabel className="text-slate-200">Status</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger disabled={!editingId}>
+                                <SelectTrigger
+                                  disabled={!editingId}
+                                  className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50"
+                                >
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="recebido">Recebido</SelectItem>
-                                <SelectItem value="sendo_tratado">Sendo Tratado</SelectItem>
-                                <SelectItem value="resolvido">Resolvido</SelectItem>
+                              <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                <SelectItem
+                                  value="recebido"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Recebido
+                                </SelectItem>
+                                <SelectItem
+                                  value="sendo_tratado"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Sendo Tratado
+                                </SelectItem>
+                                <SelectItem
+                                  value="resolvido"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Resolvido
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -458,9 +490,14 @@ export default function SACPage() {
                       name="paciente_nome"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Paciente</FormLabel>
+                          <FormLabel className="text-slate-200">Paciente</FormLabel>
                           <FormControl>
-                            <Input placeholder="Nome..." {...field} disabled={!!editingId} />
+                            <Input
+                              placeholder="Nome..."
+                              {...field}
+                              disabled={!!editingId}
+                              className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -471,20 +508,24 @@ export default function SACPage() {
                       name="quem_recebeu_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quem Recebeu?</FormLabel>
+                          <FormLabel className="text-slate-200">Quem Recebeu?</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
                             disabled={!!editingId}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
                                 <SelectValue placeholder="Selecione..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
                               {usuarios.map((u) => (
-                                <SelectItem key={u.id} value={u.id}>
+                                <SelectItem
+                                  key={u.id}
+                                  value={u.id}
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
                                   {u.nome}
                                 </SelectItem>
                               ))}
@@ -499,16 +540,20 @@ export default function SACPage() {
                       name="quem_resolve_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quem Resolve?</FormLabel>
+                          <FormLabel className="text-slate-200">Quem Resolve?</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100">
                                 <SelectValue placeholder="Selecione..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
                               {usuarios.map((u) => (
-                                <SelectItem key={u.id} value={u.id}>
+                                <SelectItem
+                                  key={u.id}
+                                  value={u.id}
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
                                   {u.nome}
                                 </SelectItem>
                               ))}
