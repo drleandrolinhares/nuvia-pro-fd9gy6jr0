@@ -1793,6 +1793,7 @@ export type Database = {
           quem_recebeu_id: string | null
           quem_resolve_id: string | null
           setor: string | null
+          solucao: string | null
           status: string
           tipo: string
         }
@@ -1808,6 +1809,7 @@ export type Database = {
           quem_recebeu_id?: string | null
           quem_resolve_id?: string | null
           setor?: string | null
+          solucao?: string | null
           status?: string
           tipo: string
         }
@@ -1823,6 +1825,7 @@ export type Database = {
           quem_recebeu_id?: string | null
           quem_resolve_id?: string | null
           setor?: string | null
+          solucao?: string | null
           status?: string
           tipo?: string
         }
@@ -3143,6 +3146,7 @@ export const Constants = {
 //   descricao: text (nullable)
 //   setor: text (nullable)
 //   data_prevista: date (nullable)
+//   solucao: text (nullable)
 // Table: sac_historico
 //   id: uuid (not null, default: gen_random_uuid())
 //   demanda_id: uuid (not null)

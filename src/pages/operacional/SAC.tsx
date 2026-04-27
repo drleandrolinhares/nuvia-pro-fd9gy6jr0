@@ -102,6 +102,11 @@ export default function SACPage() {
   const [orientacao, setOrientacao] = useState('')
   const [tempOrientacao, setTempOrientacao] = useState('')
   const [orientacaoEditMode, setOrientacaoEditMode] = useState(false)
+
+  const [orientacaoDataSolucao, setOrientacaoDataSolucao] = useState('')
+  const [tempOrientacaoDataSolucao, setTempOrientacaoDataSolucao] = useState('')
+  const [orientacaoDataSolucaoEditMode, setOrientacaoDataSolucaoEditMode] = useState(false)
+
   const [isAdmin, setIsAdmin] = useState(false)
 
   const { toast } = useToast()
@@ -136,7 +141,7 @@ export default function SACPage() {
           .order('criado_em', { ascending: false }),
         supabase
           .from('sac_configuracoes' as any)
-          .select('orientacao_status')
+          .select('orientacao_status, orientacao_data_solucao')
           .single(),
       ])
       if (usersRes.error) throw usersRes.error
@@ -148,6 +153,12 @@ export default function SACPage() {
       if (configRes.data) {
         setOrientacao(configRes.data.orientacao_status)
         setTempOrientacao(configRes.data.orientacao_status)
+
+        const dataSolucaoVal =
+          configRes.data.orientacao_data_solucao ||
+          'Se o status do caso estiver como SENDO TRATADO, esta data representará a data prevista para a solução.\nSe o status estiver como RESOLVIDO, a data significará a data da solução do caso.'
+        setOrientacaoDataSolucao(dataSolucaoVal)
+        setTempOrientacaoDataSolucao(dataSolucaoVal)
       }
 
       if (user) {
@@ -209,6 +220,21 @@ export default function SACPage() {
     }
   }
 
+  const handleSaveOrientacaoDataSolucao = async () => {
+    try {
+      const { error } = await supabase
+        .from('sac_configuracoes' as any)
+        .update({ orientacao_data_solucao: tempOrientacaoDataSolucao })
+        .eq('id', '00000000-0000-0000-0000-000000000001')
+      if (error) throw error
+      setOrientacaoDataSolucao(tempOrientacaoDataSolucao)
+      setOrientacaoDataSolucaoEditMode(false)
+      toast({ title: 'Orientação atualizada com sucesso' })
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar orientação', description: e.message, variant: 'destructive' })
+    }
+  }
+
   const onSubmit = async (values: DemandaFormValues) => {
     if (!editingId) {
       let hasError = false
@@ -245,7 +271,7 @@ export default function SACPage() {
           (values.status === 'sendo_tratado' || values.status === 'resolvido')
         ) {
           changes.push(
-            `Previsão: ${old.data_prevista ? format(parseISO(old.data_prevista), 'dd/MM/yyyy') : '-'} -> ${values.data_prevista ? format(parseISO(values.data_prevista), 'dd/MM/yyyy') : '-'}`,
+            `Data da Solução: ${old.data_prevista ? format(parseISO(old.data_prevista), 'dd/MM/yyyy') : '-'} -> ${values.data_prevista ? format(parseISO(values.data_prevista), 'dd/MM/yyyy') : '-'}`,
           )
         }
         if (
@@ -556,6 +582,7 @@ export default function SACPage() {
                   form.reset()
                   setEditingId(null)
                   setOrientacaoEditMode(false)
+                  setOrientacaoDataSolucaoEditMode(false)
                 }
               }}
             >
@@ -870,9 +897,73 @@ export default function SACPage() {
                           name="data_prevista"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-slate-200">
-                                Data Prevista de Solução
-                              </FormLabel>
+                              <div className="flex items-center gap-2 mb-2">
+                                <FormLabel className="text-slate-200 mb-0">
+                                  Data da Solução
+                                </FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-amber-500 hover:text-amber-400 focus:outline-none flex items-center justify-center transition-colors"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    side="top"
+                                    className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm z-50"
+                                  >
+                                    {orientacaoDataSolucaoEditMode ? (
+                                      <div className="space-y-3">
+                                        <Textarea
+                                          value={tempOrientacaoDataSolucao}
+                                          onChange={(e) =>
+                                            setTempOrientacaoDataSolucao(e.target.value)
+                                          }
+                                          className="bg-slate-950 border-slate-800 min-h-[120px] text-slate-200"
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                                            onClick={() => {
+                                              setOrientacaoDataSolucaoEditMode(false)
+                                              setTempOrientacaoDataSolucao(orientacaoDataSolucao)
+                                            }}
+                                          >
+                                            Cancelar
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            className="bg-amber-500 hover:bg-amber-600 text-slate-950"
+                                            onClick={handleSaveOrientacaoDataSolucao}
+                                          >
+                                            Salvar
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        <p className="leading-relaxed font-medium whitespace-pre-wrap">
+                                          {orientacaoDataSolucao}
+                                        </p>
+                                        {isAdmin && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-full text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                                            onClick={() => setOrientacaoDataSolucaoEditMode(true)}
+                                          >
+                                            Editar Orientação
+                                          </Button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
                               <FormControl>
                                 <Input
                                   type="date"
@@ -939,7 +1030,9 @@ export default function SACPage() {
               </TableHead>
               <TableHead className="text-white font-semibold text-center">DESC.</TableHead>
               <TableHead className="text-white font-semibold text-center">SOL.</TableHead>
-              <TableHead className="text-white font-semibold whitespace-nowrap">PREVISÃO</TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">
+                DATA SOLUÇÃO
+              </TableHead>
               <TableHead className="text-white font-semibold">STATUS</TableHead>
               <TableHead className="w-[80px] text-right text-white font-semibold">AÇÕES</TableHead>
             </TableRow>
