@@ -762,9 +762,13 @@ export default function SACPage() {
                                 </PopoverContent>
                               </Popover>
                             </div>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={!editingId}
+                            >
                               <FormControl>
-                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100">
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
