@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { format, addDays, parseISO } from 'date-fns'
+import { format, addDays, parseISO, differenceInDays, startOfDay } from 'date-fns'
 import {
   Plus,
   Edit2,
@@ -367,6 +367,58 @@ export default function SACPage() {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
   }
+
+  const diffDays = (start: string, end: string) => {
+    try {
+      const s = startOfDay(parseISO(start))
+      const e = startOfDay(parseISO(end))
+      return Math.max(0, differenceInDays(e, s))
+    } catch {
+      return 0
+    }
+  }
+
+  const [mesReferencia, setMesReferencia] = useState(() => format(new Date(), 'yyyy-MM'))
+
+  const demandasDoMes = demandas.filter((d) => d.data_recebimento?.startsWith(mesReferencia))
+
+  const recTotal = demandasDoMes.filter((d) => d.tipo === 'reclamacao').length
+  const recRecebido = demandasDoMes.filter(
+    (d) => d.tipo === 'reclamacao' && d.status === 'recebido',
+  ).length
+  const recSendoTratado = demandasDoMes.filter(
+    (d) => d.tipo === 'reclamacao' && d.status === 'sendo_tratado',
+  ).length
+  const recResolvido = demandasDoMes.filter(
+    (d) => d.tipo === 'reclamacao' && d.status === 'resolvido',
+  )
+  const recResolvidoCount = recResolvido.length
+  const recMediaDias =
+    recResolvidoCount > 0
+      ? recResolvido.reduce(
+          (acc, d) => acc + diffDays(d.data_recebimento, d.data_prevista || d.atualizado_em),
+          0,
+        ) / recResolvidoCount
+      : 0
+
+  const sugTotal = demandasDoMes.filter((d) => d.tipo === 'sugestao').length
+  const sugRecebido = demandasDoMes.filter(
+    (d) => d.tipo === 'sugestao' && d.status === 'recebido',
+  ).length
+  const sugSendoTratado = demandasDoMes.filter(
+    (d) => d.tipo === 'sugestao' && d.status === 'sendo_tratado',
+  ).length
+  const sugResolvido = demandasDoMes.filter(
+    (d) => d.tipo === 'sugestao' && d.status === 'resolvido',
+  )
+  const sugResolvidoCount = sugResolvido.length
+  const sugMediaDias =
+    sugResolvidoCount > 0
+      ? sugResolvido.reduce(
+          (acc, d) => acc + diffDays(d.data_recebimento, d.data_prevista || d.atualizado_em),
+          0,
+        ) / sugResolvidoCount
+      : 0
 
   const ativas = demandas.filter((d) => d.status !== 'resolvido')
   const resolvidas = demandas.filter((d) => d.status === 'resolvido')
@@ -1008,6 +1060,113 @@ export default function SACPage() {
                 </Form>
               </DialogContent>
             </Dialog>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-100">Painel de Acompanhamento</h2>
+            <p className="text-sm text-slate-400">Indicadores mensais de demandas</p>
+          </div>
+          <Input
+            type="month"
+            value={mesReferencia}
+            onChange={(e) => setMesReferencia(e.target.value)}
+            className="w-full sm:w-48 bg-slate-950 border-slate-800 text-slate-100"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Reclamações */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <h3 className="font-semibold text-slate-200 uppercase tracking-wider text-sm">
+                Reclamações
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  TOTAL
+                </p>
+                <p className="text-2xl font-bold text-slate-100">{recTotal}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  RECEBIDO
+                </p>
+                <p className="text-2xl font-bold text-red-500">{recRecebido}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  TRATANDO
+                </p>
+                <p className="text-2xl font-bold text-yellow-500">{recSendoTratado}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  RESOLVIDO
+                </p>
+                <p className="text-2xl font-bold text-green-500">{recResolvidoCount}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 col-span-2 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  MÉDIA DE DIAS (RESOLUÇÃO)
+                </p>
+                <p className="text-2xl font-bold text-blue-400">
+                  {recMediaDias.toFixed(1)}{' '}
+                  <span className="text-sm font-normal text-slate-500">dias</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sugestões */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <h3 className="font-semibold text-slate-200 uppercase tracking-wider text-sm">
+                Sugestões
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  TOTAL
+                </p>
+                <p className="text-2xl font-bold text-slate-100">{sugTotal}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  RECEBIDO
+                </p>
+                <p className="text-2xl font-bold text-red-500">{sugRecebido}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  TRATANDO
+                </p>
+                <p className="text-2xl font-bold text-yellow-500">{sugSendoTratado}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  RESOLVIDO
+                </p>
+                <p className="text-2xl font-bold text-green-500">{sugResolvidoCount}</p>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 col-span-2 flex flex-col justify-center">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                  MÉDIA DE DIAS (RESOLUÇÃO)
+                </p>
+                <p className="text-2xl font-bold text-blue-400">
+                  {sugMediaDias.toFixed(1)}{' '}
+                  <span className="text-sm font-normal text-slate-500">dias</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
