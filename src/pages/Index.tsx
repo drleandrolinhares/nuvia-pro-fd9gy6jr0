@@ -9,6 +9,7 @@ import {
   TrendingDown,
   Cake,
   LayoutDashboard,
+  MessageSquare,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { parseISO } from 'date-fns'
+import { parseISO, format } from 'date-fns'
 import {
   Select,
   SelectContent,
@@ -55,6 +56,7 @@ const Index = () => {
   const [possuiCarteira, setPossuiCarteira] = useState(false)
   const [saldoAtual, setSaldoAtual] = useState(0)
   const [saldoPerdido, setSaldoPerdido] = useState(0)
+  const [minhasDemandas, setMinhasDemandas] = useState<any[]>([])
   const { dataVersion, invalidateCache } = useCache()
 
   const loadData = async () => {
@@ -104,6 +106,17 @@ const Index = () => {
       if (usuarios) {
         setTodosUsuarios(usuarios)
       }
+
+      const { data: demandas } = await supabase
+        .from('sac_demandas')
+        .select('id, paciente_nome, tipo, limite_primeiro_contato, status')
+        .eq('quem_resolve_id', user.id)
+        .neq('status', 'resolvido')
+        .order('limite_primeiro_contato', { ascending: true })
+
+      if (demandas) {
+        setMinhasDemandas(demandas)
+      }
     }
 
     setLoading(false)
@@ -129,6 +142,9 @@ const Index = () => {
         invalidateCache(),
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saida_produtos' }, () =>
+        invalidateCache(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, () =>
         invalidateCache(),
       )
       .subscribe()
@@ -407,6 +423,73 @@ const Index = () => {
                 Atualizar Estoque
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card
+          className="border-border/50 shadow-sm animate-fade-in-up"
+          style={{ animationDelay: '100ms' }}
+        >
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <div className="p-2 bg-amber-500/10 rounded-md">
+              <MessageSquare className="size-5 text-amber-500" />
+            </div>
+            <CardTitle className="text-lg font-bold uppercase tracking-wider">
+              SAC - Minhas Demandas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {minhasDemandas.length > 0 ? (
+              <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                {minhasDemandas.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-muted/10 hover:bg-muted/20 transition-colors"
+                  >
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">{d.paciente_nome}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1.5">
+                        <span
+                          className={cn(
+                            'px-1.5 py-0.5 rounded text-[10px] uppercase font-bold shadow-sm',
+                            d.tipo === 'reclamacao'
+                              ? 'bg-red-500/20 text-red-500 border border-red-500/20'
+                              : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20',
+                          )}
+                        >
+                          {d.tipo}
+                        </span>
+                        <span className="font-medium text-slate-300">
+                          Prazo:{' '}
+                          {d.limite_primeiro_contato
+                            ? format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')
+                            : '-'}
+                        </span>
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'uppercase text-[10px] tracking-wider font-bold shadow-sm',
+                        d.status === 'recebido' && 'text-red-400 border-red-400/30 bg-red-400/10',
+                        d.status === 'sendo_tratado' &&
+                          'text-yellow-400 border-yellow-400/30 bg-yellow-400/10',
+                      )}
+                    >
+                      {d.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-[150px] items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-muted/20">
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">
+                  Nenhuma demanda pendente
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

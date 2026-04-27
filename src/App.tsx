@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { CacheProvider } from '@/hooks/use-cache'
 import { GlobalNormasPopup } from '@/components/normas/global-normas-popup'
+import { SacNotificationPopup } from '@/components/sac/sac-notification-popup'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
@@ -271,6 +272,7 @@ const App = () => (
           <Sonner />
           <AppRoutes />
           <GlobalNormasPopup />
+          <SacNotificationPopup />
         </TooltipProvider>
       </CacheProvider>
     </AuthProvider>
