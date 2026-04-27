@@ -25,6 +25,7 @@ import {
   Truck,
   Users,
   User,
+  Calculator,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -137,6 +138,18 @@ const navData = [
         url: '/estoque',
         icon: Package,
         permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
+      },
+    ],
+  },
+  {
+    title: 'ADMINISTRATIVO',
+    icon: FileText,
+    items: [
+      {
+        title: 'PRECIFICAÇÃO',
+        url: '/administrativo/precificacao',
+        icon: Calculator,
+        showRole: ['admin'],
       },
     ],
   },

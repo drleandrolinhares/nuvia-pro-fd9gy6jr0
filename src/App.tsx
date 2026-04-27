@@ -29,6 +29,7 @@ import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
+import Precificacao from './pages/administrativo/Precificacao'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -212,6 +213,16 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_terceiros']}>
               <Parceiros />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Administrativo Routes */}
+        <Route
+          path="/administrativo/precificacao"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Precificacao />
             </ProtectedRoute>
           }
         />
