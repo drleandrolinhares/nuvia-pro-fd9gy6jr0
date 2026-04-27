@@ -172,6 +172,7 @@ export function CustoHoraClinica() {
             <tr>
               <th className="px-4 py-3 font-medium w-full">Descrição do Custo</th>
               <th className="px-4 py-3 font-medium min-w-[200px]">Valor Mensal</th>
+              <th className="px-4 py-3 font-medium w-[100px] text-right">%</th>
               <th className="px-4 py-3 font-medium w-[80px] text-center">Ações</th>
             </tr>
           </thead>
@@ -192,6 +193,15 @@ export function CustoHoraClinica() {
                     onChange={(val) => updateCusto(custo.id, 'valor', val)}
                   />
                 </td>
+                <td className="px-4 py-1.5 text-right font-medium text-slate-300">
+                  {total > 0
+                    ? ((custo.valor / total) * 100).toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : '0,00'}
+                  %
+                </td>
                 <td className="px-4 py-1.5 text-center">
                   <Button
                     variant="ghost"
@@ -206,7 +216,7 @@ export function CustoHoraClinica() {
             ))}
             {custos.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
                   Nenhum custo cadastrado. Clique em "Adicionar Linha" para começar.
                 </td>
               </tr>
@@ -219,6 +229,9 @@ export function CustoHoraClinica() {
               </td>
               <td className="px-4 py-4 text-amber-500 text-lg tracking-tight">
                 {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </td>
+              <td className="px-4 py-4 text-right text-amber-500 text-lg tracking-tight">
+                {total > 0 ? '100,00' : '0,00'}%
               </td>
               <td></td>
             </tr>
