@@ -60,16 +60,26 @@ const demandaSchema = z
     quem_recebeu_id: z.string().optional(),
     quem_resolve_id: z.string().min(1, 'Obrigatório'),
     descricao: z.string().optional(),
+    solucao: z.string().optional(),
     status: z.enum(['recebido', 'sendo_tratado', 'resolvido']).default('recebido'),
     data_prevista: z.string().optional(),
   })
   .superRefine((val, ctx) => {
-    if (val.status === 'sendo_tratado' && !val.data_prevista) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Obrigatório',
-        path: ['data_prevista'],
-      })
+    if (val.status === 'sendo_tratado' || val.status === 'resolvido') {
+      if (!val.data_prevista) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Obrigatório',
+          path: ['data_prevista'],
+        })
+      }
+      if (!val.solucao || val.solucao.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Obrigatório',
+          path: ['solucao'],
+        })
+      }
     }
   })
 
@@ -105,6 +115,7 @@ export default function SACPage() {
       quem_recebeu_id: '',
       quem_resolve_id: '',
       descricao: '',
+      solucao: '',
       status: 'recebido',
       data_prevista: '',
     },
@@ -205,10 +216,6 @@ export default function SACPage() {
         form.setError('setor', { type: 'manual', message: 'Obrigatório' })
         hasError = true
       }
-      if (!values.quem_recebeu_id) {
-        form.setError('quem_recebeu_id', { type: 'manual', message: 'Obrigatório' })
-        hasError = true
-      }
       if (!values.descricao) {
         form.setError('descricao', { type: 'manual', message: 'Obrigatório' })
         hasError = true
@@ -233,10 +240,19 @@ export default function SACPage() {
           const newName = usuarios.find((u) => u.id === values.quem_resolve_id)?.nome || '-'
           changes.push(`Responsável: ${oldName} -> ${newName}`)
         }
-        if (old.data_prevista !== values.data_prevista && values.status === 'sendo_tratado') {
+        if (
+          old.data_prevista !== values.data_prevista &&
+          (values.status === 'sendo_tratado' || values.status === 'resolvido')
+        ) {
           changes.push(
             `Previsão: ${old.data_prevista ? format(parseISO(old.data_prevista), 'dd/MM/yyyy') : '-'} -> ${values.data_prevista ? format(parseISO(values.data_prevista), 'dd/MM/yyyy') : '-'}`,
           )
+        }
+        if (
+          old.solucao !== values.solucao &&
+          (values.status === 'sendo_tratado' || values.status === 'resolvido')
+        ) {
+          changes.push(`Solução atualizada`)
         }
 
         const { error } = await supabase
@@ -245,6 +261,7 @@ export default function SACPage() {
             status: values.status,
             quem_resolve_id: values.quem_resolve_id,
             data_prevista: values.data_prevista || null,
+            solucao: values.solucao || null,
           })
           .eq('id', editingId)
         if (error) throw error
@@ -262,6 +279,7 @@ export default function SACPage() {
         const payload = {
           ...values,
           data_prevista: values.data_prevista || null,
+          solucao: values.solucao || null,
         }
         const { data: newDemanda, error } = await supabase
           .from('sac_demandas' as any)
@@ -303,6 +321,7 @@ export default function SACPage() {
       quem_recebeu_id: d.quem_recebeu_id || '',
       quem_resolve_id: d.quem_resolve_id || '',
       descricao: d.descricao || '',
+      solucao: d.solucao || '',
       status: d.status,
       data_prevista: d.data_prevista || '',
     })
@@ -418,7 +437,7 @@ export default function SACPage() {
                   <CheckCircle2 className="w-4 h-4 mr-2" /> Histórico de Soluções
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col bg-slate-900 border-slate-800 text-slate-100">
+              <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col bg-slate-900 border-slate-800 text-slate-100">
                 <DialogHeader>
                   <DialogTitle className="text-slate-100">
                     Demandas Concluídas (Resolvidas)
@@ -432,6 +451,10 @@ export default function SACPage() {
                         <TableHead className="text-white font-semibold">SETOR</TableHead>
                         <TableHead className="text-white font-semibold">DATA</TableHead>
                         <TableHead className="text-white font-semibold">PACIENTE</TableHead>
+                        <TableHead className="text-white font-semibold text-center">
+                          DESC.
+                        </TableHead>
+                        <TableHead className="text-white font-semibold text-center">SOL.</TableHead>
                         <TableHead className="text-white font-semibold">QUEM RECEBEU</TableHead>
                         <TableHead className="text-white font-semibold">QUEM RESOLVEU</TableHead>
                       </TableRow>
@@ -439,7 +462,7 @@ export default function SACPage() {
                     <TableBody>
                       {resolvidas.length === 0 ? (
                         <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                          <TableCell colSpan={6} className="text-center h-24 text-slate-400">
+                          <TableCell colSpan={8} className="text-center h-24 text-slate-400">
                             Nenhuma demanda resolvida.
                           </TableCell>
                         </TableRow>
@@ -465,10 +488,50 @@ export default function SACPage() {
                               {d.setor || '-'}
                             </TableCell>
                             <TableCell className="text-white whitespace-nowrap">
-                              {format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
+                              {d.criado_em
+                                ? format(parseISO(d.criado_em), 'dd/MM/yyyy HH:mm')
+                                : format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
                             </TableCell>
                             <TableCell className="font-medium text-white">
                               {d.paciente_nome}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {d.descricao ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-amber-500 hover:text-amber-400 p-1.5 rounded hover:bg-amber-500/10 transition-colors inline-flex items-center justify-center"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
+                                    {d.descricao}
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                '-'
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {d.solucao ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
+                                    {d.solucao}
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                '-'
+                              )}
                             </TableCell>
                             <TableCell className="text-white">
                               {d.quem_recebeu?.nome || '-'}
@@ -501,7 +564,7 @@ export default function SACPage() {
                   <Plus className="w-4 h-4" /> Nova Demanda
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-slate-100">
                     {editingId ? 'Editar' : 'Nova'} Demanda
@@ -799,8 +862,9 @@ export default function SACPage() {
                       />
                     </div>
 
-                    {form.watch('status') === 'sendo_tratado' && (
-                      <div className="animate-fade-in-down">
+                    {(form.watch('status') === 'sendo_tratado' ||
+                      form.watch('status') === 'resolvido') && (
+                      <div className="animate-fade-in-down grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="data_prevista"
@@ -814,6 +878,23 @@ export default function SACPage() {
                                   type="date"
                                   {...field}
                                   className="bg-slate-950 border-slate-800 text-slate-100 w-full"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="solucao"
+                          render={({ field }) => (
+                            <FormItem className="col-span-1 md:col-span-2">
+                              <FormLabel className="text-slate-200">Solução Proposta</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Descreva detalhadamente a solução adotada..."
+                                  {...field}
+                                  className="bg-slate-950 border-slate-800 text-slate-100 min-h-[80px] resize-none"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -857,6 +938,7 @@ export default function SACPage() {
                 RESPONSÁVEL
               </TableHead>
               <TableHead className="text-white font-semibold text-center">DESC.</TableHead>
+              <TableHead className="text-white font-semibold text-center">SOL.</TableHead>
               <TableHead className="text-white font-semibold whitespace-nowrap">PREVISÃO</TableHead>
               <TableHead className="text-white font-semibold">STATUS</TableHead>
               <TableHead className="w-[80px] text-right text-white font-semibold">AÇÕES</TableHead>
@@ -865,13 +947,13 @@ export default function SACPage() {
           <TableBody>
             {loading ? (
               <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                <TableCell colSpan={10} className="text-center h-24">
+                <TableCell colSpan={11} className="text-center h-24">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
                 </TableCell>
               </TableRow>
             ) : ativas.length === 0 ? (
               <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                <TableCell colSpan={10} className="text-center h-24 text-slate-400">
+                <TableCell colSpan={11} className="text-center h-24 text-slate-400">
                   Nenhuma demanda ativa registrada.
                 </TableCell>
               </TableRow>
@@ -895,7 +977,9 @@ export default function SACPage() {
                   </TableCell>
                   <TableCell className="text-white whitespace-nowrap">{d.setor || '-'}</TableCell>
                   <TableCell className="text-white whitespace-nowrap">
-                    {format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
+                    {d.criado_em
+                      ? format(parseISO(d.criado_em), 'dd/MM/yyyy HH:mm')
+                      : format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
                   </TableCell>
                   <TableCell className="text-white whitespace-nowrap">
                     {format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')}
@@ -925,16 +1009,35 @@ export default function SACPage() {
                       '-'
                     )}
                   </TableCell>
+                  <TableCell className="text-center">
+                    {d.solucao ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
+                          {d.solucao}
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
                   <TableCell className="text-white whitespace-nowrap">
                     {d.data_prevista ? format(parseISO(d.data_prevista), 'dd/MM/yyyy') : '-'}
                   </TableCell>
                   <TableCell>
                     <span
                       className={cn(
-                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider text-white shadow-sm whitespace-nowrap',
-                        d.status === 'recebido' && 'bg-red-600',
-                        d.status === 'sendo_tratado' && 'bg-yellow-500',
-                        d.status === 'resolvido' && 'bg-green-600',
+                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider shadow-sm whitespace-nowrap',
+                        d.status === 'recebido' && 'bg-red-600 text-white',
+                        d.status === 'sendo_tratado' && 'bg-yellow-500 text-yellow-800',
+                        d.status === 'resolvido' && 'bg-green-600 text-white',
                       )}
                     >
                       {d.status.replace('_', ' ')}
