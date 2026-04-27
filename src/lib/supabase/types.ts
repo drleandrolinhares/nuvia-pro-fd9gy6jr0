@@ -1762,6 +1762,60 @@ export type Database = {
           },
         ]
       }
+      sac_demandas: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data_recebimento: string
+          id: string
+          limite_primeiro_contato: string
+          paciente_nome: string
+          quem_recebeu_id: string | null
+          quem_resolve_id: string | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data_recebimento?: string
+          id?: string
+          limite_primeiro_contato: string
+          paciente_nome: string
+          quem_recebeu_id?: string | null
+          quem_resolve_id?: string | null
+          status?: string
+          tipo: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data_recebimento?: string
+          id?: string
+          limite_primeiro_contato?: string
+          paciente_nome?: string
+          quem_recebeu_id?: string | null
+          quem_resolve_id?: string | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sac_demandas_quem_recebeu_id_fkey'
+            columns: ['quem_recebeu_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'sac_demandas_quem_resolve_id_fkey'
+            columns: ['quem_resolve_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       saida_produtos: {
         Row: {
           criado_em: string | null
@@ -3002,6 +3056,17 @@ export const Constants = {
 //   ativa: boolean (not null, default: true)
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   data_atualizacao: timestamp with time zone (not null, default: now())
+// Table: sac_demandas
+//   id: uuid (not null, default: gen_random_uuid())
+//   tipo: text (not null)
+//   data_recebimento: date (not null, default: CURRENT_DATE)
+//   limite_primeiro_contato: date (not null)
+//   paciente_nome: text (not null)
+//   quem_recebeu_id: uuid (nullable)
+//   quem_resolve_id: uuid (nullable)
+//   status: text (not null, default: 'recebido'::text)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: saida_produtos
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3304,6 +3369,12 @@ export const Constants = {
 //   FOREIGN KEY rotinas_usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   PRIMARY KEY rotinas_usuarios_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY rotinas_usuarios_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: sac_demandas
+//   PRIMARY KEY sac_demandas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY sac_demandas_quem_recebeu_id_fkey: FOREIGN KEY (quem_recebeu_id) REFERENCES usuarios(id) ON DELETE SET NULL
+//   FOREIGN KEY sac_demandas_quem_resolve_id_fkey: FOREIGN KEY (quem_resolve_id) REFERENCES usuarios(id) ON DELETE SET NULL
+//   CHECK sac_demandas_status_check: CHECK ((status = ANY (ARRAY['recebido'::text, 'sendo_tratado'::text, 'resolvido'::text])))
+//   CHECK sac_demandas_tipo_check: CHECK ((tipo = ANY (ARRAY['reclamacao'::text, 'sugestao'::text])))
 // Table: saida_produtos
 //   PRIMARY KEY saida_produtos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY saida_produtos_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
@@ -3616,6 +3687,10 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('configuracoes_geral'::text) OR has_permission('configuracoes_rotinas'::text))
 //   Policy "rotinas_usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: sac_demandas
+//   Policy "sac_demandas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: saida_produtos
 //   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))

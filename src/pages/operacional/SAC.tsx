@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, addDays, parseISO } from 'date-fns'
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -157,48 +157,114 @@ export default function SACPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">SAC</h1>
-          <p className="text-muted-foreground mt-2">Gestão de Sugestões e Reclamações</p>
-        </div>
-        <Dialog
-          open={isOpen}
-          onOpenChange={(open) => {
-            setIsOpen(open)
-            if (!open) {
-              form.reset()
-              setEditingId(null)
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" /> Nova Demanda
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingId ? 'Editar' : 'Nova'} Demanda</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+      <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 p-6 rounded-lg shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-500/10 rounded-lg">
+              <MessageSquare className="w-6 h-6 text-amber-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-100">SAC</h1>
+              <p className="text-slate-400 mt-1">Gestão de Sugestões e Reclamações</p>
+            </div>
+          </div>
+          <Dialog
+            open={isOpen}
+            onOpenChange={(open) => {
+              setIsOpen(open)
+              if (!open) {
+                form.reset()
+                setEditingId(null)
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold">
+                <Plus className="w-4 h-4" /> Nova Demanda
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{editingId ? 'Editar' : 'Nova'} Demanda</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="tipo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="reclamacao">Reclamação</SelectItem>
+                              <SelectItem value="sugestao">Sugestão</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger disabled={!editingId}>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="recebido">Recebido</SelectItem>
+                              <SelectItem value="sendo_tratado">Sendo Tratado</SelectItem>
+                              <SelectItem value="resolvido">Resolvido</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
-                    name="tipo"
+                    name="paciente_nome"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tipo</FormLabel>
+                        <FormLabel>Paciente</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="quem_recebeu_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quem Recebeu?</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
+                              <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="reclamacao">Reclamação</SelectItem>
-                            <SelectItem value="sugestao">Sugestão</SelectItem>
+                            {usuarios.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.nome}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -207,100 +273,45 @@ export default function SACPage() {
                   />
                   <FormField
                     control={form.control}
-                    name="status"
+                    name="quem_resolve_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>Quem Resolve?</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger disabled={!editingId}>
-                              <SelectValue />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="recebido">Recebido</SelectItem>
-                            <SelectItem value="sendo_tratado">Sendo Tratado</SelectItem>
-                            <SelectItem value="resolvido">Resolvido</SelectItem>
+                            {usuarios.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.nome}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="paciente_nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Paciente</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="quem_recebeu_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quem Recebeu?</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {usuarios.map((u) => (
-                            <SelectItem key={u.id} value={u.id}>
-                              {u.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="quem_resolve_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quem Resolve?</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {usuarios.map((u) => (
-                            <SelectItem key={u.id} value={u.id}>
-                              {u.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="pt-4 flex justify-end">
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    Salvar
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      type="submit"
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold"
+                      disabled={form.formState.isSubmitting}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <div className="border rounded-md">
+      <div className="border border-slate-800 bg-slate-900 rounded-md shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
