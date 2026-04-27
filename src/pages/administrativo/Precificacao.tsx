@@ -1,5 +1,6 @@
 import { Calculator, Clock, DollarSign, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CustoHoraClinica } from '@/components/precificacao/CustoHoraClinica'
 
 export default function Precificacao() {
   return (
@@ -41,17 +42,11 @@ export default function Precificacao() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="custo-hora" className="animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
-            <Clock className="w-16 h-16 text-slate-700 mb-4" />
-            <h2 className="text-xl font-medium text-white mb-2">Custo Hora Clínica</h2>
-            <p className="text-slate-400 max-w-md">
-              Aguardando definições para os cálculos e parâmetros de Custo de Hora Clínica.
-            </p>
-          </div>
+        <TabsContent value="custo-hora" className="animate-fade-in mt-0">
+          <CustoHoraClinica />
         </TabsContent>
 
-        <TabsContent value="precificacao" className="animate-fade-in">
+        <TabsContent value="precificacao" className="animate-fade-in mt-0">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
             <DollarSign className="w-16 h-16 text-slate-700 mb-4" />
             <h2 className="text-xl font-medium text-white mb-2">Precificação</h2>
@@ -61,7 +56,7 @@ export default function Precificacao() {
           </div>
         </TabsContent>
 
-        <TabsContent value="ocupacao" className="animate-fade-in">
+        <TabsContent value="ocupacao" className="animate-fade-in mt-0">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
             <Users className="w-16 h-16 text-slate-700 mb-4" />
             <h2 className="text-xl font-medium text-white mb-2">Ocupação das Cadeiras</h2>
