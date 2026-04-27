@@ -9,6 +9,7 @@ import {
   Cake,
   LayoutDashboard,
   MessageSquare,
+  ArrowRight,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -279,18 +280,30 @@ const Index = () => {
         <div className="space-y-6">
           {/* SAC */}
           <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
-              <div className="p-2 bg-amber-500/10 rounded-md">
-                <MessageSquare className="size-5 text-amber-500" />
+            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-md">
+                  <MessageSquare className="size-5 text-amber-500" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+                    SAC
+                  </CardTitle>
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2 py-0.5 rounded-full">
+                    {minhasDemandas.length}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                  SAC
-                </CardTitle>
-                <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2 py-0.5 rounded-full">
-                  {minhasDemandas.length}
-                </Badge>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="h-8 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2"
+              >
+                <Link to="/operacional/sac">
+                  Ver Tudo <ArrowRight className="ml-1 size-3" />
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
               {minhasDemandas.length > 0 ? (
