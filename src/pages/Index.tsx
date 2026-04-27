@@ -48,7 +48,7 @@ const MESES = [
 ]
 
 const Index = () => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
   const [todosUsuarios, setTodosUsuarios] = useState<any[]>([])
@@ -107,12 +107,22 @@ const Index = () => {
         setTodosUsuarios(usuarios)
       }
 
-      const { data: demandas } = await supabase
+      const isAdmin =
+        profile?.role === 'admin' ||
+        user.email === 'drleandro@nuvia.com' ||
+        user.email === 'drleandrolinhares@gmail.com'
+
+      let query = supabase
         .from('sac_demandas')
         .select('id, paciente_nome, tipo, limite_primeiro_contato, status')
-        .eq('quem_resolve_id', user.id)
         .neq('status', 'resolvido')
         .order('limite_primeiro_contato', { ascending: true })
+
+      if (!isAdmin) {
+        query = query.eq('quem_resolve_id', user.id)
+      }
+
+      const { data: demandas } = await query
 
       if (demandas) {
         setMinhasDemandas(demandas)
@@ -124,7 +134,7 @@ const Index = () => {
 
   useEffect(() => {
     loadData()
-  }, [dataVersion, user])
+  }, [dataVersion, user, profile])
 
   useEffect(() => {
     const channel = supabase

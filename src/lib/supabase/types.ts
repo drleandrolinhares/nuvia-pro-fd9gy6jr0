@@ -1766,16 +1766,19 @@ export type Database = {
         Row: {
           atualizado_em: string
           id: string
+          orientacao_data_solucao: string
           orientacao_status: string
         }
         Insert: {
           atualizado_em?: string
           id?: string
+          orientacao_data_solucao?: string
           orientacao_status?: string
         }
         Update: {
           atualizado_em?: string
           id?: string
+          orientacao_data_solucao?: string
           orientacao_status?: string
         }
         Relationships: []
@@ -3132,6 +3135,7 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   orientacao_status: text (not null, default: 'STATUS: este campo deve ser alterado pela pessoa responsável pela solução da demanda. Ao tomar ciência e mudar para SENDO TRATADO, mostra para todos os gestores e colaboradores que você já tem ciência da situação e que resolverá.'::text)
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   orientacao_data_solucao: text (not null, default: 'Se o status do caso estiver como SENDO TRATADO, esta data representará a data prevista para a solução. Se o status estiver como RESOLVIDO, a data significará a data da solução do caso.'::text)
 // Table: sac_demandas
 //   id: uuid (not null, default: gen_random_uuid())
 //   tipo: text (not null)
