@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, addDays, parseISO } from 'date-fns'
-import { Plus, Edit2, Trash2, Loader2, MessageSquare, History, CheckCircle2 } from 'lucide-react'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Loader2,
+  MessageSquare,
+  History,
+  CheckCircle2,
+  Eye,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -25,6 +35,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Form,
   FormControl,
@@ -41,13 +52,26 @@ import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 
-const demandaSchema = z.object({
-  tipo: z.enum(['reclamacao', 'sugestao']),
-  paciente_nome: z.string().min(1, 'Obrigatório'),
-  quem_recebeu_id: z.string().min(1, 'Obrigatório'),
-  quem_resolve_id: z.string().min(1, 'Obrigatório'),
-  status: z.enum(['recebido', 'sendo_tratado', 'resolvido']).default('recebido'),
-})
+const demandaSchema = z
+  .object({
+    tipo: z.enum(['reclamacao', 'sugestao']),
+    setor: z.string().optional(),
+    paciente_nome: z.string().min(1, 'Obrigatório'),
+    quem_recebeu_id: z.string().optional(),
+    quem_resolve_id: z.string().min(1, 'Obrigatório'),
+    descricao: z.string().optional(),
+    status: z.enum(['recebido', 'sendo_tratado', 'resolvido']).default('recebido'),
+    data_prevista: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.status === 'sendo_tratado' && !val.data_prevista) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Obrigatório',
+        path: ['data_prevista'],
+      })
+    }
+  })
 
 type DemandaFormValues = z.infer<typeof demandaSchema>
 
@@ -64,24 +88,33 @@ export default function SACPage() {
   const [loadingHistorico, setLoadingHistorico] = useState(false)
 
   const [isResolvedOpen, setIsResolvedOpen] = useState(false)
+
+  const [orientacao, setOrientacao] = useState('')
+  const [tempOrientacao, setTempOrientacao] = useState('')
+  const [orientacaoEditMode, setOrientacaoEditMode] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
   const { toast } = useToast()
 
   const form = useForm<DemandaFormValues>({
     resolver: zodResolver(demandaSchema),
     defaultValues: {
       tipo: 'reclamacao',
+      setor: '',
       paciente_nome: '',
       quem_recebeu_id: '',
       quem_resolve_id: '',
+      descricao: '',
       status: 'recebido',
+      data_prevista: '',
     },
   })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [usersRes, demandasRes] = await Promise.all([
-        supabase.from('usuarios').select('id, nome').eq('status', 'ativo').order('nome'),
+      const [usersRes, demandasRes, configRes] = await Promise.all([
+        supabase.from('usuarios').select('id, nome, role').eq('status', 'ativo').order('nome'),
         supabase
           .from('sac_demandas' as any)
           .select(`
@@ -90,17 +123,36 @@ export default function SACPage() {
           quem_resolve:usuarios!sac_demandas_quem_resolve_id_fkey(nome)
         `)
           .order('criado_em', { ascending: false }),
+        supabase
+          .from('sac_configuracoes' as any)
+          .select('orientacao_status')
+          .single(),
       ])
       if (usersRes.error) throw usersRes.error
       if (demandasRes.error) throw demandasRes.error
+
       setUsuarios(usersRes.data || [])
       setDemandas(demandasRes.data || [])
+
+      if (configRes.data) {
+        setOrientacao(configRes.data.orientacao_status)
+        setTempOrientacao(configRes.data.orientacao_status)
+      }
+
+      if (user) {
+        const loggedUser = usersRes.data?.find((u) => u.id === user.id)
+        setIsAdmin(
+          loggedUser?.role === 'admin' ||
+            user.email === 'drleandro@nuvia.com' ||
+            user.email === 'drleandrolinhares@gmail.com',
+        )
+      }
     } catch (error: any) {
       toast({ title: 'Erro ao carregar', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast, user])
 
   useEffect(() => {
     fetchData()
@@ -131,7 +183,39 @@ export default function SACPage() {
     if (isHistoryOpen) loadHistorico()
   }, [isHistoryOpen, loadHistorico])
 
+  const handleSaveOrientacao = async () => {
+    try {
+      const { error } = await supabase
+        .from('sac_configuracoes' as any)
+        .update({ orientacao_status: tempOrientacao })
+        .eq('id', '00000000-0000-0000-0000-000000000001')
+      if (error) throw error
+      setOrientacao(tempOrientacao)
+      setOrientacaoEditMode(false)
+      toast({ title: 'Orientação atualizada com sucesso' })
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar orientação', description: e.message, variant: 'destructive' })
+    }
+  }
+
   const onSubmit = async (values: DemandaFormValues) => {
+    if (!editingId) {
+      let hasError = false
+      if (!values.setor) {
+        form.setError('setor', { type: 'manual', message: 'Obrigatório' })
+        hasError = true
+      }
+      if (!values.quem_recebeu_id) {
+        form.setError('quem_recebeu_id', { type: 'manual', message: 'Obrigatório' })
+        hasError = true
+      }
+      if (!values.descricao) {
+        form.setError('descricao', { type: 'manual', message: 'Obrigatório' })
+        hasError = true
+      }
+      if (hasError) return
+    }
+
     try {
       const dtRec = new Date()
       const limite = addDays(dtRec, values.tipo === 'reclamacao' ? 1 : 2)
@@ -149,12 +233,18 @@ export default function SACPage() {
           const newName = usuarios.find((u) => u.id === values.quem_resolve_id)?.nome || '-'
           changes.push(`Responsável: ${oldName} -> ${newName}`)
         }
+        if (old.data_prevista !== values.data_prevista && values.status === 'sendo_tratado') {
+          changes.push(
+            `Previsão: ${old.data_prevista ? format(parseISO(old.data_prevista), 'dd/MM/yyyy') : '-'} -> ${values.data_prevista ? format(parseISO(values.data_prevista), 'dd/MM/yyyy') : '-'}`,
+          )
+        }
 
         const { error } = await supabase
           .from('sac_demandas' as any)
           .update({
             status: values.status,
             quem_resolve_id: values.quem_resolve_id,
+            data_prevista: values.data_prevista || null,
           })
           .eq('id', editingId)
         if (error) throw error
@@ -169,7 +259,10 @@ export default function SACPage() {
         }
         toast({ title: 'Atualizado com sucesso' })
       } else {
-        const payload = { ...values }
+        const payload = {
+          ...values,
+          data_prevista: values.data_prevista || null,
+        }
         const { data: newDemanda, error } = await supabase
           .from('sac_demandas' as any)
           .insert({
@@ -205,10 +298,13 @@ export default function SACPage() {
     setEditingId(d.id)
     form.reset({
       tipo: d.tipo,
+      setor: d.setor || '',
       paciente_nome: d.paciente_nome,
-      quem_recebeu_id: d.quem_recebeu_id,
-      quem_resolve_id: d.quem_resolve_id,
+      quem_recebeu_id: d.quem_recebeu_id || '',
+      quem_resolve_id: d.quem_resolve_id || '',
+      descricao: d.descricao || '',
       status: d.status,
+      data_prevista: d.data_prevista || '',
     })
     setIsOpen(true)
   }
@@ -333,6 +429,7 @@ export default function SACPage() {
                     <TableHeader>
                       <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
                         <TableHead className="text-white font-semibold">TIPO</TableHead>
+                        <TableHead className="text-white font-semibold">SETOR</TableHead>
                         <TableHead className="text-white font-semibold">DATA</TableHead>
                         <TableHead className="text-white font-semibold">PACIENTE</TableHead>
                         <TableHead className="text-white font-semibold">QUEM RECEBEU</TableHead>
@@ -342,7 +439,7 @@ export default function SACPage() {
                     <TableBody>
                       {resolvidas.length === 0 ? (
                         <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                          <TableCell colSpan={5} className="text-center h-24 text-slate-400">
+                          <TableCell colSpan={6} className="text-center h-24 text-slate-400">
                             Nenhuma demanda resolvida.
                           </TableCell>
                         </TableRow>
@@ -363,6 +460,9 @@ export default function SACPage() {
                               >
                                 {d.tipo === 'reclamacao' ? 'RECLAMAÇÃO' : 'SUGESTÃO'}
                               </span>
+                            </TableCell>
+                            <TableCell className="text-white whitespace-nowrap">
+                              {d.setor || '-'}
                             </TableCell>
                             <TableCell className="text-white whitespace-nowrap">
                               {format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
@@ -392,6 +492,7 @@ export default function SACPage() {
                 if (!open) {
                   form.reset()
                   setEditingId(null)
+                  setOrientacaoEditMode(false)
                 }
               }}
             >
@@ -400,7 +501,7 @@ export default function SACPage() {
                   <Plus className="w-4 h-4" /> Nova Demanda
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-800 text-slate-100">
+              <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-slate-100">
                     {editingId ? 'Editar' : 'Nova'} Demanda
@@ -446,16 +547,224 @@ export default function SACPage() {
                       />
                       <FormField
                         control={form.control}
+                        name="setor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-200">Setor</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={!!editingId}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                <SelectItem
+                                  value="Administrativo"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Administrativo
+                                </SelectItem>
+                                <SelectItem
+                                  value="Comercial"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Comercial
+                                </SelectItem>
+                                <SelectItem
+                                  value="Financeiro"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Financeiro
+                                </SelectItem>
+                                <SelectItem
+                                  value="Operacional"
+                                  className="focus:bg-slate-800 focus:text-slate-100"
+                                >
+                                  Operacional
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="paciente_nome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-200">Paciente</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Nome..."
+                                {...field}
+                                disabled={!!editingId}
+                                className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="quem_recebeu_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-200">Quem Recebeu?</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={!!editingId}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                {usuarios.map((u) => (
+                                  <SelectItem
+                                    key={u.id}
+                                    value={u.id}
+                                    className="focus:bg-slate-800 focus:text-slate-100"
+                                  >
+                                    {u.nome}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="descricao"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-slate-200">Descrição do Problema</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Descreva detalhadamente..."
+                              {...field}
+                              disabled={!!editingId}
+                              className="bg-slate-950 border-slate-800 text-slate-100 min-h-[80px] disabled:opacity-50 resize-none"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4 mt-2">
+                      <FormField
+                        control={form.control}
+                        name="quem_resolve_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-200">Quem Resolve?</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                {usuarios.map((u) => (
+                                  <SelectItem
+                                    key={u.id}
+                                    value={u.id}
+                                    className="focus:bg-slate-800 focus:text-slate-100"
+                                  >
+                                    {u.nome}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
                         name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-slate-200">Status</FormLabel>
+                            <div className="flex items-center gap-2 mb-2">
+                              <FormLabel className="text-slate-200 mb-0">Status</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button
+                                    type="button"
+                                    className="text-amber-500 hover:text-amber-400 focus:outline-none flex items-center justify-center transition-colors"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  side="top"
+                                  className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm z-50"
+                                >
+                                  {orientacaoEditMode ? (
+                                    <div className="space-y-3">
+                                      <Textarea
+                                        value={tempOrientacao}
+                                        onChange={(e) => setTempOrientacao(e.target.value)}
+                                        className="bg-slate-950 border-slate-800 min-h-[120px] text-slate-200"
+                                      />
+                                      <div className="flex justify-end gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                                          onClick={() => {
+                                            setOrientacaoEditMode(false)
+                                            setTempOrientacao(orientacao)
+                                          }}
+                                        >
+                                          Cancelar
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          className="bg-amber-500 hover:bg-amber-600 text-slate-950"
+                                          onClick={handleSaveOrientacao}
+                                        >
+                                          Salvar
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      <p className="leading-relaxed font-medium">{orientacao}</p>
+                                      {isAdmin && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="w-full text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                                          onClick={() => setOrientacaoEditMode(true)}
+                                        >
+                                          Editar Orientação
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger
-                                  disabled={!editingId}
-                                  className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50"
-                                >
+                                <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -485,84 +794,31 @@ export default function SACPage() {
                         )}
                       />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="paciente_nome"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-200">Paciente</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Nome..."
-                              {...field}
-                              disabled={!!editingId}
-                              className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="quem_recebeu_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-200">Quem Recebeu?</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            disabled={!!editingId}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100 disabled:opacity-50">
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
-                              {usuarios.map((u) => (
-                                <SelectItem
-                                  key={u.id}
-                                  value={u.id}
-                                  className="focus:bg-slate-800 focus:text-slate-100"
-                                >
-                                  {u.nome}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="quem_resolve_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-200">Quem Resolve?</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-100">
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
-                              {usuarios.map((u) => (
-                                <SelectItem
-                                  key={u.id}
-                                  value={u.id}
-                                  className="focus:bg-slate-800 focus:text-slate-100"
-                                >
-                                  {u.nome}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
+                    {form.watch('status') === 'sendo_tratado' && (
+                      <div className="animate-fade-in-down">
+                        <FormField
+                          control={form.control}
+                          name="data_prevista"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-slate-200">
+                                Data Prevista de Solução
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  className="bg-slate-950 border-slate-800 text-slate-100 w-full"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+
                     <div className="pt-4 flex justify-end">
                       <Button
                         type="submit"
@@ -580,30 +836,38 @@ export default function SACPage() {
         </div>
       </div>
 
-      <div className="border border-slate-800 bg-slate-900 rounded-md shadow-sm overflow-hidden">
+      <div className="border border-slate-800 bg-slate-900 rounded-md shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
               <TableHead className="text-white font-semibold">TIPO</TableHead>
-              <TableHead className="text-white font-semibold">DATA RECEBIMENTO</TableHead>
-              <TableHead className="text-white font-semibold">LIMITE CONTATO</TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">SETOR</TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">
+                DATA REC.
+              </TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">
+                LIM. CONTATO
+              </TableHead>
               <TableHead className="text-white font-semibold">PACIENTE</TableHead>
-              <TableHead className="text-white font-semibold">QUEM RECEBEU</TableHead>
-              <TableHead className="text-white font-semibold">QUEM RESOLVE</TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">
+                RESPONSÁVEL
+              </TableHead>
+              <TableHead className="text-white font-semibold text-center">DESC.</TableHead>
+              <TableHead className="text-white font-semibold whitespace-nowrap">PREVISÃO</TableHead>
               <TableHead className="text-white font-semibold">STATUS</TableHead>
-              <TableHead className="w-[100px] text-right text-white font-semibold">AÇÕES</TableHead>
+              <TableHead className="w-[80px] text-right text-white font-semibold">AÇÕES</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                <TableCell colSpan={8} className="text-center h-24">
+                <TableCell colSpan={10} className="text-center h-24">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
                 </TableCell>
               </TableRow>
             ) : ativas.length === 0 ? (
               <TableRow className="border-slate-800 hover:!bg-transparent data-[state=selected]:bg-transparent">
-                <TableCell colSpan={8} className="text-center h-24 text-slate-400">
+                <TableCell colSpan={10} className="text-center h-24 text-slate-400">
                   Nenhuma demanda ativa registrada.
                 </TableCell>
               </TableRow>
@@ -616,7 +880,7 @@ export default function SACPage() {
                   <TableCell>
                     <span
                       className={cn(
-                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider',
+                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider whitespace-nowrap',
                         d.tipo === 'reclamacao'
                           ? 'bg-red-100 text-red-800'
                           : 'bg-yellow-100 text-yellow-800',
@@ -625,19 +889,45 @@ export default function SACPage() {
                       {d.tipo === 'reclamacao' ? 'RECLAMAÇÃO' : 'SUGESTÃO'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-white">
+                  <TableCell className="text-white whitespace-nowrap">{d.setor || '-'}</TableCell>
+                  <TableCell className="text-white whitespace-nowrap">
                     {format(parseISO(d.data_recebimento), 'dd/MM/yyyy')}
                   </TableCell>
-                  <TableCell className="text-white">
+                  <TableCell className="text-white whitespace-nowrap">
                     {format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')}
                   </TableCell>
-                  <TableCell className="font-medium text-white">{d.paciente_nome}</TableCell>
-                  <TableCell className="text-white">{d.quem_recebeu?.nome || '-'}</TableCell>
-                  <TableCell className="text-white">{d.quem_resolve?.nome || '-'}</TableCell>
+                  <TableCell className="font-medium text-white whitespace-nowrap">
+                    {d.paciente_nome}
+                  </TableCell>
+                  <TableCell className="text-white whitespace-nowrap">
+                    {d.quem_resolve?.nome || '-'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {d.descricao ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-amber-500 hover:text-amber-400 p-1.5 rounded hover:bg-amber-500/10 transition-colors inline-flex items-center justify-center"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
+                          {d.descricao}
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell className="text-white whitespace-nowrap">
+                    {d.data_prevista ? format(parseISO(d.data_prevista), 'dd/MM/yyyy') : '-'}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={cn(
-                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider text-white shadow-sm',
+                        'px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider text-white shadow-sm whitespace-nowrap',
                         d.status === 'recebido' && 'bg-red-600',
                         d.status === 'sendo_tratado' && 'bg-yellow-500',
                         d.status === 'resolvido' && 'bg-green-600',
@@ -652,7 +942,7 @@ export default function SACPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(d)}
-                        className="text-slate-300 hover:text-white hover:bg-slate-800"
+                        className="text-slate-300 hover:text-white hover:bg-slate-800 h-8 w-8"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -660,7 +950,7 @@ export default function SACPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(d.id)}
-                        className="text-red-500 hover:text-red-400 hover:bg-slate-800"
+                        className="text-red-500 hover:text-red-400 hover:bg-slate-800 h-8 w-8"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
