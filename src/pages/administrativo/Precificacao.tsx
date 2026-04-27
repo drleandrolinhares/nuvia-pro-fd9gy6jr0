@@ -4,13 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 export default function Precificacao() {
   return (
     <div className="p-6 max-w-7xl mx-auto w-full animate-fade-in-up">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-amber-500/20 rounded-lg">
+      <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-sm">
+        <div className="p-3 bg-amber-500/10 rounded-lg">
           <Calculator className="w-6 h-6 text-amber-500" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">PRECIFICAÇÃO</h1>
-          <p className="text-slate-400">
+          <h1 className="text-2xl font-bold text-white tracking-tight uppercase">PRECIFICAÇÃO</h1>
+          <p className="text-slate-400 text-sm mt-1">
             Análise de custos, formação de preços e ocupação da clínica
           </p>
         </div>
