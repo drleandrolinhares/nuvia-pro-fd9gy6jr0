@@ -107,6 +107,28 @@ export function CarteiraTab() {
 
   const loadTransactions = async (userId: string, month: string) => {
     setLoading(true)
+
+    // Fetch Global Balance
+    const { data: globalData } = await supabase
+      .from('carteira_transacoes')
+      .select('tipo, valor')
+      .eq('usuario_id', userId)
+
+    let globalBal = 0
+    if (globalData) {
+      let credits = 0
+      let debits = 0
+      let saques = 0
+      globalData.forEach((t) => {
+        if (t.tipo === 'credito') credits += Number(t.valor)
+        else if (t.tipo === 'debito') debits += Number(t.valor)
+        else if (t.tipo === 'saque') saques += Number(t.valor)
+      })
+      globalBal = credits - debits - saques
+    }
+    setBalance(globalBal)
+
+    // Fetch Month Transactions
     const { data, error } = await supabase
       .from('carteira_transacoes')
       .select('*')
@@ -120,15 +142,12 @@ export function CarteiraTab() {
       setTransactions(data)
       let pot = 0
       let per = 0
-      let sq = 0
       data.forEach((t) => {
         if (t.tipo === 'credito') pot += Number(t.valor)
         else if (t.tipo === 'debito') per += Number(t.valor)
-        else if (t.tipo === 'saque') sq += Number(t.valor)
       })
       setPotencialTotal(pot)
       setPerdasTotal(per)
-      setBalance(pot - per - sq)
     }
     setLoading(false)
   }
@@ -139,12 +158,14 @@ export function CarteiraTab() {
       return
     }
 
+    const currentMonth = format(new Date(), 'yyyy-MM')
+
     const { error } = await supabase.from('carteira_transacoes').insert({
       usuario_id: selectedUser,
       tipo: 'saque',
       valor: balance,
       descricao: 'Saque Efetuado: Resgate de Saldo',
-      mes_referencia: selectedMonth,
+      mes_referencia: currentMonth,
     })
 
     if (error) {
@@ -234,14 +255,14 @@ export function CarteiraTab() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-red-800 flex items-center gap-2">
               <ArrowDownRight className="w-4 h-4" />
-              Perdas Acumuladas
+              Perdas do Mês
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               R$ {perdasTotal.toFixed(2).replace('.', ',')}
             </div>
-            <p className="text-xs text-red-600/80 mt-1">Descontos ou metas não batidas</p>
+            <p className="text-xs text-red-600/80 mt-1">Descontos no mês selecionado</p>
           </CardContent>
         </Card>
 
@@ -250,7 +271,7 @@ export function CarteiraTab() {
             <CardTitle className="text-sm font-medium text-slate-200 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-amber-500" />
-                Saldo do Mês
+                Saldo Atual
               </span>
             </CardTitle>
           </CardHeader>
@@ -354,11 +375,12 @@ export function CarteiraTab() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-slate-600">
-              Você está prestes a solicitar/registrar o saque do saldo disponível neste mês de{' '}
+              Você está prestes a solicitar/registrar o saque do saldo total disponível de{' '}
               <strong className="text-slate-900">R$ {balance.toFixed(2).replace('.', ',')}</strong>.
             </p>
             <p className="text-sm text-slate-500 mt-2">
-              Esta ação irá zerar o saldo do mês na carteira e registrar a saída no extrato.
+              Esta ação irá zerar o saldo atual da carteira e registrar a saída no extrato do mês
+              vigente.
             </p>
           </div>
           <DialogFooter>

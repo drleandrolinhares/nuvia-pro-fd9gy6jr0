@@ -248,7 +248,7 @@ const Index = () => {
           <Card className="border-slate-800 bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[140px]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                Saldo Total Acumulado
+                Saldo Atual
               </CardTitle>
               <Wallet className="h-4 w-4 text-emerald-500" />
             </CardHeader>
