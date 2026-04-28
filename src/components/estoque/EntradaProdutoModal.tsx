@@ -352,15 +352,15 @@ export function EntradaProdutoModal({
       setHistorico([])
     }
   }
-  const qtyComprada = form.watch('quantidade_comprada') || 1
-  const itensEmb = form.watch('itens_embalagem') || 1
+  const qtyComprada = Number(form.watch('quantidade_comprada')) || 1
+  const itensEmb = Number(form.watch('itens_embalagem')) || 1
   const refConsumo = form.watch('referencia_consumo')
-  const valorTotal = form.watch('valor_total') || 0
+  const valorTotal = Number(form.watch('valor_total')) || 0
 
   const totalAdicionado = refConsumo === 'itens_embalagem' ? itensEmb : qtyComprada
   const valorAtribuido = totalAdicionado > 0 ? valorTotal / totalAdicionado : 0
   const estoqueAtual = selectedProdutoId
-    ? localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0
+    ? Number(localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque) || 0
     : 0
   const estoquePosAdicao = estoqueAtual + totalAdicionado
   const ultimaCompra = historico.length > 0 ? historico[0] : null
