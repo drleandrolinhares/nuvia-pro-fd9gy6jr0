@@ -41,6 +41,7 @@ const formSchema = z.object({
   embalagem: z.string().optional(),
   custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
   sala_id: z.string().optional(),
+  referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -76,6 +77,7 @@ export function CriarProdutoModal({
       especialidade_id: 'none',
       embalagem: '',
       custo_unitario: 0,
+      referencia_consumo: 'qtd_comprada',
     },
   })
 
@@ -89,6 +91,7 @@ export function CriarProdutoModal({
         embalagem: '',
         custo_unitario: 0,
         sala_id: 'none',
+        referencia_consumo: 'qtd_comprada',
       })
       fetchEspecialidades().then((res) => {
         if (res.data) setEspecialidades(res.data)
@@ -136,6 +139,7 @@ export function CriarProdutoModal({
       quantidade_estoque: 0,
       quantidade_minima: 0,
       custo_unitario: values.custo_unitario || 0,
+      referencia_consumo: values.referencia_consumo,
     }
 
     const { data, error } = await createProduto(payload)
@@ -304,6 +308,31 @@ export function CriarProdutoModal({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="referencia_consumo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Critério de Consumo</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="qtd_comprada">Quantidade Comprada</SelectItem>
+                      <SelectItem value="itens_embalagem">Itens na Embalagem</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Define como o estoque será incrementado nas entradas.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {camposDinamicos.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">

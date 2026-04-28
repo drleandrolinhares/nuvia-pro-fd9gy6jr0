@@ -156,6 +156,14 @@ export function VisualizarProdutoModal({
               <p className="font-semibold text-slate-900">{produto.quantidade_minima}</p>
             </div>
             <div>
+              <p className="text-sm font-medium text-slate-500">Critério de Consumo</p>
+              <Badge variant="outline" className="mt-1 font-medium bg-slate-100">
+                {produto.referencia_consumo === 'itens_embalagem'
+                  ? 'Itens na Embalagem'
+                  : 'Qtd Comprada'}
+              </Badge>
+            </div>
+            <div>
               <p className="text-sm font-medium text-slate-500">Sala / Armário</p>
               <p className="font-semibold text-slate-900">
                 {produto.sala || '-'} {produto.numero_armario ? `/ ${produto.numero_armario}` : ''}

@@ -109,7 +109,7 @@ export function PermissoesTab() {
             ) : cargos.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cargo cadastrado.</div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 items-start">
                 {cargos.map((cargo) => (
                   <div
                     key={cargo.id}
@@ -168,7 +168,7 @@ export function PermissoesTab() {
                 Carregando colaboradores...
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 items-start">
                 {usuarios.map((user) => (
                   <div
                     key={user.id}

@@ -177,9 +177,12 @@ export default function Estoque() {
     const { error } = await deleteProduto(produtoExcluir.id)
 
     if (error) {
+      const isFkError = error.message?.includes('foreign key constraint') || error.code === '23503'
       toast({
-        title: 'Erro ao excluir produto',
-        description: error.message,
+        title: 'Não é possível excluir',
+        description: isFkError
+          ? 'Este produto já possui movimentações (entradas/saídas/compras) e não pode ser excluído para preservar o histórico do sistema.'
+          : error.message,
         variant: 'destructive',
       })
     } else {

@@ -54,6 +54,9 @@ export function EditarProdutoModal({
   const [salas, setSalas] = useState<{ id: string; nome: string }[]>([])
   const [numeroArmario, setNumeroArmario] = useState('')
   const [custoUnitario, setCustoUnitario] = useState('0')
+  const [referenciaConsumo, setReferenciaConsumo] = useState<'qtd_comprada' | 'itens_embalagem'>(
+    'qtd_comprada',
+  )
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
@@ -85,6 +88,14 @@ export function EditarProdutoModal({
         setSalaId(produto.sala_id || 'none')
         setNumeroArmario(produto.numero_armario || '')
         setCustoUnitario(produto.custo_unitario?.toString() || '0')
+        if (
+          produto.referencia_consumo === 'itens_embalagem' ||
+          produto.referencia_consumo === 'qtd_comprada'
+        ) {
+          setReferenciaConsumo(produto.referencia_consumo)
+        } else {
+          setReferenciaConsumo('qtd_comprada')
+        }
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -152,6 +163,7 @@ export function EditarProdutoModal({
       sala: salaNome,
       numero_armario: numeroArmario.trim() || null,
       custo_unitario: parseFloat(custoUnitario) || 0,
+      referencia_consumo: referenciaConsumo,
     })
 
     setLoading(false)
@@ -281,6 +293,25 @@ export function EditarProdutoModal({
                 placeholder="0.00"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ref_consumo">Critério de Consumo</Label>
+            <Select
+              value={referenciaConsumo}
+              onValueChange={(val: any) => setReferenciaConsumo(val)}
+            >
+              <SelectTrigger id="ref_consumo">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="qtd_comprada">Quantidade Comprada (Unidades/Caixas)</SelectItem>
+                <SelectItem value="itens_embalagem">Itens na Embalagem (Fracionado)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">
+              Define como o estoque será incrementado nas próximas entradas.
+            </p>
           </div>
 
           {camposDinamicos.length > 0 && (

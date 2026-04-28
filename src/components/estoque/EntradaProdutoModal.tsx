@@ -604,17 +604,27 @@ export function EntradaProdutoModal({
                       </div>
                     )}
                     <FormMessage />
-                    {selectedProdutoId &&
-                      formatProdutoVariacoes(
-                        localProdutos.find((p) => p.id === selectedProdutoId),
-                      ) && (
-                        <p className="text-[11px] text-fuchsia-600 font-bold mt-1 uppercase">
-                          Variação selecionada:{' '}
-                          {formatProdutoVariacoes(
-                            localProdutos.find((p) => p.id === selectedProdutoId),
-                          )}
+                    {selectedProdutoId && (
+                      <div className="flex flex-col gap-1 mt-2">
+                        {formatProdutoVariacoes(
+                          localProdutos.find((p) => p.id === selectedProdutoId),
+                        ) && (
+                          <p className="text-[11px] text-fuchsia-600 font-bold uppercase">
+                            Variação:{' '}
+                            {formatProdutoVariacoes(
+                              localProdutos.find((p) => p.id === selectedProdutoId),
+                            )}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-amber-600 font-bold uppercase flex items-center bg-amber-50 w-fit px-2 py-0.5 rounded border border-amber-200">
+                          Critério atual do produto:{' '}
+                          {localProdutos.find((p) => p.id === selectedProdutoId)
+                            ?.referencia_consumo === 'itens_embalagem'
+                            ? 'Itens na Embalagem'
+                            : 'Quantidade Comprada'}
                         </p>
-                      )}
+                      </div>
+                    )}
                   </FormItem>
                 )}
               />
@@ -858,36 +868,49 @@ export function EntradaProdutoModal({
                   </div>
                 </div>
               </div>{' '}
-              <div className="mt-6">
+              <div className="mt-6 bg-slate-200/50 p-4 rounded-lg border border-slate-200">
                 <FormField
                   control={form.control}
                   name="referencia_consumo"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className={labelClass}>Referência de Consumo no Estoque</FormLabel>
+                      <FormLabel className={cn(labelClass, 'flex items-center gap-2')}>
+                        Referência de Consumo no Estoque
+                        {selectedProdutoId && (
+                          <span className="text-[10px] text-amber-600 font-bold bg-amber-100 px-2 py-0.5 rounded-full lowercase tracking-normal">
+                            Sugerido pelo cadastro:{' '}
+                            {localProdutos.find((p) => p.id === selectedProdutoId)
+                              ?.referencia_consumo === 'itens_embalagem'
+                              ? 'Itens na Embalagem'
+                              : 'Qtd Comprada'}
+                          </span>
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                           className="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0"
                         >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormItem className="flex items-center space-x-2 space-y-0 bg-white px-3 py-2 rounded-md border border-slate-200 shadow-sm flex-1 cursor-pointer">
                             <FormControl>
                               <RadioGroupItem
                                 value="qtd_comprada"
                                 className="text-fuchsia-600 border-slate-300"
                               />
                             </FormControl>
-                            <FormLabel className="font-normal text-sm">Qtd Comprada</FormLabel>
+                            <FormLabel className="font-semibold text-sm cursor-pointer w-full">
+                              Quantidade Comprada
+                            </FormLabel>
                           </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormItem className="flex items-center space-x-2 space-y-0 bg-white px-3 py-2 rounded-md border border-slate-200 shadow-sm flex-1 cursor-pointer">
                             <FormControl>
                               <RadioGroupItem
                                 value="itens_embalagem"
                                 className="text-fuchsia-600 border-slate-300"
                               />
                             </FormControl>
-                            <FormLabel className="font-normal text-sm">
+                            <FormLabel className="font-semibold text-sm cursor-pointer w-full">
                               Itens na Embalagem
                             </FormLabel>
                           </FormItem>
