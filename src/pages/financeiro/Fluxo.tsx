@@ -185,37 +185,40 @@ export default function Fluxo() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
-            <Waves className="h-8 w-8 text-[#C5A059]" />
-            Ondas de Liquidez
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Sincronização de receitas e planejamento de contas a pagar.
-          </p>
-        </div>
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C5A059]"></div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+              <Waves className="h-6 w-6 text-[#C5A059]" />
+              Ondas de Liquidez
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm">
+              Sincronização de receitas e planejamento de contas a pagar.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-4 bg-[#001529] p-1.5 rounded-lg border border-slate-800">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <span className="font-medium text-lg w-32 text-center text-[#C5A059] capitalize">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-4 bg-slate-950 p-1.5 rounded-lg border border-slate-800 shadow-inner">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <span className="font-medium w-32 text-center text-[#C5A059] capitalize">
+              {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -255,48 +258,58 @@ export default function Fluxo() {
           return (
             <Card
               key={c}
-              className="border-slate-800 bg-[#001529]/20 flex flex-col overflow-hidden"
+              className="border-slate-800 bg-slate-900/50 flex flex-col overflow-hidden shadow-lg"
             >
-              <CardHeader className="pb-3 border-b border-[#001529] bg-[#001529]">
-                <div className="flex justify-between items-start mb-2">
-                  <Badge variant="outline" className="bg-[#000d1a] border-slate-700 text-[#C5A059]">
+              <CardHeader className="pb-4 border-b border-slate-800 bg-slate-900 relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#C5A059]/20"></div>
+                <div className="flex justify-between items-start mb-3">
+                  <Badge
+                    variant="outline"
+                    className="bg-slate-950 border-slate-700 text-[#C5A059] font-semibold"
+                  >
                     Ciclo {c}
                   </Badge>
                   <Badge variant="outline" className={statusColor}>
                     {statusText}
                   </Badge>
                 </div>
-                <CardTitle className="text-lg text-slate-100">Boletos: Dia {info.boleto}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="text-lg text-slate-100 flex items-center gap-2">
+                  Boletos: Dia {info.boleto}
+                </CardTitle>
+                <CardDescription className="text-slate-400 mt-1">
                   Disponível ~Dia {info.disp} <br />
                   Cobre despesas de {info.start} a {info.end}
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-4 flex-1 flex flex-col gap-5">
+              <CardContent className="pt-5 flex-1 flex flex-col gap-6">
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400 font-semibold tracking-wider uppercase">
                     Receita Estimada
                   </Label>
                   <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      value={receitaInputs[c] || ''}
-                      onChange={(e) =>
-                        setReceitaInputs((prev) => ({ ...prev, [c]: e.target.value }))
-                      }
-                      className="bg-slate-950 border-slate-800 text-[#C5A059] font-medium placeholder:text-slate-600"
-                      placeholder="0.00"
-                    />
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                        R$
+                      </span>
+                      <Input
+                        type="number"
+                        value={receitaInputs[c] || ''}
+                        onChange={(e) =>
+                          setReceitaInputs((prev) => ({ ...prev, [c]: e.target.value }))
+                        }
+                        className="bg-slate-950 border-slate-700 text-[#C5A059] font-semibold pl-9 placeholder:text-slate-600 focus-visible:ring-[#C5A059]/50 w-full"
+                        placeholder="0,00"
+                      />
+                    </div>
                     <Button
-                      className="bg-[#C5A059] hover:bg-[#b08d4d] text-[#001529] font-bold"
+                      className="bg-[#C5A059] hover:bg-[#b08d4d] text-[#001529] font-bold shadow-sm"
                       onClick={() => handleSaveReceita(c)}
                     >
                       Salvar
                     </Button>
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Despesas</span>
@@ -322,19 +335,20 @@ export default function Fluxo() {
                     <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                       <DialogTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-xs text-[#C5A059] hover:text-[#b08d4d] hover:bg-[#C5A059]/10"
+                          className="h-7 px-2 text-xs border-[#C5A059]/30 text-[#C5A059] hover:bg-[#C5A059]/10 bg-transparent"
                         >
                           <Plus className="h-3 w-3 mr-1" /> Adicionar
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="border-slate-800 bg-[#001529] text-slate-200 sm:max-w-[425px]">
+                      <DialogContent className="border-slate-800 bg-slate-900 text-slate-200 sm:max-w-[425px]">
                         <DialogHeader>
-                          <DialogTitle className="text-slate-100">
+                          <DialogTitle className="text-slate-100 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-[#C5A059] rounded-full inline-block"></span>
                             Nova Despesa Estimada
                           </DialogTitle>
-                        </DialogHeader>
+                        </DialogHeader>{' '}
                         <div className="grid gap-4 py-4">
                           <div className="grid gap-2">
                             <Label className="text-slate-300">Data de Vencimento</Label>
@@ -420,8 +434,9 @@ export default function Fluxo() {
                       cycleDespesas.map((d) => (
                         <div
                           key={d.id}
-                          className="flex flex-col bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 group hover:border-slate-700 transition-colors"
+                          className="flex flex-col bg-slate-800/40 p-3 rounded-lg border border-slate-700/50 group hover:border-slate-600 transition-colors"
                         >
+                          {' '}
                           <div className="flex justify-between items-start">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-slate-300 truncate max-w-[140px]">
