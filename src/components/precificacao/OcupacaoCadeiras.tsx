@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Plus, Trash2, Settings } from 'lucide-react'
+import { Loader2, Plus, Trash2, Settings, Copy } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   Dialog,
@@ -9,6 +9,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -98,6 +104,7 @@ type OcupacaoData = {
   consultorio: string
   turno: string
   dia_semana: string
+  semana?: number
   especialidade: string | null
   dentista: string | null
   horas_trabalhadas: number | null
@@ -119,10 +126,12 @@ export function OcupacaoCadeiras({
   const [internalIsConfigOpen, setInternalIsConfigOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [activeWeek, setActiveWeek] = useState(1)
   const [editingCell, setEditingCell] = useState<{
     consultorio: string
     turno: string
     dia: string
+    semana: number
   } | null>(null)
   const [form, setForm] = useState({ especialidade: '', dentista: '', horas: '', cor: '' })
 
@@ -143,13 +152,13 @@ export function OcupacaoCadeiras({
   const fetchData = async () => {
     try {
       const { data: records, error } = await supabase
-        .from('precificacao_ocupacao_cadeiras')
+        .from('precificacao_ocupacao_cadeiras' as any)
         .select('*')
       if (error) throw error
 
       const map: Record<string, OcupacaoData> = {}
-      records?.forEach((r) => {
-        map[`${r.consultorio}_${r.turno}_${r.dia_semana}`] = r
+      records?.forEach((r: any) => {
+        map[`${r.consultorio}_${r.turno}_${r.dia_semana}_${r.semana || 1}`] = r
       })
       setData(map)
     } catch (err) {
@@ -167,7 +176,10 @@ export function OcupacaoCadeiras({
 
   useEffect(() => {
     if (editingCell) {
-      const existing = data[`${editingCell.consultorio}_${editingCell.turno}_${editingCell.dia}`]
+      const existing =
+        data[
+          `${editingCell.consultorio}_${editingCell.turno}_${editingCell.dia}_${editingCell.semana}`
+        ]
       setForm({
         especialidade: existing?.especialidade || '',
         dentista: existing?.dentista || '',
@@ -249,25 +261,26 @@ export function OcupacaoCadeiras({
     setSaving(true)
 
     try {
-      const { consultorio, turno, dia } = editingCell
+      const { consultorio, turno, dia, semana } = editingCell
 
       if (!form.especialidade) {
         await supabase
-          .from('precificacao_ocupacao_cadeiras')
+          .from('precificacao_ocupacao_cadeiras' as any)
           .delete()
-          .match({ consultorio, turno, dia_semana: dia })
+          .match({ consultorio, turno, dia_semana: dia, semana })
       } else {
-        await supabase.from('precificacao_ocupacao_cadeiras').upsert(
+        await supabase.from('precificacao_ocupacao_cadeiras' as any).upsert(
           {
             consultorio,
             turno,
             dia_semana: dia,
+            semana,
             especialidade: form.especialidade,
             dentista: form.dentista,
             horas_trabalhadas: Number(form.horas) || 0,
             cor: form.cor,
           },
-          { onConflict: 'consultorio,turno,dia_semana' },
+          { onConflict: 'consultorio,turno,dia_semana,semana' } as any,
         )
       }
 
@@ -286,6 +299,42 @@ export function OcupacaoCadeiras({
     await handleSave()
   }
 
+  const handleReplicarSemana = async (targetWeeks: number[]) => {
+    setSaving(true)
+    try {
+      const currentWeekData = Object.values(data).filter((d) => (d.semana || 1) === activeWeek)
+
+      for (const targetWeek of targetWeeks) {
+        await supabase
+          .from('precificacao_ocupacao_cadeiras' as any)
+          .delete()
+          .match({ semana: targetWeek })
+
+        if (currentWeekData.length > 0) {
+          const newData = currentWeekData.map((d) => ({
+            consultorio: d.consultorio,
+            turno: d.turno,
+            dia_semana: d.dia_semana,
+            semana: targetWeek,
+            especialidade: d.especialidade,
+            dentista: d.dentista,
+            horas_trabalhadas: d.horas_trabalhadas,
+            cor: d.cor,
+          }))
+          await supabase.from('precificacao_ocupacao_cadeiras' as any).insert(newData)
+        }
+      }
+
+      toast({ title: 'Semana replicada com sucesso' })
+      fetchData()
+    } catch (err) {
+      console.error(err)
+      toast({ title: 'Erro ao replicar semana', variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
@@ -301,17 +350,21 @@ export function OcupacaoCadeiras({
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Total Geral
+              Total Mensal
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{metrics.totalHoras}h</div>
+            <p className="text-[10px] text-slate-500 mt-1">Soma das 4 semanas</p>
           </CardContent>
         </Card>
         {CONSULTORIOS.map((c) => (
           <Card key={c} className="bg-slate-900 border-slate-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <CardTitle
+                className="text-xs font-semibold text-slate-400 uppercase tracking-wider truncate"
+                title={c}
+              >
                 {c}
               </CardTitle>
             </CardHeader>
@@ -319,6 +372,7 @@ export function OcupacaoCadeiras({
               <div className="text-3xl font-bold text-amber-500">
                 {metrics.horasPorConsultorio[c]}h
               </div>
+              <p className="text-[10px] text-slate-500 mt-1">Mês (4 semanas)</p>
             </CardContent>
           </Card>
         ))}
@@ -328,7 +382,7 @@ export function OcupacaoCadeiras({
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-slate-200">
-              Ranking por Dentista
+              Ranking por Dentista (Mensal)
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-6">
@@ -374,7 +428,7 @@ export function OcupacaoCadeiras({
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-slate-200">
-              Ranking por Especialidade
+              Ranking por Especialidade (Mensal)
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-6">
@@ -418,6 +472,57 @@ export function OcupacaoCadeiras({
         </Card>
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1">
+          {[1, 2, 3, 4].map((w) => (
+            <button
+              key={w}
+              onClick={() => setActiveWeek(w)}
+              className={cn(
+                'px-4 py-1.5 text-sm font-medium rounded-md transition-all',
+                activeWeek === w
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
+              )}
+            >
+              Semana {w}
+            </button>
+          ))}
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Replicar Semana {activeWeek}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-200">
+            <DropdownMenuItem
+              onClick={() => handleReplicarSemana([1, 2, 3, 4].filter((w) => w !== activeWeek))}
+              className="focus:bg-slate-800 focus:text-white cursor-pointer font-medium"
+            >
+              Para todas as outras semanas
+            </DropdownMenuItem>
+            {[1, 2, 3, 4]
+              .filter((w) => w !== activeWeek)
+              .map((w) => (
+                <DropdownMenuItem
+                  key={w}
+                  onClick={() => handleReplicarSemana([w])}
+                  className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                >
+                  Apenas para a Semana {w}
+                </DropdownMenuItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <Table className="min-w-[900px] border-collapse">
@@ -459,7 +564,7 @@ export function OcupacaoCadeiras({
                         {t}
                       </TableCell>
                       {DIAS.map((d) => {
-                        const cellData = data[`${c}_${t}_${d.id}`]
+                        const cellData = data[`${c}_${t}_${d.id}_${activeWeek}`]
                         const colorObj =
                           PRESET_COLORS.find((pc) => pc.value === cellData?.cor) || PRESET_COLORS[0]
                         return (
@@ -469,7 +574,12 @@ export function OcupacaoCadeiras({
                           >
                             <div
                               onClick={() =>
-                                setEditingCell({ consultorio: c, turno: t, dia: d.id })
+                                setEditingCell({
+                                  consultorio: c,
+                                  turno: t,
+                                  dia: d.id,
+                                  semana: activeWeek,
+                                })
                               }
                               className={cn(
                                 'p-2 rounded-md border text-xs min-h-[85px] flex flex-col items-start justify-start cursor-pointer transition-all hover:scale-[1.02]',
@@ -520,7 +630,7 @@ export function OcupacaoCadeiras({
       <Dialog open={!!editingCell} onOpenChange={(open) => !open && setEditingCell(null)}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Editar Ocupação</DialogTitle>
+            <DialogTitle>Editar Ocupação - Semana {editingCell?.semana}</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
