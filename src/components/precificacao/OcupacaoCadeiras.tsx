@@ -98,6 +98,18 @@ const PRESET_COLORS = [
     textClass: 'text-cyan-400',
     value: 'cyan',
   },
+  {
+    name: 'Vermelho',
+    class: 'bg-red-600 border-red-500 text-white',
+    textClass: 'text-red-400',
+    value: 'red',
+  },
+  {
+    name: 'Branco',
+    class: 'bg-white border-slate-300 text-slate-900',
+    textClass: 'text-white',
+    value: 'white',
+  },
 ]
 
 type OcupacaoData = {
