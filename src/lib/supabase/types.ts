@@ -1653,6 +1653,44 @@ export type Database = {
         }
         Relationships: []
       }
+      precificacao_custos_fixos_detalhes: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          custo_fixo_id: string
+          descricao: string
+          id: string
+          ordem: number
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          custo_fixo_id: string
+          descricao: string
+          id?: string
+          ordem?: number
+          valor?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          custo_fixo_id?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'precificacao_custos_fixos_detalhes_custo_fixo_id_fkey'
+            columns: ['custo_fixo_id']
+            isOneToOne: false
+            referencedRelation: 'precificacao_custos_fixos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       precificacao_ocupacao_cadeiras: {
         Row: {
           atualizado_em: string
@@ -3308,6 +3346,14 @@ export const Constants = {
 //   ativo: boolean (not null, default: true)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_custos_fixos_detalhes
+//   id: uuid (not null, default: gen_random_uuid())
+//   custo_fixo_id: uuid (not null)
+//   descricao: text (not null)
+//   valor: numeric (not null, default: 0)
+//   ordem: integer (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: precificacao_ocupacao_cadeiras
 //   id: uuid (not null, default: gen_random_uuid())
 //   consultorio: text (not null)
@@ -3696,6 +3742,9 @@ export const Constants = {
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: precificacao_custos_fixos
 //   PRIMARY KEY precificacao_custos_fixos_pkey: PRIMARY KEY (id)
+// Table: precificacao_custos_fixos_detalhes
+//   FOREIGN KEY precificacao_custos_fixos_detalhes_custo_fixo_id_fkey: FOREIGN KEY (custo_fixo_id) REFERENCES precificacao_custos_fixos(id) ON DELETE CASCADE
+//   PRIMARY KEY precificacao_custos_fixos_detalhes_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_cadeiras
 //   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem: UNIQUE (consultorio, turno, dia_semana, semana)
 //   PRIMARY KEY precificacao_ocupacao_cadeiras_pkey: PRIMARY KEY (id)
@@ -4031,6 +4080,10 @@ export const Constants = {
 //     USING: true
 // Table: precificacao_custos_fixos
 //   Policy "precificacao_custos_fixos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: precificacao_custos_fixos_detalhes
+//   Policy "precificacao_custos_fixos_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: precificacao_ocupacao_cadeiras

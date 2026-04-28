@@ -250,7 +250,7 @@ export function CarteiraTab() {
             <CardTitle className="text-sm font-medium text-slate-200 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-amber-500" />
-                Saldo Atual
+                Saldo do Mês
               </span>
             </CardTitle>
           </CardHeader>
@@ -354,11 +354,11 @@ export function CarteiraTab() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-slate-600">
-              Você está prestes a solicitar/registrar o saque do saldo total disponível de{' '}
+              Você está prestes a solicitar/registrar o saque do saldo disponível neste mês de{' '}
               <strong className="text-slate-900">R$ {balance.toFixed(2).replace('.', ',')}</strong>.
             </p>
             <p className="text-sm text-slate-500 mt-2">
-              Esta ação irá zerar o saldo atual da carteira e registrar a saída no extrato.
+              Esta ação irá zerar o saldo do mês na carteira e registrar a saída no extrato.
             </p>
           </div>
           <DialogFooter>
