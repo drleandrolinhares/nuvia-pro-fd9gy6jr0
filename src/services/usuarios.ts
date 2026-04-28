@@ -29,6 +29,11 @@ export async function updateUsuarioStatus(id: string, status: string) {
   if (error) throw error
 }
 
+export async function updateUsuarioRole(id: string, role: string) {
+  const { error } = await supabase.from('usuarios').update({ role }).eq('id', id)
+  if (error) throw error
+}
+
 export async function getColaboradorDetalhes(usuarioId: string) {
   const { data, error } = await supabase
     .from('colaboradores_detalhes')

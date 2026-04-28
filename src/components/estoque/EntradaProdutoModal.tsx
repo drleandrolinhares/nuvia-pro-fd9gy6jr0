@@ -526,14 +526,24 @@ export function EntradaProdutoModal({
                     </FormControl>
                     {openProduto && (
                       <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-md shadow-lg p-1">
-                        {localProdutos.filter((p) =>
-                          p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
-                        ).length > 0 ? (
+                        {localProdutos.filter((p) => {
+                          const searchTerm = field.value?.toLowerCase() || ''
+                          return (
+                            p.nome.toLowerCase().includes(searchTerm) ||
+                            (p.marca?.toLowerCase() || '').includes(searchTerm) ||
+                            formatProdutoVariacoes(p).toLowerCase().includes(searchTerm)
+                          )
+                        }).length > 0 ? (
                           <>
                             {localProdutos
-                              .filter((p) =>
-                                p.nome.toLowerCase().includes(field.value?.toLowerCase() || ''),
-                              )
+                              .filter((p) => {
+                                const searchTerm = field.value?.toLowerCase() || ''
+                                return (
+                                  p.nome.toLowerCase().includes(searchTerm) ||
+                                  (p.marca?.toLowerCase() || '').includes(searchTerm) ||
+                                  formatProdutoVariacoes(p).toLowerCase().includes(searchTerm)
+                                )
+                              })
                               .map((p) => (
                                 <div
                                   key={p.id}

@@ -3,6 +3,7 @@ import {
   getUsuarios,
   getCargos,
   updateUsuarioStatus,
+  updateUsuarioRole,
   checkHasPermission,
   UsuarioWithCargo,
 } from '@/services/usuarios'
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Switch } from '@/components/ui/switch'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -192,6 +194,17 @@ export default function Usuarios() {
     } catch (error) {
       console.error(error)
       toast.error('Erro ao atualizar status')
+    }
+  }
+
+  const handleToggleRole = async (id: string, newRole: string) => {
+    try {
+      await updateUsuarioRole(id, newRole)
+      setUsuarios(usuarios.map((u) => (u.id === id ? { ...u, role: newRole } : u)))
+      toast.success(`Permissão atualizada com sucesso`)
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao atualizar permissão')
     }
   }
 
@@ -406,6 +419,7 @@ export default function Usuarios() {
                   Total
                 </TableHead>
                 <TableHead className="px-2 text-right whitespace-nowrap">Saldo Carteira</TableHead>
+                <TableHead className="px-2 text-center">Admin</TableHead>
                 <TableHead className="px-2">Status</TableHead>
                 <TableHead className="w-[60px] px-2 text-right">Ações</TableHead>
               </TableRow>
@@ -530,6 +544,17 @@ export default function Usuarios() {
                         >
                           R$ {(usuario.saldo_carteira || 0).toFixed(2).replace('.', ',')}
                         </span>
+                      </TableCell>
+
+                      <TableCell className="px-2 text-center">
+                        <Switch
+                          checked={usuario.role === 'admin'}
+                          onCheckedChange={(checked) =>
+                            handleToggleRole(usuario.id, checked ? 'admin' : 'user')
+                          }
+                          disabled={!isAdmin || usuario.id === profile?.id}
+                          className="data-[state=checked]:bg-amber-500"
+                        />
                       </TableCell>
 
                       <TableCell className="px-2">
