@@ -49,17 +49,6 @@ export const registrarEntrada = async (dados: {
     .single()
 
   const precoAnterior = Number(produto?.custo_unitario || 0)
-  const estoqueAtual = Number(produto?.quantidade_estoque || 0)
-  const refConsumo = produto?.referencia_consumo
-
-  // Calculate the correct amount to add based on the consumption reference
-  // and force mathematical addition to prevent string concatenation
-  const quantidadeAdicionada =
-    refConsumo === 'itens_embalagem'
-      ? Number(dados.quantidade_embalagem)
-      : Number(dados.quantidade_comprada)
-
-  const novoEstoque = estoqueAtual + quantidadeAdicionada
 
   // Insert entrada
   const { data: entrada, error: entradaError } = await supabase
@@ -91,11 +80,10 @@ export const registrarEntrada = async (dados: {
     data_compra: dados.data_entrada,
   })
 
-  // Update product stock and cost
+  // Update product cost only (stock is handled by trigger trg_atualiza_estoque_entrada)
   await supabase
     .from('produtos')
     .update({
-      quantidade_estoque: novoEstoque,
       custo_unitario: Number(dados.preco_unitario),
     })
     .eq('id', dados.produto_id)
