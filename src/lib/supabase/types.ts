@@ -1571,6 +1571,7 @@ export type Database = {
           especialidade: string | null
           horas_trabalhadas: number | null
           id: string
+          semana: number
           turno: string
         }
         Insert: {
@@ -1583,6 +1584,7 @@ export type Database = {
           especialidade?: string | null
           horas_trabalhadas?: number | null
           id?: string
+          semana?: number
           turno: string
         }
         Update: {
@@ -1595,6 +1597,7 @@ export type Database = {
           especialidade?: string | null
           horas_trabalhadas?: number | null
           id?: string
+          semana?: number
           turno?: string
         }
         Relationships: []
@@ -3190,6 +3193,7 @@ export const Constants = {
 //   cor: text (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   semana: integer (not null, default: 1)
 // Table: precificacao_ocupacao_config
 //   id: uuid (not null, default: gen_random_uuid())
 //   tipo: text (not null)
@@ -3559,7 +3563,7 @@ export const Constants = {
 // Table: precificacao_custos_fixos
 //   PRIMARY KEY precificacao_custos_fixos_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_cadeiras
-//   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key: UNIQUE (consultorio, turno, dia_semana)
+//   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem: UNIQUE (consultorio, turno, dia_semana, semana)
 //   PRIMARY KEY precificacao_ocupacao_cadeiras_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_config
 //   PRIMARY KEY precificacao_ocupacao_config_pkey: PRIMARY KEY (id)
@@ -4589,7 +4593,7 @@ export const Constants = {
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: precificacao_ocupacao_cadeiras
-//   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana)
+//   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana, semana)
 // Table: precificacao_ocupacao_config
 //   CREATE UNIQUE INDEX precificacao_ocupacao_config_tipo_nome_idx ON public.precificacao_ocupacao_config USING btree (tipo, nome)
 // Table: produto_campos_valores

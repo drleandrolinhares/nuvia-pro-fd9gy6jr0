@@ -295,8 +295,26 @@ export function OcupacaoCadeiras({
   }
 
   const handleDelete = async () => {
-    setForm({ especialidade: '', dentista: '', horas: '', cor: '' })
-    await handleSave()
+    if (!editingCell) return
+    setSaving(true)
+
+    try {
+      const { consultorio, turno, dia, semana } = editingCell
+
+      await supabase
+        .from('precificacao_ocupacao_cadeiras' as any)
+        .delete()
+        .match({ consultorio, turno, dia_semana: dia, semana })
+
+      toast({ title: 'Removido com sucesso' })
+      setEditingCell(null)
+      setForm({ especialidade: '', dentista: '', horas: '', cor: '' })
+      fetchData()
+    } catch (err) {
+      toast({ title: 'Erro ao remover', variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleReplicarSemana = async (targetWeeks: number[]) => {
