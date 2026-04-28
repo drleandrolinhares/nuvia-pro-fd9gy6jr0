@@ -239,16 +239,26 @@ export default function Estoque() {
     }
   }, [produtosDashboard])
 
-  const filteredData = produtosDashboard.filter((item) => {
-    const matchesSearch =
-      item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.marca?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  const filteredData = useMemo(() => {
+    return produtosDashboard.filter((item) => {
+      const searchLower = searchTerm.toLowerCase()
+      const tamanho = camposDinamicos[item.id]?.tamanho || ''
+      const diametro = camposDinamicos[item.id]?.diametro || ''
 
-    const isCritico = item.quantidade_estoque <= item.quantidade_minima
-    const matchesStatus = showCriticalOnly ? isCritico : true
+      const matchesSearch =
+        searchTerm === '' ||
+        item.nome.toLowerCase().includes(searchLower) ||
+        (item.marca?.toLowerCase() || '').includes(searchLower) ||
+        (item.variacao?.toLowerCase() || '').includes(searchLower) ||
+        tamanho.toLowerCase().includes(searchLower) ||
+        diametro.toLowerCase().includes(searchLower)
 
-    return matchesSearch && matchesStatus
-  })
+      const isCritico = item.quantidade_estoque <= item.quantidade_minima
+      const matchesStatus = showCriticalOnly && searchTerm === '' ? isCritico : true
+
+      return matchesSearch && matchesStatus
+    })
+  }, [produtosDashboard, searchTerm, showCriticalOnly, camposDinamicos])
 
   const groupedData = useMemo(() => {
     const groups: Record<string, Produto[]> = {}
@@ -484,7 +494,7 @@ export default function Estoque() {
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                       <Input
                         type="text"
-                        placeholder="Buscar por nome/marca..."
+                        placeholder="Buscar por nome, marca, variação..."
                         className="pl-9 border-slate-300 focus-visible:ring-slate-900"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -554,7 +564,7 @@ export default function Estoque() {
                     </TableRow>
                   ) : (
                     groupedData.map((group) => {
-                      const isExpanded = expandedGroups.has(group.nome)
+                      const isExpanded = expandedGroups.has(group.nome) || searchTerm.trim() !== ''
                       return (
                         <React.Fragment key={group.nome}>
                           <TableRow
