@@ -54,6 +54,7 @@ export function CarteiraTab() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [balance, setBalance] = useState(0)
+  const [saldoPeriodo, setSaldoPeriodo] = useState(0)
   const [potencialTotal, setPotencialTotal] = useState(0)
   const [perdasTotal, setPerdasTotal] = useState(0)
 
@@ -89,7 +90,6 @@ export function CarteiraTab() {
         setSelectedUser(data[0].id)
       }
     }
-    if (data) setUsers(data)
   }
 
   const handleGerarAdiantamentos = async () => {
@@ -142,12 +142,15 @@ export function CarteiraTab() {
       setTransactions(data)
       let pot = 0
       let per = 0
+      let saq = 0
       data.forEach((t) => {
         if (t.tipo === 'credito') pot += Number(t.valor)
         else if (t.tipo === 'debito') per += Number(t.valor)
+        else if (t.tipo === 'saque') saq += Number(t.valor)
       })
       setPotencialTotal(pot)
       setPerdasTotal(per)
+      setSaldoPeriodo(pot - per - saq)
     }
     setLoading(false)
   }
@@ -164,7 +167,7 @@ export function CarteiraTab() {
       usuario_id: selectedUser,
       tipo: 'saque',
       valor: balance,
-      descricao: 'Saque Efetuado: Resgate de Saldo',
+      descricao: 'Saque Efetuado: Resgate de Saldo Total Acumulado',
       mes_referencia: currentMonth,
     })
 
@@ -271,18 +274,24 @@ export function CarteiraTab() {
             <CardTitle className="text-sm font-medium text-slate-200 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-amber-500" />
-                Saldo Atual
+                Saldo do Período
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight mb-2">
-              R$ {balance.toFixed(2).replace('.', ',')}
+            <div className="text-3xl font-bold tracking-tight mb-1">
+              R$ {saldoPeriodo.toFixed(2).replace('.', ',')}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2 pb-1 border-b border-slate-700">
+              <span>Saldo Total Acumulado:</span>
+              <span className="font-semibold text-emerald-400">
+                R$ {balance.toFixed(2).replace('.', ',')}
+              </span>
             </div>
             <Button
               onClick={() => setIsSaqueDialogOpen(true)}
               disabled={balance <= 0 || (!isAdmin && selectedUser !== user?.id)}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full h-8 text-sm mt-2"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full h-8 text-sm"
             >
               <DollarSign className="w-3 h-3 mr-1" />
               Solicitar Saque
@@ -375,11 +384,11 @@ export function CarteiraTab() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-slate-600">
-              Você está prestes a solicitar/registrar o saque do saldo total disponível de{' '}
+              Você está prestes a solicitar/registrar o saque do saldo total acumulado de{' '}
               <strong className="text-slate-900">R$ {balance.toFixed(2).replace('.', ',')}</strong>.
             </p>
             <p className="text-sm text-slate-500 mt-2">
-              Esta ação irá zerar o saldo atual da carteira e registrar a saída no extrato do mês
+              Esta ação irá zerar o saldo total da carteira e registrar a saída no extrato do mês
               vigente.
             </p>
           </div>
