@@ -104,11 +104,19 @@ type OcupacaoData = {
   cor: string | null
 }
 
-export function OcupacaoCadeiras() {
+interface OcupacaoCadeirasProps {
+  isConfigOpen?: boolean
+  setIsConfigOpen?: (open: boolean) => void
+}
+
+export function OcupacaoCadeiras({
+  isConfigOpen: externalIsConfigOpen,
+  setIsConfigOpen: externalSetIsConfigOpen,
+}: OcupacaoCadeirasProps) {
   const { toast } = useToast()
   const [data, setData] = useState<Record<string, OcupacaoData>>({})
   const [configItems, setConfigItems] = useState<ConfigItem[]>([])
-  const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [internalIsConfigOpen, setInternalIsConfigOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingCell, setEditingCell] = useState<{
@@ -117,6 +125,10 @@ export function OcupacaoCadeiras() {
     dia: string
   } | null>(null)
   const [form, setForm] = useState({ especialidade: '', dentista: '', horas: '', cor: '' })
+
+  const isConfigOpen =
+    externalIsConfigOpen !== undefined ? externalIsConfigOpen : internalIsConfigOpen
+  const setIsConfigOpen = externalSetIsConfigOpen || setInternalIsConfigOpen
 
   const fetchConfig = async () => {
     const { data: configData, error } = await supabase
@@ -285,17 +297,6 @@ export function OcupacaoCadeiras() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-2">
-        <Button
-          variant="outline"
-          onClick={() => setIsConfigOpen(true)}
-          className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white gap-2"
-        >
-          <Settings className="w-4 h-4" />
-          Configurar Listas
-        </Button>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-5">
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="pb-2">

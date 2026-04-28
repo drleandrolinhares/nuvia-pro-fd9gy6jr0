@@ -1599,6 +1599,27 @@ export type Database = {
         }
         Relationships: []
       }
+      precificacao_ocupacao_config: {
+        Row: {
+          criado_em: string
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          nome: string
+          tipo: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          nome?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       produto_campos_valores: {
         Row: {
           atualizado_em: string
@@ -3169,6 +3190,11 @@ export const Constants = {
 //   cor: text (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_ocupacao_config
+//   id: uuid (not null, default: gen_random_uuid())
+//   tipo: text (not null)
+//   nome: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: produto_campos_valores
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3535,6 +3561,9 @@ export const Constants = {
 // Table: precificacao_ocupacao_cadeiras
 //   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key: UNIQUE (consultorio, turno, dia_semana)
 //   PRIMARY KEY precificacao_ocupacao_cadeiras_pkey: PRIMARY KEY (id)
+// Table: precificacao_ocupacao_config
+//   PRIMARY KEY precificacao_ocupacao_config_pkey: PRIMARY KEY (id)
+//   CHECK precificacao_ocupacao_config_tipo_check: CHECK ((tipo = ANY (ARRAY['especialidade'::text, 'dentista'::text])))
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
@@ -3856,6 +3885,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: precificacao_ocupacao_cadeiras
 //   Policy "precificacao_ocupacao_cadeiras_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: precificacao_ocupacao_config
+//   Policy "precificacao_ocupacao_config_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: produto_campos_valores
@@ -4557,6 +4590,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
 // Table: precificacao_ocupacao_cadeiras
 //   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana)
+// Table: precificacao_ocupacao_config
+//   CREATE UNIQUE INDEX precificacao_ocupacao_config_tipo_nome_idx ON public.precificacao_ocupacao_config USING btree (tipo, nome)
 // Table: produto_campos_valores
 //   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
 // Table: rotinas_usuarios
