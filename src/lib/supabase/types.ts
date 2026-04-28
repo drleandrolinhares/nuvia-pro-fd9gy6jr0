@@ -1560,6 +1560,45 @@ export type Database = {
         }
         Relationships: []
       }
+      precificacao_ocupacao_cadeiras: {
+        Row: {
+          atualizado_em: string
+          consultorio: string
+          cor: string | null
+          criado_em: string
+          dentista: string | null
+          dia_semana: string
+          especialidade: string | null
+          horas_trabalhadas: number | null
+          id: string
+          turno: string
+        }
+        Insert: {
+          atualizado_em?: string
+          consultorio: string
+          cor?: string | null
+          criado_em?: string
+          dentista?: string | null
+          dia_semana: string
+          especialidade?: string | null
+          horas_trabalhadas?: number | null
+          id?: string
+          turno: string
+        }
+        Update: {
+          atualizado_em?: string
+          consultorio?: string
+          cor?: string | null
+          criado_em?: string
+          dentista?: string | null
+          dia_semana?: string
+          especialidade?: string | null
+          horas_trabalhadas?: number | null
+          id?: string
+          turno?: string
+        }
+        Relationships: []
+      }
       produto_campos_valores: {
         Row: {
           atualizado_em: string
@@ -3119,6 +3158,17 @@ export const Constants = {
 //   ativo: boolean (not null, default: true)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_ocupacao_cadeiras
+//   id: uuid (not null, default: gen_random_uuid())
+//   consultorio: text (not null)
+//   turno: text (not null)
+//   dia_semana: text (not null)
+//   especialidade: text (nullable)
+//   dentista: text (nullable)
+//   horas_trabalhadas: numeric (nullable, default: 0)
+//   cor: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: produto_campos_valores
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3482,6 +3532,9 @@ export const Constants = {
 //   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
 // Table: precificacao_custos_fixos
 //   PRIMARY KEY precificacao_custos_fixos_pkey: PRIMARY KEY (id)
+// Table: precificacao_ocupacao_cadeiras
+//   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key: UNIQUE (consultorio, turno, dia_semana)
+//   PRIMARY KEY precificacao_ocupacao_cadeiras_pkey: PRIMARY KEY (id)
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
@@ -3799,6 +3852,10 @@ export const Constants = {
 //     USING: true
 // Table: precificacao_custos_fixos
 //   Policy "precificacao_custos_fixos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: precificacao_ocupacao_cadeiras
+//   Policy "precificacao_ocupacao_cadeiras_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: produto_campos_valores
@@ -4498,6 +4555,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX performance_pp_pdm_usuario_id_data_registro_key ON public.performance_pp_pdm USING btree (usuario_id, data_registro)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
+// Table: precificacao_ocupacao_cadeiras
+//   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_key ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana)
 // Table: produto_campos_valores
 //   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
 // Table: rotinas_usuarios

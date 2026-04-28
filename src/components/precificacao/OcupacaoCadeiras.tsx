@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 const DIAS = [
@@ -35,14 +36,54 @@ const CONSULTORIOS = ['Consultório 1', 'Consultório 2', 'Consultório 3', 'Con
 const TURNOS = ['Manhã', 'Tarde']
 
 const PRESET_COLORS = [
-  { name: 'Nenhuma', class: 'bg-slate-800 border-slate-700 text-slate-300', value: '' },
-  { name: 'Azul', class: 'bg-blue-600 border-blue-500 text-white', value: 'blue' },
-  { name: 'Verde', class: 'bg-emerald-600 border-emerald-500 text-white', value: 'emerald' },
-  { name: 'Roxo', class: 'bg-purple-600 border-purple-500 text-white', value: 'purple' },
-  { name: 'Laranja', class: 'bg-orange-600 border-orange-500 text-white', value: 'orange' },
-  { name: 'Rosa', class: 'bg-pink-600 border-pink-500 text-white', value: 'pink' },
-  { name: 'Amarelo', class: 'bg-amber-500 border-amber-400 text-slate-950', value: 'amber' },
-  { name: 'Ciano', class: 'bg-cyan-600 border-cyan-500 text-white', value: 'cyan' },
+  {
+    name: 'Nenhuma',
+    class: 'bg-slate-800 border-slate-700 text-slate-300',
+    textClass: 'text-slate-300',
+    value: '',
+  },
+  {
+    name: 'Azul',
+    class: 'bg-blue-600 border-blue-500 text-white',
+    textClass: 'text-blue-400',
+    value: 'blue',
+  },
+  {
+    name: 'Verde',
+    class: 'bg-emerald-600 border-emerald-500 text-white',
+    textClass: 'text-emerald-400',
+    value: 'emerald',
+  },
+  {
+    name: 'Roxo',
+    class: 'bg-purple-600 border-purple-500 text-white',
+    textClass: 'text-purple-400',
+    value: 'purple',
+  },
+  {
+    name: 'Laranja',
+    class: 'bg-orange-600 border-orange-500 text-white',
+    textClass: 'text-orange-400',
+    value: 'orange',
+  },
+  {
+    name: 'Rosa',
+    class: 'bg-pink-600 border-pink-500 text-white',
+    textClass: 'text-pink-400',
+    value: 'pink',
+  },
+  {
+    name: 'Amarelo',
+    class: 'bg-amber-500 border-amber-400 text-slate-950',
+    textClass: 'text-amber-400',
+    value: 'amber',
+  },
+  {
+    name: 'Ciano',
+    class: 'bg-cyan-600 border-cyan-500 text-white',
+    textClass: 'text-cyan-400',
+    value: 'cyan',
+  },
 ]
 
 type OcupacaoData = {
@@ -103,6 +144,59 @@ export function OcupacaoCadeiras() {
     }
   }, [editingCell, data])
 
+  const metrics = useMemo(() => {
+    const horasPorConsultorio: Record<string, number> = {
+      'Consultório 1': 0,
+      'Consultório 2': 0,
+      'Consultório 3': 0,
+      'Consultório 4': 0,
+    }
+    let totalHoras = 0
+
+    const periodosPorDentista: Record<string, number> = {}
+    const horasPorDentista: Record<string, number> = {}
+
+    const periodosPorEspecialidade: Record<string, number> = {}
+    const horasPorEspecialidade: Record<string, number> = {}
+
+    Object.values(data).forEach((item) => {
+      const horas = item.horas_trabalhadas || 0
+      const dentista = item.dentista || 'Não informado'
+      const especialidade = item.especialidade || 'Não informada'
+      const consultorio = item.consultorio
+
+      if (horasPorConsultorio[consultorio] !== undefined) {
+        horasPorConsultorio[consultorio] += horas
+      }
+      totalHoras += horas
+
+      if (item.dentista) {
+        periodosPorDentista[dentista] = (periodosPorDentista[dentista] || 0) + 1
+        horasPorDentista[dentista] = (horasPorDentista[dentista] || 0) + horas
+      }
+
+      if (item.especialidade) {
+        periodosPorEspecialidade[especialidade] = (periodosPorEspecialidade[especialidade] || 0) + 1
+        horasPorEspecialidade[especialidade] = (horasPorEspecialidade[especialidade] || 0) + horas
+      }
+    })
+
+    const getTop = (record: Record<string, number>) => {
+      return Object.entries(record)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+    }
+
+    return {
+      horasPorConsultorio,
+      totalHoras,
+      topDentistasPeriodos: getTop(periodosPorDentista),
+      topDentistasHoras: getTop(horasPorDentista),
+      topEspecialidadesPeriodos: getTop(periodosPorEspecialidade),
+      topEspecialidadesHoras: getTop(horasPorEspecialidade),
+    }
+  }, [data])
+
   const handleSave = async () => {
     if (!editingCell) return
     setSaving(true)
@@ -155,7 +249,128 @@ export function OcupacaoCadeiras() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Total Geral
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{metrics.totalHoras}h</div>
+          </CardContent>
+        </Card>
+        {CONSULTORIOS.map((c) => (
+          <Card key={c} className="bg-slate-900 border-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                {c}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-amber-500">
+                {metrics.horasPorConsultorio[c]}h
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-slate-200">
+              Ranking por Dentista
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
+                Mais Períodos
+              </h4>
+              <div className="space-y-2">
+                {metrics.topDentistasPeriodos.map(([d, val]) => (
+                  <div key={d} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-300 truncate pr-2">{d}</span>
+                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md">
+                      {val}
+                    </span>
+                  </div>
+                ))}
+                {metrics.topDentistasPeriodos.length === 0 && (
+                  <p className="text-xs text-slate-600">Sem dados</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
+                Mais Horas
+              </h4>
+              <div className="space-y-2">
+                {metrics.topDentistasHoras.map(([d, val]) => (
+                  <div key={d} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-300 truncate pr-2">{d}</span>
+                    <span className="font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                      {val}h
+                    </span>
+                  </div>
+                ))}
+                {metrics.topDentistasHoras.length === 0 && (
+                  <p className="text-xs text-slate-600">Sem dados</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-slate-200">
+              Ranking por Especialidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
+                Mais Períodos
+              </h4>
+              <div className="space-y-2">
+                {metrics.topEspecialidadesPeriodos.map(([e, val]) => (
+                  <div key={e} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-300 truncate pr-2">{e}</span>
+                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md">
+                      {val}
+                    </span>
+                  </div>
+                ))}
+                {metrics.topEspecialidadesPeriodos.length === 0 && (
+                  <p className="text-xs text-slate-600">Sem dados</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
+                Mais Horas
+              </h4>
+              <div className="space-y-2">
+                {metrics.topEspecialidadesHoras.map(([e, val]) => (
+                  <div key={e} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-300 truncate pr-2">{e}</span>
+                    <span className="font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                      {val}h
+                    </span>
+                  </div>
+                ))}
+                {metrics.topEspecialidadesHoras.length === 0 && (
+                  <p className="text-xs text-slate-600">Sem dados</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <Table className="min-w-[900px] border-collapse">
@@ -213,25 +428,28 @@ export function OcupacaoCadeiras() {
                               className={cn(
                                 'p-2 rounded-md border text-xs min-h-[85px] flex flex-col items-start justify-start cursor-pointer transition-all hover:scale-[1.02]',
                                 cellData?.especialidade
-                                  ? colorObj.class
+                                  ? 'bg-slate-800 border-slate-700'
                                   : 'bg-slate-800/20 border-slate-700/50 border-dashed hover:bg-slate-800/60',
                               )}
                             >
                               {cellData?.especialidade ? (
                                 <>
                                   <span
-                                    className="font-bold truncate w-full"
+                                    className={cn('font-bold truncate w-full', colorObj.textClass)}
                                     title={cellData.especialidade}
                                   >
                                     {cellData.especialidade}
                                   </span>
                                   <span
-                                    className="opacity-90 truncate w-full mt-0.5"
+                                    className={cn(
+                                      'opacity-90 truncate w-full mt-0.5 font-bold',
+                                      colorObj.textClass,
+                                    )}
                                     title={cellData.dentista || ''}
                                   >
                                     {cellData.dentista}
                                   </span>
-                                  <span className="mt-auto pt-2 text-[10px] opacity-80 font-medium">
+                                  <span className="mt-auto pt-2 text-[10px] opacity-80 font-medium text-slate-400">
                                     {cellData.horas_trabalhadas}h
                                   </span>
                                 </>
