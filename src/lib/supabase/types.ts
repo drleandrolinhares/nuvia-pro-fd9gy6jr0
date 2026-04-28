@@ -1163,6 +1163,63 @@ export type Database = {
           },
         ]
       }
+      fluxo_caixa_despesas: {
+        Row: {
+          atualizado_em: string
+          categoria: string
+          criado_em: string
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          valor_estimado: number
+        }
+        Insert: {
+          atualizado_em?: string
+          categoria: string
+          criado_em?: string
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          valor_estimado?: number
+        }
+        Update: {
+          atualizado_em?: string
+          categoria?: string
+          criado_em?: string
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          valor_estimado?: number
+        }
+        Relationships: []
+      }
+      fluxo_caixa_receitas: {
+        Row: {
+          atualizado_em: string
+          ciclo: number
+          criado_em: string
+          id: string
+          mes_referencia: string
+          valor_estimado: number
+        }
+        Insert: {
+          atualizado_em?: string
+          ciclo: number
+          criado_em?: string
+          id?: string
+          mes_referencia: string
+          valor_estimado?: number
+        }
+        Update: {
+          atualizado_em?: string
+          ciclo?: number
+          criado_em?: string
+          id?: string
+          mes_referencia?: string
+          valor_estimado?: number
+        }
+        Relationships: []
+      }
       fornecedores: {
         Row: {
           cnpj: string | null
@@ -3128,6 +3185,21 @@ export const Constants = {
 //   observacao_pagamento: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: fluxo_caixa_despesas
+//   id: uuid (not null, default: gen_random_uuid())
+//   data_vencimento: date (not null)
+//   categoria: text (not null)
+//   valor_estimado: numeric (not null, default: 0)
+//   descricao: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: fluxo_caixa_receitas
+//   id: uuid (not null, default: gen_random_uuid())
+//   mes_referencia: text (not null)
+//   ciclo: integer (not null)
+//   valor_estimado: numeric (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: fornecedores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -3579,6 +3651,11 @@ export const Constants = {
 //   FOREIGN KEY faturas_comissoes_faturamento_id_fkey: FOREIGN KEY (faturamento_id) REFERENCES faturamento_comissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY faturas_comissoes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY faturas_comissoes_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: fluxo_caixa_despesas
+//   PRIMARY KEY fluxo_caixa_despesas_pkey: PRIMARY KEY (id)
+// Table: fluxo_caixa_receitas
+//   UNIQUE fluxo_caixa_receitas_mes_referencia_ciclo_key: UNIQUE (mes_referencia, ciclo)
+//   PRIMARY KEY fluxo_caixa_receitas_pkey: PRIMARY KEY (id)
 // Table: fornecedores
 //   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
 // Table: historico_compras
@@ -3873,6 +3950,14 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: faturas_comissoes
 //   Policy "faturas_comissoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: fluxo_caixa_despesas
+//   Policy "fluxo_caixa_despesas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: fluxo_caixa_receitas
+//   Policy "fluxo_caixa_receitas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: fornecedores
@@ -4702,6 +4787,8 @@ export const Constants = {
 // Table: faturas_comissoes
 //   CREATE INDEX faturas_comissoes_faturamento_id_idx ON public.faturas_comissoes USING btree (faturamento_id)
 //   CREATE INDEX faturas_comissoes_profissional_id_idx ON public.faturas_comissoes USING btree (profissional_id)
+// Table: fluxo_caixa_receitas
+//   CREATE UNIQUE INDEX fluxo_caixa_receitas_mes_referencia_ciclo_key ON public.fluxo_caixa_receitas USING btree (mes_referencia, ciclo)
 // Table: marcas_implante
 //   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
 // Table: normas_aceites

@@ -188,7 +188,7 @@ export default function Fluxo() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
-            <Waves className="h-8 w-8 text-blue-500" />
+            <Waves className="h-8 w-8 text-[#C5A059]" />
             Ondas de Liquidez
           </h1>
           <p className="text-slate-400 mt-1">
@@ -196,20 +196,22 @@ export default function Fluxo() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-900/50 p-1.5 rounded-lg border border-slate-800">
+        <div className="flex items-center gap-4 bg-[#001529] p-1.5 rounded-lg border border-slate-800">
           <Button
             variant="ghost"
             size="icon"
+            className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="font-medium text-lg w-32 text-center text-slate-200 capitalize">
+          <span className="font-medium text-lg w-32 text-center text-[#C5A059] capitalize">
             {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
           </span>
           <Button
             variant="ghost"
             size="icon"
+            className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
           >
             <ChevronRight className="h-5 w-5" />
@@ -251,18 +253,21 @@ export default function Fluxo() {
           }
 
           return (
-            <Card key={c} className="border-slate-800 bg-slate-900/40 flex flex-col">
-              <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/50">
+            <Card
+              key={c}
+              className="border-slate-800 bg-[#001529]/20 flex flex-col overflow-hidden"
+            >
+              <CardHeader className="pb-3 border-b border-[#001529] bg-[#001529]">
                 <div className="flex justify-between items-start mb-2">
-                  <Badge variant="outline" className="bg-slate-800 text-slate-300">
+                  <Badge variant="outline" className="bg-[#000d1a] border-slate-700 text-[#C5A059]">
                     Ciclo {c}
                   </Badge>
                   <Badge variant="outline" className={statusColor}>
                     {statusText}
                   </Badge>
                 </div>
-                <CardTitle className="text-lg">Boletos: Dia {info.boleto}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg text-slate-100">Boletos: Dia {info.boleto}</CardTitle>
+                <CardDescription className="text-slate-400">
                   Disponível ~Dia {info.disp} <br />
                   Cobre despesas de {info.start} a {info.end}
                 </CardDescription>
@@ -280,10 +285,13 @@ export default function Fluxo() {
                       onChange={(e) =>
                         setReceitaInputs((prev) => ({ ...prev, [c]: e.target.value }))
                       }
-                      className="bg-slate-950 border-slate-800 text-blue-400 font-medium"
+                      className="bg-slate-950 border-slate-800 text-[#C5A059] font-medium placeholder:text-slate-600"
                       placeholder="0.00"
                     />
-                    <Button variant="secondary" onClick={() => handleSaveReceita(c)}>
+                    <Button
+                      className="bg-[#C5A059] hover:bg-[#b08d4d] text-[#001529] font-bold"
+                      onClick={() => handleSaveReceita(c)}
+                    >
                       Salvar
                     </Button>
                   </div>
@@ -316,37 +324,39 @@ export default function Fluxo() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                          className="h-7 px-2 text-xs text-[#C5A059] hover:text-[#b08d4d] hover:bg-[#C5A059]/10"
                         >
                           <Plus className="h-3 w-3 mr-1" /> Adicionar
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="border-slate-800 bg-slate-950 sm:max-w-[425px]">
+                      <DialogContent className="border-slate-800 bg-[#001529] text-slate-200 sm:max-w-[425px]">
                         <DialogHeader>
-                          <DialogTitle>Nova Despesa Estimada</DialogTitle>
+                          <DialogTitle className="text-slate-100">
+                            Nova Despesa Estimada
+                          </DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid gap-2">
-                            <Label>Data de Vencimento</Label>
+                            <Label className="text-slate-300">Data de Vencimento</Label>
                             <Input
                               type="date"
                               value={newDespesa.data}
                               onChange={(e) =>
                                 setNewDespesa({ ...newDespesa, data: e.target.value })
                               }
-                              className="bg-slate-900 border-slate-800"
+                              className="bg-slate-950 border-slate-800 text-slate-200"
                             />
                             <p className="text-[10px] text-slate-500">
                               O sistema alocará automaticamente no ciclo correto.
                             </p>
                           </div>
                           <div className="grid gap-2">
-                            <Label>Categoria</Label>
+                            <Label className="text-slate-300">Categoria</Label>
                             <Select
                               value={newDespesa.categoria}
                               onValueChange={(v) => setNewDespesa({ ...newDespesa, categoria: v })}
                             >
-                              <SelectTrigger className="bg-slate-900 border-slate-800">
+                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-200">
                                 <SelectValue placeholder="Selecione..." />
                               </SelectTrigger>
                               <SelectContent>
@@ -359,34 +369,43 @@ export default function Fluxo() {
                             </Select>
                           </div>
                           <div className="grid gap-2">
-                            <Label>Descrição (Opcional)</Label>
+                            <Label className="text-slate-300">Descrição (Opcional)</Label>
                             <Input
                               value={newDespesa.descricao}
                               onChange={(e) =>
                                 setNewDespesa({ ...newDespesa, descricao: e.target.value })
                               }
-                              className="bg-slate-900 border-slate-800"
+                              className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-600"
                               placeholder="Ex: Fornecedor X"
                             />
                           </div>
                           <div className="grid gap-2">
-                            <Label>Valor Estimado (R$)</Label>
+                            <Label className="text-slate-300">Valor Estimado (R$)</Label>
                             <Input
                               type="number"
                               value={newDespesa.valor}
                               onChange={(e) =>
                                 setNewDespesa({ ...newDespesa, valor: e.target.value })
                               }
-                              className="bg-slate-900 border-slate-800"
+                              className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-600"
                               placeholder="0.00"
                             />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                          <Button
+                            variant="outline"
+                            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                            onClick={() => setIsAddModalOpen(false)}
+                          >
                             Cancelar
                           </Button>
-                          <Button onClick={handleAddDespesa}>Salvar Despesa</Button>
+                          <Button
+                            className="bg-[#C5A059] hover:bg-[#b08d4d] text-[#001529] font-bold"
+                            onClick={handleAddDespesa}
+                          >
+                            Salvar Despesa
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -401,7 +420,7 @@ export default function Fluxo() {
                       cycleDespesas.map((d) => (
                         <div
                           key={d.id}
-                          className="flex flex-col bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/60 group"
+                          className="flex flex-col bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 group hover:border-slate-700 transition-colors"
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex flex-col">
