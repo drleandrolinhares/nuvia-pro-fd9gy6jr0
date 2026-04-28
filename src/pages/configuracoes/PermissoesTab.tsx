@@ -109,54 +109,52 @@ export function PermissoesTab() {
             ) : cargos.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cargo cadastrado.</div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {cargos.map((cargo) => (
                   <div
                     key={cargo.id}
-                    className="rounded-lg border p-4 space-y-3 flex flex-col justify-between"
+                    className="rounded-lg border bg-card text-card-foreground p-4 flex flex-col gap-4 shadow-sm"
                   >
-                    <div>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-bold text-sm uppercase tracking-wider">
-                            {cargo.nome}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            {cargo.descricao || 'Sem descrição'} • Setor:{' '}
-                            {cargo.setor || 'Não definido'}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCargo(cargo)
-                            setCargoDialogOpen(true)
-                          }}
-                          className="h-8 text-xs uppercase tracking-wider shrink-0 ml-2"
-                        >
-                          Editar
-                        </Button>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-sm uppercase tracking-wider leading-none">
+                          {cargo.nome}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {cargo.descricao || 'Sem descrição'} • Setor:{' '}
+                          {cargo.setor || 'Não definido'}
+                        </p>
                       </div>
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {cargo.cargo_permissoes?.map((cp) => {
-                          const perm = permissoes.find((p) => p.id === cp.permissao_id)
-                          return perm ? (
-                            <Badge
-                              key={perm.id}
-                              variant="secondary"
-                              className="text-[10px] uppercase"
-                            >
-                              {perm.nome}
-                            </Badge>
-                          ) : null
-                        })}
-                        {(!cargo.cargo_permissoes || cargo.cargo_permissoes.length === 0) && (
-                          <span className="text-xs text-muted-foreground italic">
-                            Sem permissões atribuídas
-                          </span>
-                        )}
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCargo(cargo)
+                          setCargoDialogOpen(true)
+                        }}
+                        className="h-8 text-xs uppercase tracking-wider shrink-0"
+                      >
+                        Editar
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cargo.cargo_permissoes?.map((cp) => {
+                        const perm = permissoes.find((p) => p.id === cp.permissao_id)
+                        return perm ? (
+                          <Badge
+                            key={perm.id}
+                            variant="secondary"
+                            className="text-[10px] uppercase px-2 py-0.5 font-medium"
+                          >
+                            {perm.nome}
+                          </Badge>
+                        ) : null
+                      })}
+                      {(!cargo.cargo_permissoes || cargo.cargo_permissoes.length === 0) && (
+                        <span className="text-xs text-muted-foreground italic">
+                          Sem permissões atribuídas
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -170,46 +168,52 @@ export function PermissoesTab() {
                 Carregando colaboradores...
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {usuarios.map((user) => (
                   <div
                     key={user.id}
-                    className="rounded-lg border p-4 flex flex-col justify-between space-y-3"
+                    className="rounded-lg border bg-card text-card-foreground p-4 flex flex-col gap-4 shadow-sm"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-bold text-sm uppercase tracking-wider">{user.nome}</h4>
-                        <p className="text-xs text-muted-foreground">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-sm uppercase tracking-wider leading-none">
+                          {user.nome}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
                           {user.email} • Cargo: {user.cargo?.nome || 'Nenhum'}
                         </p>
                       </div>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setSelectedUser(user)
                           setUserDialogOpen(true)
                         }}
-                        className="h-8 text-xs uppercase tracking-wider shrink-0 ml-2"
+                        className="h-8 text-xs uppercase tracking-wider shrink-0"
                       >
                         Permissões
                       </Button>
                     </div>
-                    {user.usuario_permissoes?.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                    {user.usuario_permissoes?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
                         {user.usuario_permissoes.map((up) => {
                           const p = permissoes.find((p) => p.id === up.permissao_id)
                           return p ? (
                             <Badge
                               key={p.id}
                               variant="outline"
-                              className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/20"
+                              className="text-[10px] uppercase px-2 py-0.5 font-medium bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400"
                             >
                               {p.nome}
                             </Badge>
                           ) : null
                         })}
                       </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">
+                        Sem permissões adicionais
+                      </span>
                     )}
                   </div>
                 ))}
