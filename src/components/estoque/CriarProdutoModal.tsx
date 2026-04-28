@@ -128,6 +128,8 @@ export function CriarProdutoModal({
 
     const payload = {
       ...values,
+      nome: values.nome.trim().toUpperCase(),
+      marca: values.marca ? values.marca.trim().toUpperCase() : undefined,
       especialidade_id: values.especialidade_id === 'none' ? null : values.especialidade_id,
       sala_id: values.sala_id === 'none' ? null : values.sala_id,
       sala: salaNome,

@@ -250,10 +250,11 @@ export default function Estoque() {
   const groupedData = useMemo(() => {
     const groups: Record<string, Produto[]> = {}
     filteredData.forEach((p) => {
-      if (!groups[p.nome]) {
-        groups[p.nome] = []
+      const normalizedNome = p.nome ? p.nome.trim().toUpperCase() : 'SEM NOME'
+      if (!groups[normalizedNome]) {
+        groups[normalizedNome] = []
       }
-      groups[p.nome].push(p)
+      groups[normalizedNome].push(p)
     })
 
     return Object.entries(groups)

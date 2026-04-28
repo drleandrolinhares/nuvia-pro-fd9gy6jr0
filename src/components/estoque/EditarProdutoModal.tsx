@@ -143,8 +143,8 @@ export function EditarProdutoModal({
     const salaNome = salaId !== 'none' ? salas.find((s) => s.id === salaId)?.nome || null : null
 
     const { data, error } = await updateProduto(produto.id, {
-      nome: nome.trim(),
-      marca: marca.trim() || null,
+      nome: nome.trim().toUpperCase(),
+      marca: marca.trim().toUpperCase() || null,
       especialidade_id: especialidadeId === 'none' ? null : especialidadeId,
       codigo_barras: codigoBarras.trim() || null,
       quantidade_minima: parseInt(quantidadeMinima) || 0,

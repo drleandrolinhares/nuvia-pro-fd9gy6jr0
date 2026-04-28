@@ -384,9 +384,9 @@ export function EntradaProdutoModal({
 
     if (!finalProdutoId) {
       const { data: novoProduto, error } = await createProduto({
-        nome: values.nome_material,
+        nome: values.nome_material.trim().toUpperCase(),
         codigo_barras: values.codigo_barras,
-        marca: values.marca,
+        marca: values.marca ? values.marca.trim().toUpperCase() : undefined,
         especialidade_id: values.especialidade_id || null,
         embalagem_id: values.embalagem_id || null,
         sala_id: values.sala_id || null,
@@ -407,7 +407,7 @@ export function EntradaProdutoModal({
     } else {
       await updateProduto(finalProdutoId, {
         codigo_barras: values.codigo_barras,
-        marca: values.marca,
+        marca: values.marca ? values.marca.trim().toUpperCase() : undefined,
         especialidade_id: values.especialidade_id || null,
         embalagem_id: values.embalagem_id || null,
         sala_id: values.sala_id || null,
