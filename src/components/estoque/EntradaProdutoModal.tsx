@@ -58,6 +58,7 @@ import {
   fetchEspecialidadeCampos,
   fetchProdutoCamposValores,
   upsertProdutoCamposValores,
+  formatProdutoVariacoes,
 } from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
 import { supabase } from '@/lib/supabase/client'
@@ -543,7 +544,12 @@ export function EntradaProdutoModal({
                                     setOpenProduto(false)
                                   }}
                                 >
-                                  <span className="font-medium text-slate-800">{p.nome}</span>
+                                  <span className="font-medium text-slate-800">
+                                    {p.nome}{' '}
+                                    {formatProdutoVariacoes(p)
+                                      ? ` - ${formatProdutoVariacoes(p)}`
+                                      : ''}
+                                  </span>
                                   {p.marca && (
                                     <span className="text-xs text-slate-500">Marca: {p.marca}</span>
                                   )}
@@ -588,6 +594,17 @@ export function EntradaProdutoModal({
                       </div>
                     )}
                     <FormMessage />
+                    {selectedProdutoId &&
+                      formatProdutoVariacoes(
+                        localProdutos.find((p) => p.id === selectedProdutoId),
+                      ) && (
+                        <p className="text-[11px] text-fuchsia-600 font-bold mt-1 uppercase">
+                          Variação selecionada:{' '}
+                          {formatProdutoVariacoes(
+                            localProdutos.find((p) => p.id === selectedProdutoId),
+                          )}
+                        </p>
+                      )}
                   </FormItem>
                 )}
               />

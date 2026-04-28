@@ -37,6 +37,26 @@ export interface Produto {
         } | null
       }[]
     | null
+  produto_campos_valores?:
+    | {
+        campo_id: string
+        valor: string | null
+        campos_personalizados?: {
+          nome: string
+        } | null
+      }[]
+    | null
+}
+
+export const formatProdutoVariacoes = (p: Produto | undefined) => {
+  if (!p || !p.produto_campos_valores || p.produto_campos_valores.length === 0) return ''
+  const parts = p.produto_campos_valores
+    .filter((c) => c.valor && c.valor !== '-')
+    .map((c) => {
+      const nomeCampo = (c.campos_personalizados as any)?.nome || 'Var'
+      return `${nomeCampo}: ${c.valor}`
+    })
+  return parts.join(' | ')
 }
 
 export const fetchProdutos = async () => {
@@ -58,6 +78,13 @@ export const fetchProdutos = async () => {
         compras (
           data,
           status
+        )
+      ),
+      produto_campos_valores (
+        campo_id,
+        valor,
+        campos_personalizados (
+          nome
         )
       )
     `)

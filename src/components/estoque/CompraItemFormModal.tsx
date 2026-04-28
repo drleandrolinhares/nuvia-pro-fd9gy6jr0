@@ -27,6 +27,7 @@ import {
   upsertProdutoCamposValores,
   fetchProdutoCamposValores,
   Produto,
+  formatProdutoVariacoes,
 } from '@/services/produtos'
 import { fetchUltimasComprasProduto, CompraItem } from '@/services/compras'
 import { format, parseISO } from 'date-fns'
@@ -322,11 +323,14 @@ export function CompraItemFormModal({
                   <SelectItem value="new" className="font-bold text-amber-600 bg-amber-50">
                     --- Novo Produto ---
                   </SelectItem>
-                  {produtos.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome}
-                    </SelectItem>
-                  ))}
+                  {produtos.map((p) => {
+                    const variacoes = formatProdutoVariacoes(p)
+                    return (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome} {variacoes ? `- ${variacoes}` : ''} {p.marca ? `(${p.marca})` : ''}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>

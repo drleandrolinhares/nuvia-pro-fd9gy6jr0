@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
-import { Produto } from '@/services/produtos'
+import { Produto, formatProdutoVariacoes } from '@/services/produtos'
 import { Loader2, Search, Check, PackageMinus } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -187,7 +187,12 @@ export function SaidaProdutoModal({
                           )}
                         >
                           {field.value
-                            ? produtos.find((p) => p.id === field.value)?.nome
+                            ? (() => {
+                                const p = produtos.find((p) => p.id === field.value)
+                                return p
+                                  ? `${p.nome} ${formatProdutoVariacoes(p) ? `- ${formatProdutoVariacoes(p)}` : ''}`
+                                  : 'Produto não encontrado'
+                              })()
                             : 'Buscar produto por nome ou marca...'}
                           <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -202,7 +207,7 @@ export function SaidaProdutoModal({
                             {produtos.map((produto) => (
                               <CommandItem
                                 key={produto.id}
-                                value={`${produto.nome} ${produto.marca || ''} ${produto.id}`}
+                                value={`${produto.nome} ${produto.marca || ''} ${formatProdutoVariacoes(produto)} ${produto.id}`}
                                 onSelect={() => {
                                   form.setValue('produto_id', produto.id, { shouldValidate: true })
                                   setOpenCombobox(false)
@@ -215,7 +220,12 @@ export function SaidaProdutoModal({
                                   )}
                                 />
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{produto.nome}</span>
+                                  <span className="font-medium">
+                                    {produto.nome}{' '}
+                                    {formatProdutoVariacoes(produto)
+                                      ? ` - ${formatProdutoVariacoes(produto)}`
+                                      : ''}
+                                  </span>
                                   {produto.marca && (
                                     <span className="text-xs text-slate-500">{produto.marca}</span>
                                   )}
