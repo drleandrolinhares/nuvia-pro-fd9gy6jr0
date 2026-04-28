@@ -717,6 +717,7 @@ export default function Estoque() {
             onOpenChange={setModalSaidaOpen}
             produtos={produtos}
             onSuccess={invalidateCache}
+            camposDinamicos={camposDinamicos}
           />
           <VisualizarProdutoModal
             open={!!produtoVisualizar}

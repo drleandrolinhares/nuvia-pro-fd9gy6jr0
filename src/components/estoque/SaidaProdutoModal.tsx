@@ -70,6 +70,7 @@ interface SaidaProdutoModalProps {
   onOpenChange: (open: boolean) => void
   produtos: Produto[]
   onSuccess: () => void
+  camposDinamicos?: Record<string, { tamanho: string; diametro: string }>
 }
 
 export function SaidaProdutoModal({
@@ -77,6 +78,7 @@ export function SaidaProdutoModal({
   onOpenChange,
   produtos,
   onSuccess,
+  camposDinamicos,
 }: SaidaProdutoModalProps) {
   const [loading, setLoading] = useState(false)
   const [openCombobox, setOpenCombobox] = useState(false)
@@ -199,7 +201,23 @@ export function SaidaProdutoModal({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
-                      <Command>
+                      <Command
+                        filter={(value, search) => {
+                          if (!search) return 1
+                          const normalize = (str: string) =>
+                            str
+                              .normalize('NFD')
+                              .replace(/[\u0300-\u036f]/g, '')
+                              .toLowerCase()
+                          const searchNormalized = normalize(search)
+                          const valueNormalized = normalize(value)
+                          const searchTerms = searchNormalized.split(/\s+/).filter(Boolean)
+                          const isMatch = searchTerms.every((term) =>
+                            valueNormalized.includes(term),
+                          )
+                          return isMatch ? 1 : 0
+                        }}
+                      >
                         <CommandInput placeholder="Buscar produto..." />
                         <CommandList>
                           <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
@@ -207,7 +225,7 @@ export function SaidaProdutoModal({
                             {produtos.map((produto) => (
                               <CommandItem
                                 key={produto.id}
-                                value={`${produto.nome} ${produto.marca || ''} ${formatProdutoVariacoes(produto)} ${produto.id}`}
+                                value={`${produto.nome} ${produto.marca || ''} ${formatProdutoVariacoes(produto)} ${camposDinamicos?.[produto.id]?.tamanho || ''} ${camposDinamicos?.[produto.id]?.diametro || ''} ${produto.id}`}
                                 onSelect={() => {
                                   form.setValue('produto_id', produto.id, { shouldValidate: true })
                                   setOpenCombobox(false)
