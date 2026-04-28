@@ -180,7 +180,11 @@ export function GoogleTab() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={handleGerarAdiantamentos}>
+            <Button
+              variant="outline"
+              onClick={handleGerarAdiantamentos}
+              title="Os adiantamentos são gerados automaticamente no dia 1º de cada mês (a partir de Maio/2026). Use apenas para contingência."
+            >
               Gerar Adiantamentos
             </Button>
             <Button

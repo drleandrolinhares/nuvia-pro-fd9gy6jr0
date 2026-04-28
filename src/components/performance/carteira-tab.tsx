@@ -248,6 +248,7 @@ export function CarteiraTab() {
             className="w-full sm:w-auto text-amber-700 border-amber-200 hover:bg-amber-50"
             onClick={handleGerarAdiantamentos}
             disabled={loading}
+            title="Os adiantamentos são gerados automaticamente no dia 1º de cada mês (a partir de Maio/2026). Use este botão apenas para contingência/reprocessamento."
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Gerar Adiantamentos
