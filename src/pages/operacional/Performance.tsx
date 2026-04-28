@@ -5,6 +5,7 @@ import { CarteiraTab } from '@/components/performance/carteira-tab'
 import { RelatorioRotinasTab } from '@/components/performance/relatorio-rotinas-tab'
 import { SorrisoDosSonhosTab } from '@/components/performance/sorriso-dos-sonhos-tab'
 import { InovacoesTab } from '@/components/performance/inovacoes-tab'
+import { GoogleTab } from '@/components/performance/google-tab'
 import { Target } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -49,6 +50,9 @@ export default function Performance() {
           <TabsTrigger value="inovacoes" className="whitespace-nowrap">
             Inovações
           </TabsTrigger>
+          <TabsTrigger value="google" className="whitespace-nowrap">
+            Google
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="carteira" className="animate-fade-in">
           <CarteiraTab />
@@ -69,6 +73,9 @@ export default function Performance() {
         </TabsContent>
         <TabsContent value="inovacoes" className="animate-fade-in">
           <InovacoesTab />
+        </TabsContent>
+        <TabsContent value="google" className="animate-fade-in">
+          <GoogleTab />
         </TabsContent>
       </Tabs>
     </div>
