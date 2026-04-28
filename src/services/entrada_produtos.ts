@@ -44,12 +44,22 @@ export const registrarEntrada = async (dados: {
   // Fetch current product to get previous price and stock
   const { data: produto } = await supabase
     .from('produtos')
-    .select('quantidade_estoque, custo_unitario')
+    .select('quantidade_estoque, custo_unitario, referencia_consumo')
     .eq('id', dados.produto_id)
     .single()
 
-  const precoAnterior = produto?.custo_unitario || 0
-  const estoqueAtual = produto?.quantidade_estoque || 0
+  const precoAnterior = Number(produto?.custo_unitario || 0)
+  const estoqueAtual = Number(produto?.quantidade_estoque || 0)
+  const refConsumo = produto?.referencia_consumo
+
+  // Calculate the correct amount to add based on the consumption reference
+  // and force mathematical addition to prevent string concatenation
+  const quantidadeAdicionada =
+    refConsumo === 'itens_embalagem'
+      ? Number(dados.quantidade_embalagem)
+      : Number(dados.quantidade_comprada)
+
+  const novoEstoque = estoqueAtual + quantidadeAdicionada
 
   // Insert entrada
   const { data: entrada, error: entradaError } = await supabase
@@ -57,11 +67,11 @@ export const registrarEntrada = async (dados: {
     .insert({
       produto_id: dados.produto_id,
       fornecedor_id: dados.fornecedor_id || null,
-      quantidade_embalagem: dados.quantidade_embalagem,
-      quantidade_comprada: dados.quantidade_comprada,
+      quantidade_embalagem: Number(dados.quantidade_embalagem),
+      quantidade_comprada: Number(dados.quantidade_comprada),
       unidade_consumo: dados.unidade_consumo,
-      preco_unitario: dados.preco_unitario,
-      preco_total: dados.preco_total,
+      preco_unitario: Number(dados.preco_unitario),
+      preco_total: Number(dados.preco_total),
       data_entrada: dados.data_entrada,
       data_validade: dados.data_validade,
       numero_nfe: dados.numero_nfe,
@@ -82,14 +92,11 @@ export const registrarEntrada = async (dados: {
   })
 
   // Update product stock and cost
-  const totalItens = dados.quantidade_embalagem * dados.quantidade_comprada
-  const novoEstoque = estoqueAtual + totalItens
-
   await supabase
     .from('produtos')
     .update({
       quantidade_estoque: novoEstoque,
-      custo_unitario: dados.preco_unitario,
+      custo_unitario: Number(dados.preco_unitario),
     })
     .eq('id', dados.produto_id)
 

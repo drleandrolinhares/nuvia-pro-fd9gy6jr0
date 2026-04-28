@@ -360,9 +360,9 @@ export function EntradaProdutoModal({
   const totalAdicionado = refConsumo === 'itens_embalagem' ? itensEmb : qtyComprada
   const valorAtribuido = totalAdicionado > 0 ? valorTotal / totalAdicionado : 0
   const estoqueAtual = selectedProdutoId
-    ? Number(localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque) || 0
+    ? Number(localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0)
     : 0
-  const estoquePosAdicao = estoqueAtual + totalAdicionado
+  const estoquePosAdicao = Number(estoqueAtual) + Number(totalAdicionado)
   const ultimaCompra = historico.length > 0 ? historico[0] : null
 
   const onSubmit = async (values: EntradaFormValues) => {
