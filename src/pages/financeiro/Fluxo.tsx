@@ -247,7 +247,7 @@ export default function Fluxo() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C5A059]"></div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
