@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Trash2, Settings } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   Dialog,
@@ -21,7 +21,15 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { ConfiguracaoGradeDialog, ConfigItem } from './ConfiguracaoGradeDialog'
 
 const DIAS = [
   { id: 'segunda', label: 'Segunda' },
@@ -99,6 +107,8 @@ type OcupacaoData = {
 export function OcupacaoCadeiras() {
   const { toast } = useToast()
   const [data, setData] = useState<Record<string, OcupacaoData>>({})
+  const [configItems, setConfigItems] = useState<ConfigItem[]>([])
+  const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingCell, setEditingCell] = useState<{
@@ -107,6 +117,16 @@ export function OcupacaoCadeiras() {
     dia: string
   } | null>(null)
   const [form, setForm] = useState({ especialidade: '', dentista: '', horas: '', cor: '' })
+
+  const fetchConfig = async () => {
+    const { data: configData, error } = await supabase
+      .from('precificacao_ocupacao_config')
+      .select('*')
+      .order('nome')
+    if (!error && configData) {
+      setConfigItems(configData as ConfigItem[])
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -130,6 +150,7 @@ export function OcupacaoCadeiras() {
 
   useEffect(() => {
     fetchData()
+    fetchConfig()
   }, [])
 
   useEffect(() => {
@@ -144,6 +165,22 @@ export function OcupacaoCadeiras() {
     }
   }, [editingCell, data])
 
+  const especialidadesOptions = useMemo(() => {
+    const opts = configItems.filter((i) => i.tipo === 'especialidade').map((i) => i.nome)
+    if (form.especialidade && !opts.includes(form.especialidade)) {
+      opts.push(form.especialidade)
+    }
+    return opts
+  }, [configItems, form.especialidade])
+
+  const dentistasOptions = useMemo(() => {
+    const opts = configItems.filter((i) => i.tipo === 'dentista').map((i) => i.nome)
+    if (form.dentista && !opts.includes(form.dentista)) {
+      opts.push(form.dentista)
+    }
+    return opts
+  }, [configItems, form.dentista])
+
   const metrics = useMemo(() => {
     const horasPorConsultorio: Record<string, number> = {
       'Consultório 1': 0,
@@ -152,10 +189,8 @@ export function OcupacaoCadeiras() {
       'Consultório 4': 0,
     }
     let totalHoras = 0
-
     const periodosPorDentista: Record<string, number> = {}
     const horasPorDentista: Record<string, number> = {}
-
     const periodosPorEspecialidade: Record<string, number> = {}
     const horasPorEspecialidade: Record<string, number> = {}
 
@@ -250,6 +285,17 @@ export function OcupacaoCadeiras() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end mb-2">
+        <Button
+          variant="outline"
+          onClick={() => setIsConfigOpen(true)}
+          className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          Configurar Listas
+        </Button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-5">
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="pb-2">
@@ -415,7 +461,6 @@ export function OcupacaoCadeiras() {
                         const cellData = data[`${c}_${t}_${d.id}`]
                         const colorObj =
                           PRESET_COLORS.find((pc) => pc.value === cellData?.cor) || PRESET_COLORS[0]
-
                         return (
                           <TableCell
                             key={d.id}
@@ -480,21 +525,47 @@ export function OcupacaoCadeiras() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label className="text-slate-300">Especialidade</Label>
-              <Input
-                value={form.especialidade}
-                onChange={(e) => setForm((f) => ({ ...f, especialidade: e.target.value }))}
-                placeholder="Ex: Ortodontia"
-                className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-500"
-              />
+              <Select
+                value={form.especialidade || undefined}
+                onValueChange={(val) => setForm((f) => ({ ...f, especialidade: val }))}
+              >
+                <SelectTrigger className="bg-slate-950 border-slate-700 text-white">
+                  <SelectValue placeholder="Selecione uma especialidade" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 max-h-[250px]">
+                  {especialidadesOptions.map((nome) => (
+                    <SelectItem
+                      key={nome}
+                      value={nome}
+                      className="focus:bg-slate-800 focus:text-white"
+                    >
+                      {nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label className="text-slate-300">Dentista</Label>
-              <Input
-                value={form.dentista}
-                onChange={(e) => setForm((f) => ({ ...f, dentista: e.target.value }))}
-                placeholder="Ex: Dr. Leandro"
-                className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-500"
-              />
+              <Select
+                value={form.dentista || undefined}
+                onValueChange={(val) => setForm((f) => ({ ...f, dentista: val }))}
+              >
+                <SelectTrigger className="bg-slate-950 border-slate-700 text-white">
+                  <SelectValue placeholder="Selecione um dentista" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 max-h-[250px]">
+                  {dentistasOptions.map((nome) => (
+                    <SelectItem
+                      key={nome}
+                      value={nome}
+                      className="focus:bg-slate-800 focus:text-white"
+                    >
+                      {nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label className="text-slate-300">Horas Trabalhadas</Label>
@@ -563,6 +634,13 @@ export function OcupacaoCadeiras() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfiguracaoGradeDialog
+        open={isConfigOpen}
+        onOpenChange={setIsConfigOpen}
+        items={configItems}
+        onRefresh={fetchConfig}
+      />
     </div>
   )
 }
