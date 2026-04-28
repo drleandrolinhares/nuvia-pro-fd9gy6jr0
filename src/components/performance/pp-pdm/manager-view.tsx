@@ -125,79 +125,6 @@ export function ManagerPPDMView() {
     }
   }
 
-  const handleToggleInovacao = async (
-    id: string,
-    currentVal: boolean,
-    userId: string,
-    date: string,
-  ) => {
-    const newVal = !currentVal
-    const { error } = await supabase
-      .from('performance_pp_pdm' as any)
-      .update({ inovacao_validada: newVal })
-      .eq('id', id)
-
-    if (!error) {
-      const month = date.substring(0, 7)
-      if (newVal) {
-        const { data: countData } = await supabase
-          .from('performance_pp_pdm' as any)
-          .select('id')
-          .eq('usuario_id', userId)
-          .like('data_registro', `${month}%`)
-          .eq('inovacao_validada', true)
-
-        const count = countData ? countData.length : 0
-        if (count > 1) {
-          await supabase.from('carteira_transacoes').insert({
-            usuario_id: userId,
-            tipo: 'credito',
-            valor: 100,
-            descricao: `Bônus: Inovação Validada extra (${count}ª do mês)`,
-            mes_referencia: month,
-            origem_id: id,
-          })
-        }
-      } else {
-        await supabase
-          .from('carteira_transacoes')
-          .delete()
-          .eq('origem_id', id)
-          .like('descricao', 'Bônus: Inovação Validada extra%')
-      }
-      toast.success(newVal ? 'Inovação validada!' : 'Inovação invalidada!')
-      loadData()
-    }
-  }
-
-  const handleGerarAdiantamentoInovacao = async () => {
-    setIsGenerating(true)
-    const month = selectedWeek.substring(0, 7)
-    try {
-      const { error } = await supabase.rpc('gerar_adiantamento_mes_inovacao', { p_mes: month })
-      if (error) throw error
-      toast.success(`Adiantamentos de Inovação gerados para ${month}`)
-    } catch (e: any) {
-      toast.error('Erro ao gerar adiantamentos: ' + e.message)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const handleProcessarFechamentoInovacao = async () => {
-    setIsGenerating(true)
-    const month = selectedWeek.substring(0, 7)
-    try {
-      const { error } = await supabase.rpc('processar_fechamento_mes_inovacao', { p_mes: month })
-      if (error) throw error
-      toast.success(`Fechamento de Inovações processado para ${month}`)
-    } catch (e: any) {
-      toast.error('Erro ao processar fechamento: ' + e.message)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
   return (
     <div className="space-y-6 mt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -219,25 +146,6 @@ export function ManagerPPDMView() {
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 justify-end mb-4 mt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGerarAdiantamentoInovacao}
-          disabled={isGenerating}
-        >
-          Gerar Adiantamento Inovação (Mês)
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleProcessarFechamentoInovacao}
-          disabled={isGenerating}
-        >
-          Fechamento Inovação (Mês)
-        </Button>
       </div>
 
       {loading ? (
@@ -437,31 +345,6 @@ export function ManagerPPDMView() {
                                 <p className="text-sm text-emerald-900 whitespace-pre-wrap">
                                   {submission.pontos_positivos ||
                                     'Nenhum ponto positivo registrado.'}
-                                </p>
-                              </div>
-
-                              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-bold text-blue-800">Inovações</h4>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-blue-700">
-                                      Aprovar Inovação?
-                                    </span>
-                                    <Switch
-                                      checked={submission.inovacao_validada}
-                                      onCheckedChange={() =>
-                                        handleToggleInovacao(
-                                          submission.id,
-                                          submission.inovacao_validada,
-                                          submission.usuario_id,
-                                          submission.data_registro,
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                                <p className="text-sm text-blue-900 whitespace-pre-wrap">
-                                  {submission.inovacoes || 'Nenhuma inovação registrada.'}
                                 </p>
                               </div>
 

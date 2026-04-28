@@ -4,9 +4,13 @@ import { BonificacaoTab } from '@/components/performance/bonificacao-tab'
 import { CarteiraTab } from '@/components/performance/carteira-tab'
 import { RelatorioRotinasTab } from '@/components/performance/relatorio-rotinas-tab'
 import { SorrisoDosSonhosTab } from '@/components/performance/sorriso-dos-sonhos-tab'
+import { InovacoesTab } from '@/components/performance/inovacoes-tab'
 import { Target } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Performance() {
+  const { profile } = useAuth()
+  const isManager = profile?.role === 'admin' || profile?.role === 'gestor'
   return (
     <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
@@ -31,14 +35,19 @@ export default function Performance() {
           <TabsTrigger value="pp-pdm" className="whitespace-nowrap">
             PP e PDM
           </TabsTrigger>
-          <TabsTrigger value="bonificacao" className="whitespace-nowrap">
-            Bonificação Feijão com Arroz
-          </TabsTrigger>
+          {isManager && (
+            <TabsTrigger value="bonificacao" className="whitespace-nowrap">
+              Bonificação Feijão com Arroz
+            </TabsTrigger>
+          )}
           <TabsTrigger value="relatorio-rotinas" className="whitespace-nowrap">
             Relatório de Rotinas
           </TabsTrigger>
           <TabsTrigger value="sorriso-dos-sonhos" className="whitespace-nowrap">
             Sorriso dos Sonhos
+          </TabsTrigger>
+          <TabsTrigger value="inovacoes" className="whitespace-nowrap">
+            Inovações
           </TabsTrigger>
         </TabsList>
         <TabsContent value="carteira" className="animate-fade-in">
@@ -47,14 +56,19 @@ export default function Performance() {
         <TabsContent value="pp-pdm" className="animate-fade-in">
           <PPEPDMTab />
         </TabsContent>
-        <TabsContent value="bonificacao" className="animate-fade-in">
-          <BonificacaoTab />
-        </TabsContent>
+        {isManager && (
+          <TabsContent value="bonificacao" className="animate-fade-in">
+            <BonificacaoTab />
+          </TabsContent>
+        )}
         <TabsContent value="relatorio-rotinas" className="animate-fade-in">
           <RelatorioRotinasTab />
         </TabsContent>
         <TabsContent value="sorriso-dos-sonhos" className="animate-fade-in">
           <SorrisoDosSonhosTab />
+        </TabsContent>
+        <TabsContent value="inovacoes" className="animate-fade-in">
+          <InovacoesTab />
         </TabsContent>
       </Tabs>
     </div>

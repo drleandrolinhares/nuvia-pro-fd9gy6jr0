@@ -46,10 +46,8 @@ export function EmployeePPDMView() {
   const [pp, setPp] = useState('')
   const [pdmLegacy, setPdmLegacy] = useState('')
   const [pdmItems, setPdmItems] = useState<PdmItem[]>([{ id: '1', melhoria: '', sugestao: '' }])
-  const [inovacoes, setInovacoes] = useState('')
   const [notaFinal, setNotaFinal] = useState<number | null>(null)
   const [ppValidado, setPpValidado] = useState(false)
-  const [inovacaoValidada, setInovacaoValidada] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -74,9 +72,7 @@ export function EmployeePPDMView() {
       if (data) {
         setRecordId(data.id)
         setPp(data.pontos_positivos || '')
-        setInovacoes(data.inovacoes || '')
         setPpValidado(data.pp_validado || false)
-        setInovacaoValidada(data.inovacao_validada || false)
         if (data.pdm_itens && Array.isArray(data.pdm_itens) && data.pdm_itens.length > 0) {
           setPdmItems(data.pdm_itens)
           setNotaFinal(data.nota_pdm)
@@ -89,12 +85,10 @@ export function EmployeePPDMView() {
       } else {
         setRecordId(null)
         setPp('')
-        setInovacoes('')
         setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
         setPdmLegacy('')
         setNotaFinal(null)
         setPpValidado(false)
-        setInovacaoValidada(false)
       }
     } catch (e: any) {
       console.error(e)
@@ -113,16 +107,18 @@ export function EmployeePPDMView() {
     try {
       await supabase
         .from('performance_pp_pdm' as any)
-        .delete()
+        .update({
+          pontos_positivos: '',
+          pontos_melhoria: '',
+          pdm_itens: [],
+          nota_pdm: 0,
+        })
         .eq('id', recordId)
-      setRecordId(null)
       setPp('')
-      setInovacoes('')
       setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
       setPdmLegacy('')
       setNotaFinal(null)
       setPpValidado(false)
-      setInovacaoValidada(false)
       toast.success('Envio desfeito com sucesso!')
     } catch (e: any) {
       toast.error('Erro ao desfazer envio.')
@@ -135,7 +131,7 @@ export function EmployeePPDMView() {
     if (!user) return
     const filledItems = pdmItems.filter((item) => item.melhoria.trim() || item.sugestao.trim())
 
-    if (!pp.trim() && filledItems.length === 0 && !pdmLegacy.trim() && !inovacoes.trim()) {
+    if (!pp.trim() && filledItems.length === 0 && !pdmLegacy.trim()) {
       toast.warning('Preencha ao menos um dos campos antes de salvar.')
       return
     }
@@ -177,7 +173,6 @@ export function EmployeePPDMView() {
       const payload = {
         pontos_positivos: pp || 'Nenhum ponto positivo registrado.',
         pontos_melhoria: pdmText,
-        inovacoes: inovacoes || '',
         pdm_itens: filledItems,
         nota_pdm: nota,
         atualizado_em: new Date().toISOString(),
@@ -247,15 +242,6 @@ export function EmployeePPDMView() {
                       <strong>Teto da Nota:</strong> A pontuação total (PDM + PP) é limitada a{' '}
                       <strong>10 pontos</strong>.
                     </p>
-                    <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
-                      <p className="text-amber-800">
-                        <strong>Inovações:</strong> Funcionam separadamente da nota. Inovações
-                        validadas pelo gestor garantem a manutenção do bônus de{' '}
-                        <strong>R$ 100,00</strong> no extrato da sua carteira no final do mês. Caso
-                        nenhuma inovação seja validada no mês, o adiantamento de R$ 100,00 será
-                        estornado.
-                      </p>
-                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -301,26 +287,6 @@ export function EmployeePPDMView() {
                   className="min-h-[150px] resize-none border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500 text-sm shadow-sm disabled:opacity-70"
                   value={pp}
                   onChange={(e) => setPp(e.target.value)}
-                  disabled={isBlocked}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-blue-700 font-semibold flex items-center gap-2">
-                    Inovações
-                  </Label>
-                  {inovacaoValidada && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold">
-                      Validado (R$ 100)
-                    </span>
-                  )}
-                </div>
-                <Textarea
-                  placeholder="Sugestões de implementações: ação, equipamento, comportamento..."
-                  className="min-h-[150px] resize-none border-blue-200 bg-blue-50/30 focus-visible:ring-blue-500 text-sm shadow-sm disabled:opacity-70"
-                  value={inovacoes}
-                  onChange={(e) => setInovacoes(e.target.value)}
                   disabled={isBlocked}
                 />
               </div>
@@ -425,7 +391,7 @@ export function EmployeePPDMView() {
         )}
 
         <div className="flex flex-col sm:flex-row justify-end pt-4 border-t border-slate-100 gap-3">
-          {recordId && !isBlocked && !ppValidado && !inovacaoValidada && (
+          {recordId && !isBlocked && !ppValidado && (
             <Button
               variant="outline"
               onClick={handleUndo}
