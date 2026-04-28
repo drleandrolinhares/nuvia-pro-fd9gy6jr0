@@ -1464,6 +1464,42 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_google_reviews: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data_comentario: string
+          data_contato: string
+          id: string
+          mes_referencia: string
+          paciente_nome: string
+          status: string
+          usuario_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data_comentario: string
+          data_contato: string
+          id?: string
+          mes_referencia: string
+          paciente_nome: string
+          status?: string
+          usuario_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data_comentario?: string
+          data_contato?: string
+          id?: string
+          mes_referencia?: string
+          paciente_nome?: string
+          status?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       performance_pp_pdm: {
         Row: {
           atualizado_em: string
@@ -2657,6 +2693,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gerar_adiantamento_mes_google: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       gerar_adiantamento_mes_inovacao: {
         Args: { p_mes: string }
         Returns: undefined
@@ -2667,6 +2707,10 @@ export type Database = {
       }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      processar_fechamento_mes_google: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       processar_fechamento_mes_inovacao: {
         Args: { p_mes: string }
         Returns: undefined
@@ -3156,6 +3200,16 @@ export const Constants = {
 //   ativo: boolean (not null, default: true)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   explicacao: text (nullable)
+// Table: performance_google_reviews
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   paciente_nome: text (not null)
+//   data_contato: date (not null)
+//   data_comentario: date (not null)
+//   status: text (not null, default: 'pendente'::text)
+//   mes_referencia: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: performance_pp_pdm
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -3553,6 +3607,9 @@ export const Constants = {
 //   UNIQUE performance_bonificacao_usuario_id_mes_referencia_key: UNIQUE (usuario_id, mes_referencia)
 // Table: performance_bonificacao_itens
 //   PRIMARY KEY performance_bonificacao_itens_pkey: PRIMARY KEY (id)
+// Table: performance_google_reviews
+//   PRIMARY KEY performance_google_reviews_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY performance_google_reviews_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: performance_pp_pdm
 //   PRIMARY KEY performance_pp_pdm_pkey: PRIMARY KEY (id)
 //   UNIQUE performance_pp_pdm_usuario_id_data_registro_key: UNIQUE (usuario_id, data_registro)
@@ -3874,6 +3931,10 @@ export const Constants = {
 //   Policy "performance_bonificacao_itens_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: performance_google_reviews
+//   Policy "performance_google_reviews_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: performance_pp_pdm
 //   Policy "performance_pp_pdm_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -4066,6 +4127,29 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION gerar_adiantamento_mes_google(text)
+//   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//   BEGIN
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF NOT EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
+//         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
+//       ) THEN
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//         VALUES (v_user.id, 'credito', 100, 'Adiantamento Google Avaliações (Meta 5)', p_mes);
+//       END IF;
+//     END LOOP;
+//   END;
+//   $function$
+//
 // FUNCTION gerar_adiantamento_mes_inovacao(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_inovacao(p_mes text)
 //    RETURNS void
@@ -4174,6 +4258,45 @@ export const Constants = {
 //
 //     SELECT role INTO v_role FROM public.usuarios WHERE id = auth.uid();
 //     RETURN v_role = 'admin';
+//   END;
+//   $function$
+//
+// FUNCTION processar_fechamento_mes_google(text)
+//   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_google(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user RECORD;
+//     v_count integer;
+//   BEGIN
+//     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
+//       IF EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
+//         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
+//       ) THEN
+//         IF NOT EXISTS (
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
+//           AND descricao = 'Ajuste de Meta Google (não atingiu 5)'
+//         ) THEN
+//           SELECT COUNT(*) INTO v_count
+//           FROM public.performance_google_reviews
+//           WHERE usuario_id = v_user.id
+//             AND status = 'validado'
+//             AND mes_referencia = p_mes;
+//
+//           IF v_count < 5 THEN
+//             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
+//             VALUES (v_user.id, 'debito', 100, 'Ajuste de Meta Google (não atingiu 5)', p_mes);
+//           END IF;
+//         END IF;
+//       END IF;
+//     END LOOP;
 //   END;
 //   $function$
 //

@@ -29,31 +29,33 @@ export default function Performance() {
       </div>
 
       <Tabs defaultValue="carteira" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto max-w-5xl mb-6 justify-start">
-          <TabsTrigger value="carteira" className="whitespace-nowrap">
-            Carteira
-          </TabsTrigger>
-          <TabsTrigger value="pp-pdm" className="whitespace-nowrap">
-            PP e PDM
-          </TabsTrigger>
-          {isManager && (
-            <TabsTrigger value="bonificacao" className="whitespace-nowrap">
-              Bonificação Feijão com Arroz
+        <div className="w-full overflow-x-auto pb-2 mb-4 flex [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <TabsList className="inline-flex w-max min-w-full justify-start h-auto p-1 flex-nowrap gap-1">
+            <TabsTrigger value="carteira" className="whitespace-nowrap shrink-0">
+              Carteira
             </TabsTrigger>
-          )}
-          <TabsTrigger value="relatorio-rotinas" className="whitespace-nowrap">
-            Relatório de Rotinas
-          </TabsTrigger>
-          <TabsTrigger value="sorriso-dos-sonhos" className="whitespace-nowrap">
-            Sorriso dos Sonhos
-          </TabsTrigger>
-          <TabsTrigger value="inovacoes" className="whitespace-nowrap">
-            Inovações
-          </TabsTrigger>
-          <TabsTrigger value="google" className="whitespace-nowrap">
-            Google
-          </TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="pp-pdm" className="whitespace-nowrap shrink-0">
+              PP e PDM
+            </TabsTrigger>
+            {isManager && (
+              <TabsTrigger value="bonificacao" className="whitespace-nowrap shrink-0">
+                Bonificação Feijão com Arroz
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="relatorio-rotinas" className="whitespace-nowrap shrink-0">
+              Relatório de Rotinas
+            </TabsTrigger>
+            <TabsTrigger value="sorriso-dos-sonhos" className="whitespace-nowrap shrink-0">
+              Sorriso dos Sonhos
+            </TabsTrigger>
+            <TabsTrigger value="inovacoes" className="whitespace-nowrap shrink-0">
+              Inovações
+            </TabsTrigger>
+            <TabsTrigger value="google" className="whitespace-nowrap shrink-0">
+              Google
+            </TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="carteira" className="animate-fade-in">
           <CarteiraTab />
         </TabsContent>
