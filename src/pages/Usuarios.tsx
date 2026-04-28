@@ -56,6 +56,7 @@ import { useAuth } from '@/hooks/use-auth'
 
 export interface ExtendedUsuario extends UsuarioWithCargo {
   ordem?: number
+  saldo_carteira?: number
   horario_entrada?: string | null
   inicio_lanche_manha?: string | null
   fim_lanche_manha?: string | null
@@ -128,7 +129,21 @@ export default function Usuarios() {
       setHasPermission(permitted)
 
       if (permitted) {
-        const [us, cs] = await Promise.all([getUsuarios(), getCargos()])
+        const [us, cs, { data: transacoes }] = await Promise.all([
+          getUsuarios(),
+          getCargos(),
+          supabase.from('carteira_transacoes').select('usuario_id, tipo, valor'),
+        ])
+
+        const saldos: Record<string, number> = {}
+        if (transacoes) {
+          transacoes.forEach((t) => {
+            if (!saldos[t.usuario_id]) saldos[t.usuario_id] = 0
+            if (t.tipo === 'credito') saldos[t.usuario_id] += Number(t.valor)
+            else if (t.tipo === 'debito' || t.tipo === 'saque')
+              saldos[t.usuario_id] -= Number(t.valor)
+          })
+        }
 
         const { data: scheduleData } = await supabase
           .from('usuarios')
@@ -138,7 +153,7 @@ export default function Usuarios() {
 
         const extendedUs = us.map((u) => {
           const s = scheduleData?.find((sd) => sd.id === u.id)
-          return { ...u, ...s } as ExtendedUsuario
+          return { ...u, ...s, saldo_carteira: saldos[u.id] || 0 } as ExtendedUsuario
         })
 
         extendedUs.sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
@@ -390,6 +405,7 @@ export default function Usuarios() {
                 <TableHead className="px-2 text-xs whitespace-nowrap font-bold text-amber-600 text-center">
                   Total
                 </TableHead>
+                <TableHead className="px-2 text-right whitespace-nowrap">Saldo Carteira</TableHead>
                 <TableHead className="px-2">Status</TableHead>
                 <TableHead className="w-[60px] px-2 text-right">Ações</TableHead>
               </TableRow>
@@ -500,6 +516,20 @@ export default function Usuarios() {
 
                       <TableCell className="px-2 text-[11px] whitespace-nowrap font-bold text-amber-600 text-center">
                         {calculateTotalHours(usuario)}
+                      </TableCell>
+
+                      <TableCell className="px-2 text-right font-bold whitespace-nowrap text-xs">
+                        <span
+                          className={cn(
+                            usuario.saldo_carteira && usuario.saldo_carteira > 0
+                              ? 'text-emerald-600'
+                              : usuario.saldo_carteira && usuario.saldo_carteira < 0
+                                ? 'text-red-600'
+                                : 'text-slate-500',
+                          )}
+                        >
+                          R$ {(usuario.saldo_carteira || 0).toFixed(2).replace('.', ',')}
+                        </span>
                       </TableCell>
 
                       <TableCell className="px-2">

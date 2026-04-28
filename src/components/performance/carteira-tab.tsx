@@ -3,7 +3,15 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Wallet, ArrowUpRight, ArrowDownRight, DollarSign, RefreshCw } from 'lucide-react'
+import {
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  RefreshCw,
+  Trash2,
+  History,
+} from 'lucide-react'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -51,6 +59,7 @@ export function CarteiraTab() {
   const pastMonths = getPastMonths()
   const [selectedMonth, setSelectedMonth] = useState(pastMonths[0])
 
+  const [globalTransactions, setGlobalTransactions] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [balance, setBalance] = useState(0)
@@ -59,6 +68,7 @@ export function CarteiraTab() {
   const [perdasTotal, setPerdasTotal] = useState(0)
 
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false)
+  const [isExtratoGlobalOpen, setIsExtratoGlobalOpen] = useState(false)
 
   useEffect(() => {
     if (user?.id && !selectedUser) {
@@ -108,50 +118,41 @@ export function CarteiraTab() {
   const loadTransactions = async (userId: string, month: string) => {
     setLoading(true)
 
-    // Fetch Global Balance
-    const { data: globalData } = await supabase
-      .from('carteira_transacoes')
-      .select('tipo, valor')
-      .eq('usuario_id', userId)
-
-    let globalBal = 0
-    if (globalData) {
-      let credits = 0
-      let debits = 0
-      let saques = 0
-      globalData.forEach((t) => {
-        if (t.tipo === 'credito') credits += Number(t.valor)
-        else if (t.tipo === 'debito') debits += Number(t.valor)
-        else if (t.tipo === 'saque') saques += Number(t.valor)
-      })
-      globalBal = credits - debits - saques
-    }
-    setBalance(globalBal)
-
-    // Fetch Month Transactions
-    const { data, error } = await supabase
+    // Fetch Global Data
+    const { data: globalData, error } = await supabase
       .from('carteira_transacoes')
       .select('*')
       .eq('usuario_id', userId)
-      .eq('mes_referencia', month)
       .order('criado_em', { ascending: false })
 
     if (error) {
       toast.error('Erro ao carregar transações')
-    } else if (data) {
-      setTransactions(data)
+    } else if (globalData) {
+      setGlobalTransactions(globalData)
+      let globalBal = 0
+      globalData.forEach((t) => {
+        if (t.tipo === 'credito') globalBal += Number(t.valor)
+        else if (t.tipo === 'debito') globalBal -= Number(t.valor)
+        else if (t.tipo === 'saque') globalBal -= Number(t.valor)
+      })
+      setBalance(globalBal)
+
+      // Calculate month data
+      const monthData = globalData.filter((t) => t.mes_referencia === month)
+      setTransactions(monthData)
+
       let pot = 0
       let per = 0
-      let saq = 0
-      data.forEach((t) => {
+      monthData.forEach((t) => {
         if (t.tipo === 'credito') pot += Number(t.valor)
         else if (t.tipo === 'debito') per += Number(t.valor)
-        else if (t.tipo === 'saque') saq += Number(t.valor)
       })
       setPotencialTotal(pot)
       setPerdasTotal(per)
-      setSaldoPeriodo(pot - per - saq)
+      // Calculation specified by user: Ganhos - Perdas (ignores saques for period display)
+      setSaldoPeriodo(pot - per)
     }
+
     setLoading(false)
   }
 
@@ -176,6 +177,22 @@ export function CarteiraTab() {
     } else {
       toast.success('Saque registrado com sucesso!')
       setIsSaqueDialogOpen(false)
+      loadTransactions(selectedUser, selectedMonth)
+    }
+  }
+
+  const handleDeleteTransaction = async (id: string) => {
+    if (
+      !window.confirm('Tem certeza que deseja excluir este lançamento? O saldo será recalculado.')
+    )
+      return
+    setLoading(true)
+    const { error } = await supabase.from('carteira_transacoes').delete().eq('id', id)
+    if (error) {
+      toast.error('Erro ao excluir lançamento')
+      setLoading(false)
+    } else {
+      toast.success('Lançamento excluído com sucesso')
       loadTransactions(selectedUser, selectedMonth)
     }
   }
@@ -283,7 +300,16 @@ export function CarteiraTab() {
               R$ {saldoPeriodo.toFixed(2).replace('.', ',')}
             </div>
             <div className="flex items-center justify-between text-xs text-slate-400 mb-2 pb-1 border-b border-slate-700">
-              <span>Saldo Total Acumulado:</span>
+              <button
+                onClick={() => setIsExtratoGlobalOpen(true)}
+                className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group cursor-pointer"
+                title="Ver Extrato Completo"
+              >
+                <History className="w-3.5 h-3.5" />
+                <span className="underline decoration-dashed underline-offset-2 decoration-slate-600 group-hover:decoration-amber-400">
+                  Saldo Total Acumulado:
+                </span>
+              </button>
               <span className="font-semibold text-emerald-400">
                 R$ {balance.toFixed(2).replace('.', ',')}
               </span>
@@ -313,7 +339,7 @@ export function CarteiraTab() {
               <div className="py-8 text-center text-slate-500">Carregando transações...</div>
             ) : transactions.length === 0 ? (
               <div className="py-8 text-center text-slate-500 italic">
-                Nenhuma movimentação registrada.
+                Nenhuma movimentação registrada no período.
               </div>
             ) : (
               <div className="rounded-md border max-h-[400px] overflow-y-auto">
@@ -324,6 +350,7 @@ export function CarteiraTab() {
                       <TableHead>Descrição (Origem)</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
+                      {isAdmin && <TableHead className="w-10"></TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -367,6 +394,19 @@ export function CarteiraTab() {
                           {t.tipo === 'credito' ? '+' : '-'} R${' '}
                           {Number(t.valor).toFixed(2).replace('.', ',')}
                         </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDeleteTransaction(t.id)}
+                              title="Excluir Lançamento"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -400,6 +440,102 @@ export function CarteiraTab() {
               Confirmar Saque
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isExtratoGlobalOpen} onOpenChange={setIsExtratoGlobalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-800">
+              <History className="w-5 h-5 text-amber-500" />
+              Extrato Completo - Histórico Acumulado
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto mt-4 rounded-md border bg-white">
+            <Table>
+              <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Mês Ref.</TableHead>
+                  <TableHead>Descrição (Origem)</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  {isAdmin && <TableHead className="w-10"></TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {globalTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="text-center py-8 text-slate-500"
+                    >
+                      Nenhuma movimentação registrada no histórico.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  globalTransactions.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="text-slate-500 whitespace-nowrap text-xs">
+                        {format(new Date(t.criado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-700 text-xs whitespace-nowrap">
+                        {t.mes_referencia}
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-700 text-xs">
+                        {t.descricao}
+                      </TableCell>
+                      <TableCell>
+                        {t.tipo === 'credito' && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 text-[10px]"
+                          >
+                            <ArrowUpRight className="w-3 h-3 mr-1" /> Crédito
+                          </Badge>
+                        )}
+                        {t.tipo === 'debito' && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-red-100 text-red-800 hover:bg-red-200 text-[10px]"
+                          >
+                            <ArrowDownRight className="w-3 h-3 mr-1" /> Débito
+                          </Badge>
+                        )}
+                        {t.tipo === 'saque' && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-[10px]"
+                          >
+                            <DollarSign className="w-3 h-3 mr-1" /> Saque
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right font-bold whitespace-nowrap text-xs ${t.tipo === 'credito' ? 'text-emerald-600' : 'text-red-600'}`}
+                      >
+                        {t.tipo === 'credito' ? '+' : '-'} R${' '}
+                        {Number(t.valor).toFixed(2).replace('.', ',')}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteTransaction(t.id)}
+                            title="Excluir Lançamento"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
