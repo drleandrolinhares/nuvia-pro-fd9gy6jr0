@@ -258,17 +258,37 @@ export default function Estoque() {
 
     return Object.entries(groups)
       .map(([nome, items]) => {
+        const sortedItems = [...items].sort((a, b) => {
+          const parseNumeric = (val: string | undefined) => {
+            if (!val || val === '-') return 0
+            const match = val.replace(',', '.').match(/-?\d+(\.\d+)?/)
+            return match ? parseFloat(match[0]) : 0
+          }
+
+          const diamA = parseNumeric(camposDinamicos[a.id]?.diametro)
+          const diamB = parseNumeric(camposDinamicos[b.id]?.diametro)
+
+          if (diamA !== diamB) {
+            return diamA - diamB
+          }
+
+          const tamA = parseNumeric(camposDinamicos[a.id]?.tamanho)
+          const tamB = parseNumeric(camposDinamicos[b.id]?.tamanho)
+
+          return tamA - tamB
+        })
+
         const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
         const isCritico = items.some((item) => item.quantidade_estoque <= item.quantidade_minima)
         return {
           nome,
-          items,
+          items: sortedItems,
           quantidadeTotal,
           isCritico,
         }
       })
       .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [filteredData])
+  }, [filteredData, camposDinamicos])
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 

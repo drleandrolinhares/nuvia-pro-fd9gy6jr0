@@ -2800,6 +2800,7 @@ export type Database = {
         Args: { p_mes: string }
         Returns: undefined
       }
+      gerar_todos_adiantamentos_mensais: { Args: never; Returns: undefined }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       processar_fechamento_mes_google: {
@@ -4334,6 +4335,43 @@ export const Constants = {
 //           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //           VALUES (v_user.id, 'credito', 200, 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)', p_mes);
 //         END IF;
+//       END IF;
+//     END LOOP;
+//   END;
+//   $function$
+//
+// FUNCTION gerar_todos_adiantamentos_mensais()
+//   CREATE OR REPLACE FUNCTION public.gerar_todos_adiantamentos_mensais()
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_mes_atual text;
+//     v_data_atual date := CURRENT_DATE;
+//     v_user RECORD;
+//   BEGIN
+//     -- Trava de segurança: Iniciar apenas a partir de 1º de Maio de 2026
+//     IF v_data_atual < '2026-05-01'::date THEN
+//       RETURN;
+//     END IF;
+//
+//     v_mes_atual := to_char(v_data_atual, 'YYYY-MM');
+//
+//     -- 1. Gerar Adiantamentos Específicos usando funções existentes
+//     PERFORM public.gerar_adiantamento_mes_google(v_mes_atual);
+//     PERFORM public.gerar_adiantamento_mes_inovacao(v_mes_atual);
+//     PERFORM public.gerar_adiantamento_mes_sorriso(v_mes_atual);
+//
+//     -- 2. Gerar registros base de Bonificação Feijão com Arroz para acionar o trigger de adiantamento
+//     -- O trigger trg_sync_carteira_bonificacao fará a inserção do crédito na carteira
+//     FOR v_user IN SELECT id FROM public.usuarios WHERE status = 'ativo' AND possui_carteira = true LOOP
+//       IF NOT EXISTS (
+//         SELECT 1 FROM public.performance_bonificacao
+//         WHERE usuario_id = v_user.id AND mes_referencia = v_mes_atual
+//       ) THEN
+//         INSERT INTO public.performance_bonificacao (usuario_id, mes_referencia, itens_marcados, pontuacao_total, atingiu_meta)
+//         VALUES (v_user.id, v_mes_atual, '[]'::jsonb, 0, false);
 //       END IF;
 //     END LOOP;
 //   END;
