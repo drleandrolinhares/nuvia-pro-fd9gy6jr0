@@ -9,6 +9,7 @@ import { SacNotificationPopup } from '@/components/sac/sac-notification-popup'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
+import Fluxo from './pages/financeiro/Fluxo'
 import Configuracoes from './pages/Configuracoes'
 import Usuarios from './pages/Usuarios'
 import Fornecedores from './pages/Fornecedores'
@@ -95,6 +96,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['financeiro_estoque']}>
               <Estoque />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/fluxo"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Fluxo />
             </ProtectedRoute>
           }
         />

@@ -139,6 +139,12 @@ const navData = [
         icon: Package,
         permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
       },
+      {
+        title: 'FLUXO DE CAIXA',
+        url: '/financeiro/fluxo',
+        icon: Activity,
+        showRole: ['admin'],
+      },
     ],
   },
   {
