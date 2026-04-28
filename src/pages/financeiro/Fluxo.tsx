@@ -20,9 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Plus, Trash2, Waves } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Trash2, Waves, Copy } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -172,6 +171,70 @@ export default function Fluxo() {
     }
   }
 
+  const handleReplicarMes = async () => {
+    if (
+      !confirm(
+        'Deseja replicar as receitas e despesas deste mês para o próximo? Esta ação apenas adicionará novos registros.',
+      )
+    )
+      return
+
+    const nextMonthDate = addMonths(currentMonth, 1)
+    const nextMonthStr = format(nextMonthDate, 'yyyy-MM')
+
+    try {
+      const { data: currentReceitas } = await supabase
+        .from('fluxo_caixa_receitas')
+        .select('*')
+        .eq('mes_referencia', monthStr)
+
+      if (currentReceitas && currentReceitas.length > 0) {
+        const { data: existingNextReceitas } = await supabase
+          .from('fluxo_caixa_receitas')
+          .select('ciclo')
+          .eq('mes_referencia', nextMonthStr)
+
+        const existingCycles = new Set(existingNextReceitas?.map((r) => r.ciclo) || [])
+
+        const novasReceitas = currentReceitas
+          .filter((r) => !existingCycles.has(r.ciclo))
+          .map((r) => ({
+            mes_referencia: nextMonthStr,
+            ciclo: r.ciclo,
+            valor_estimado: r.valor_estimado,
+          }))
+
+        if (novasReceitas.length > 0) {
+          await supabase.from('fluxo_caixa_receitas').insert(novasReceitas)
+        }
+      }
+
+      const currentDespesas = despesas.filter((d) => {
+        const mapped = getCycleForDate(d.data_vencimento)
+        return mapped.monthStr === monthStr
+      })
+
+      if (currentDespesas.length > 0) {
+        const novasDespesas = currentDespesas.map((d) => {
+          const oldDate = parseISO(d.data_vencimento)
+          const newDate = addMonths(oldDate, 1)
+          return {
+            data_vencimento: format(newDate, 'yyyy-MM-dd'),
+            categoria: d.categoria,
+            descricao: d.descricao,
+            valor_estimado: d.valor_estimado,
+          }
+        })
+        await supabase.from('fluxo_caixa_despesas').insert(novasDespesas)
+      }
+
+      toast({ title: 'Informações replicadas para o próximo mês com sucesso!' })
+      fetchData()
+    } catch (e) {
+      toast({ title: 'Erro ao replicar informações', variant: 'destructive' })
+    }
+  }
+
   const cycles = [1, 2, 3, 4]
   const cycleInfo = {
     1: { boleto: 7, disp: 9, start: 9, end: 15 },
@@ -198,26 +261,37 @@ export default function Fluxo() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-slate-950 p-1.5 rounded-lg border border-slate-800 shadow-inner">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
             <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              variant="outline"
+              className="border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059] w-full sm:w-auto bg-slate-950 font-semibold"
+              onClick={handleReplicarMes}
             >
-              <ChevronLeft className="h-5 w-5" />
+              <Copy className="h-4 w-4 mr-2" /> Replicar para{' '}
+              {format(addMonths(currentMonth, 1), 'MMMM', { locale: ptBR })}
             </Button>
-            <span className="font-medium w-32 text-center text-[#C5A059] capitalize">
-              {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+
+            <div className="flex items-center gap-4 bg-slate-950 p-1.5 rounded-lg border border-slate-800 shadow-inner w-full sm:w-auto justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
+                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <span className="font-bold w-32 text-center text-slate-100 capitalize">
+                {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#C5A059] hover:bg-[#C5A059]/10 hover:text-[#C5A059]"
+                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -241,16 +315,16 @@ export default function Fluxo() {
           const saldo = recVal - totalDesp
           const capacity = totalDesp > 0 ? (recVal / totalDesp) * 100 : recVal > 0 ? 200 : 0
 
-          let statusColor = 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
+          let statusColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
           let progressColor = 'bg-emerald-500'
           let statusText = 'Saudável'
 
           if (recVal < totalDesp) {
-            statusColor = 'bg-rose-500/20 text-rose-500 border-rose-500/30'
+            statusColor = 'bg-rose-500/20 text-rose-400 border-rose-500/30'
             progressColor = 'bg-rose-500'
             statusText = 'Crítico'
           } else if (recVal < totalDesp * 1.1) {
-            statusColor = 'bg-amber-500/20 text-amber-500 border-amber-500/30'
+            statusColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30'
             progressColor = 'bg-amber-500'
             statusText = 'Ajustado'
           }
@@ -258,14 +332,14 @@ export default function Fluxo() {
           return (
             <Card
               key={c}
-              className="border-slate-800 bg-slate-900/50 flex flex-col overflow-hidden shadow-lg"
+              className="border-slate-700 bg-[#0B1320] flex flex-col overflow-hidden shadow-lg shadow-black/40"
             >
-              <CardHeader className="pb-4 border-b border-slate-800 bg-slate-900 relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-[#C5A059]/20"></div>
+              <CardHeader className="pb-4 border-b border-slate-800 bg-[#0F1A2A] relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#C5A059]"></div>
                 <div className="flex justify-between items-start mb-3">
                   <Badge
                     variant="outline"
-                    className="bg-slate-950 border-slate-700 text-[#C5A059] font-semibold"
+                    className="bg-[#001529] border-[#C5A059]/30 text-[#C5A059] font-bold"
                   >
                     Ciclo {c}
                   </Badge>
@@ -276,20 +350,20 @@ export default function Fluxo() {
                 <CardTitle className="text-lg text-slate-100 flex items-center gap-2">
                   Boletos: Dia {info.boleto}
                 </CardTitle>
-                <CardDescription className="text-slate-400 mt-1">
+                <CardDescription className="text-slate-300 mt-1">
                   Disponível ~Dia {info.disp} <br />
                   Cobre despesas de {info.start} a {info.end}
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-5 flex-1 flex flex-col gap-6">
+              <CardContent className="pt-5 flex-1 flex flex-col gap-6 bg-[#0B1320]">
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-400 font-semibold tracking-wider uppercase">
+                  <Label className="text-xs text-slate-300 font-semibold tracking-wider uppercase">
                     Receita Estimada
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C5A059] font-medium text-sm">
                         R$
                       </span>
                       <Input
@@ -298,8 +372,8 @@ export default function Fluxo() {
                         onChange={(e) =>
                           setReceitaInputs((prev) => ({ ...prev, [c]: e.target.value }))
                         }
-                        className="bg-slate-950 border-slate-700 text-[#C5A059] font-semibold pl-9 placeholder:text-slate-600 focus-visible:ring-[#C5A059]/50 w-full"
-                        placeholder="0,00"
+                        className="bg-[#050A13] border-slate-700 text-slate-100 font-bold pl-9 placeholder:text-slate-600 focus-visible:ring-[#C5A059]/50 w-full shadow-inner"
+                        placeholder="0.00"
                       />
                     </div>
                     <Button
@@ -310,26 +384,34 @@ export default function Fluxo() {
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Despesas</span>
-                    <span className="font-medium text-rose-400">{formatCurrency(totalDesp)}</span>
+
+                <div className="bg-[#050A13] rounded-lg p-3 border border-slate-800 space-y-3 shadow-inner">
+                  <div className="flex justify-between text-sm items-center">
+                    <span className="text-slate-300 font-medium">Total Despesas</span>
+                    <span className="font-bold text-rose-400">{formatCurrency(totalDesp)}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium">
-                    <span className="text-slate-300">Saldo Projetado</span>
-                    <span className={saldo >= 0 ? 'text-emerald-400' : 'text-rose-500'}>
+                  <div className="flex justify-between text-sm items-center border-t border-slate-800 pt-2">
+                    <span className="text-slate-300 font-medium">Saldo Projetado</span>
+                    <span
+                      className={cn(
+                        'font-bold text-base',
+                        saldo >= 0 ? 'text-emerald-400' : 'text-rose-500',
+                      )}
+                    >
                       {formatCurrency(saldo)}
                     </span>
                   </div>
-                  <Progress
-                    value={Math.min(capacity, 100)}
-                    className={cn('h-2 mt-2', progressColor)}
-                  />
+                  <div className="w-full bg-[#0F1A2A] rounded-full h-2 overflow-hidden mt-1">
+                    <div
+                      className={cn('h-full transition-all duration-500', progressColor)}
+                      style={{ width: `${Math.min(capacity, 100)}%` }}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex-1 flex flex-col">
-                  <div className="flex justify-between items-center mb-3">
-                    <Label className="text-xs text-slate-400 font-semibold tracking-wider uppercase">
+                  <div className="flex justify-between items-center mb-3 mt-2">
+                    <Label className="text-xs text-slate-300 font-bold tracking-wider uppercase">
                       Contas a Pagar
                     </Label>
                     <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -337,45 +419,49 @@ export default function Fluxo() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-xs border-[#C5A059]/30 text-[#C5A059] hover:bg-[#C5A059]/10 bg-transparent"
+                          className="h-7 px-2 text-xs border-[#C5A059]/30 text-[#C5A059] hover:bg-[#C5A059]/10 bg-[#0F1A2A]"
                         >
                           <Plus className="h-3 w-3 mr-1" /> Adicionar
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="border-slate-800 bg-slate-900 text-slate-200 sm:max-w-[425px]">
+                      <DialogContent className="border-slate-700 bg-[#0B1320] text-slate-200 sm:max-w-[425px] shadow-2xl shadow-black/50">
                         <DialogHeader>
                           <DialogTitle className="text-slate-100 flex items-center gap-2">
                             <span className="w-1 h-5 bg-[#C5A059] rounded-full inline-block"></span>
                             Nova Despesa Estimada
                           </DialogTitle>
-                        </DialogHeader>{' '}
+                        </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid gap-2">
-                            <Label className="text-slate-300">Data de Vencimento</Label>
+                            <Label className="text-slate-300 font-medium">Data de Vencimento</Label>
                             <Input
                               type="date"
                               value={newDespesa.data}
                               onChange={(e) =>
                                 setNewDespesa({ ...newDespesa, data: e.target.value })
                               }
-                              className="bg-slate-950 border-slate-800 text-slate-200"
+                              className="bg-[#050A13] border-slate-700 text-slate-100 focus-visible:ring-[#C5A059]/50"
                             />
-                            <p className="text-[10px] text-slate-500">
+                            <p className="text-[10px] text-slate-500 font-medium">
                               O sistema alocará automaticamente no ciclo correto.
                             </p>
                           </div>
                           <div className="grid gap-2">
-                            <Label className="text-slate-300">Categoria</Label>
+                            <Label className="text-slate-300 font-medium">Categoria</Label>
                             <Select
                               value={newDespesa.categoria}
                               onValueChange={(v) => setNewDespesa({ ...newDespesa, categoria: v })}
                             >
-                              <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-200">
+                              <SelectTrigger className="bg-[#050A13] border-slate-700 text-slate-100 focus:ring-[#C5A059]/50">
                                 <SelectValue placeholder="Selecione..." />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-[#0F1A2A] border-slate-700 text-slate-200">
                                 {CATEGORIAS.map((cat) => (
-                                  <SelectItem key={cat} value={cat}>
+                                  <SelectItem
+                                    key={cat}
+                                    value={cat}
+                                    className="focus:bg-[#C5A059]/20 focus:text-white cursor-pointer"
+                                  >
                                     {cat}
                                   </SelectItem>
                                 ))}
@@ -383,33 +469,42 @@ export default function Fluxo() {
                             </Select>
                           </div>
                           <div className="grid gap-2">
-                            <Label className="text-slate-300">Descrição (Opcional)</Label>
+                            <Label className="text-slate-300 font-medium">
+                              Descrição (Opcional)
+                            </Label>
                             <Input
                               value={newDespesa.descricao}
                               onChange={(e) =>
                                 setNewDespesa({ ...newDespesa, descricao: e.target.value })
                               }
-                              className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-600"
+                              className="bg-[#050A13] border-slate-700 text-slate-100 placeholder:text-slate-600 focus-visible:ring-[#C5A059]/50"
                               placeholder="Ex: Fornecedor X"
                             />
                           </div>
                           <div className="grid gap-2">
-                            <Label className="text-slate-300">Valor Estimado (R$)</Label>
-                            <Input
-                              type="number"
-                              value={newDespesa.valor}
-                              onChange={(e) =>
-                                setNewDespesa({ ...newDespesa, valor: e.target.value })
-                              }
-                              className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-600"
-                              placeholder="0.00"
-                            />
+                            <Label className="text-slate-300 font-medium">
+                              Valor Estimado (R$)
+                            </Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C5A059] font-medium text-sm">
+                                R$
+                              </span>
+                              <Input
+                                type="number"
+                                value={newDespesa.valor}
+                                onChange={(e) =>
+                                  setNewDespesa({ ...newDespesa, valor: e.target.value })
+                                }
+                                className="bg-[#050A13] border-slate-700 text-slate-100 pl-9 placeholder:text-slate-600 focus-visible:ring-[#C5A059]/50"
+                                placeholder="0.00"
+                              />
+                            </div>
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
-                            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                            className="border-slate-700 text-slate-300 hover:bg-slate-800 bg-[#0F1A2A]"
                             onClick={() => setIsAddModalOpen(false)}
                           >
                             Cancelar
@@ -425,34 +520,37 @@ export default function Fluxo() {
                     </Dialog>
                   </div>
 
-                  <div className="space-y-2 flex-1 overflow-y-auto pr-1 max-h-[250px] scrollbar-thin scrollbar-thumb-slate-800">
+                  <div className="space-y-2 flex-1 overflow-y-auto pr-1 max-h-[250px] scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                     {cycleDespesas.length === 0 ? (
-                      <div className="text-center py-6 text-sm text-slate-500 border border-dashed border-slate-800 rounded-lg">
+                      <div className="text-center py-6 text-sm text-slate-500 border border-dashed border-slate-700 rounded-lg bg-[#050A13]">
                         Nenhuma despesa neste ciclo.
                       </div>
                     ) : (
                       cycleDespesas.map((d) => (
                         <div
                           key={d.id}
-                          className="flex flex-col bg-slate-800/40 p-3 rounded-lg border border-slate-700/50 group hover:border-slate-600 transition-colors"
+                          className="flex flex-col bg-[#0F1A2A] p-3 rounded-lg border border-slate-700/50 group hover:border-[#C5A059]/50 transition-colors shadow-sm"
                         >
-                          {' '}
                           <div className="flex justify-between items-start">
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-slate-300 truncate max-w-[140px]">
+                              <span
+                                className="text-sm font-semibold text-slate-200 truncate max-w-[140px]"
+                                title={d.descricao || ''}
+                              >
                                 {d.descricao}
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-400 mt-0.5">
                                 {format(parseISO(d.data_vencimento), 'dd/MM/yyyy')} • {d.categoria}
                               </span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <span className="text-sm font-semibold text-rose-400/90">
+                              <span className="text-sm font-bold text-slate-100">
                                 {formatCurrency(d.valor_estimado)}
                               </span>
                               <button
                                 onClick={() => handleDeleteDespesa(d.id)}
-                                className="text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Excluir despesa"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
