@@ -145,6 +145,12 @@ const navData = [
         icon: Activity,
         showRole: ['admin'],
       },
+      {
+        title: 'GESTÃO FISCAL',
+        url: '/financeiro/fiscal',
+        icon: Landmark,
+        showRole: ['admin'],
+      },
     ],
   },
   {

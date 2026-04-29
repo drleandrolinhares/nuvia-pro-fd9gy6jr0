@@ -31,6 +31,7 @@ import Vendas from './pages/comercial/Vendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
 import Precificacao from './pages/administrativo/Precificacao'
+import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2 } from 'lucide-react'
@@ -270,10 +271,10 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/comercial/fiscal"
+          path="/financeiro/fiscal"
           element={
-            <ProtectedRoute allowedRoles={[]}>
-              <Placeholder />
+            <ProtectedRoute allowedRoles={['admin']}>
+              <GestaoFiscal />
             </ProtectedRoute>
           }
         />
