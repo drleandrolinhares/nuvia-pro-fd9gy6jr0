@@ -1801,10 +1801,14 @@ export type Database = {
       }
       produtos: {
         Row: {
+          alerta_prazo_dias: number | null
           categoria: string | null
           codigo_barras: string | null
+          consumo_estimado_frequencia: string | null
+          consumo_estimado_valor: number | null
           custo_unitario: number | null
           data_criacao: string | null
+          data_proxima_revisao: string | null
           embalagem: string | null
           embalagem_id: string | null
           especialidade_id: string | null
@@ -1816,20 +1820,20 @@ export type Database = {
           quantidade_estoque: number | null
           quantidade_minima: number | null
           referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
-          alerta_prazo_dias: number | null
-          data_proxima_revisao: string | null
-          consumo_estimado_valor: number | null
-          consumo_estimado_frequencia: string | null
           sala: string | null
           sala_id: string | null
           validade: string | null
           variacao: string | null
         }
         Insert: {
+          alerta_prazo_dias?: number | null
           categoria?: string | null
           codigo_barras?: string | null
+          consumo_estimado_frequencia?: string | null
+          consumo_estimado_valor?: number | null
           custo_unitario?: number | null
           data_criacao?: string | null
+          data_proxima_revisao?: string | null
           embalagem?: string | null
           embalagem_id?: string | null
           especialidade_id?: string | null
@@ -1841,20 +1845,20 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
-          alerta_prazo_dias?: number | null
-          data_proxima_revisao?: string | null
-          consumo_estimado_valor?: number | null
-          consumo_estimado_frequencia?: string | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null
           variacao?: string | null
         }
         Update: {
+          alerta_prazo_dias?: number | null
           categoria?: string | null
           codigo_barras?: string | null
+          consumo_estimado_frequencia?: string | null
+          consumo_estimado_valor?: number | null
           custo_unitario?: number | null
           data_criacao?: string | null
+          data_proxima_revisao?: string | null
           embalagem?: string | null
           embalagem_id?: string | null
           especialidade_id?: string | null
@@ -1866,10 +1870,6 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
-          alerta_prazo_dias?: number | null
-          data_proxima_revisao?: string | null
-          consumo_estimado_valor?: number | null
-          consumo_estimado_frequencia?: string | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null
@@ -3415,6 +3415,10 @@ export const Constants = {
 //   embalagem_id: uuid (nullable)
 //   sala_id: uuid (nullable)
 //   referencia_consumo: referencia_consumo_enum (nullable, default: 'qtd_comprada'::referencia_consumo_enum)
+//   alerta_prazo_dias: integer (nullable)
+//   data_proxima_revisao: date (nullable)
+//   consumo_estimado_valor: numeric (nullable)
+//   consumo_estimado_frequencia: text (nullable)
 // Table: referencias_comissao_crc
 //   id: uuid (not null, default: gen_random_uuid())
 //   faixa_entrada_minima: numeric (nullable)

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
 import {
   Produto,
@@ -58,6 +59,11 @@ export function EditarProdutoModal({
     'qtd_comprada',
   )
 
+  const [controlePorPrazo, setControlePorPrazo] = useState(false)
+  const [alertaPrazoDias, setAlertaPrazoDias] = useState('')
+  const [consumoEstimadoValor, setConsumoEstimadoValor] = useState('')
+  const [consumoEstimadoFrequencia, setConsumoEstimadoFrequencia] = useState('MES')
+
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
   const [campoOpcoes, setCampoOpcoes] = useState<Record<string, any[]>>({})
@@ -96,6 +102,17 @@ export function EditarProdutoModal({
         } else {
           setReferenciaConsumo('qtd_comprada')
         }
+
+        if (produto.alerta_prazo_dias) {
+          setControlePorPrazo(true)
+          setAlertaPrazoDias(produto.alerta_prazo_dias.toString())
+        } else {
+          setControlePorPrazo(false)
+          setAlertaPrazoDias('')
+        }
+
+        setConsumoEstimadoValor(produto.consumo_estimado_valor?.toString() || '')
+        setConsumoEstimadoFrequencia(produto.consumo_estimado_frequencia || 'MES')
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -153,7 +170,7 @@ export function EditarProdutoModal({
 
     const salaNome = salaId !== 'none' ? salas.find((s) => s.id === salaId)?.nome || null : null
 
-    const { data, error } = await updateProduto(produto.id, {
+    const updates: Partial<Produto> = {
       nome: nome.trim().toUpperCase(),
       marca: marca.trim().toUpperCase() || null,
       especialidade_id: especialidadeId === 'none' ? null : especialidadeId,
@@ -164,7 +181,22 @@ export function EditarProdutoModal({
       numero_armario: numeroArmario.trim() || null,
       custo_unitario: parseFloat(custoUnitario) || 0,
       referencia_consumo: referenciaConsumo,
-    })
+      alerta_prazo_dias: controlePorPrazo ? parseInt(alertaPrazoDias) || null : null,
+      consumo_estimado_valor: consumoEstimadoValor ? parseFloat(consumoEstimadoValor) : null,
+      consumo_estimado_frequencia: consumoEstimadoValor ? consumoEstimadoFrequencia : null,
+    }
+
+    if (controlePorPrazo && parseInt(alertaPrazoDias)) {
+      if (!produto.data_proxima_revisao) {
+        const date = new Date()
+        date.setDate(date.getDate() + parseInt(alertaPrazoDias))
+        updates.data_proxima_revisao = date.toISOString().split('T')[0]
+      }
+    } else {
+      updates.data_proxima_revisao = null
+    }
+
+    const { data, error } = await updateProduto(produto.id, updates)
 
     setLoading(false)
 
@@ -191,7 +223,7 @@ export function EditarProdutoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Editar Produto</DialogTitle>
         </DialogHeader>
@@ -312,6 +344,71 @@ export function EditarProdutoModal({
             <p className="text-xs text-slate-500">
               Define como o estoque será incrementado nas próximas entradas.
             </p>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-slate-200 mt-4">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm uppercase tracking-wider">
+              Planejamento de Consumo
+            </h3>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="controle_prazo"
+                checked={controlePorPrazo}
+                onCheckedChange={setControlePorPrazo}
+              />
+              <Label htmlFor="controle_prazo" className="cursor-pointer">
+                Controle de Estoque por Prazo
+              </Label>
+            </div>
+
+            {controlePorPrazo && (
+              <div className="space-y-2 animate-fade-in">
+                <Label htmlFor="alerta_prazo">Dias para Reabastecimento</Label>
+                <Input
+                  id="alerta_prazo"
+                  type="number"
+                  min="1"
+                  value={alertaPrazoDias}
+                  onChange={(e) => setAlertaPrazoDias(e.target.value)}
+                  placeholder="Ex: 90"
+                />
+                <p className="text-xs text-slate-500">
+                  O produto reaparecerá para compra após este prazo, independente da quantidade.
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="consumo_valor">Estimar Consumo Médio</Label>
+                <Input
+                  id="consumo_valor"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={consumoEstimadoValor}
+                  onChange={(e) => setConsumoEstimadoValor(e.target.value)}
+                  placeholder="Ex: 2"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="consumo_freq">Frequência</Label>
+                <Select
+                  value={consumoEstimadoFrequencia}
+                  onValueChange={setConsumoEstimadoFrequencia}
+                >
+                  <SelectTrigger id="consumo_freq">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DIA">Por Dia</SelectItem>
+                    <SelectItem value="SEMANA">Por Semana</SelectItem>
+                    <SelectItem value="MES">Por Mês</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {camposDinamicos.length > 0 && (
