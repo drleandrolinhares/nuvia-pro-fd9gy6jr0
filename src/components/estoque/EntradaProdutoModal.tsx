@@ -357,7 +357,7 @@ export function EntradaProdutoModal({
   const refConsumo = form.watch('referencia_consumo')
   const valorTotal = Number(form.watch('valor_total')) || 0
 
-  const totalAdicionado = refConsumo === 'itens_embalagem' ? itensEmb : qtyComprada
+  const totalAdicionado = refConsumo === 'itens_embalagem' ? qtyComprada * itensEmb : qtyComprada
   const valorAtribuido = totalAdicionado > 0 ? valorTotal / totalAdicionado : 0
   const estoqueAtual = selectedProdutoId
     ? Number(localProdutos.find((p) => p.id === selectedProdutoId)?.quantidade_estoque || 0)
@@ -380,7 +380,9 @@ export function EntradaProdutoModal({
     const precoTotalCalc = values.valor_total
     const embalagemObj = embalagens.find((e) => e.id === values.embalagem_id)
     const totalAdicSubmit =
-      refConsumo === 'itens_embalagem' ? values.itens_embalagem : values.quantidade_comprada
+      refConsumo === 'itens_embalagem'
+        ? values.quantidade_comprada * values.itens_embalagem
+        : values.quantidade_comprada
     const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
     if (!finalProdutoId) {

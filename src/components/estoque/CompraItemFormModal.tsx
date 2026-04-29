@@ -205,7 +205,7 @@ export function CompraItemFormModal({
     const vt = parseFloat(valorTotal) || 0
     const qc = parseInt(qtdComprada) || 1
     const ie = parseInt(itensEmbalagem) || 1
-    if (referenciaConsumo === 'itens_embalagem') return vt / ie
+    if (referenciaConsumo === 'itens_embalagem') return vt / (qc * ie)
     return vt / qc
   }, [valorTotal, qtdComprada, itensEmbalagem, referenciaConsumo])
 
@@ -269,7 +269,7 @@ export function CompraItemFormModal({
       valor_unitario: vu,
       estoque_adicionado:
         referenciaConsumo === 'itens_embalagem'
-          ? parseInt(itensEmbalagem) || 0
+          ? (parseInt(qtdComprada) || 0) * (parseInt(itensEmbalagem) || 1)
           : parseInt(qtdComprada) || 0,
       data_validade: dbValidade,
       numero_armario: numeroArmario || null,

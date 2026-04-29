@@ -1694,6 +1694,7 @@ export type Database = {
       precificacao_ocupacao_cadeiras: {
         Row: {
           atualizado_em: string
+          capacidade_maxima: number | null
           consultorio: string
           cor: string | null
           criado_em: string
@@ -1707,6 +1708,7 @@ export type Database = {
         }
         Insert: {
           atualizado_em?: string
+          capacidade_maxima?: number | null
           consultorio: string
           cor?: string | null
           criado_em?: string
@@ -1720,6 +1722,7 @@ export type Database = {
         }
         Update: {
           atualizado_em?: string
+          capacidade_maxima?: number | null
           consultorio?: string
           cor?: string | null
           criado_em?: string
@@ -3367,6 +3370,7 @@ export const Constants = {
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
 //   semana: integer (not null, default: 1)
+//   capacidade_maxima: numeric (nullable, default: 0)
 // Table: precificacao_ocupacao_config
 //   id: uuid (not null, default: gen_random_uuid())
 //   tipo: text (not null)
