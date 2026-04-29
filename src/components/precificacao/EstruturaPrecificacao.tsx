@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Search,
   ChevronDown,
@@ -11,53 +11,39 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { CurrencyInput } from './CurrencyInput'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
-const MOCK_ESPES = [
-  {
-    id: '1',
-    nome: 'Clínico Geral',
-    procs: [
-      { id: 'p1', nome: 'Restauração 1 Face' },
-      { id: 'p2', nome: 'Restauração 2 Faces' },
-      { id: 'p3', nome: 'Profilaxia' },
-      { id: 'p4', nome: 'Clareamento Dental' },
-    ],
-  },
-  {
-    id: '2',
-    nome: 'Endodontia',
-    procs: [
-      { id: 'p5', nome: 'Tratamento Canal Anterior' },
-      { id: 'p6', nome: 'Tratamento Canal Posterior' },
-      { id: 'p7', nome: 'Retratamento' },
-    ],
-  },
-  {
-    id: '3',
-    nome: 'Ortodontia',
-    procs: [
-      { id: 'p8', nome: 'Manutenção Aparelho Fixo' },
-      { id: 'p9', nome: 'Aparelho Invisalign' },
-    ],
-  },
-  {
-    id: '4',
-    nome: 'Implantodontia',
-    procs: [
-      { id: 'p10', nome: 'Implante Unitário' },
-      { id: 'p11', nome: 'Protocolo Superior' },
-      { id: 'p12', nome: 'Enxerto Ósseo' },
-    ],
-  },
-]
+type Especialidade = {
+  id: string
+  nome: string
+}
 
-type ProcData = { valor: number; tempo: number; lab: number; mat: number; dentista: number }
+type Procedimento = {
+  id: string
+  especialidade_id: string
+  nome: string
+  valor_cobrado: number
+  tempo_execucao: number
+  custo_laboratorio: number
+  custo_material: number
+  honorarios_dentista: number
+}
+
+type GlobalVars = {
+  id: string
+  taxa_cartao: number
+  comissao: number
+  inadimplencia: number
+  imposto: number
+}
 
 function GlobalVarRow({
   label,
@@ -95,133 +81,242 @@ export function EstruturaPrecificacao() {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
 
-  const [espes, setEspes] = useState(MOCK_ESPES)
-  const [expanded, setExpanded] = useState<string[]>(['1'])
-  const [selProc, setSelProc] = useState<string>('p1')
-  const [search, setSearch] = useState('')
-
-  const [procData, setProcData] = useState<Record<string, ProcData>>({
-    p1: { valor: 150, tempo: 30, lab: 0, mat: 15, dentista: 45 },
-  })
-
-  const [globals, setGlobals] = useState({
-    cartao: 3,
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [especialidades, setEspecialidades] = useState<Especialidade[]>([])
+  const [procedimentos, setProcedimentos] = useState<Procedimento[]>([])
+  const [globals, setGlobals] = useState<GlobalVars>({
+    id: '',
+    taxa_cartao: 3,
     comissao: 5,
     inadimplencia: 2,
     imposto: 6,
   })
 
+  const [expanded, setExpanded] = useState<string[]>([])
+  const [selProc, setSelProc] = useState<string>('')
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    setLoading(true)
+    const [resEsp, resProc, resGlob] = await Promise.all([
+      supabase.from('especialidades').select('*').order('nome'),
+      supabase.from('precificacao_procedimentos').select('*').order('nome'),
+      supabase.from('precificacao_globais').select('*').limit(1).single(),
+    ])
+
+    if (resEsp.data) {
+      setEspecialidades(resEsp.data)
+      setExpanded(resEsp.data.map((e) => e.id))
+    }
+    if (resProc.data) {
+      setProcedimentos(resProc.data)
+      if (resProc.data.length > 0) setSelProc(resProc.data[0].id)
+    }
+    if (resGlob.data) setGlobals(resGlob.data as any)
+    setLoading(false)
+  }
+
   const toggle = (id: string) =>
     setExpanded((p) => (p.includes(id) ? p.filter((e) => e !== id) : [...p, id]))
 
-  const updateData = (field: keyof ProcData, val: number) => {
-    setProcData((p) => ({
-      ...p,
-      [selProc]: {
-        ...(p[selProc] || { valor: 0, tempo: 30, lab: 0, mat: 0, dentista: 0 }),
-        [field]: val,
-      },
-    }))
+  const updateProcData = (field: keyof Procedimento, val: number) => {
+    setProcedimentos((p) => p.map((x) => (x.id === selProc ? { ...x, [field]: val } : x)))
   }
 
-  const updateGlobal = (key: keyof typeof globals, val: number) => {
+  const updateGlobal = (key: keyof GlobalVars, val: number) => {
     setGlobals((p) => ({ ...p, [key]: val }))
   }
 
-  const handleAddEspec = () => {
+  const handleAddEspec = async () => {
     const nome = window.prompt('Nome da nova especialidade:')
-    if (nome) setEspes([...espes, { id: `e${Date.now()}`, nome, procs: [] }])
+    if (!nome) return
+    const { data, error } = await supabase.from('especialidades').insert({ nome }).select().single()
+    if (error) {
+      if (error.code === '23505') toast.error('Especialidade já existe.')
+      else toast.error('Erro ao adicionar.')
+      return
+    }
+    setEspecialidades((p) => [...p, data])
   }
 
-  const handleEditEspec = (e: React.MouseEvent, espId: string) => {
+  const handleEditEspec = async (e: React.MouseEvent, espId: string) => {
     e.stopPropagation()
-    const esp = espes.find((e) => e.id === espId)
-    const nome = window.prompt('Editar especialidade:', esp?.nome)
-    if (nome) setEspes(espes.map((e) => (e.id === espId ? { ...e, nome } : e)))
+    const esp = especialidades.find((x) => x.id === espId)
+    if (!esp) return
+    const nome = window.prompt('Editar especialidade:', esp.nome)
+    if (!nome || nome === esp.nome) return
+    const { error } = await supabase.from('especialidades').update({ nome }).eq('id', espId)
+    if (error) toast.error('Erro ao editar especialidade.')
+    else setEspecialidades((p) => p.map((x) => (x.id === espId ? { ...x, nome } : x)))
   }
 
-  const handleDeleteEspec = (e: React.MouseEvent, espId: string) => {
+  const handleDeleteEspec = async (e: React.MouseEvent, espId: string) => {
     e.stopPropagation()
-    if (window.confirm('Excluir esta especialidade e seus procedimentos?')) {
-      setEspes(espes.filter((e) => e.id !== espId))
+    if (!window.confirm('Excluir esta especialidade e todos os seus procedimentos?')) return
+    const { error } = await supabase.from('especialidades').delete().eq('id', espId)
+    if (error) toast.error('Erro ao excluir.')
+    else {
+      setEspecialidades((p) => p.filter((x) => x.id !== espId))
+      setProcedimentos((p) => p.filter((x) => x.especialidade_id !== espId))
+      if (procedimentos.find((p) => p.id === selProc)?.especialidade_id === espId) setSelProc('')
     }
   }
 
-  const handleAddProc = (e: React.MouseEvent, espId: string) => {
+  const handleAddProc = async (e: React.MouseEvent, espId: string) => {
     e.stopPropagation()
     const nome = window.prompt('Nome do novo procedimento:')
-    if (nome) {
-      const newProc = { id: `p${Date.now()}`, nome }
-      setEspes(espes.map((e) => (e.id === espId ? { ...e, procs: [...e.procs, newProc] } : e)))
-      setExpanded((p) => (p.includes(espId) ? p : [...p, espId]))
-      setSelProc(newProc.id)
+    if (!nome) return
+    const { data, error } = await supabase
+      .from('precificacao_procedimentos')
+      .insert({
+        especialidade_id: espId,
+        nome,
+        valor_cobrado: 0,
+        tempo_execucao: 30,
+        custo_laboratorio: 0,
+        custo_material: 0,
+        honorarios_dentista: 0,
+      })
+      .select()
+      .single()
+    if (error) {
+      toast.error('Erro ao adicionar procedimento.')
+      return
     }
+    setProcedimentos((p) => [...p, data])
+    setExpanded((p) => (p.includes(espId) ? p : [...p, espId]))
+    setSelProc(data.id)
   }
 
-  const handleEditProc = (e: React.MouseEvent, espId: string, procId: string) => {
+  const handleEditProc = async (e: React.MouseEvent, procId: string) => {
     e.stopPropagation()
-    const esp = espes.find((e) => e.id === espId)
-    const proc = esp?.procs.find((p) => p.id === procId)
-    const nome = window.prompt('Editar procedimento:', proc?.nome)
-    if (nome) {
-      setEspes(
-        espes.map((e) =>
-          e.id === espId
-            ? { ...e, procs: e.procs.map((p) => (p.id === procId ? { ...p, nome } : p)) }
-            : e,
-        ),
-      )
-    }
+    const proc = procedimentos.find((x) => x.id === procId)
+    if (!proc) return
+    const nome = window.prompt('Editar procedimento:', proc.nome)
+    if (!nome || nome === proc.nome) return
+    const { error } = await supabase
+      .from('precificacao_procedimentos')
+      .update({ nome })
+      .eq('id', procId)
+    if (error) toast.error('Erro ao editar procedimento.')
+    else setProcedimentos((p) => p.map((x) => (x.id === procId ? { ...x, nome } : x)))
   }
 
-  const handleDeleteProc = (e: React.MouseEvent, espId: string, procId: string) => {
+  const handleDeleteProc = async (e: React.MouseEvent, procId: string) => {
     e.stopPropagation()
-    if (window.confirm('Excluir este procedimento?')) {
-      setEspes(
-        espes.map((e) =>
-          e.id === espId ? { ...e, procs: e.procs.filter((p) => p.id !== procId) } : e,
-        ),
-      )
+    if (!window.confirm('Excluir este procedimento?')) return
+    const { error } = await supabase.from('precificacao_procedimentos').delete().eq('id', procId)
+    if (error) toast.error('Erro ao excluir.')
+    else {
+      setProcedimentos((p) => p.filter((x) => x.id !== procId))
       if (selProc === procId) setSelProc('')
     }
   }
 
-  const filtered = useMemo(
-    () =>
-      espes
-        .map((e) => ({
-          ...e,
-          procs: e.procs.filter((p) => p.nome.toLowerCase().includes(search.toLowerCase())),
-        }))
-        .filter((e) => e.procs.length > 0 || e.nome.toLowerCase().includes(search.toLowerCase())),
-    [espes, search],
-  )
+  const handleSave = async () => {
+    if (!selProc) return
+    setSaving(true)
+    try {
+      const proc = procedimentos.find((p) => p.id === selProc)
+      if (proc) {
+        const { error: errProc } = await supabase
+          .from('precificacao_procedimentos')
+          .update({
+            valor_cobrado: proc.valor_cobrado,
+            tempo_execucao: proc.tempo_execucao,
+            custo_laboratorio: proc.custo_laboratorio,
+            custo_material: proc.custo_material,
+            honorarios_dentista: proc.honorarios_dentista,
+          })
+          .eq('id', proc.id)
+        if (errProc) throw errProc
+      }
+
+      if (globals.id) {
+        const { error: errGlob } = await supabase
+          .from('precificacao_globais')
+          .update({
+            taxa_cartao: globals.taxa_cartao,
+            comissao: globals.comissao,
+            inadimplencia: globals.inadimplencia,
+            imposto: globals.imposto,
+          })
+          .eq('id', globals.id)
+        if (errGlob) throw errGlob
+      }
+      toast.success('Configuração salva com sucesso!')
+    } catch (error) {
+      toast.error('Erro ao salvar as configurações.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const filteredEspes = useMemo(() => {
+    return especialidades
+      .map((esp) => {
+        const procs = procedimentos
+          .filter((p) => p.especialidade_id === esp.id)
+          .filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()))
+        return { ...esp, procs }
+      })
+      .filter(
+        (esp) => esp.procs.length > 0 || esp.nome.toLowerCase().includes(search.toLowerCase()),
+      )
+  }, [especialidades, procedimentos, search])
 
   const activeProc = useMemo(
-    () => espes.flatMap((e) => e.procs).find((p) => p.id === selProc),
-    [espes, selProc],
+    () => procedimentos.find((p) => p.id === selProc),
+    [procedimentos, selProc],
   )
 
-  const data = procData[selProc] || { valor: 0, tempo: 30, lab: 0, mat: 0, dentista: 0 }
+  if (loading) {
+    return (
+      <div className="flex h-[750px] items-center justify-center bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+      </div>
+    )
+  }
+
+  const data = activeProc || {
+    valor_cobrado: 0,
+    tempo_execucao: 30,
+    custo_laboratorio: 0,
+    custo_material: 0,
+    honorarios_dentista: 0,
+  }
 
   const CUSTO_HORA = 90
   const custoMinuto = CUSTO_HORA / 60
-  const custoFixo = data.tempo * custoMinuto
-  const percCustoFixo = data.valor > 0 ? (custoFixo / data.valor) * 100 : 0
+  const custoFixo = (data.tempo_execucao || 0) * custoMinuto
+  const percCustoFixo = (data.valor_cobrado || 0) > 0 ? (custoFixo / data.valor_cobrado) * 100 : 0
 
-  const cartaoVal = (data.valor * globals.cartao) / 100
-  const comissaoVal = (data.valor * globals.comissao) / 100
-  const inadimplenciaVal = (data.valor * globals.inadimplencia) / 100
-  const impostoVal = (data.valor * globals.imposto) / 100
-  const dentistaVal = data.dentista || 0
+  const cartaoVal = ((data.valor_cobrado || 0) * globals.taxa_cartao) / 100
+  const comissaoVal = ((data.valor_cobrado || 0) * globals.comissao) / 100
+  const inadimplenciaVal = ((data.valor_cobrado || 0) * globals.inadimplencia) / 100
+  const impostoVal = ((data.valor_cobrado || 0) * globals.imposto) / 100
+  const dentistaVal = data.honorarios_dentista || 0
 
   const totalVariavelVal =
-    data.lab + data.mat + dentistaVal + cartaoVal + comissaoVal + inadimplenciaVal + impostoVal
-  const percCustoVariavel = data.valor > 0 ? (totalVariavelVal / data.valor) * 100 : 0
+    (data.custo_laboratorio || 0) +
+    (data.custo_material || 0) +
+    dentistaVal +
+    cartaoVal +
+    comissaoVal +
+    inadimplenciaVal +
+    impostoVal
+  const percCustoVariavel =
+    (data.valor_cobrado || 0) > 0 ? (totalVariavelVal / data.valor_cobrado) * 100 : 0
 
   const custoTotal = custoFixo + totalVariavelVal
-  const lucroValor = data.valor - custoTotal
-  const margemLucroPerc = data.valor > 0 ? (lucroValor / data.valor) * 100 : 0
+  const lucroValor = (data.valor_cobrado || 0) - custoTotal
+  const margemLucroPerc =
+    (data.valor_cobrado || 0) > 0 ? (lucroValor / data.valor_cobrado) * 100 : 0
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-stretch min-h-[750px]">
@@ -235,7 +330,7 @@ export function EstruturaPrecificacao() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
-                if (e.target.value) setExpanded(espes.map((esp) => esp.id))
+                if (e.target.value) setExpanded(especialidades.map((esp) => esp.id))
               }}
               className="pl-9 bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-amber-500"
             />
@@ -254,8 +349,8 @@ export function EstruturaPrecificacao() {
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-          {filtered.length > 0 ? (
-            filtered.map((esp) => (
+          {filteredEspes.length > 0 ? (
+            filteredEspes.map((esp) => (
               <div key={esp.id} className="space-y-1 group/esp">
                 <div
                   onClick={() => toggle(esp.id)}
@@ -320,14 +415,14 @@ export function EstruturaPrecificacao() {
                         {isAdmin && (
                           <div className="hidden group-hover/proc:flex items-center gap-1 ml-2">
                             <button
-                              onClick={(e) => handleEditProc(e, esp.id, proc.id)}
+                              onClick={(e) => handleEditProc(e, proc.id)}
                               className="p-1.5 text-slate-400 hover:text-blue-400 transition-colors"
                               title="Editar"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={(e) => handleDeleteProc(e, esp.id, proc.id)}
+                              onClick={(e) => handleDeleteProc(e, proc.id)}
                               className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
                               title="Excluir"
                             >
@@ -368,8 +463,8 @@ export function EstruturaPrecificacao() {
                   </p>
                   <div>
                     <CurrencyInput
-                      value={data.valor}
-                      onChange={(v) => updateData('valor', v)}
+                      value={data.valor_cobrado}
+                      onChange={(v) => updateProcData('valor_cobrado', v)}
                       className="h-auto py-1 text-4xl lg:text-5xl font-bold tracking-tight pl-14 lg:pl-16 pr-0 border-transparent bg-transparent focus:bg-slate-950/50 transition-all text-white focus:text-white shadow-none text-left"
                       iconClassName="text-2xl lg:text-3xl text-amber-500/80 left-0"
                     />
@@ -423,8 +518,8 @@ export function EstruturaPrecificacao() {
                   <div className="relative">
                     <Input
                       type="number"
-                      value={data.tempo}
-                      onChange={(e) => updateData('tempo', Number(e.target.value))}
+                      value={data.tempo_execucao}
+                      onChange={(e) => updateProcData('tempo_execucao', Number(e.target.value))}
                       className="h-12 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-amber-500 text-center"
                     />
                   </div>
@@ -469,8 +564,8 @@ export function EstruturaPrecificacao() {
                   <div className="space-y-3">
                     <GlobalVarRow
                       label="Taxa do Cartão"
-                      perc={globals.cartao}
-                      onChange={(v) => updateGlobal('cartao', v)}
+                      perc={globals.taxa_cartao}
+                      onChange={(v) => updateGlobal('taxa_cartao', v)}
                       calc={cartaoVal}
                     />
                     <GlobalVarRow
@@ -506,8 +601,8 @@ export function EstruturaPrecificacao() {
                       </label>
                       <div className="w-40 currency-wrapper-lg">
                         <CurrencyInput
-                          value={data.dentista || 0}
-                          onChange={(v) => updateData('dentista', v)}
+                          value={data.honorarios_dentista || 0}
+                          onChange={(v) => updateProcData('honorarios_dentista', v)}
                         />
                       </div>
                     </div>
@@ -516,7 +611,10 @@ export function EstruturaPrecificacao() {
                         Laboratório (R$)
                       </label>
                       <div className="w-40 currency-wrapper-lg">
-                        <CurrencyInput value={data.lab} onChange={(v) => updateData('lab', v)} />
+                        <CurrencyInput
+                          value={data.custo_laboratorio}
+                          onChange={(v) => updateProcData('custo_laboratorio', v)}
+                        />
                       </div>
                     </div>
                     <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
@@ -524,7 +622,10 @@ export function EstruturaPrecificacao() {
                         Custo com Material (R$)
                       </label>
                       <div className="w-40 currency-wrapper-lg">
-                        <CurrencyInput value={data.mat} onChange={(v) => updateData('mat', v)} />
+                        <CurrencyInput
+                          value={data.custo_material}
+                          onChange={(v) => updateProcData('custo_material', v)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -554,7 +655,12 @@ export function EstruturaPrecificacao() {
             </div>
 
             <div className="flex justify-end pt-4 border-t border-slate-800">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 h-12 text-base shadow-lg shadow-amber-500/20 transition-all">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 h-12 text-base shadow-lg shadow-amber-500/20 transition-all"
+              >
+                {saving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                 Salvar Configuração
               </Button>
             </div>
