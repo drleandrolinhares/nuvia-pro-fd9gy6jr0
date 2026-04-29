@@ -28,12 +28,17 @@ export default function Performance() {
         </div>
       </div>
 
-      <Tabs defaultValue="carteira" className="w-full">
+      <Tabs
+        defaultValue={isManager || profile?.possui_carteira ? 'carteira' : 'pp-pdm'}
+        className="w-full"
+      >
         <div className="w-full overflow-x-auto pb-2 mb-4 flex [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <TabsList className="inline-flex w-max min-w-full justify-start h-auto p-1 flex-nowrap gap-1">
-            <TabsTrigger value="carteira" className="whitespace-nowrap shrink-0">
-              Carteira
-            </TabsTrigger>
+            {(isManager || profile?.possui_carteira) && (
+              <TabsTrigger value="carteira" className="whitespace-nowrap shrink-0">
+                Carteira
+              </TabsTrigger>
+            )}
             <TabsTrigger value="pp-pdm" className="whitespace-nowrap shrink-0">
               PP e PDM
             </TabsTrigger>
@@ -56,9 +61,11 @@ export default function Performance() {
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="carteira" className="animate-fade-in">
-          <CarteiraTab />
-        </TabsContent>
+        {(isManager || profile?.possui_carteira) && (
+          <TabsContent value="carteira" className="animate-fade-in">
+            <CarteiraTab />
+          </TabsContent>
+        )}
         <TabsContent value="pp-pdm" className="animate-fade-in">
           <PPEPDMTab />
         </TabsContent>

@@ -7,6 +7,8 @@ interface UserProfile {
   nome: string
   email: string
   role: string | null
+  exigir_rotina?: boolean
+  possui_carteira?: boolean
 }
 
 const normalizePermissionToKey = (name: string): string => {

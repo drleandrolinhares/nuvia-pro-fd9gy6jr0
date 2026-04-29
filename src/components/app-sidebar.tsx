@@ -240,6 +240,11 @@ export function AppSidebar() {
 
           const filteredItems =
             group.items?.filter((item: any) => {
+              if (item.title === 'ROTINA DIÁRIA') {
+                if (profile?.exigir_rotina === false) return false
+                if (profile?.exigir_rotina === true) return true
+              }
+
               if (
                 item.hideRole &&
                 item.hideRole.some((r: string) => r.toLowerCase() === role?.toLowerCase())
