@@ -353,7 +353,7 @@ export function EstruturaPrecificacao() {
       <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm relative flex flex-col">
         {activeProc ? (
           <div className="space-y-6 animate-fade-in relative z-10 flex-1 flex flex-col">
-            <div className="pb-6 border-b border-slate-800 flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center">
+            <div className="pb-6 border-b border-slate-800 flex flex-col gap-6">
               <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight">{activeProc.nome}</h2>
                 <p className="text-slate-400 text-base mt-1.5">
@@ -361,8 +361,8 @@ export function EstruturaPrecificacao() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap sm:flex-nowrap gap-4 w-full xl:w-auto">
-                <div className="bg-slate-900/80 border-2 border-amber-500/50 rounded-xl p-5 flex-1 sm:w-[240px] shadow-sm shadow-amber-500/10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-slate-900/80 border-2 border-amber-500/50 rounded-xl p-6 flex flex-col justify-center shadow-sm shadow-amber-500/10 min-h-[130px]">
                   <p className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <DollarSign className="w-5 h-5" /> Valor Cobrado
                   </p>
@@ -371,7 +371,7 @@ export function EstruturaPrecificacao() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex-1 sm:w-[200px] shadow-sm flex flex-col justify-center">
+                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center shadow-sm min-h-[130px]">
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <Percent className="w-5 h-5" /> Margem de Lucro
                   </p>
@@ -385,7 +385,7 @@ export function EstruturaPrecificacao() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex-1 sm:w-[200px] shadow-sm flex flex-col justify-center">
+                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center shadow-sm min-h-[130px]">
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <TrendingUp className="w-5 h-5" /> Lucro em R$
                   </p>
@@ -410,8 +410,8 @@ export function EstruturaPrecificacao() {
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
-                  <label className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-4 flex items-center gap-2">
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <label className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-slate-400" />
                     Tempo de Execução (Minutos)
                   </label>
@@ -420,13 +420,13 @@ export function EstruturaPrecificacao() {
                       type="number"
                       value={data.tempo}
                       onChange={(e) => updateData('tempo', Number(e.target.value))}
-                      className="h-14 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-amber-500 text-center"
+                      className="h-12 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-amber-500 text-center"
                     />
                   </div>
                 </div>
 
-                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
-                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-slate-400" />
                     CUSTO FIXO EM R$
                   </p>
@@ -435,8 +435,8 @@ export function EstruturaPrecificacao() {
                   </p>
                 </div>
 
-                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
-                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
                     <Percent className="w-5 h-5 text-slate-400" />
                     CUSTO FIXO EM %
                   </p>
@@ -495,50 +495,50 @@ export function EstruturaPrecificacao() {
                     Custo do Procedimento
                   </h4>
                   <div className="space-y-4">
-                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
-                      <label className="text-base font-bold text-slate-100 mb-2 block">
+                    <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
+                      <label className="text-base font-bold text-slate-100 flex-1">
                         Honorários Dentista (R$)
                       </label>
-                      <div className="currency-wrapper-lg">
+                      <div className="w-40 currency-wrapper-lg">
                         <CurrencyInput
                           value={data.dentista || 0}
                           onChange={(v) => updateData('dentista', v)}
                         />
                       </div>
                     </div>
-                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
-                      <label className="text-base font-bold text-slate-100 mb-2 block">
+                    <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
+                      <label className="text-base font-bold text-slate-100 flex-1">
                         Laboratório (R$)
                       </label>
-                      <div className="currency-wrapper-lg">
+                      <div className="w-40 currency-wrapper-lg">
                         <CurrencyInput value={data.lab} onChange={(v) => updateData('lab', v)} />
                       </div>
                     </div>
-                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
-                      <label className="text-base font-bold text-slate-100 mb-2 block">
+                    <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
+                      <label className="text-base font-bold text-slate-100 flex-1">
                         Custo com Material (R$)
                       </label>
-                      <div className="currency-wrapper-lg">
+                      <div className="w-40 currency-wrapper-lg">
                         <CurrencyInput value={data.mat} onChange={(v) => updateData('mat', v)} />
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-auto pt-6">
-                    <div className="bg-blue-500/20 border border-blue-500/40 rounded-xl p-6 flex justify-between items-center shadow-md">
-                      <div>
-                        <p className="text-sm text-blue-300 uppercase tracking-wider font-bold mb-1">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 shadow-sm min-h-[130px] flex flex-col justify-center">
+                        <p className="text-sm text-blue-400 uppercase tracking-wider font-bold mb-2">
                           Carga Variável Total
                         </p>
-                        <p className="text-4xl font-bold text-blue-400">
+                        <p className="text-3xl font-bold text-blue-400">
                           {percCustoVariavel.toFixed(1)}%
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-blue-300 uppercase tracking-wider font-bold mb-1">
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 shadow-sm min-h-[130px] flex flex-col justify-center">
+                        <p className="text-sm text-blue-400 uppercase tracking-wider font-bold mb-2">
                           Total em R$
                         </p>
-                        <p className="text-4xl font-bold text-white">
+                        <p className="text-3xl font-bold text-white">
                           R$ {totalVariavelVal.toFixed(2)}
                         </p>
                       </div>
