@@ -4583,7 +4583,7 @@ export const Constants = {
 //     IF OLD.status IS DISTINCT FROM 'Finalizada' AND NEW.status = 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
 //         IF v_item.referencia_consumo = 'itens_embalagem' THEN
-//           v_qtd := COALESCE(v_item.itens_embalagem, 0);
+//           v_qtd := COALESCE(v_item.qtd_comprada, 0) * COALESCE(v_item.itens_embalagem, 1);
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
@@ -4597,7 +4597,7 @@ export const Constants = {
 //     ELSIF OLD.status = 'Finalizada' AND NEW.status IS DISTINCT FROM 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
 //         IF v_item.referencia_consumo = 'itens_embalagem' THEN
-//           v_qtd := COALESCE(v_item.itens_embalagem, 0);
+//           v_qtd := COALESCE(v_item.qtd_comprada, 0) * COALESCE(v_item.itens_embalagem, 1);
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
@@ -4626,7 +4626,7 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       SELECT status INTO v_status FROM public.compras WHERE id = NEW.compra_id;
 //       IF NEW.referencia_consumo = 'itens_embalagem' THEN
-//         v_qtd_adicionar_new := COALESCE(NEW.itens_embalagem, 0);
+//         v_qtd_adicionar_new := COALESCE(NEW.qtd_comprada, 0) * COALESCE(NEW.itens_embalagem, 1);
 //       ELSE
 //         v_qtd_adicionar_new := COALESCE(NEW.qtd_comprada, 0);
 //       END IF;
@@ -4635,7 +4635,7 @@ export const Constants = {
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
 //       SELECT status INTO v_status FROM public.compras WHERE id = OLD.compra_id;
 //       IF OLD.referencia_consumo = 'itens_embalagem' THEN
-//         v_qtd_adicionar_old := COALESCE(OLD.itens_embalagem, 0);
+//         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0) * COALESCE(OLD.itens_embalagem, 1);
 //       ELSE
 //         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0);
 //       END IF;
@@ -4690,7 +4690,7 @@ export const Constants = {
 //
 //     IF v_ref = 'itens_embalagem' THEN
 //       UPDATE public.produtos
-//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + COALESCE(NEW.quantidade_embalagem, 0)
+//       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + (COALESCE(NEW.quantidade_comprada, 0) * COALESCE(NEW.quantidade_embalagem, 1))
 //       WHERE id = NEW.produto_id;
 //     ELSE
 //       UPDATE public.produtos

@@ -42,6 +42,7 @@ import { PackagePlus, PackageMinus } from 'lucide-react'
 import { useCache } from '@/hooks/use-cache'
 import { supabase } from '@/lib/supabase/client'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
+import { useSearchParams } from 'react-router-dom'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +55,8 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export default function Estoque() {
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
   const [barcode, setBarcode] = useState('')
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showCriticalOnly, setShowCriticalOnly] = useState(false)
@@ -497,7 +499,16 @@ export default function Estoque() {
                         placeholder="Buscar por nome, marca, variação..."
                         className="pl-9 border-slate-300 focus-visible:ring-slate-900"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setSearchTerm(val)
+                          if (val) {
+                            searchParams.set('q', val)
+                          } else {
+                            searchParams.delete('q')
+                          }
+                          setSearchParams(searchParams, { replace: true })
+                        }}
                       />
                     </div>
                   </div>

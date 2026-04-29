@@ -464,12 +464,15 @@ const Index = () => {
               {itemsAvisos.length > 0 ? (
                 <div className="flex flex-col gap-3 pr-2">
                   {itemsAvisos.map((item) => (
-                    <div
+                    <Link
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800/50 transition-colors"
+                      to={`/estoque?q=${encodeURIComponent(item.nome)}`}
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800 transition-colors cursor-pointer group"
                     >
                       <div>
-                        <p className="font-semibold text-sm text-slate-200">{item.nome}</p>
+                        <p className="font-semibold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">
+                          {item.nome}
+                        </p>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {item.marca || 'Sem marca'} - {item.variacao || 'S/V'}
                         </p>
@@ -482,7 +485,7 @@ const Index = () => {
                           Mínimo: {item.quantidade_minima}
                         </p>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
