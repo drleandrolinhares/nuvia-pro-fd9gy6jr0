@@ -1691,6 +1691,33 @@ export type Database = {
           },
         ]
       }
+      precificacao_globais: {
+        Row: {
+          atualizado_em: string
+          comissao: number
+          id: string
+          imposto: number
+          inadimplencia: number
+          taxa_cartao: number
+        }
+        Insert: {
+          atualizado_em?: string
+          comissao?: number
+          id?: string
+          imposto?: number
+          inadimplencia?: number
+          taxa_cartao?: number
+        }
+        Update: {
+          atualizado_em?: string
+          comissao?: number
+          id?: string
+          imposto?: number
+          inadimplencia?: number
+          taxa_cartao?: number
+        }
+        Relationships: []
+      }
       precificacao_ocupacao_cadeiras: {
         Row: {
           atualizado_em: string
@@ -1756,6 +1783,53 @@ export type Database = {
           tipo?: string
         }
         Relationships: []
+      }
+      precificacao_procedimentos: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          custo_laboratorio: number
+          custo_material: number
+          especialidade_id: string
+          honorarios_dentista: number
+          id: string
+          nome: string
+          tempo_execucao: number
+          valor_cobrado: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          custo_laboratorio?: number
+          custo_material?: number
+          especialidade_id: string
+          honorarios_dentista?: number
+          id?: string
+          nome: string
+          tempo_execucao?: number
+          valor_cobrado?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          custo_laboratorio?: number
+          custo_material?: number
+          especialidade_id?: string
+          honorarios_dentista?: number
+          id?: string
+          nome?: string
+          tempo_execucao?: number
+          valor_cobrado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'precificacao_procedimentos_especialidade_id_fkey'
+            columns: ['especialidade_id']
+            isOneToOne: false
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
+          },
+        ]
       }
       produto_campos_valores: {
         Row: {
@@ -3370,6 +3444,13 @@ export const Constants = {
 //   ordem: integer (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_globais
+//   id: uuid (not null, default: gen_random_uuid())
+//   taxa_cartao: numeric (not null, default: 3)
+//   comissao: numeric (not null, default: 5)
+//   inadimplencia: numeric (not null, default: 2)
+//   imposto: numeric (not null, default: 6)
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: precificacao_ocupacao_cadeiras
 //   id: uuid (not null, default: gen_random_uuid())
 //   consultorio: text (not null)
@@ -3388,6 +3469,17 @@ export const Constants = {
 //   tipo: text (not null)
 //   nome: text (not null)
 //   criado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_procedimentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   especialidade_id: uuid (not null)
+//   nome: text (not null)
+//   valor_cobrado: numeric (not null, default: 0)
+//   tempo_execucao: integer (not null, default: 30)
+//   custo_laboratorio: numeric (not null, default: 0)
+//   custo_material: numeric (not null, default: 0)
+//   honorarios_dentista: numeric (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: produto_campos_valores
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3766,12 +3858,17 @@ export const Constants = {
 // Table: precificacao_custos_fixos_detalhes
 //   FOREIGN KEY precificacao_custos_fixos_detalhes_custo_fixo_id_fkey: FOREIGN KEY (custo_fixo_id) REFERENCES precificacao_custos_fixos(id) ON DELETE CASCADE
 //   PRIMARY KEY precificacao_custos_fixos_detalhes_pkey: PRIMARY KEY (id)
+// Table: precificacao_globais
+//   PRIMARY KEY precificacao_globais_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_cadeiras
 //   UNIQUE precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem: UNIQUE (consultorio, turno, dia_semana, semana)
 //   PRIMARY KEY precificacao_ocupacao_cadeiras_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_config
 //   PRIMARY KEY precificacao_ocupacao_config_pkey: PRIMARY KEY (id)
 //   CHECK precificacao_ocupacao_config_tipo_check: CHECK ((tipo = ANY (ARRAY['especialidade'::text, 'dentista'::text])))
+// Table: precificacao_procedimentos
+//   FOREIGN KEY precificacao_procedimentos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
+//   PRIMARY KEY precificacao_procedimentos_pkey: PRIMARY KEY (id)
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
@@ -4107,12 +4204,20 @@ export const Constants = {
 //   Policy "precificacao_custos_fixos_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: precificacao_globais
+//   Policy "precificacao_globais_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: precificacao_ocupacao_cadeiras
 //   Policy "precificacao_ocupacao_cadeiras_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: precificacao_ocupacao_config
 //   Policy "precificacao_ocupacao_config_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: precificacao_procedimentos
+//   Policy "precificacao_procedimentos_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: produto_campos_valores

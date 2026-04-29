@@ -348,38 +348,40 @@ export function EstruturaPrecificacao() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar mt-2">
           {filteredEspes.length > 0 ? (
             filteredEspes.map((esp) => (
               <div key={esp.id} className="space-y-1 group/esp">
                 <div
                   onClick={() => toggle(esp.id)}
-                  className="flex items-center w-full justify-between p-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-100 font-semibold text-base cursor-pointer"
+                  className="flex items-center w-full justify-between py-2 px-3 rounded-md hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
-                  <span className="truncate text-base">{esp.nome}</span>
+                  <span className="truncate text-xs font-bold uppercase tracking-wider">
+                    {esp.nome}
+                  </span>
                   <div className="flex items-center gap-1">
                     {isAdmin && (
                       <div className="hidden group-hover/esp:flex items-center gap-1 mr-2">
                         <div
                           onClick={(e) => handleAddProc(e, esp.id)}
-                          className="p-1.5 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
                           title="Novo Procedimento"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3.5 h-3.5" />
                         </div>
                         <div
                           onClick={(e) => handleEditEspec(e, esp.id)}
-                          className="p-1.5 text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
                           title="Editar"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </div>
                         <div
                           onClick={(e) => handleDeleteEspec(e, esp.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
                           title="Excluir"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </div>
                       </div>
                     )}
@@ -394,21 +396,29 @@ export function EstruturaPrecificacao() {
                 </div>
 
                 {expanded.includes(esp.id) && (
-                  <div className="pl-3 pr-1 space-y-1 border-l border-slate-800 ml-3 mt-1">
+                  <div className="space-y-0.5 ml-3 pl-2 border-l border-slate-800/50">
                     {esp.procs.map((proc) => (
                       <div
                         key={proc.id}
                         className={cn(
-                          'w-full flex items-center justify-between px-4 py-2.5 text-sm rounded-lg transition-all duration-200 border group/proc',
+                          'w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all duration-200 group/proc relative',
                           selProc === proc.id
-                            ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 font-bold shadow-sm shadow-amber-500/5'
-                            : 'bg-transparent border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 font-medium',
+                            ? 'bg-slate-800/80 text-amber-500 font-medium shadow-sm'
+                            : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
                         )}
                       >
                         <button
                           onClick={() => setSelProc(proc.id)}
-                          className="flex-1 text-left truncate text-[15px]"
+                          className="flex-1 text-left truncate flex items-center gap-2"
                         >
+                          <div
+                            className={cn(
+                              'w-1.5 h-1.5 rounded-full transition-colors',
+                              selProc === proc.id
+                                ? 'bg-amber-500'
+                                : 'bg-slate-600 group-hover/proc:bg-slate-400',
+                            )}
+                          />
                           {proc.nome}
                         </button>
 
@@ -416,14 +426,14 @@ export function EstruturaPrecificacao() {
                           <div className="hidden group-hover/proc:flex items-center gap-1 ml-2">
                             <button
                               onClick={(e) => handleEditProc(e, proc.id)}
-                              className="p-1.5 text-slate-400 hover:text-blue-400 transition-colors"
+                              className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
                               title="Editar"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={(e) => handleDeleteProc(e, proc.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                              className="p-1 text-slate-400 hover:text-red-400 transition-colors"
                               title="Excluir"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
