@@ -1816,6 +1816,10 @@ export type Database = {
           quantidade_estoque: number | null
           quantidade_minima: number | null
           referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
+          alerta_prazo_dias: number | null
+          data_proxima_revisao: string | null
+          consumo_estimado_valor: number | null
+          consumo_estimado_frequencia: string | null
           sala: string | null
           sala_id: string | null
           validade: string | null
@@ -1837,6 +1841,10 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
+          alerta_prazo_dias?: number | null
+          data_proxima_revisao?: string | null
+          consumo_estimado_valor?: number | null
+          consumo_estimado_frequencia?: string | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null
@@ -1858,6 +1866,10 @@ export type Database = {
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
+          alerta_prazo_dias?: number | null
+          data_proxima_revisao?: string | null
+          consumo_estimado_valor?: number | null
+          consumo_estimado_frequencia?: string | null
           sala?: string | null
           sala_id?: string | null
           validade?: string | null

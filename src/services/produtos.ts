@@ -19,6 +19,10 @@ export interface Produto {
   quantidade_estoque: number
   quantidade_minima: number
   referencia_consumo?: 'qtd_comprada' | 'itens_embalagem' | null
+  alerta_prazo_dias?: number | null
+  data_proxima_revisao?: string | null
+  consumo_estimado_valor?: number | null
+  consumo_estimado_frequencia?: string | null
   especialidades?: {
     nome: string
   } | null

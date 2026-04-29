@@ -213,9 +213,21 @@ const Index = () => {
   }, [todosUsuarios, selectedMonth])
 
   const { itemsAvisos } = useMemo(() => {
-    const itemsLowStock = produtosDashboard.filter(
-      (p) => (p.quantidade_estoque || 0) <= (p.quantidade_minima || 0),
-    )
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const itemsLowStock = produtosDashboard.filter((p) => {
+      let isPastPrazo = false
+      if (p.data_proxima_revisao) {
+        const d = new Date(p.data_proxima_revisao)
+        const localDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+        localDate.setHours(0, 0, 0, 0)
+        isPastPrazo = localDate <= today
+      }
+      const isLowStock = (p.quantidade_estoque || 0) <= (p.quantidade_minima || 0)
+
+      return isLowStock || isPastPrazo
+    })
 
     return {
       itemsAvisos: itemsLowStock,
@@ -477,13 +489,22 @@ const Index = () => {
                           {item.marca || 'Sem marca'} - {item.variacao || 'S/V'}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-destructive text-sm bg-red-500/10 px-2 py-1 rounded inline-block">
-                          {item.quantidade_estoque} em estoque
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Mínimo: {item.quantidade_minima}
-                        </p>
+                      <div className="text-right flex flex-col items-end gap-1">
+                        {item.data_proxima_revisao &&
+                        new Date(
+                          new Date(item.data_proxima_revisao).getTime() +
+                            new Date(item.data_proxima_revisao).getTimezoneOffset() * 60000,
+                        ) <= new Date(new Date().setHours(0, 0, 0, 0)) ? (
+                          <p className="font-bold text-amber-600 text-[11px] uppercase bg-amber-50 px-2 py-1 rounded inline-block border border-amber-200 shadow-sm">
+                            Prazo de Compra Atingido
+                          </p>
+                        ) : null}
+                        {(item.quantidade_estoque || 0) <= (item.quantidade_minima || 0) && (
+                          <p className="font-bold text-destructive text-sm bg-red-500/10 px-2 py-1 rounded inline-block">
+                            {item.quantidade_estoque} em estoque
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500">Mínimo: {item.quantidade_minima}</p>
                       </div>
                     </Link>
                   ))}

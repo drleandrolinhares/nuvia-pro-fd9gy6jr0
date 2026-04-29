@@ -85,6 +85,13 @@ const formSchema = z.object({
   numero_armario: z.string().optional(),
   estoque_minimo: z.coerce.number().min(0).optional(),
 
+  controle_prazo: z.boolean().default(false),
+  alerta_prazo_dias: z.coerce.number().min(1).optional(),
+
+  estimar_consumo: z.boolean().default(false),
+  consumo_estimado_valor: z.coerce.number().min(0.01).optional(),
+  consumo_estimado_frequencia: z.enum(['dia', 'semana', 'mes']).optional(),
+
   observacoes: z.string().optional(),
   observacoes_criticas: z.string().optional(),
 
@@ -145,6 +152,11 @@ export function EntradaProdutoModal({
       sala_id: '',
       numero_armario: '',
       estoque_minimo: 0,
+      controle_prazo: false,
+      alerta_prazo_dias: 0,
+      estimar_consumo: false,
+      consumo_estimado_valor: 0,
+      consumo_estimado_frequencia: 'mes',
       observacoes: '',
       observacoes_criticas: '',
       manter_campos: false,
@@ -285,6 +297,11 @@ export function EntradaProdutoModal({
           observacoes: '',
           observacoes_criticas: '',
           manter_campos: false,
+          controle_prazo: false,
+          alerta_prazo_dias: 0,
+          estimar_consumo: false,
+          consumo_estimado_valor: 0,
+          consumo_estimado_frequencia: 'mes',
           campos_dinamicos: {},
         })
         setSelectedProdutoId(null)
@@ -313,6 +330,14 @@ export function EntradaProdutoModal({
       form.setValue('sala_id', produto.sala_id || '')
       form.setValue('numero_armario', produto.numero_armario || '')
       form.setValue('estoque_minimo', produto.quantidade_minima || 0)
+      form.setValue('controle_prazo', !!produto.alerta_prazo_dias)
+      form.setValue('alerta_prazo_dias', produto.alerta_prazo_dias || 0)
+      form.setValue('estimar_consumo', !!produto.consumo_estimado_valor)
+      form.setValue('consumo_estimado_valor', produto.consumo_estimado_valor || 0)
+      form.setValue(
+        'consumo_estimado_frequencia',
+        (produto.consumo_estimado_frequencia as any) || 'mes',
+      )
       if (produto.validade) {
         const parts = produto.validade.split('-')
         if (parts.length >= 2) {
@@ -385,6 +410,13 @@ export function EntradaProdutoModal({
         : values.quantidade_comprada
     const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
+    let dataProximaRevisaoParsed = null
+    if (values.controle_prazo && values.alerta_prazo_dias) {
+      const d = new Date()
+      d.setDate(d.getDate() + values.alerta_prazo_dias)
+      dataProximaRevisaoParsed = d.toISOString().split('T')[0]
+    }
+
     if (!finalProdutoId) {
       const { data: novoProduto, error } = await createProduto({
         nome: values.nome_material.trim().toUpperCase(),
@@ -399,6 +431,12 @@ export function EntradaProdutoModal({
         custo_unitario: valorAtribSubmit,
         validade: dataValidadeParsed,
         referencia_consumo: values.referencia_consumo,
+        alerta_prazo_dias: values.controle_prazo ? values.alerta_prazo_dias : null,
+        data_proxima_revisao: dataProximaRevisaoParsed,
+        consumo_estimado_valor: values.estimar_consumo ? values.consumo_estimado_valor : null,
+        consumo_estimado_frequencia: values.estimar_consumo
+          ? values.consumo_estimado_frequencia
+          : null,
       })
       if (error || !novoProduto) {
         toast({ title: 'Erro', description: 'Erro ao criar produto.', variant: 'destructive' })
@@ -418,6 +456,12 @@ export function EntradaProdutoModal({
         quantidade_minima: values.estoque_minimo,
         validade: dataValidadeParsed,
         referencia_consumo: values.referencia_consumo,
+        alerta_prazo_dias: values.controle_prazo ? values.alerta_prazo_dias : null,
+        data_proxima_revisao: dataProximaRevisaoParsed,
+        consumo_estimado_valor: values.estimar_consumo ? values.consumo_estimado_valor : null,
+        consumo_estimado_frequencia: values.estimar_consumo
+          ? values.consumo_estimado_frequencia
+          : null,
       })
     }
     const obsFinal = []
@@ -1074,6 +1118,133 @@ export function EntradaProdutoModal({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-blue-950 font-extrabold mb-5 text-xs tracking-widest border-b pb-2">
+                PLANEJAMENTO DE CONSUMO
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
+                <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                  <FormField
+                    control={form.control}
+                    name="controle_prazo"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm font-bold text-slate-800">
+                            Controle de Estoque por Prazo
+                          </FormLabel>
+                          <p className="text-[11px] text-slate-500">
+                            Ao invés do estoque mínimo, alertar para compra após o prazo.
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:bg-fuchsia-600"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch('controle_prazo') && (
+                    <FormField
+                      control={form.control}
+                      name="alerta_prazo_dias"
+                      render={({ field }) => (
+                        <FormItem className="pt-2 border-t border-slate-100">
+                          <FormLabel className={labelClass}>Dias para Reabastecimento</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="1"
+                                className={cn(inputClass, 'w-24')}
+                                {...field}
+                              />
+                              <span className="text-sm text-slate-500 font-medium">dias</span>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                  <FormField
+                    control={form.control}
+                    name="estimar_consumo"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm font-bold text-slate-800">
+                            Estimar Consumo Médio
+                          </FormLabel>
+                          <p className="text-[11px] text-slate-500">
+                            Defina uma média de consumo para previsão de estoque.
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:bg-fuchsia-600"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch('estimar_consumo') && (
+                    <div className="flex items-start gap-4 pt-2 border-t border-slate-100">
+                      <FormField
+                        control={form.control}
+                        name="consumo_estimado_valor"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel className={labelClass}>Quantidade</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className={inputClass}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="consumo_estimado_frequencia"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel className={labelClass}>Por</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className={inputClass}>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="dia">Dia</SelectItem>
+                                <SelectItem value="semana">Semana</SelectItem>
+                                <SelectItem value="mes">Mês</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-sm">
