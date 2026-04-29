@@ -6,9 +6,17 @@ interface CurrencyInputProps {
   value: number
   onChange: (v: number) => void
   disabled?: boolean
+  className?: string
+  iconClassName?: string
 }
 
-export function CurrencyInput({ value, onChange, disabled }: CurrencyInputProps) {
+export function CurrencyInput({
+  value,
+  onChange,
+  disabled,
+  className,
+  iconClassName,
+}: CurrencyInputProps) {
   const [inputValue, setInputValue] = useState(() => (value * 100).toFixed(0))
 
   useEffect(() => {
@@ -36,6 +44,7 @@ export function CurrencyInput({ value, onChange, disabled }: CurrencyInputProps)
         className={cn(
           'absolute left-3 font-medium',
           disabled ? 'text-slate-500' : 'text-slate-400',
+          iconClassName,
         )}
       >
         R$
@@ -47,6 +56,7 @@ export function CurrencyInput({ value, onChange, disabled }: CurrencyInputProps)
           disabled
             ? 'opacity-70 cursor-not-allowed text-slate-400'
             : 'hover:border-slate-600 focus:bg-slate-800 focus:border-amber-500/50 text-slate-200 focus:text-white',
+          className,
         )}
         value={formatDisplay(inputValue)}
         onChange={handleChange}

@@ -363,11 +363,16 @@ export function EstruturaPrecificacao() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-900/80 border-2 border-amber-500/50 rounded-xl p-6 flex flex-col justify-center shadow-sm shadow-amber-500/10 min-h-[130px]">
-                  <p className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <DollarSign className="w-5 h-5" /> Valor Cobrado
                   </p>
-                  <div className="currency-wrapper-lg">
-                    <CurrencyInput value={data.valor} onChange={(v) => updateData('valor', v)} />
+                  <div>
+                    <CurrencyInput
+                      value={data.valor}
+                      onChange={(v) => updateData('valor', v)}
+                      className="h-auto py-1 text-4xl lg:text-5xl font-bold tracking-tight pl-14 lg:pl-16 pr-0 border-transparent bg-transparent focus:bg-slate-950/50 transition-all text-white focus:text-white shadow-none text-left"
+                      iconClassName="text-2xl lg:text-3xl text-amber-500/80 left-0"
+                    />
                   </div>
                 </div>
 
