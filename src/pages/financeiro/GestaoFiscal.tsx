@@ -59,7 +59,12 @@ export default function GestaoFiscal() {
       })
   }, [])
 
+  const pf_receita_calc = c.pf_despesa + 3000
   const pj1_receita_calc = c.pj1_despesa_folha * (1 + c.pj1_margem_perc / 100)
+  const excedente = Math.max(0, c.faturamento_previsto - pf_receita_calc - pj1_receita_calc)
+
+  const impPj1 = pj1_receita_calc * (c.pj1_imposto_perc / 100)
+  const impPj2 = excedente * (c.pj2_imposto_perc / 100)
 
   const handleSave = async () => {
     setSaving(true)
@@ -67,6 +72,7 @@ export default function GestaoFiscal() {
       .from('gestao_fiscal_config')
       .update({
         ...c,
+        pf_receita: pf_receita_calc,
         pj1_receita: pj1_receita_calc,
       })
       .eq('id', id)
@@ -74,10 +80,6 @@ export default function GestaoFiscal() {
     else toast.success('Gestão fiscal atualizada com sucesso!')
     setSaving(false)
   }
-
-  const excedente = Math.max(0, c.faturamento_previsto - c.pf_receita - pj1_receita_calc)
-  const impPj1 = pj1_receita_calc * (c.pj1_imposto_perc / 100)
-  const impPj2 = excedente * (c.pj2_imposto_perc / 100)
 
   if (loading) {
     return (
@@ -124,31 +126,40 @@ export default function GestaoFiscal() {
           <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
           <div className="flex items-center gap-2 mb-5 h-8">
             <UserIcon className="w-5 h-5 text-amber-500 shrink-0" />
-            <h2 className="text-lg font-bold text-white tracking-wider uppercase flex-1 px-2 flex items-center">
+            <h2 className="text-lg font-bold text-white tracking-wider uppercase flex-1 px-2 h-full flex items-center">
               PESSOA FÍSICA
             </h2>
           </div>
-          <div className="space-y-4 flex-1">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 VALOR A RECEBER
               </label>
-              <CurrencyInput
-                value={c.pf_receita}
-                onChange={(v: number) => setC({ ...c, pf_receita: v })}
-                className="text-2xl h-12 text-amber-500 border-amber-500/30 bg-amber-500/5 focus:border-amber-500 focus:text-amber-400"
-                iconClassName="text-amber-500/70"
-              />
+              <div className="text-3xl font-bold tracking-tight text-amber-400 truncate h-10 flex items-center">
+                R${' '}
+                {pf_receita_calc.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
+                Automático: Despesa Livro Caixa + R$ 3.000,00
+              </p>
             </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                Despesa Prevista (Livro Caixa)
-              </label>
-              <CurrencyInput
-                value={c.pf_despesa}
-                onChange={(v: number) => setC({ ...c, pf_despesa: v })}
-              />
+            <div className="flex flex-col gap-4 flex-1">
+              <div>
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  Despesa Prevista (Livro Caixa)
+                </label>
+                <CurrencyInput
+                  value={c.pf_despesa}
+                  onChange={(v: number) => setC({ ...c, pf_despesa: v })}
+                />
+              </div>
             </div>
+          </div>
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
+            {/* Espaço reservado para alinhar simetricamente com os outros cards */}
           </div>
         </div>
 
@@ -163,12 +174,12 @@ export default function GestaoFiscal() {
               className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-blue-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
-          <div className="space-y-4 flex-1 flex flex-col">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Teto de Receita Permitida
               </label>
-              <div className="text-3xl font-bold tracking-tight text-blue-400 truncate h-12 flex items-center">
+              <div className="text-3xl font-bold tracking-tight text-blue-400 truncate h-10 flex items-center">
                 R${' '}
                 {pj1_receita_calc.toLocaleString('pt-BR', {
                   minimumFractionDigits: 2,
@@ -179,39 +190,41 @@ export default function GestaoFiscal() {
                 Automático: Despesa Folha + Proporção
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Despesa (Folha)
-                </label>
-                <CurrencyInput
-                  value={c.pj1_despesa_folha}
-                  onChange={(v: number) => setC({ ...c, pj1_despesa_folha: v })}
-                />
+            <div className="flex flex-col gap-4 flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Despesa (Folha)
+                  </label>
+                  <CurrencyInput
+                    value={c.pj1_despesa_folha}
+                    onChange={(v: number) => setC({ ...c, pj1_despesa_folha: v })}
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Proporção (%)
+                  </label>
+                  <PercInput
+                    value={c.pj1_margem_perc}
+                    onChange={(v: number) => setC({ ...c, pj1_margem_perc: v })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Proporção (%)
+              <div className="mt-auto flex justify-between items-center pt-2">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Estimativa de Imposto (%)
                 </label>
-                <PercInput
-                  value={c.pj1_margem_perc}
-                  onChange={(v: number) => setC({ ...c, pj1_margem_perc: v })}
-                />
-              </div>
-            </div>
-            <div className="pt-3 border-t border-slate-800 flex justify-between items-center mt-auto">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Estimativa de Imposto (%)
-              </label>
-              <div className="w-24">
-                <PercInput
-                  value={c.pj1_imposto_perc}
-                  onChange={(v: number) => setC({ ...c, pj1_imposto_perc: v })}
-                />
+                <div className="w-24">
+                  <PercInput
+                    value={c.pj1_imposto_perc}
+                    onChange={(v: number) => setC({ ...c, pj1_imposto_perc: v })}
+                  />
+                </div>
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center">
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
             <span className="text-lg font-bold text-red-400">
               R${' '}
@@ -234,12 +247,12 @@ export default function GestaoFiscal() {
               className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-emerald-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
-          <div className="space-y-4 flex-1 flex flex-col">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Receita Excedente
               </label>
-              <div className="text-3xl font-bold tracking-tight text-emerald-400 truncate h-12 flex items-center">
+              <div className="text-3xl font-bold tracking-tight text-emerald-400 truncate h-10 flex items-center">
                 R${' '}
                 {excedente.toLocaleString('pt-BR', {
                   minimumFractionDigits: 2,
@@ -247,23 +260,24 @@ export default function GestaoFiscal() {
                 })}
               </div>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
-                Calculado automaticamente baseando-se no Faturamento Previsto e descontando as
-                receitas atribuídas à PF e PJ 01.
+                Automático: Faturamento - PF - PJ 01
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-800 flex justify-between items-center mt-auto">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Estimativa de Imposto (%)
-              </label>
-              <div className="w-24">
-                <PercInput
-                  value={c.pj2_imposto_perc}
-                  onChange={(v: number) => setC({ ...c, pj2_imposto_perc: v })}
-                />
+            <div className="flex flex-col gap-4 flex-1">
+              <div className="mt-auto flex justify-between items-center pt-2">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Estimativa de Imposto (%)
+                </label>
+                <div className="w-24">
+                  <PercInput
+                    value={c.pj2_imposto_perc}
+                    onChange={(v: number) => setC({ ...c, pj2_imposto_perc: v })}
+                  />
+                </div>
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center">
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
             <span className="text-lg font-bold text-red-400">
               R${' '}
