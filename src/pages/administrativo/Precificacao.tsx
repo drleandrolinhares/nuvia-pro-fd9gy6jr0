@@ -11,7 +11,7 @@ export default function Precificacao() {
   const [isConfigOpen, setIsConfigOpen] = useState(false)
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full animate-fade-in-up">
+    <div className="p-6 max-w-[1800px] mx-auto w-full animate-fade-in-up">
       <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-sm">
         <div className="p-3 bg-amber-500/10 rounded-lg">
           <Calculator className="w-6 h-6 text-amber-500" />
