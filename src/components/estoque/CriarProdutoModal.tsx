@@ -6,6 +6,8 @@ import { Loader2, PackagePlus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Form,
   FormControl,
@@ -42,6 +44,10 @@ const formSchema = z.object({
   custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
   sala_id: z.string().optional(),
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
+  controle_prazo: z.boolean().default(false),
+  alerta_prazo_dias: z.string().optional(),
+  consumo_estimado_valor: z.string().optional(),
+  consumo_estimado_frequencia: z.string().default('MES'),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -67,6 +73,7 @@ export function CriarProdutoModal({
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
   const [campoOpcoes, setCampoOpcoes] = useState<Record<string, any[]>>({})
+  const [mostrarEstimativa, setMostrarEstimativa] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -78,6 +85,10 @@ export function CriarProdutoModal({
       embalagem: '',
       custo_unitario: 0,
       referencia_consumo: 'qtd_comprada',
+      controle_prazo: false,
+      alerta_prazo_dias: '',
+      consumo_estimado_valor: '',
+      consumo_estimado_frequencia: 'MES',
     },
   })
 
@@ -92,7 +103,12 @@ export function CriarProdutoModal({
         custo_unitario: 0,
         sala_id: 'none',
         referencia_consumo: 'qtd_comprada',
+        controle_prazo: false,
+        alerta_prazo_dias: '',
+        consumo_estimado_valor: '',
+        consumo_estimado_frequencia: 'MES',
       })
+      setMostrarEstimativa(false)
       fetchEspecialidades().then((res) => {
         if (res.data) setEspecialidades(res.data)
       })
@@ -129,7 +145,15 @@ export function CriarProdutoModal({
     const salaNome =
       values.sala_id !== 'none' ? salas.find((s) => s.id === values.sala_id)?.nome || null : null
 
-    const payload = {
+    let dataRevisao = null
+    const diasAlerta = values.alerta_prazo_dias ? parseInt(values.alerta_prazo_dias) : null
+    if (values.controle_prazo && diasAlerta) {
+      const d = new Date()
+      d.setDate(d.getDate() + diasAlerta)
+      dataRevisao = d.toISOString().split('T')[0]
+    }
+
+    const payload: Partial<Produto> = {
       ...values,
       nome: values.nome.trim().toUpperCase(),
       marca: values.marca ? values.marca.trim().toUpperCase() : undefined,
@@ -140,9 +164,17 @@ export function CriarProdutoModal({
       quantidade_minima: 0,
       custo_unitario: values.custo_unitario || 0,
       referencia_consumo: values.referencia_consumo,
+      alerta_prazo_dias: values.controle_prazo ? diasAlerta : null,
+      data_proxima_revisao: dataRevisao,
+      consumo_estimado_valor: values.consumo_estimado_valor
+        ? parseFloat(values.consumo_estimado_valor)
+        : null,
+      consumo_estimado_frequencia: values.consumo_estimado_valor
+        ? values.consumo_estimado_frequencia
+        : null,
     }
 
-    const { data, error } = await createProduto(payload)
+    const { data, error } = await createProduto(payload as any)
     setLoading(false)
 
     if (error) {
@@ -163,7 +195,7 @@ export function CriarProdutoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-800">
             <PackagePlus className="w-5 h-5 text-amber-500" />
@@ -201,45 +233,47 @@ export function CriarProdutoModal({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="marca"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Marca do Produto</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Supermax" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="especialidade_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Especialidade</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="marca"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Marca do Produto</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
+                      <Input placeholder="Ex: Supermax" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">Geral / Nenhuma</SelectItem>
-                      {especialidades.map((esp) => (
-                        <SelectItem key={esp.id} value={esp.id}>
-                          {esp.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="especialidade_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Especialidade</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Geral / Nenhuma</SelectItem>
+                        {especialidades.map((esp) => (
+                          <SelectItem key={esp.id} value={esp.id}>
+                            {esp.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-3 gap-4">
               <FormField
@@ -333,6 +367,97 @@ export function CriarProdutoModal({
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 pt-4 border-t border-slate-200 mt-4">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm uppercase tracking-wider">
+                Planejamento de Consumo
+              </h3>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="controle_prazo"
+                  checked={form.watch('controle_prazo')}
+                  onCheckedChange={(val) => form.setValue('controle_prazo', val)}
+                />
+                <Label htmlFor="controle_prazo" className="cursor-pointer">
+                  Controle de Estoque por Prazo
+                </Label>
+              </div>
+
+              {form.watch('controle_prazo') && (
+                <FormField
+                  control={form.control}
+                  name="alerta_prazo_dias"
+                  render={({ field }) => (
+                    <FormItem className="animate-fade-in">
+                      <FormLabel>Dias para Reabastecimento</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" placeholder="Ex: 90" {...field} />
+                      </FormControl>
+                      <p className="text-xs text-slate-500">
+                        O produto reaparecerá para compra após este prazo, independente da
+                        quantidade.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start text-slate-600 dark:text-slate-300"
+                onClick={() => setMostrarEstimativa(!mostrarEstimativa)}
+              >
+                {mostrarEstimativa ? 'Ocultar Estimativa' : 'Estimar Consumo Médio'}
+              </Button>
+
+              {mostrarEstimativa && (
+                <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                  <FormField
+                    control={form.control}
+                    name="consumo_estimado_valor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Consumo Médio</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.01" placeholder="Ex: 2" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="consumo_estimado_frequencia"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frequência</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="DIA">Por Dia</SelectItem>
+                            <SelectItem value="SEMANA">Por Semana</SelectItem>
+                            <SelectItem value="QUINZENA">Por Quinzena</SelectItem>
+                            <SelectItem value="MES">Por Mês</SelectItem>
+                            <SelectItem value="BIMESTRE">Por Bimestre</SelectItem>
+                            <SelectItem value="TRIMESTRE">Por Trimestre</SelectItem>
+                            <SelectItem value="SEMESTRE">Por Semestre</SelectItem>
+                            <SelectItem value="ANO">Por Ano</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
 
             {camposDinamicos.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">

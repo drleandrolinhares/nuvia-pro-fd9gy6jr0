@@ -120,18 +120,18 @@ export default function GestaoFiscal() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         {/* Card PF */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden h-full">
           <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-          <div className="flex items-center gap-2 mb-5 h-8">
+          <div className="flex items-center gap-2 mb-5 h-8 shrink-0">
             <UserIcon className="w-5 h-5 text-amber-500 shrink-0" />
             <h2 className="text-lg font-bold text-white tracking-wider uppercase flex-1 px-2 h-full flex items-center">
               PESSOA FÍSICA
             </h2>
           </div>
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
+          <div className="flex flex-col flex-1">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 VALOR A RECEBER
               </label>
@@ -146,7 +146,7 @@ export default function GestaoFiscal() {
                 Automático: Despesa Livro Caixa + R$ 3.000,00
               </p>
             </div>
-            <div className="flex flex-col gap-4 flex-1">
+            <div className="flex flex-col flex-1 mt-6">
               <div>
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                   Despesa Prevista (Livro Caixa)
@@ -158,15 +158,15 @@ export default function GestaoFiscal() {
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px] shrink-0">
             {/* Espaço reservado para alinhar simetricamente com os outros cards */}
           </div>
         </div>
 
         {/* Card PJ1 */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden h-full">
           <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
-          <div className="flex items-center gap-2 mb-5 w-full h-8">
+          <div className="flex items-center gap-2 mb-5 h-8 shrink-0">
             <Building2 className="w-5 h-5 text-blue-500 shrink-0" />
             <Input
               value={c.pj1_titulo}
@@ -174,8 +174,8 @@ export default function GestaoFiscal() {
               className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-blue-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
+          <div className="flex flex-col flex-1">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Teto de Receita Permitida
               </label>
@@ -190,7 +190,7 @@ export default function GestaoFiscal() {
                 Automático: Despesa Folha + Proporção
               </p>
             </div>
-            <div className="flex flex-col gap-4 flex-1">
+            <div className="flex flex-col flex-1 mt-6">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
@@ -211,7 +211,7 @@ export default function GestaoFiscal() {
                   />
                 </div>
               </div>
-              <div className="mt-auto flex justify-between items-center pt-2">
+              <div className="mt-auto flex justify-between items-center pt-4">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Estimativa de Imposto (%)
                 </label>
@@ -224,7 +224,7 @@ export default function GestaoFiscal() {
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px] shrink-0">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
             <span className="text-lg font-bold text-red-400">
               R${' '}
@@ -237,9 +237,9 @@ export default function GestaoFiscal() {
         </div>
 
         {/* Card PJ2 Excedente */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden h-full">
           <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
-          <div className="flex items-center gap-2 mb-5 w-full h-8">
+          <div className="flex items-center gap-2 mb-5 h-8 shrink-0">
             <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
             <Input
               value={c.pj2_titulo}
@@ -247,8 +247,8 @@ export default function GestaoFiscal() {
               className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-emerald-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center min-h-[116px]">
+          <div className="flex flex-col flex-1">
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Receita Excedente
               </label>
@@ -263,8 +263,8 @@ export default function GestaoFiscal() {
                 Automático: Faturamento - PF - PJ 01
               </p>
             </div>
-            <div className="flex flex-col gap-4 flex-1">
-              <div className="mt-auto flex justify-between items-center pt-2">
+            <div className="flex flex-col flex-1 mt-6">
+              <div className="mt-auto flex justify-between items-center pt-4">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Estimativa de Imposto (%)
                 </label>
@@ -277,7 +277,7 @@ export default function GestaoFiscal() {
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px]">
+          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center h-[36px] shrink-0">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
             <span className="text-lg font-bold text-red-400">
               R${' '}

@@ -63,6 +63,7 @@ export function EditarProdutoModal({
   const [alertaPrazoDias, setAlertaPrazoDias] = useState('')
   const [consumoEstimadoValor, setConsumoEstimadoValor] = useState('')
   const [consumoEstimadoFrequencia, setConsumoEstimadoFrequencia] = useState('MES')
+  const [mostrarEstimativa, setMostrarEstimativa] = useState(false)
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
@@ -113,6 +114,7 @@ export function EditarProdutoModal({
 
         setConsumoEstimadoValor(produto.consumo_estimado_valor?.toString() || '')
         setConsumoEstimadoFrequencia(produto.consumo_estimado_frequencia?.toUpperCase() || 'MES')
+        setMostrarEstimativa(!!produto.consumo_estimado_valor)
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -379,41 +381,52 @@ export function EditarProdutoModal({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="consumo_valor">Estimar Consumo Médio</Label>
-                <Input
-                  id="consumo_valor"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={consumoEstimadoValor}
-                  onChange={(e) => setConsumoEstimadoValor(e.target.value)}
-                  placeholder="Ex: 2"
-                />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start text-slate-600 dark:text-slate-300"
+              onClick={() => setMostrarEstimativa(!mostrarEstimativa)}
+            >
+              {mostrarEstimativa ? 'Ocultar Estimativa' : 'Estimar Consumo Médio'}
+            </Button>
+
+            {mostrarEstimativa && (
+              <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="consumo_valor">Consumo Médio</Label>
+                  <Input
+                    id="consumo_valor"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={consumoEstimadoValor}
+                    onChange={(e) => setConsumoEstimadoValor(e.target.value)}
+                    placeholder="Ex: 2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="consumo_freq">Frequência</Label>
+                  <Select
+                    value={consumoEstimadoFrequencia}
+                    onValueChange={setConsumoEstimadoFrequencia}
+                  >
+                    <SelectTrigger id="consumo_freq">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DIA">Por Dia</SelectItem>
+                      <SelectItem value="SEMANA">Por Semana</SelectItem>
+                      <SelectItem value="QUINZENA">Por Quinzena</SelectItem>
+                      <SelectItem value="MES">Por Mês</SelectItem>
+                      <SelectItem value="BIMESTRE">Por Bimestre</SelectItem>
+                      <SelectItem value="TRIMESTRE">Por Trimestre</SelectItem>
+                      <SelectItem value="SEMESTRE">Por Semestre</SelectItem>
+                      <SelectItem value="ANO">Por Ano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="consumo_freq">Frequência</Label>
-                <Select
-                  value={consumoEstimadoFrequencia}
-                  onValueChange={setConsumoEstimadoFrequencia}
-                >
-                  <SelectTrigger id="consumo_freq">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DIA">Por Dia</SelectItem>
-                    <SelectItem value="SEMANA">Por Semana</SelectItem>
-                    <SelectItem value="QUINZENA">Por Quinzena</SelectItem>
-                    <SelectItem value="MES">Por Mês</SelectItem>
-                    <SelectItem value="BIMESTRE">Por Bimestre</SelectItem>
-                    <SelectItem value="TRIMESTRE">Por Trimestre</SelectItem>
-                    <SelectItem value="SEMESTRE">Por Semestre</SelectItem>
-                    <SelectItem value="ANO">Por Ano</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
           </div>
 
           {camposDinamicos.length > 0 && (
