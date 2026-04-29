@@ -71,20 +71,22 @@ function GlobalVarRow({
   calc: number
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 p-2.5 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">
-      <span className="text-sm font-medium text-slate-300 flex-1">{label}</span>
-      <div className="flex items-center gap-2 w-24 relative">
+    <div className="flex items-center justify-between gap-4 p-3.5 bg-slate-900/80 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors shadow-sm">
+      <span className="text-base font-semibold text-slate-100 flex-1">{label}</span>
+      <div className="flex items-center gap-2 w-28 relative">
         <Input
           type="number"
           value={perc}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="h-9 pr-6 text-right bg-slate-950 border-slate-700 text-slate-200 focus-visible:ring-blue-500 font-medium"
+          className="h-11 pr-8 text-right bg-slate-950 border-slate-500 text-white focus-visible:ring-blue-400 font-bold text-base"
         />
-        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
           %
         </span>
       </div>
-      <div className="text-sm font-bold text-slate-200 w-24 text-right">R$ {calc.toFixed(2)}</div>
+      <div className="text-base font-bold text-emerald-400 w-28 text-right">
+        R$ {calc.toFixed(2)}
+      </div>
     </div>
   )
 }
@@ -224,7 +226,7 @@ export function EstruturaPrecificacao() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-stretch min-h-[750px]">
       {/* Sidebar */}
-      <div className="w-full lg:w-[380px] bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-4 shadow-sm">
+      <div className="w-full lg:w-[420px] bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-4 shadow-sm self-stretch h-auto">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -257,9 +259,9 @@ export function EstruturaPrecificacao() {
               <div key={esp.id} className="space-y-1 group/esp">
                 <div
                   onClick={() => toggle(esp.id)}
-                  className="flex items-center w-full justify-between p-2.5 rounded-lg hover:bg-slate-800 transition-colors text-slate-200 font-medium text-sm cursor-pointer"
+                  className="flex items-center w-full justify-between p-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-100 font-semibold text-base cursor-pointer"
                 >
-                  <span className="truncate text-[15px]">{esp.nome}</span>
+                  <span className="truncate text-base">{esp.nome}</span>
                   <div className="flex items-center gap-1">
                     {isAdmin && (
                       <div className="hidden group-hover/esp:flex items-center gap-1 mr-2">
@@ -302,15 +304,15 @@ export function EstruturaPrecificacao() {
                       <div
                         key={proc.id}
                         className={cn(
-                          'w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-all duration-200 border group/proc',
+                          'w-full flex items-center justify-between px-4 py-2.5 text-sm rounded-lg transition-all duration-200 border group/proc',
                           selProc === proc.id
-                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-medium shadow-sm shadow-amber-500/5'
-                            : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/80',
+                            ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 font-bold shadow-sm shadow-amber-500/5'
+                            : 'bg-transparent border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 font-medium',
                         )}
                       >
                         <button
                           onClick={() => setSelProc(proc.id)}
-                          className="flex-1 text-left truncate text-[14px]"
+                          className="flex-1 text-left truncate text-[15px]"
                         >
                           {proc.nome}
                         </button>
@@ -348,7 +350,7 @@ export function EstruturaPrecificacao() {
       </div>
 
       {/* Main Dash */}
-      <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm relative overflow-hidden flex flex-col">
+      <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm relative flex flex-col">
         {activeProc ? (
           <div className="space-y-6 animate-fade-in relative z-10 flex-1 flex flex-col">
             <div className="pb-6 border-b border-slate-800 flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center">
@@ -360,20 +362,22 @@ export function EstruturaPrecificacao() {
               </div>
 
               <div className="flex flex-wrap sm:flex-nowrap gap-4 w-full xl:w-auto">
-                <div className="bg-slate-900/80 border border-amber-500/50 rounded-xl p-4 flex-1 sm:w-[220px] shadow-sm shadow-amber-500/5">
-                  <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4" /> Valor Cobrado
+                <div className="bg-slate-900/80 border-2 border-amber-500/50 rounded-xl p-5 flex-1 sm:w-[240px] shadow-sm shadow-amber-500/10">
+                  <p className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <DollarSign className="w-5 h-5" /> Valor Cobrado
                   </p>
-                  <CurrencyInput value={data.valor} onChange={(v) => updateData('valor', v)} />
+                  <div className="currency-wrapper-lg">
+                    <CurrencyInput value={data.valor} onChange={(v) => updateData('valor', v)} />
+                  </div>
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-4 flex-1 sm:w-[180px] shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Percent className="w-4 h-4" /> Margem de Lucro
+                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex-1 sm:w-[200px] shadow-sm flex flex-col justify-center">
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Percent className="w-5 h-5" /> Margem de Lucro
                   </p>
                   <div
                     className={cn(
-                      'text-3xl font-bold tracking-tight',
+                      'text-4xl font-bold tracking-tight',
                       margemLucroPerc >= 0 ? 'text-emerald-400' : 'text-red-400',
                     )}
                   >
@@ -381,13 +385,13 @@ export function EstruturaPrecificacao() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-4 flex-1 sm:w-[180px] shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4" /> Lucro em R$
+                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex-1 sm:w-[200px] shadow-sm flex flex-col justify-center">
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <TrendingUp className="w-5 h-5" /> Lucro em R$
                   </p>
                   <div
                     className={cn(
-                      'text-3xl font-bold tracking-tight',
+                      'text-4xl font-bold tracking-tight',
                       lucroValor >= 0 ? 'text-emerald-400' : 'text-red-400',
                     )}
                   >
@@ -406,9 +410,9 @@ export function EstruturaPrecificacao() {
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/80 flex flex-col justify-center shadow-sm">
-                  <label className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-slate-500" />
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
+                  <label className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-slate-400" />
                     Tempo de Execução (Minutos)
                   </label>
                   <div className="relative">
@@ -416,27 +420,27 @@ export function EstruturaPrecificacao() {
                       type="number"
                       value={data.tempo}
                       onChange={(e) => updateData('tempo', Number(e.target.value))}
-                      className="h-12 bg-slate-900 border-slate-700 text-white font-bold text-lg focus-visible:ring-amber-500 text-center"
+                      className="h-14 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-amber-500 text-center"
                     />
                   </div>
                 </div>
 
-                <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/80 flex flex-col justify-center shadow-sm">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4 text-slate-500" />
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-slate-400" />
                     CUSTO FIXO EM R$
                   </p>
-                  <p className="text-3xl font-bold text-slate-200 tracking-tight mt-1">
+                  <p className="text-4xl font-bold text-white tracking-tight mt-1">
                     R$ {custoFixo.toFixed(2)}
                   </p>
                 </div>
 
-                <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/80 flex flex-col justify-center shadow-sm">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5">
-                    <Percent className="w-4 h-4 text-slate-500" />
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[140px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                    <Percent className="w-5 h-5 text-slate-400" />
                     CUSTO FIXO EM %
                   </p>
-                  <p className="text-3xl font-bold text-slate-200 tracking-tight mt-1">
+                  <p className="text-4xl font-bold text-white tracking-tight mt-1">
                     {percCustoFixo.toFixed(1)}%
                   </p>
                 </div>
@@ -491,44 +495,50 @@ export function EstruturaPrecificacao() {
                     Custo do Procedimento
                   </h4>
                   <div className="space-y-4">
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                      <label className="text-[15px] font-medium text-slate-300 mb-2 block">
+                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
+                      <label className="text-base font-bold text-slate-100 mb-2 block">
                         Honorários Dentista (R$)
                       </label>
-                      <CurrencyInput
-                        value={data.dentista || 0}
-                        onChange={(v) => updateData('dentista', v)}
-                      />
+                      <div className="currency-wrapper-lg">
+                        <CurrencyInput
+                          value={data.dentista || 0}
+                          onChange={(v) => updateData('dentista', v)}
+                        />
+                      </div>
                     </div>
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                      <label className="text-[15px] font-medium text-slate-300 mb-2 block">
+                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
+                      <label className="text-base font-bold text-slate-100 mb-2 block">
                         Laboratório (R$)
                       </label>
-                      <CurrencyInput value={data.lab} onChange={(v) => updateData('lab', v)} />
+                      <div className="currency-wrapper-lg">
+                        <CurrencyInput value={data.lab} onChange={(v) => updateData('lab', v)} />
+                      </div>
                     </div>
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                      <label className="text-[15px] font-medium text-slate-300 mb-2 block">
+                    <div className="bg-slate-900/80 p-4 rounded-lg border border-slate-600 shadow-sm">
+                      <label className="text-base font-bold text-slate-100 mb-2 block">
                         Custo com Material (R$)
                       </label>
-                      <CurrencyInput value={data.mat} onChange={(v) => updateData('mat', v)} />
+                      <div className="currency-wrapper-lg">
+                        <CurrencyInput value={data.mat} onChange={(v) => updateData('mat', v)} />
+                      </div>
                     </div>
                   </div>
 
                   <div className="mt-auto pt-6">
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-5 flex justify-between items-center">
+                    <div className="bg-blue-500/20 border border-blue-500/40 rounded-xl p-6 flex justify-between items-center shadow-md">
                       <div>
-                        <p className="text-xs text-blue-400/80 uppercase tracking-wider font-bold mb-1">
+                        <p className="text-sm text-blue-300 uppercase tracking-wider font-bold mb-1">
                           Carga Variável Total
                         </p>
-                        <p className="text-3xl font-bold text-blue-400">
+                        <p className="text-4xl font-bold text-blue-400">
                           {percCustoVariavel.toFixed(1)}%
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-blue-400/80 uppercase tracking-wider font-bold mb-1">
+                        <p className="text-sm text-blue-300 uppercase tracking-wider font-bold mb-1">
                           Total em R$
                         </p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-4xl font-bold text-white">
                           R$ {totalVariavelVal.toFixed(2)}
                         </p>
                       </div>
