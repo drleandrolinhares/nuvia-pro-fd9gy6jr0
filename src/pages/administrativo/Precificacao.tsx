@@ -1,7 +1,8 @@
-import { Calculator, Clock, DollarSign, Users, Settings } from 'lucide-react'
+import { Calculator, Clock, DollarSign, Users, Settings, Calendar } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CustoHoraClinica } from '@/components/precificacao/CustoHoraClinica'
-import { OcupacaoCadeiras } from '@/components/precificacao/OcupacaoCadeiras'
+import { SegmentacaoAgenda } from '@/components/precificacao/SegmentacaoAgenda'
+import { OcupacaoConsultorios } from '@/components/precificacao/OcupacaoConsultorios'
 import { EstruturaPrecificacao } from '@/components/precificacao/EstruturaPrecificacao'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -41,14 +42,21 @@ export default function Precificacao() {
             PRECIFICAÇÃO
           </TabsTrigger>
           <TabsTrigger
+            value="segmentacao"
+            className="whitespace-nowrap flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950"
+          >
+            <Calendar className="w-4 h-4" />
+            SEGMENTAÇÃO DA AGENDA
+          </TabsTrigger>
+          <TabsTrigger
             value="ocupacao"
             className="whitespace-nowrap flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950"
           >
             <Users className="w-4 h-4" />
-            OCUPAÇÃO DAS CADEIRAS
+            OCUPAÇÃO DOS CONSULTÓRIOS
           </TabsTrigger>
 
-          {activeTab === 'ocupacao' && (
+          {activeTab === 'segmentacao' && (
             <div className="ml-auto pl-2 pr-1 flex items-center">
               <Button
                 variant="outline"
@@ -79,8 +87,12 @@ export default function Precificacao() {
           <EstruturaPrecificacao />
         </TabsContent>
 
+        <TabsContent value="segmentacao" className="animate-fade-in mt-0">
+          <SegmentacaoAgenda isConfigOpen={isConfigOpen} setIsConfigOpen={setIsConfigOpen} />
+        </TabsContent>
+
         <TabsContent value="ocupacao" className="animate-fade-in mt-0">
-          <OcupacaoCadeiras isConfigOpen={isConfigOpen} setIsConfigOpen={setIsConfigOpen} />
+          <OcupacaoConsultorios />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Plus, Trash2, Settings, Copy } from 'lucide-react'
+import { Loader2, Plus, Trash2, Copy } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   Dialog,
@@ -26,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -120,18 +119,19 @@ type OcupacaoData = {
   especialidade: string | null
   dentista: string | null
   horas_trabalhadas: number | null
+  capacidade_maxima: number | null
   cor: string | null
 }
 
-interface OcupacaoCadeirasProps {
+interface SegmentacaoAgendaProps {
   isConfigOpen?: boolean
   setIsConfigOpen?: (open: boolean) => void
 }
 
-export function OcupacaoCadeiras({
+export function SegmentacaoAgenda({
   isConfigOpen: externalIsConfigOpen,
   setIsConfigOpen: externalSetIsConfigOpen,
-}: OcupacaoCadeirasProps) {
+}: SegmentacaoAgendaProps) {
   const { toast } = useToast()
   const [data, setData] = useState<Record<string, OcupacaoData>>({})
   const [configItems, setConfigItems] = useState<ConfigItem[]>([])
@@ -145,7 +145,13 @@ export function OcupacaoCadeiras({
     dia: string
     semana: number
   } | null>(null)
-  const [form, setForm] = useState({ especialidade: '', dentista: '', horas: '', cor: '' })
+  const [form, setForm] = useState({
+    especialidade: '',
+    dentista: '',
+    horas: '',
+    capacidade: '',
+    cor: '',
+  })
 
   const isConfigOpen =
     externalIsConfigOpen !== undefined ? externalIsConfigOpen : internalIsConfigOpen
@@ -156,9 +162,7 @@ export function OcupacaoCadeiras({
       .from('precificacao_ocupacao_config')
       .select('*')
       .order('nome')
-    if (!error && configData) {
-      setConfigItems(configData as ConfigItem[])
-    }
+    if (!error && configData) setConfigItems(configData as ConfigItem[])
   }
 
   const fetchData = async () => {
@@ -170,7 +174,10 @@ export function OcupacaoCadeiras({
 
       const map: Record<string, OcupacaoData> = {}
       records?.forEach((r: any) => {
-        map[`${r.consultorio}_${r.turno}_${r.dia_semana}_${r.semana || 1}`] = r
+        map[`${r.consultorio}_${r.turno}_${r.dia_semana}_${r.semana || 1}`] = {
+          ...r,
+          capacidade_maxima: Number(r.capacidade_maxima) || 0,
+        }
       })
       setData(map)
     } catch (err) {
@@ -196,6 +203,7 @@ export function OcupacaoCadeiras({
         especialidade: existing?.especialidade || '',
         dentista: existing?.dentista || '',
         horas: existing?.horas_trabalhadas?.toString() || '',
+        capacidade: existing?.capacidade_maxima?.toString() || '',
         cor: existing?.cor || '',
       })
     }
@@ -203,70 +211,15 @@ export function OcupacaoCadeiras({
 
   const especialidadesOptions = useMemo(() => {
     const opts = configItems.filter((i) => i.tipo === 'especialidade').map((i) => i.nome)
-    if (form.especialidade && !opts.includes(form.especialidade)) {
-      opts.push(form.especialidade)
-    }
+    if (form.especialidade && !opts.includes(form.especialidade)) opts.push(form.especialidade)
     return opts
   }, [configItems, form.especialidade])
 
   const dentistasOptions = useMemo(() => {
     const opts = configItems.filter((i) => i.tipo === 'dentista').map((i) => i.nome)
-    if (form.dentista && !opts.includes(form.dentista)) {
-      opts.push(form.dentista)
-    }
+    if (form.dentista && !opts.includes(form.dentista)) opts.push(form.dentista)
     return opts
   }, [configItems, form.dentista])
-
-  const metrics = useMemo(() => {
-    const horasPorConsultorio: Record<string, number> = {
-      'Consultório 1': 0,
-      'Consultório 2': 0,
-      'Consultório 3': 0,
-      'Consultório 4': 0,
-    }
-    let totalHoras = 0
-    const periodosPorDentista: Record<string, number> = {}
-    const horasPorDentista: Record<string, number> = {}
-    const periodosPorEspecialidade: Record<string, number> = {}
-    const horasPorEspecialidade: Record<string, number> = {}
-
-    Object.values(data).forEach((item) => {
-      const horas = item.horas_trabalhadas || 0
-      const dentista = item.dentista || 'Não informado'
-      const especialidade = item.especialidade || 'Não informada'
-      const consultorio = item.consultorio
-
-      if (horasPorConsultorio[consultorio] !== undefined) {
-        horasPorConsultorio[consultorio] += horas
-      }
-      totalHoras += horas
-
-      if (item.dentista) {
-        periodosPorDentista[dentista] = (periodosPorDentista[dentista] || 0) + 1
-        horasPorDentista[dentista] = (horasPorDentista[dentista] || 0) + horas
-      }
-
-      if (item.especialidade) {
-        periodosPorEspecialidade[especialidade] = (periodosPorEspecialidade[especialidade] || 0) + 1
-        horasPorEspecialidade[especialidade] = (horasPorEspecialidade[especialidade] || 0) + horas
-      }
-    })
-
-    const getTop = (record: Record<string, number>) => {
-      return Object.entries(record)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 3)
-    }
-
-    return {
-      horasPorConsultorio,
-      totalHoras,
-      topDentistasPeriodos: getTop(periodosPorDentista),
-      topDentistasHoras: getTop(horasPorDentista),
-      topEspecialidadesPeriodos: getTop(periodosPorEspecialidade),
-      topEspecialidadesHoras: getTop(horasPorEspecialidade),
-    }
-  }, [data])
 
   const handleSave = async () => {
     if (!editingCell) return
@@ -274,8 +227,9 @@ export function OcupacaoCadeiras({
 
     try {
       const { consultorio, turno, dia, semana } = editingCell
+      const cap = Number(form.capacidade) || 0
 
-      if (!form.especialidade) {
+      if (!form.especialidade && cap === 0) {
         await supabase
           .from('precificacao_ocupacao_cadeiras' as any)
           .delete()
@@ -287,10 +241,11 @@ export function OcupacaoCadeiras({
             turno,
             dia_semana: dia,
             semana,
-            especialidade: form.especialidade,
-            dentista: form.dentista,
+            especialidade: form.especialidade || null,
+            dentista: form.dentista || null,
             horas_trabalhadas: Number(form.horas) || 0,
-            cor: form.cor,
+            capacidade_maxima: cap,
+            cor: form.cor || null,
           },
           { onConflict: 'consultorio,turno,dia_semana,semana' } as any,
         )
@@ -312,15 +267,12 @@ export function OcupacaoCadeiras({
 
     try {
       const { consultorio, turno, dia, semana } = editingCell
-
       await supabase
         .from('precificacao_ocupacao_cadeiras' as any)
         .delete()
         .match({ consultorio, turno, dia_semana: dia, semana })
-
       toast({ title: 'Removido com sucesso' })
       setEditingCell(null)
-      setForm({ especialidade: '', dentista: '', horas: '', cor: '' })
       fetchData()
     } catch (err) {
       toast({ title: 'Erro ao remover', variant: 'destructive' })
@@ -349,6 +301,7 @@ export function OcupacaoCadeiras({
             especialidade: d.especialidade,
             dentista: d.dentista,
             horas_trabalhadas: d.horas_trabalhadas,
+            capacidade_maxima: d.capacidade_maxima || 0,
             cor: d.cor,
           }))
           await supabase.from('precificacao_ocupacao_cadeiras' as any).insert(newData)
@@ -369,139 +322,13 @@ export function OcupacaoCadeiras({
     return (
       <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-4" />
-        <p className="text-slate-400">Carregando ocupação...</p>
+        <p className="text-slate-400">Carregando segmentação...</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Total Mensal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-white">{metrics.totalHoras}h</div>
-            <p className="text-[10px] text-slate-500 mt-1">Soma das 4 semanas</p>
-          </CardContent>
-        </Card>
-        {CONSULTORIOS.map((c) => (
-          <Card key={c} className="bg-slate-900 border-slate-800">
-            <CardHeader className="pb-2">
-              <CardTitle
-                className="text-xs font-semibold text-slate-400 uppercase tracking-wider truncate"
-                title={c}
-              >
-                {c}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-amber-500">
-                {metrics.horasPorConsultorio[c]}h
-              </div>
-              <p className="text-[10px] text-slate-500 mt-1">Mês (4 semanas)</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-slate-200">
-              Ranking por Dentista (Mensal)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
-                Mais Períodos
-              </h4>
-              <div className="space-y-2">
-                {metrics.topDentistasPeriodos.map(([d, val]) => (
-                  <div key={d} className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300 truncate pr-2">{d}</span>
-                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md">
-                      {val}
-                    </span>
-                  </div>
-                ))}
-                {metrics.topDentistasPeriodos.length === 0 && (
-                  <p className="text-xs text-slate-600">Sem dados</p>
-                )}
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
-                Mais Horas
-              </h4>
-              <div className="space-y-2">
-                {metrics.topDentistasHoras.map(([d, val]) => (
-                  <div key={d} className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300 truncate pr-2">{d}</span>
-                    <span className="font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">
-                      {val}h
-                    </span>
-                  </div>
-                ))}
-                {metrics.topDentistasHoras.length === 0 && (
-                  <p className="text-xs text-slate-600">Sem dados</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-slate-200">
-              Ranking por Especialidade (Mensal)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
-                Mais Períodos
-              </h4>
-              <div className="space-y-2">
-                {metrics.topEspecialidadesPeriodos.map(([e, val]) => (
-                  <div key={e} className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300 truncate pr-2">{e}</span>
-                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md">
-                      {val}
-                    </span>
-                  </div>
-                ))}
-                {metrics.topEspecialidadesPeriodos.length === 0 && (
-                  <p className="text-xs text-slate-600">Sem dados</p>
-                )}
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">
-                Mais Horas
-              </h4>
-              <div className="space-y-2">
-                {metrics.topEspecialidadesHoras.map(([e, val]) => (
-                  <div key={e} className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300 truncate pr-2">{e}</span>
-                    <span className="font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">
-                      {val}h
-                    </span>
-                  </div>
-                ))}
-                {metrics.topEspecialidadesHoras.length === 0 && (
-                  <p className="text-xs text-slate-600">Sem dados</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1">
           {[1, 2, 3, 4].map((w) => (
@@ -597,6 +424,11 @@ export function OcupacaoCadeiras({
                         const cellData = data[`${c}_${t}_${d.id}_${activeWeek}`]
                         const colorObj =
                           PRESET_COLORS.find((pc) => pc.value === cellData?.cor) || PRESET_COLORS[0]
+                        const hasEspecialidade = !!cellData?.especialidade
+                        const hasCapacidade = cellData?.capacidade_maxima
+                          ? cellData.capacidade_maxima > 0
+                          : false
+
                         return (
                           <TableCell
                             key={d.id}
@@ -613,16 +445,16 @@ export function OcupacaoCadeiras({
                               }
                               className={cn(
                                 'p-2 rounded-md border text-xs min-h-[85px] flex flex-col items-start justify-start cursor-pointer transition-all hover:scale-[1.02]',
-                                cellData?.especialidade
+                                hasEspecialidade || hasCapacidade
                                   ? 'bg-slate-800 border-slate-700'
                                   : 'bg-slate-800/20 border-slate-700/50 border-dashed hover:bg-slate-800/60',
                               )}
                             >
-                              {cellData?.especialidade ? (
+                              {hasEspecialidade ? (
                                 <>
                                   <span
                                     className={cn('font-bold truncate w-full', colorObj.textClass)}
-                                    title={cellData.especialidade}
+                                    title={cellData.especialidade!}
                                   >
                                     {cellData.especialidade}
                                   </span>
@@ -635,10 +467,18 @@ export function OcupacaoCadeiras({
                                   >
                                     {cellData.dentista}
                                   </span>
-                                  <span className="mt-auto pt-2 text-[10px] opacity-80 font-medium text-slate-400">
-                                    {cellData.horas_trabalhadas}h
+                                  <span className="mt-auto pt-2 text-[10px] opacity-80 font-medium text-slate-400 whitespace-nowrap">
+                                    Trab: {cellData.horas_trabalhadas}h | Cap:{' '}
+                                    {cellData.capacidade_maxima}h
                                   </span>
                                 </>
+                              ) : hasCapacidade ? (
+                                <div className="w-full h-full min-h-[60px] flex flex-col items-center justify-center opacity-70 hover:opacity-100 text-slate-400">
+                                  <span className="text-[10px] uppercase font-semibold">Livre</span>
+                                  <span className="text-xs font-bold mt-1 text-slate-300">
+                                    Cap: {cellData.capacidade_maxima}h
+                                  </span>
+                                </div>
                               ) : (
                                 <div className="w-full h-full min-h-[60px] flex items-center justify-center opacity-0 hover:opacity-100 text-slate-500">
                                   <Plus className="w-5 h-5" />
@@ -671,7 +511,7 @@ export function OcupacaoCadeiras({
                 onValueChange={(val) => setForm((f) => ({ ...f, especialidade: val }))}
               >
                 <SelectTrigger className="bg-slate-950 border-slate-700 text-white">
-                  <SelectValue placeholder="Selecione uma especialidade" />
+                  <SelectValue placeholder="Selecione uma especialidade (opcional)" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 max-h-[250px]">
                   {especialidadesOptions.map((nome) => (
@@ -693,7 +533,7 @@ export function OcupacaoCadeiras({
                 onValueChange={(val) => setForm((f) => ({ ...f, dentista: val }))}
               >
                 <SelectTrigger className="bg-slate-950 border-slate-700 text-white">
-                  <SelectValue placeholder="Selecione um dentista" />
+                  <SelectValue placeholder="Selecione um dentista (opcional)" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 max-h-[250px]">
                   {dentistasOptions.map((nome) => (
@@ -708,16 +548,29 @@ export function OcupacaoCadeiras({
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label className="text-slate-300">Horas Trabalhadas</Label>
-              <Input
-                type="number"
-                step="0.5"
-                value={form.horas}
-                onChange={(e) => setForm((f) => ({ ...f, horas: e.target.value }))}
-                placeholder="Ex: 4"
-                className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-500"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label className="text-slate-300">Horas Trabalhadas</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={form.horas}
+                  onChange={(e) => setForm((f) => ({ ...f, horas: e.target.value }))}
+                  placeholder="Ex: 4"
+                  className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-slate-300">Capacidade Máxima</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={form.capacidade}
+                  onChange={(e) => setForm((f) => ({ ...f, capacidade: e.target.value }))}
+                  placeholder="Ex: 4"
+                  className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
             </div>
             <div className="grid gap-2">
               <Label className="text-slate-300">Cor de Identificação</Label>
@@ -726,6 +579,8 @@ export function OcupacaoCadeiras({
                   <button
                     key={c.value}
                     type="button"
+                    title={c.name}
+                    onClick={() => setForm((f) => ({ ...f, cor: c.value }))}
                     className={cn(
                       'w-8 h-8 rounded-md border-2 transition-all',
                       c.class,
@@ -733,20 +588,18 @@ export function OcupacaoCadeiras({
                         ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900 scale-110'
                         : 'opacity-80 hover:opacity-100',
                     )}
-                    onClick={() => setForm((f) => ({ ...f, cor: c.value }))}
-                    title={c.name}
                   />
                 ))}
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+          <DialogFooter className="flex items-center justify-between w-full">
             <Button
               type="button"
               variant="destructive"
               onClick={handleDelete}
-              disabled={saving || !form.especialidade}
+              disabled={saving}
               className="gap-2"
             >
               <Trash2 className="w-4 h-4" />
@@ -765,7 +618,7 @@ export function OcupacaoCadeiras({
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || (!form.especialidade && !form.capacidade)}
                 className="bg-amber-500 text-slate-950 hover:bg-amber-600"
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
