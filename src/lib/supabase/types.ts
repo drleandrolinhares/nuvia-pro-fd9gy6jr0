@@ -1268,6 +1268,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gestao_fiscal_config: {
+        Row: {
+          atualizado_em: string
+          faturamento_previsto: number
+          id: string
+          pf_despesa: number
+          pf_imposto_perc: number
+          pf_receita: number
+          pj1_despesa_folha: number
+          pj1_imposto_perc: number
+          pj1_margem_perc: number
+          pj1_receita: number
+          pj1_titulo: string
+          pj2_imposto_perc: number
+          pj2_titulo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          faturamento_previsto?: number
+          id?: string
+          pf_despesa?: number
+          pf_imposto_perc?: number
+          pf_receita?: number
+          pj1_despesa_folha?: number
+          pj1_imposto_perc?: number
+          pj1_margem_perc?: number
+          pj1_receita?: number
+          pj1_titulo?: string
+          pj2_imposto_perc?: number
+          pj2_titulo?: string
+        }
+        Update: {
+          atualizado_em?: string
+          faturamento_previsto?: number
+          id?: string
+          pf_despesa?: number
+          pf_imposto_perc?: number
+          pf_receita?: number
+          pj1_despesa_folha?: number
+          pj1_imposto_perc?: number
+          pj1_margem_perc?: number
+          pj1_receita?: number
+          pj1_titulo?: string
+          pj2_imposto_perc?: number
+          pj2_titulo?: string
+        }
+        Relationships: []
+      }
       historico_compras: {
         Row: {
           criado_em: string | null
@@ -3342,6 +3390,20 @@ export const Constants = {
 //   senha: text (nullable)
 //   usuario_login: text (nullable)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: gestao_fiscal_config
+//   id: uuid (not null, default: gen_random_uuid())
+//   faturamento_previsto: numeric (not null, default: 0)
+//   pf_despesa: numeric (not null, default: 0)
+//   pf_receita: numeric (not null, default: 0)
+//   pf_imposto_perc: numeric (not null, default: 0)
+//   pj1_titulo: text (not null, default: 'PJ 01'::text)
+//   pj1_despesa_folha: numeric (not null, default: 0)
+//   pj1_margem_perc: numeric (not null, default: 30)
+//   pj1_receita: numeric (not null, default: 0)
+//   pj1_imposto_perc: numeric (not null, default: 0)
+//   pj2_titulo: text (not null, default: 'EXCEDENTE (PJ 02)'::text)
+//   pj2_imposto_perc: numeric (not null, default: 0)
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: historico_compras
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -3817,6 +3879,8 @@ export const Constants = {
 //   PRIMARY KEY fluxo_caixa_receitas_pkey: PRIMARY KEY (id)
 // Table: fornecedores
 //   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
+// Table: gestao_fiscal_config
+//   PRIMARY KEY gestao_fiscal_config_pkey: PRIMARY KEY (id)
 // Table: historico_compras
 //   FOREIGN KEY historico_compras_fornecedor_id_fkey: FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id) ON DELETE SET NULL
 //   PRIMARY KEY historico_compras_pkey: PRIMARY KEY (id)
@@ -4137,6 +4201,10 @@ export const Constants = {
 //   Policy "fornecedores_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: gestao_fiscal_config
+//   Policy "gestao_fiscal_config_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: historico_compras
 //   Policy "historico_compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))

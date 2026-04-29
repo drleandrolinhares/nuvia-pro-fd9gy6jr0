@@ -5,14 +5,10 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { CurrencyInput } from '@/components/precificacao/CurrencyInput'
 
-const NumInput = ({ value, onChange, className, isPerc }: any) => (
+const PercInput = ({ value, onChange, className }: any) => (
   <div className="relative w-full">
-    {!isPerc && (
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold select-none">
-        R$
-      </span>
-    )}
     <Input
       type="number"
       value={value || ''}
@@ -20,16 +16,13 @@ const NumInput = ({ value, onChange, className, isPerc }: any) => (
       step="0.01"
       min="0"
       className={cn(
-        `font-bold bg-slate-950 border-slate-700 text-white focus-visible:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`,
-        isPerc ? 'pr-8 text-center' : 'pl-10',
+        `font-bold bg-slate-900/50 border-slate-800 text-slate-200 focus:text-white focus:bg-slate-800 focus:border-amber-500/50 hover:border-slate-600 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pr-8 text-right h-9`,
         className,
       )}
     />
-    {isPerc && (
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold select-none">
-        %
-      </span>
-    )}
+    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium select-none">
+      %
+    </span>
   </div>
 )
 
@@ -66,17 +59,24 @@ export default function GestaoFiscal() {
       })
   }, [])
 
+  const pj1_receita_calc = c.pj1_despesa_folha * (1 + c.pj1_margem_perc / 100)
+
   const handleSave = async () => {
     setSaving(true)
-    const { error } = await supabase.from('gestao_fiscal_config').update(c).eq('id', id)
+    const { error } = await supabase
+      .from('gestao_fiscal_config')
+      .update({
+        ...c,
+        pj1_receita: pj1_receita_calc,
+      })
+      .eq('id', id)
     if (error) toast.error('Erro ao salvar as configurações fiscais')
     else toast.success('Gestão fiscal atualizada com sucesso!')
     setSaving(false)
   }
 
-  const excedente = Math.max(0, c.faturamento_previsto - c.pf_receita - c.pj1_receita)
-  const impPf = c.pf_receita * (c.pf_imposto_perc / 100)
-  const impPj1 = c.pj1_receita * (c.pj1_imposto_perc / 100)
+  const excedente = Math.max(0, c.faturamento_previsto - c.pf_receita - pj1_receita_calc)
+  const impPj1 = pj1_receita_calc * (c.pj1_imposto_perc / 100)
   const impPj2 = excedente * (c.pj2_imposto_perc / 100)
 
   if (loading) {
@@ -107,11 +107,12 @@ export default function GestaoFiscal() {
           <span className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">
             Faturamento Previsto Total
           </span>
-          <div className="w-full md:w-56">
-            <NumInput
+          <div className="w-full md:w-64">
+            <CurrencyInput
               value={c.faturamento_previsto}
               onChange={(v: number) => setC({ ...c, faturamento_previsto: v })}
-              className="h-12 text-xl border-amber-500/50 bg-amber-500/5 text-amber-500"
+              className="h-12 text-xl border-amber-500/50 bg-amber-500/5 text-amber-500 focus:border-amber-400 focus:text-amber-400"
+              iconClassName="text-amber-500/70"
             />
           </div>
         </div>
@@ -121,72 +122,61 @@ export default function GestaoFiscal() {
         {/* Card PF */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-          <div className="flex items-center gap-2 mb-5">
-            <UserIcon className="w-5 h-5 text-amber-500" />
-            <h2 className="text-lg font-bold text-white tracking-wider uppercase">Pessoa Física</h2>
+          <div className="flex items-center gap-2 mb-5 h-8">
+            <UserIcon className="w-5 h-5 text-amber-500 shrink-0" />
+            <h2 className="text-lg font-bold text-white tracking-wider uppercase flex-1 px-2 flex items-center">
+              PESSOA FÍSICA
+            </h2>
           </div>
           <div className="space-y-4 flex-1">
             <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Valor a Receber (Teto)
+                VALOR A RECEBER
               </label>
-              <NumInput
+              <CurrencyInput
                 value={c.pf_receita}
                 onChange={(v: number) => setC({ ...c, pf_receita: v })}
-                className="text-2xl h-12 text-amber-500 border-amber-500/30 bg-amber-500/5"
+                className="text-2xl h-12 text-amber-500 border-amber-500/30 bg-amber-500/5 focus:border-amber-500 focus:text-amber-400"
+                iconClassName="text-amber-500/70"
               />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                 Despesa Prevista (Livro Caixa)
               </label>
-              <NumInput
+              <CurrencyInput
                 value={c.pf_despesa}
                 onChange={(v: number) => setC({ ...c, pf_despesa: v })}
               />
             </div>
-            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Estimativa de Imposto (%)
-              </label>
-              <div className="w-24">
-                <NumInput
-                  isPerc
-                  value={c.pf_imposto_perc}
-                  onChange={(v: number) => setC({ ...c, pf_imposto_perc: v })}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
-            <span className="text-lg font-bold text-red-400">R$ {impPf.toFixed(2)}</span>
           </div>
         </div>
 
         {/* Card PJ1 */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
-          <div className="flex items-center gap-2 mb-5 w-full">
+          <div className="flex items-center gap-2 mb-5 w-full h-8">
             <Building2 className="w-5 h-5 text-blue-500 shrink-0" />
             <Input
               value={c.pj1_titulo}
               onChange={(e) => setC({ ...c, pj1_titulo: e.target.value })}
-              className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-blue-500 h-8 px-2 flex-1"
+              className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-blue-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
-          <div className="space-y-4 flex-1">
+          <div className="space-y-4 flex-1 flex flex-col">
             <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Teto de Receita Permitida
               </label>
-              <NumInput
-                value={c.pj1_receita}
-                onChange={(v: number) => setC({ ...c, pj1_receita: v })}
-                className="text-2xl h-12 text-blue-400 border-blue-500/30 bg-blue-500/5 focus-visible:ring-blue-500"
-              />
+              <div className="text-3xl font-bold tracking-tight text-blue-400 truncate h-12 flex items-center">
+                R${' '}
+                {pj1_receita_calc.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
-                Sugestão: R$ {(c.pj1_despesa_folha * (1 + c.pj1_margem_perc / 100)).toFixed(2)}
+                Automático: Despesa Folha + Proporção
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -194,7 +184,7 @@ export default function GestaoFiscal() {
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                   Despesa (Folha)
                 </label>
-                <NumInput
+                <CurrencyInput
                   value={c.pj1_despesa_folha}
                   onChange={(v: number) => setC({ ...c, pj1_despesa_folha: v })}
                 />
@@ -203,8 +193,7 @@ export default function GestaoFiscal() {
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                   Proporção (%)
                 </label>
-                <NumInput
-                  isPerc
+                <PercInput
                   value={c.pj1_margem_perc}
                   onChange={(v: number) => setC({ ...c, pj1_margem_perc: v })}
                 />
@@ -215,8 +204,7 @@ export default function GestaoFiscal() {
                 Estimativa de Imposto (%)
               </label>
               <div className="w-24">
-                <NumInput
-                  isPerc
+                <PercInput
                   value={c.pj1_imposto_perc}
                   onChange={(v: number) => setC({ ...c, pj1_imposto_perc: v })}
                 />
@@ -225,19 +213,25 @@ export default function GestaoFiscal() {
           </div>
           <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
-            <span className="text-lg font-bold text-red-400">R$ {impPj1.toFixed(2)}</span>
+            <span className="text-lg font-bold text-red-400">
+              R${' '}
+              {impPj1.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
         </div>
 
         {/* Card PJ2 Excedente */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
-          <div className="flex items-center gap-2 mb-5 w-full">
+          <div className="flex items-center gap-2 mb-5 w-full h-8">
             <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
             <Input
               value={c.pj2_titulo}
               onChange={(e) => setC({ ...c, pj2_titulo: e.target.value })}
-              className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-emerald-500 h-8 px-2 flex-1"
+              className="text-lg font-bold text-white tracking-wider uppercase bg-transparent border-transparent hover:border-slate-700 focus-visible:ring-emerald-500 h-full px-2 flex-1 shadow-none"
             />
           </div>
           <div className="space-y-4 flex-1 flex flex-col">
@@ -245,21 +239,24 @@ export default function GestaoFiscal() {
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Receita Excedente
               </label>
-              <div className="text-4xl font-bold tracking-tight text-emerald-400">
-                R$ {excedente.toFixed(2)}
+              <div className="text-3xl font-bold tracking-tight text-emerald-400 truncate h-12 flex items-center">
+                R${' '}
+                {excedente.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
-              <p className="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
                 Calculado automaticamente baseando-se no Faturamento Previsto e descontando as
                 receitas atribuídas à PF e PJ 01.
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center mt-auto">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 Estimativa de Imposto (%)
               </label>
               <div className="w-24">
-                <NumInput
-                  isPerc
+                <PercInput
                   value={c.pj2_imposto_perc}
                   onChange={(v: number) => setC({ ...c, pj2_imposto_perc: v })}
                 />
@@ -268,7 +265,13 @@ export default function GestaoFiscal() {
           </div>
           <div className="mt-5 pt-3 border-t border-slate-800 flex justify-between items-center">
             <span className="text-xs font-bold text-slate-400 uppercase">Imposto Previsto</span>
-            <span className="text-lg font-bold text-red-400">R$ {impPj2.toFixed(2)}</span>
+            <span className="text-lg font-bold text-red-400">
+              R${' '}
+              {impPj2.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
         </div>
       </div>
@@ -279,7 +282,11 @@ export default function GestaoFiscal() {
             Carga Tributária Total Estimada
           </p>
           <p className="text-3xl font-bold text-red-400 tracking-tight">
-            R$ {(impPf + impPj1 + impPj2).toFixed(2)}
+            R${' '}
+            {(impPj1 + impPj2).toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </p>
         </div>
         <Button
