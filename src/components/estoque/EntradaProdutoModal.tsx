@@ -90,7 +90,7 @@ const formSchema = z.object({
 
   estimar_consumo: z.boolean().default(false),
   consumo_estimado_valor: z.coerce.number().min(0.01).optional(),
-  consumo_estimado_frequencia: z.enum(['dia', 'semana', 'mes']).optional(),
+  consumo_estimado_frequencia: z.string().optional(),
 
   observacoes: z.string().optional(),
   observacoes_criticas: z.string().optional(),
@@ -156,7 +156,7 @@ export function EntradaProdutoModal({
       alerta_prazo_dias: 0,
       estimar_consumo: false,
       consumo_estimado_valor: 0,
-      consumo_estimado_frequencia: 'mes',
+      consumo_estimado_frequencia: 'MES',
       observacoes: '',
       observacoes_criticas: '',
       manter_campos: false,
@@ -301,7 +301,7 @@ export function EntradaProdutoModal({
           alerta_prazo_dias: 0,
           estimar_consumo: false,
           consumo_estimado_valor: 0,
-          consumo_estimado_frequencia: 'mes',
+          consumo_estimado_frequencia: 'MES',
           campos_dinamicos: {},
         })
         setSelectedProdutoId(null)
@@ -336,7 +336,7 @@ export function EntradaProdutoModal({
       form.setValue('consumo_estimado_valor', produto.consumo_estimado_valor || 0)
       form.setValue(
         'consumo_estimado_frequencia',
-        (produto.consumo_estimado_frequencia as any) || 'mes',
+        (produto.consumo_estimado_frequencia?.toUpperCase() as any) || 'MES',
       )
       if (produto.validade) {
         const parts = produto.validade.split('-')
@@ -1232,9 +1232,14 @@ export function EntradaProdutoModal({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="dia">Dia</SelectItem>
-                                <SelectItem value="semana">Semana</SelectItem>
-                                <SelectItem value="mes">Mês</SelectItem>
+                                <SelectItem value="DIA">Dia</SelectItem>
+                                <SelectItem value="SEMANA">Semana</SelectItem>
+                                <SelectItem value="QUINZENA">Quinzena</SelectItem>
+                                <SelectItem value="MES">Mês</SelectItem>
+                                <SelectItem value="BIMESTRE">Bimestre</SelectItem>
+                                <SelectItem value="TRIMESTRE">Trimestre</SelectItem>
+                                <SelectItem value="SEMESTRE">Semestre</SelectItem>
+                                <SelectItem value="ANO">Ano</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

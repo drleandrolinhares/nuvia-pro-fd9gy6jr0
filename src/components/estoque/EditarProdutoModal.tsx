@@ -112,7 +112,7 @@ export function EditarProdutoModal({
         }
 
         setConsumoEstimadoValor(produto.consumo_estimado_valor?.toString() || '')
-        setConsumoEstimadoFrequencia(produto.consumo_estimado_frequencia || 'MES')
+        setConsumoEstimadoFrequencia(produto.consumo_estimado_frequencia?.toUpperCase() || 'MES')
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -404,7 +404,12 @@ export function EditarProdutoModal({
                   <SelectContent>
                     <SelectItem value="DIA">Por Dia</SelectItem>
                     <SelectItem value="SEMANA">Por Semana</SelectItem>
+                    <SelectItem value="QUINZENA">Por Quinzena</SelectItem>
                     <SelectItem value="MES">Por Mês</SelectItem>
+                    <SelectItem value="BIMESTRE">Por Bimestre</SelectItem>
+                    <SelectItem value="TRIMESTRE">Por Trimestre</SelectItem>
+                    <SelectItem value="SEMESTRE">Por Semestre</SelectItem>
+                    <SelectItem value="ANO">Por Ano</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
