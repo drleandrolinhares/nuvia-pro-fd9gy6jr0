@@ -354,7 +354,7 @@ export function EstruturaPrecificacao() {
               <div key={esp.id} className="space-y-1 group/esp">
                 <div
                   onClick={() => toggle(esp.id)}
-                  className="flex items-center w-full justify-between py-2 px-3 rounded-md hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
+                  className="flex items-center w-full justify-between py-2 px-3 rounded-md hover:bg-slate-800/50 transition-colors text-amber-500 hover:text-amber-400 cursor-pointer"
                 >
                   <span className="truncate text-xs font-bold uppercase tracking-wider">
                     {esp.nome}
@@ -364,28 +364,28 @@ export function EstruturaPrecificacao() {
                       <div className="hidden group-hover/esp:flex items-center gap-1 mr-2">
                         <div
                           onClick={(e) => handleAddProc(e, esp.id)}
-                          className="p-1 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                          className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
                           title="Novo Procedimento"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </div>
                         <div
                           onClick={(e) => handleEditEspec(e, esp.id)}
-                          className="p-1 text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                          className="p-1 text-amber-500/70 hover:text-blue-400 transition-colors cursor-pointer"
                           title="Editar"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </div>
                         <div
                           onClick={(e) => handleDeleteEspec(e, esp.id)}
-                          className="p-1 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                          className="p-1 text-amber-500/70 hover:text-red-400 transition-colors cursor-pointer"
                           title="Excluir"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </div>
                       </div>
                     )}
-                    <span className="text-slate-500 group-hover/esp:text-slate-300 transition-colors">
+                    <span className="text-amber-500/70 group-hover/esp:text-amber-400 transition-colors">
                       {expanded.includes(esp.id) ? (
                         <ChevronDown className="w-4 h-4" />
                       ) : (
@@ -403,8 +403,8 @@ export function EstruturaPrecificacao() {
                         className={cn(
                           'w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all duration-200 group/proc relative',
                           selProc === proc.id
-                            ? 'bg-slate-800/80 text-amber-500 font-medium shadow-sm'
-                            : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
+                            ? 'bg-slate-800/80 text-white font-medium shadow-sm'
+                            : 'bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/40',
                         )}
                       >
                         <button
