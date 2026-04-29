@@ -11,7 +11,9 @@ import {
   RefreshCw,
   Trash2,
   History,
+  Plus,
 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -69,6 +71,13 @@ export function CarteiraTab() {
 
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false)
   const [isExtratoGlobalOpen, setIsExtratoGlobalOpen] = useState(false)
+
+  const [isNovoLancamentoOpen, setIsNovoLancamentoOpen] = useState(false)
+  const [novoLancamento, setNovoLancamento] = useState({
+    tipo: 'credito',
+    valor: '',
+    descricao: '',
+  })
 
   useEffect(() => {
     if (user?.id && !selectedUser) {
@@ -181,6 +190,38 @@ export function CarteiraTab() {
     }
   }
 
+  const handleNovoLancamento = async () => {
+    if (!novoLancamento.valor || !novoLancamento.descricao) {
+      toast.error('Preencha o valor e a descrição.')
+      return
+    }
+
+    const valorNum = Number(novoLancamento.valor.replace(',', '.'))
+    if (isNaN(valorNum) || valorNum <= 0) {
+      toast.error('Valor inválido.')
+      return
+    }
+
+    setLoading(true)
+    const { error } = await supabase.from('carteira_transacoes').insert({
+      usuario_id: selectedUser,
+      tipo: novoLancamento.tipo,
+      valor: valorNum,
+      descricao: novoLancamento.descricao,
+      mes_referencia: selectedMonth,
+    })
+
+    if (error) {
+      toast.error('Erro ao registrar lançamento.')
+      setLoading(false)
+    } else {
+      toast.success('Lançamento registrado com sucesso!')
+      setIsNovoLancamentoOpen(false)
+      setNovoLancamento({ tipo: 'credito', valor: '', descricao: '' })
+      loadTransactions(selectedUser, selectedMonth)
+    }
+  }
+
   const handleDeleteTransaction = async (id: string) => {
     if (
       !window.confirm('Tem certeza que deseja excluir este lançamento? O saldo será recalculado.')
@@ -243,16 +284,27 @@ export function CarteiraTab() {
         </div>
 
         {isAdmin && (
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto text-amber-700 border-amber-200 hover:bg-amber-50"
-            onClick={handleGerarAdiantamentos}
-            disabled={loading}
-            title="Os adiantamentos são gerados automaticamente no dia 1º de cada mês (a partir de Maio/2026). Use este botão apenas para contingência/reprocessamento."
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Gerar Adiantamentos
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto text-amber-700 border-amber-200 hover:bg-amber-50"
+              onClick={handleGerarAdiantamentos}
+              disabled={loading}
+              title="Os adiantamentos são gerados automaticamente no dia 1º de cada mês (a partir de Maio/2026). Use este botão apenas para contingência/reprocessamento."
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Gerar Adiantamentos
+            </Button>
+            <Button
+              variant="default"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => setIsNovoLancamentoOpen(true)}
+              disabled={loading}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Lançamento Manual
+            </Button>
+          </div>
         )}
       </div>
 
@@ -537,6 +589,62 @@ export function CarteiraTab() {
               </TableBody>
             </Table>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isNovoLancamentoOpen} onOpenChange={setIsNovoLancamentoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Lançamento Manual</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Tipo de Lançamento</Label>
+              <Select
+                value={novoLancamento.tipo}
+                onValueChange={(val) => setNovoLancamento({ ...novoLancamento, tipo: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="credito">Crédito (Adiantamento/Bônus)</SelectItem>
+                  <SelectItem value="debito">Débito (Desconto/Ajuste)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Valor (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={novoLancamento.valor}
+                onChange={(e) => setNovoLancamento({ ...novoLancamento, valor: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input
+                placeholder="Ex: Adiantamento Feijão com Arroz"
+                value={novoLancamento.descricao}
+                onChange={(e) =>
+                  setNovoLancamento({ ...novoLancamento, descricao: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNovoLancamentoOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleNovoLancamento}
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Salvar Lançamento
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
