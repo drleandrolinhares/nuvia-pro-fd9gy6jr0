@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
-import { supabase } from '@/lib/supabase/client'
 import {
   getMeusPedidos,
   saveRascunho,
@@ -12,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { Trash2, Search, Save, Send, PlusCircle, CheckCircle } from 'lucide-react'
+import { Trash2, Save, Send, PlusCircle, CheckCircle, AlertCircle } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -30,9 +29,10 @@ export default function NovosPedidos() {
   const [pedidoAtivo, setPedidoAtivo] = useState<PedidoMaterial | null>(null)
   const [itens, setItens] = useState<PedidoItem[]>([])
   const [observacoes, setObservacoes] = useState('')
-  const [busca, setBusca] = useState('')
-  const [produtos, setProdutos] = useState<any[]>([])
   const [bloqueado, setBloqueado] = useState(false)
+
+  const [novaDescricao, setNovaDescricao] = useState('')
+  const [novaQtd, setNovaQtd] = useState(1)
 
   const loadPedidos = async () => {
     if (!user) return
@@ -55,44 +55,39 @@ export default function NovosPedidos() {
     loadPedidos()
   }, [user])
 
-  const searchProdutos = async (q: string) => {
-    if (q.length < 2) return setProdutos([])
-    const { data } = await supabase
-      .from('produtos')
-      .select('id, nome, marca, variacao, custo_unitario, quantidade_estoque')
-      .ilike('nome', `%${q}%`)
-      .limit(10)
-    setProdutos(data || [])
-  }
+  const addItem = () => {
+    if (!novaDescricao.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Informe a descrição do material.',
+        variant: 'destructive',
+      })
+      return
+    }
 
-  const addItem = (p: any) => {
-    const existing = itens.find((i) => i.produto_id === p.id)
-    if (existing) {
-      setItens(
-        itens.map((i) =>
-          i.produto_id === p.id
-            ? {
-                ...i,
-                quantidade: i.quantidade + 1,
-                valor_total: (i.quantidade + 1) * i.preco_unitario,
-              }
-            : i,
-        ),
-      )
+    const existingIdx = itens.findIndex(
+      (i) =>
+        i.descricao_item?.toLowerCase() === novaDescricao.toLowerCase().trim() ||
+        i.produto?.nome.toLowerCase() === novaDescricao.toLowerCase().trim(),
+    )
+
+    if (existingIdx >= 0) {
+      const newItens = [...itens]
+      newItens[existingIdx].quantidade += novaQtd
+      setItens(newItens)
     } else {
       setItens([
         {
-          produto_id: p.id,
-          quantidade: 1,
-          preco_unitario: p.custo_unitario || 0,
-          valor_total: p.custo_unitario || 0,
-          produto: p,
+          descricao_item: novaDescricao.trim(),
+          quantidade: novaQtd,
+          preco_unitario: 0,
+          valor_total: 0,
         },
         ...itens,
       ])
     }
-    setBusca('')
-    setProdutos([])
+    setNovaDescricao('')
+    setNovaQtd(1)
   }
 
   const updateQtd = (idx: number, qtd: number) => {
@@ -147,47 +142,59 @@ export default function NovosPedidos() {
 
   return (
     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-6">
-      <div className="flex items-center gap-4 relative">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+      <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl mb-6">
+        <h3 className="font-bold text-amber-500 flex items-center gap-2 mb-2">
+          <AlertCircle className="w-5 h-5" /> Regras Importantes
+        </h3>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-amber-200/90">
+          <li>Pedidos podem ser salvos como rascunho ao longo da semana.</li>
+          <li>O limite para envio do pedido é sexta-feira até as 11:00 AM.</li>
+          <li>É permitida apenas uma solicitação de materiais por semana.</li>
+        </ul>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-end gap-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
+        <div className="flex-1 w-full space-y-1.5">
+          <label className="text-xs font-bold text-slate-300 uppercase">
+            Descrição do Material
+          </label>
           <Input
-            value={busca}
-            onChange={(e) => {
-              setBusca(e.target.value)
-              searchProdutos(e.target.value)
+            value={novaDescricao}
+            onChange={(e) => setNovaDescricao(e.target.value)}
+            placeholder="Ex: Luvas de procedimento M, Algodão..."
+            className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500 h-11 focus-visible:ring-amber-500"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addItem()
             }}
-            placeholder="Buscar produto para adicionar ao pedido..."
-            className="pl-10 bg-slate-950 border-slate-800 h-12"
           />
-          {produtos.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-md shadow-xl z-50 overflow-hidden max-h-64 overflow-y-auto custom-scrollbar">
-              {produtos.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => addItem(p)}
-                  className="p-3 hover:bg-slate-700 cursor-pointer flex justify-between items-center border-b border-slate-700/50 last:border-0 text-slate-200"
-                >
-                  <div>
-                    <div className="font-bold">{p.nome}</div>
-                    <div className="text-xs text-slate-400">
-                      {p.marca} {p.variacao ? ` - ${p.variacao}` : ''} | Estoque:{' '}
-                      {p.quantidade_estoque || 0}
-                    </div>
-                  </div>
-                  <PlusCircle className="w-4 h-4 text-amber-500" />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
+        <div className="w-full sm:w-32 space-y-1.5">
+          <label className="text-xs font-bold text-slate-300 uppercase">Quantidade</label>
+          <Input
+            type="number"
+            min="1"
+            value={novaQtd}
+            onChange={(e) => setNovaQtd(parseInt(e.target.value) || 1)}
+            className="bg-slate-900 border-slate-700 text-slate-100 h-11 focus-visible:ring-amber-500 text-center"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addItem()
+            }}
+          />
+        </div>
+        <Button
+          onClick={addItem}
+          className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 w-full sm:w-auto px-6"
+        >
+          <PlusCircle className="w-4 h-4 mr-2" /> Adicionar
+        </Button>
       </div>
 
       <div className="border border-slate-800 rounded-lg overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-950">
             <TableRow className="border-slate-800 hover:bg-transparent">
-              <TableHead className="text-slate-400">Produto</TableHead>
-              <TableHead className="text-slate-400 w-32">Quantidade</TableHead>
+              <TableHead className="text-slate-400">Material Solicitado</TableHead>
+              <TableHead className="text-slate-400 w-32 text-center">Quantidade</TableHead>
               <TableHead className="text-slate-400 w-16 text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -195,14 +202,14 @@ export default function NovosPedidos() {
             {itens.length === 0 ? (
               <TableRow className="border-slate-800 hover:bg-transparent">
                 <TableCell colSpan={3} className="text-center py-8 text-slate-500">
-                  Nenhum item adicionado.
+                  Nenhum item adicionado ao pedido.
                 </TableCell>
               </TableRow>
             ) : (
               itens.map((it, idx) => (
                 <TableRow key={idx} className="border-slate-800 hover:bg-slate-800/50">
                   <TableCell className="font-medium text-slate-200">
-                    {it.produto?.nome || 'Produto Indisponível'}
+                    {it.descricao_item || it.produto?.nome || 'Item não especificado'}
                   </TableCell>
                   <TableCell>
                     <Input
@@ -210,7 +217,7 @@ export default function NovosPedidos() {
                       min="1"
                       value={it.quantidade}
                       onChange={(e) => updateQtd(idx, parseInt(e.target.value) || 1)}
-                      className="bg-slate-950 border-slate-800 h-8"
+                      className="bg-slate-950 border-slate-700 text-slate-200 h-9 text-center focus-visible:ring-amber-500"
                     />
                   </TableCell>
                   <TableCell className="text-center">
@@ -218,7 +225,7 @@ export default function NovosPedidos() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setItens(itens.filter((_, i) => i !== idx))}
-                      className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 h-8 w-8"
+                      className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 h-9 w-9"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -231,11 +238,14 @@ export default function NovosPedidos() {
       </div>
 
       <div>
+        <label className="text-xs font-bold text-slate-300 uppercase mb-1.5 block">
+          Observações do Pedido
+        </label>
         <Textarea
-          placeholder="Observações do pedido (opcional)..."
+          placeholder="Ex: Por favor, enviar até quinta-feira se possível..."
           value={observacoes}
           onChange={(e) => setObservacoes(e.target.value)}
-          className="bg-slate-950 border-slate-800 resize-none h-24"
+          className="bg-slate-950 border-slate-700 text-slate-200 placeholder:text-slate-500 resize-none h-24 focus-visible:ring-amber-500"
         />
       </div>
 
@@ -243,13 +253,13 @@ export default function NovosPedidos() {
         <Button
           variant="outline"
           onClick={handleSave}
-          className="border-slate-700 hover:bg-slate-800 text-slate-300"
+          className="border-slate-700 hover:bg-slate-800 text-slate-300 font-medium"
         >
           <Save className="w-4 h-4 mr-2" /> Salvar Rascunho
         </Button>
         <Button
           onClick={handleSend}
-          className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wider text-xs"
+          className="bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wider text-xs px-6"
         >
           <Send className="w-4 h-4 mr-2" /> Enviar Pedido
         </Button>

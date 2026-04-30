@@ -110,7 +110,9 @@ export default function PedidosRecebidos() {
                       key={it.id}
                       className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800"
                     >
-                      <span className="text-sm text-slate-300">{it.produto?.nome}</span>
+                      <span className="text-sm text-slate-300">
+                        {it.descricao_item || it.produto?.nome || 'Item não especificado'}
+                      </span>
                       <span className="text-xs font-bold bg-slate-800 px-2 py-1 rounded text-amber-500">
                         {it.quantidade} UN
                       </span>

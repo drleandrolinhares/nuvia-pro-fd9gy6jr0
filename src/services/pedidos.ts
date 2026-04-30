@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabase/client'
 export interface PedidoItem {
   id?: string
   pedido_id?: string
-  produto_id: string
+  produto_id?: string | null
+  descricao_item?: string
   quantidade: number
   preco_unitario: number
   valor_total: number
@@ -101,7 +102,8 @@ export const saveRascunho = async (
   if (itens.length > 0) {
     const toInsert = itens.map((i) => ({
       pedido_id: pedidoId,
-      produto_id: i.produto_id,
+      produto_id: i.produto_id || null,
+      descricao_item: i.descricao_item || null,
       quantidade: i.quantidade,
       preco_unitario: i.preco_unitario,
       valor_total: i.valor_total,
@@ -135,13 +137,15 @@ export const entregarPedido = async (pedidoId: string, entregue_por: string) => 
     .eq('id', pedidoId)
   if (updError) throw updError
 
-  const saidas = pedido.itens.map((i) => ({
-    produto_id: i.produto_id,
-    quantidade: i.quantidade,
-    tipo_saida: 'definitiva',
-    descricao: `Entrega de material (Pedido #${pedido.id.substring(0, 8)})`,
-    usuario_id: pedido.usuario_id,
-  }))
+  const saidas = pedido.itens
+    .filter((i: any) => i.produto_id)
+    .map((i: any) => ({
+      produto_id: i.produto_id,
+      quantidade: i.quantidade,
+      tipo_saida: 'definitiva',
+      descricao: `Entrega de material (Pedido #${pedido.id.substring(0, 8)})`,
+      usuario_id: pedido.usuario_id,
+    }))
 
   if (saidas.length > 0) await supabase.from('saida_produtos').insert(saidas)
 }
