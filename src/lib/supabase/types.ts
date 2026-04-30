@@ -1566,6 +1566,87 @@ export type Database = {
         }
         Relationships: []
       }
+      pedido_itens: {
+        Row: {
+          id: string
+          pedido_id: string
+          preco_unitario: number
+          produto_id: string
+          quantidade: number
+          valor_total: number
+        }
+        Insert: {
+          id?: string
+          pedido_id: string
+          preco_unitario?: number
+          produto_id: string
+          quantidade: number
+          valor_total?: number
+        }
+        Update: {
+          id?: string
+          pedido_id?: string
+          preco_unitario?: number
+          produto_id?: string
+          quantidade?: number
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pedido_itens_pedido_id_fkey'
+            columns: ['pedido_id']
+            isOneToOne: false
+            referencedRelation: 'pedidos_materiais'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pedido_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pedidos_materiais: {
+        Row: {
+          ciclo_entrega: string
+          data_criacao: string
+          data_entrega: string | null
+          data_envio: string | null
+          entregue_por: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          usuario_id: string
+          valor_total: number
+        }
+        Insert: {
+          ciclo_entrega: string
+          data_criacao?: string
+          data_entrega?: string | null
+          data_envio?: string | null
+          entregue_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          usuario_id: string
+          valor_total?: number
+        }
+        Update: {
+          ciclo_entrega?: string
+          data_criacao?: string
+          data_entrega?: string | null
+          data_envio?: string | null
+          entregue_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          usuario_id?: string
+          valor_total?: number
+        }
+        Relationships: []
+      }
       performance_bonificacao: {
         Row: {
           atingiu_meta: boolean
@@ -3518,6 +3599,24 @@ export const Constants = {
 //   data_cadastro: date (nullable, default: CURRENT_DATE)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: pedido_itens
+//   id: uuid (not null, default: gen_random_uuid())
+//   pedido_id: uuid (not null)
+//   produto_id: uuid (not null)
+//   quantidade: integer (not null)
+//   preco_unitario: numeric (not null, default: 0)
+//   valor_total: numeric (not null, default: 0)
+// Table: pedidos_materiais
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   status: text (not null, default: 'rascunho'::text)
+//   ciclo_entrega: date (not null)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   data_envio: timestamp with time zone (nullable)
+//   data_entrega: timestamp with time zone (nullable)
+//   entregue_por: uuid (nullable)
+//   valor_total: numeric (not null, default: 0)
+//   observacoes: text (nullable)
 // Table: performance_bonificacao
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -3978,6 +4077,16 @@ export const Constants = {
 //   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
 // Table: pacientes
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
+// Table: pedido_itens
+//   FOREIGN KEY pedido_itens_pedido_id_fkey: FOREIGN KEY (pedido_id) REFERENCES pedidos_materiais(id) ON DELETE CASCADE
+//   PRIMARY KEY pedido_itens_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY pedido_itens_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT
+//   CHECK pedido_itens_quantidade_check: CHECK ((quantidade > 0))
+// Table: pedidos_materiais
+//   FOREIGN KEY pedidos_materiais_entregue_por_fkey: FOREIGN KEY (entregue_por) REFERENCES auth.users(id) ON DELETE SET NULL
+//   PRIMARY KEY pedidos_materiais_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY pedidos_materiais_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   CHECK valid_status: CHECK ((status = ANY (ARRAY['rascunho'::text, 'enviado'::text, 'entregue'::text, 'cancelado'::text])))
 // Table: performance_bonificacao
 //   PRIMARY KEY performance_bonificacao_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY performance_bonificacao_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -4328,6 +4437,14 @@ export const Constants = {
 //   Policy "pacientes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: pedido_itens
+//   Policy "pedido_itens_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pedidos_materiais p   WHERE ((p.id = pedido_itens.pedido_id) AND ((p.usuario_id = auth.uid()) OR has_permission('operacional_pedidos_gerenciar'::text) OR is_admin()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pedidos_materiais p   WHERE ((p.id = pedido_itens.pedido_id) AND ((p.usuario_id = auth.uid()) OR has_permission('operacional_pedidos_gerenciar'::text) OR is_admin()))))
+// Table: pedidos_materiais
+//   Policy "pedidos_materiais_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR has_permission('operacional_pedidos_gerenciar'::text) OR is_admin())
+//     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('operacional_pedidos_gerenciar'::text) OR is_admin())
 // Table: performance_bonificacao
 //   Policy "performance_bonificacao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true

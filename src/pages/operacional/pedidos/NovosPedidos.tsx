@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { Trash2, Search, Save, Send, PlusCircle } from 'lucide-react'
+import { Trash2, Search, Save, Send, PlusCircle, CheckCircle } from 'lucide-react'
 import {
   Table,
   TableBody,
