@@ -19,9 +19,7 @@ export default function Pedidos() {
           <Package className="w-6 h-6 text-amber-500" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white uppercase tracking-tight">
-            Pedidos de Materiais
-          </h1>
+          <h1 className="text-2xl font-bold text-white uppercase tracking-tight">Pedidos</h1>
           <p className="text-slate-400 text-sm font-medium uppercase tracking-wider mt-1">
             Requisição semanal de insumos para o almoxarifado
           </p>

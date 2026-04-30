@@ -1648,7 +1648,15 @@ export type Database = {
           usuario_id?: string
           valor_total?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'pedidos_materiais_usuario_id_usuarios_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
       }
       performance_bonificacao: {
         Row: {
@@ -4090,6 +4098,7 @@ export const Constants = {
 //   FOREIGN KEY pedidos_materiais_entregue_por_fkey: FOREIGN KEY (entregue_por) REFERENCES auth.users(id) ON DELETE SET NULL
 //   PRIMARY KEY pedidos_materiais_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY pedidos_materiais_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   FOREIGN KEY pedidos_materiais_usuario_id_usuarios_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 //   CHECK valid_status: CHECK ((status = ANY (ARRAY['rascunho'::text, 'enviado'::text, 'entregue'::text, 'cancelado'::text])))
 // Table: performance_bonificacao
 //   PRIMARY KEY performance_bonificacao_pkey: PRIMARY KEY (id)

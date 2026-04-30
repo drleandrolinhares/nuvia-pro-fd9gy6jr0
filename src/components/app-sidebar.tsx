@@ -72,7 +72,7 @@ const navData = [
         permission: ['operacional_sac', 'Acessar SAC'],
       },
       {
-        title: 'PEDIDOS DE MATERIAIS',
+        title: 'PEDIDOS',
         url: '/operacional/pedidos',
         icon: Package,
         permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
