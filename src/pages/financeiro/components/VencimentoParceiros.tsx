@@ -20,7 +20,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, CheckCircle2, Circle, Users, Building } from 'lucide-react'
+import {
+  Trash2,
+  Plus,
+  CheckCircle2,
+  Circle,
+  Users,
+  Building,
+  Stethoscope,
+  Microscope,
+  ClipboardList,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +42,7 @@ interface Parceiro {
   valor: number
   descricao: string
   status: string
+  criterio_pagamento?: string
 }
 
 export function VencimentoParceiros() {
@@ -43,6 +54,7 @@ export function VencimentoParceiros() {
     data_vencimento: '',
     valor: '',
     descricao: '',
+    criterio_pagamento: '',
   })
   const { toast } = useToast()
 
@@ -64,14 +76,29 @@ export function VencimentoParceiros() {
       toast({ title: 'Preencha os campos obrigatórios', variant: 'destructive' })
       return
     }
-    const { error } = await supabase
-      .from('fluxo_caixa_parceiros')
-      .insert({ ...formData, valor: parseFloat(formData.valor) })
+    const dataToSave = {
+      tipo: formData.tipo,
+      nome: formData.nome,
+      data_vencimento: formData.data_vencimento,
+      valor: parseFloat(formData.valor),
+      descricao: formData.descricao || null,
+      criterio_pagamento:
+        formData.tipo === 'dentista_executor' ? formData.criterio_pagamento || null : null,
+    }
+
+    const { error } = await supabase.from('fluxo_caixa_parceiros').insert(dataToSave)
     if (error) toast({ title: 'Erro ao salvar', variant: 'destructive' })
     else {
       toast({ title: 'Adicionado com sucesso!' })
       setIsOpen(false)
-      setFormData({ tipo: '', nome: '', data_vencimento: '', valor: '', descricao: '' })
+      setFormData({
+        tipo: '',
+        nome: '',
+        data_vencimento: '',
+        valor: '',
+        descricao: '',
+        criterio_pagamento: '',
+      })
       fetchParceiros()
     }
   }
@@ -90,6 +117,127 @@ export function VencimentoParceiros() {
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+
+  const avaliadores = parceiros.filter(
+    (p) => p.tipo === 'dentista_avaliador' || p.tipo === 'dentista',
+  )
+  const executores = parceiros.filter((p) => p.tipo === 'dentista_executor')
+  const laboratorios = parceiros.filter((p) => p.tipo === 'laboratorio')
+  const outros = parceiros.filter((p) => p.tipo === 'outro')
+
+  const renderSection = (
+    title: string,
+    data: Parceiro[],
+    icon: React.ReactNode,
+    typeColor: string,
+  ) => {
+    if (data.length === 0) return null
+    return (
+      <div className="mb-8">
+        <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-4 pb-2 border-b border-slate-800">
+          <div
+            className={cn(
+              'p-1.5 rounded-md',
+              typeColor.replace('bg-', 'bg-').replace('-500', '-500/20').replace('-400', '-400/20'),
+            )}
+          >
+            {icon}
+          </div>
+          {title}
+          <span className="text-xs font-medium text-slate-400 bg-[#050A13] px-2 py-0.5 rounded-full border border-slate-800">
+            {data.length}
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data.map((p) => (
+            <Card
+              key={p.id}
+              className={cn(
+                'bg-[#0F1A2A] border-slate-700 relative overflow-hidden transition-all',
+                p.status === 'pago' ? 'opacity-60 grayscale' : 'shadow-lg shadow-black/30',
+              )}
+            >
+              <div className={cn('absolute top-0 left-0 w-1.5 h-full', typeColor)} />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col gap-1">
+                    <span
+                      className="font-bold text-slate-100 uppercase tracking-wider text-sm truncate max-w-[160px]"
+                      title={p.nome}
+                    >
+                      {p.nome}
+                    </span>
+                    {p.criterio_pagamento && (
+                      <Badge
+                        variant="outline"
+                        className="w-fit text-[10px] uppercase bg-[#050A13] text-slate-300 border-slate-700"
+                      >
+                        {p.criterio_pagamento}
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={
+                      p.status === 'pago'
+                        ? 'text-emerald-400 border-emerald-400/50 bg-emerald-500/10'
+                        : 'text-amber-400 border-amber-400/50 bg-amber-500/10'
+                    }
+                  >
+                    {p.status === 'pago' ? 'Pago' : 'Pendente'}
+                  </Badge>
+                </div>
+                <div className="mb-6">
+                  <div className="text-3xl font-black text-[#C5A059]">
+                    {formatCurrency(p.valor)}
+                  </div>
+                  {p.descricao && (
+                    <div className="text-sm text-slate-400 mt-1 line-clamp-1" title={p.descricao}>
+                      {p.descricao}
+                    </div>
+                  )}
+                </div>
+                <div className="bg-[#050A13] p-3 rounded-lg border border-slate-800 mb-4 flex justify-between items-center shadow-inner">
+                  <span className="text-slate-400 text-sm">Vencimento:</span>
+                  <span className="text-slate-100 font-bold text-lg">
+                    {format(parseISO(p.data_vencimento), 'dd/MM/yyyy')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleStatus(p.id, p.status)}
+                    className={cn(
+                      'font-bold transition-colors',
+                      p.status === 'pago'
+                        ? 'text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10'
+                        : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10',
+                    )}
+                  >
+                    {p.status === 'pago' ? (
+                      <CheckCircle2 className="w-5 h-5 mr-2" />
+                    ) : (
+                      <Circle className="w-5 h-5 mr-2" />
+                    )}
+                    {p.status === 'pago' ? 'Marcado como Pago' : 'Marcar como Pago'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(p.id)}
+                    className="text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -117,18 +265,41 @@ export function VencimentoParceiros() {
                 <Label>Tipo de Parceiro</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(v) => setFormData({ ...formData, tipo: v })}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, tipo: v, criterio_pagamento: '' })
+                  }
                 >
                   <SelectTrigger className="bg-[#050A13] border-slate-700">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#0F1A2A] border-slate-700 text-slate-200">
-                    <SelectItem value="dentista">Dentista</SelectItem>
+                    <SelectItem value="dentista_avaliador">Dentista Avaliador</SelectItem>
+                    <SelectItem value="dentista_executor">Dentista Executor</SelectItem>
                     <SelectItem value="laboratorio">Laboratório</SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {formData.tipo === 'dentista_executor' && (
+                <div className="grid gap-2">
+                  <Label>Critério de Pagamento</Label>
+                  <Select
+                    value={formData.criterio_pagamento}
+                    onValueChange={(v) => setFormData({ ...formData, criterio_pagamento: v })}
+                  >
+                    <SelectTrigger className="bg-[#050A13] border-slate-700">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0F1A2A] border-slate-700 text-slate-200">
+                      <SelectItem value="Execução">Execução</SelectItem>
+                      <SelectItem value="Diária">Diária</SelectItem>
+                      <SelectItem value="Fixo">Fixo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="grid gap-2">
                 <Label>Nome do Parceiro</Label>
                 <Input
@@ -180,96 +351,32 @@ export function VencimentoParceiros() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {parceiros.map((p) => (
-          <Card
-            key={p.id}
-            className={cn(
-              'bg-[#0F1A2A] border-slate-700 relative overflow-hidden transition-all',
-              p.status === 'pago' ? 'opacity-60 grayscale' : 'shadow-lg shadow-black/30',
-            )}
-          >
-            <div
-              className={cn(
-                'absolute top-0 left-0 w-1.5 h-full',
-                p.tipo === 'dentista'
-                  ? 'bg-blue-500'
-                  : p.tipo === 'laboratorio'
-                    ? 'bg-purple-500'
-                    : 'bg-slate-500',
-              )}
-            />
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  {p.tipo === 'dentista' ? (
-                    <Users className="w-5 h-5 text-blue-400" />
-                  ) : (
-                    <Building className="w-5 h-5 text-purple-400" />
-                  )}
-                  <span
-                    className="font-bold text-slate-100 uppercase tracking-wider text-sm truncate max-w-[160px]"
-                    title={p.nome}
-                  >
-                    {p.nome}
-                  </span>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    p.status === 'pago'
-                      ? 'text-emerald-400 border-emerald-400/50 bg-emerald-500/10'
-                      : 'text-amber-400 border-amber-400/50 bg-amber-500/10'
-                  }
-                >
-                  {p.status === 'pago' ? 'Pago' : 'Pendente'}
-                </Badge>
-              </div>
-              <div className="mb-6">
-                <div className="text-3xl font-black text-[#C5A059]">{formatCurrency(p.valor)}</div>
-                {p.descricao && (
-                  <div className="text-sm text-slate-400 mt-1 line-clamp-1" title={p.descricao}>
-                    {p.descricao}
-                  </div>
-                )}
-              </div>
-              <div className="bg-[#050A13] p-3 rounded-lg border border-slate-800 mb-4 flex justify-between items-center shadow-inner">
-                <span className="text-slate-400 text-sm">Vencimento:</span>
-                <span className="text-slate-100 font-bold text-lg">
-                  {format(parseISO(p.data_vencimento), 'dd/MM/yyyy')}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleToggleStatus(p.id, p.status)}
-                  className={cn(
-                    'font-bold transition-colors',
-                    p.status === 'pago'
-                      ? 'text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10'
-                      : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10',
-                  )}
-                >
-                  {p.status === 'pago' ? (
-                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                  ) : (
-                    <Circle className="w-5 h-5 mr-2" />
-                  )}
-                  {p.status === 'pago' ? 'Marcado como Pago' : 'Marcar como Pago'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(p.id)}
-                  className="text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        {renderSection(
+          'Dentista Avaliador',
+          avaliadores,
+          <ClipboardList className="w-5 h-5 text-blue-400" />,
+          'bg-blue-500',
+        )}
+        {renderSection(
+          'Dentista Executor',
+          executores,
+          <Stethoscope className="w-5 h-5 text-emerald-400" />,
+          'bg-emerald-500',
+        )}
+        {renderSection(
+          'Laboratório',
+          laboratorios,
+          <Microscope className="w-5 h-5 text-purple-400" />,
+          'bg-purple-500',
+        )}
+        {renderSection(
+          'Outros',
+          outros,
+          <Users className="w-5 h-5 text-slate-400" />,
+          'bg-slate-500',
+        )}
+
         {parceiros.length === 0 && (
           <div className="col-span-full text-center py-16 border-2 border-dashed border-slate-800 rounded-xl bg-[#0B1320]">
             <Building className="w-12 h-12 text-slate-600 mx-auto mb-4" />

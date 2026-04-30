@@ -1163,6 +1163,24 @@ export type Database = {
           },
         ]
       }
+      fluxo_caixa_categorias: {
+        Row: {
+          criado_em: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       fluxo_caixa_despesas: {
         Row: {
           atualizado_em: string
@@ -1190,6 +1208,42 @@ export type Database = {
           descricao?: string | null
           id?: string
           valor_estimado?: number
+        }
+        Relationships: []
+      }
+      fluxo_caixa_parceiros: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          nome: string
+          status: string | null
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+          tipo?: string
+          valor?: number
         }
         Relationships: []
       }
@@ -3361,12 +3415,26 @@ export const Constants = {
 //   observacao_pagamento: text (nullable)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: fluxo_caixa_categorias
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: fluxo_caixa_despesas
 //   id: uuid (not null, default: gen_random_uuid())
 //   data_vencimento: date (not null)
 //   categoria: text (not null)
 //   valor_estimado: numeric (not null, default: 0)
 //   descricao: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: fluxo_caixa_parceiros
+//   id: uuid (not null, default: gen_random_uuid())
+//   tipo: text (not null)
+//   nome: text (not null)
+//   data_vencimento: date (not null)
+//   valor: numeric (not null, default: 0)
+//   descricao: text (nullable)
+//   status: text (nullable, default: 'pendente'::text)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: fluxo_caixa_receitas
@@ -3872,8 +3940,14 @@ export const Constants = {
 //   FOREIGN KEY faturas_comissoes_faturamento_id_fkey: FOREIGN KEY (faturamento_id) REFERENCES faturamento_comissoes(id) ON DELETE CASCADE
 //   PRIMARY KEY faturas_comissoes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY faturas_comissoes_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: fluxo_caixa_categorias
+//   UNIQUE fluxo_caixa_categorias_nome_key: UNIQUE (nome)
+//   PRIMARY KEY fluxo_caixa_categorias_pkey: PRIMARY KEY (id)
 // Table: fluxo_caixa_despesas
 //   PRIMARY KEY fluxo_caixa_despesas_pkey: PRIMARY KEY (id)
+// Table: fluxo_caixa_parceiros
+//   PRIMARY KEY fluxo_caixa_parceiros_pkey: PRIMARY KEY (id)
+//   CHECK fluxo_caixa_parceiros_tipo_check: CHECK ((tipo = ANY (ARRAY['dentista'::text, 'laboratorio'::text, 'outro'::text])))
 // Table: fluxo_caixa_receitas
 //   UNIQUE fluxo_caixa_receitas_mes_referencia_ciclo_key: UNIQUE (mes_referencia, ciclo)
 //   PRIMARY KEY fluxo_caixa_receitas_pkey: PRIMARY KEY (id)
@@ -4183,8 +4257,16 @@ export const Constants = {
 //   Policy "faturas_comissoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: fluxo_caixa_categorias
+//   Policy "fluxo_caixa_categorias_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: fluxo_caixa_despesas
 //   Policy "fluxo_caixa_despesas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: fluxo_caixa_parceiros
+//   Policy "fluxo_caixa_parceiros_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: fluxo_caixa_receitas
@@ -5071,6 +5153,8 @@ export const Constants = {
 // Table: faturas_comissoes
 //   CREATE INDEX faturas_comissoes_faturamento_id_idx ON public.faturas_comissoes USING btree (faturamento_id)
 //   CREATE INDEX faturas_comissoes_profissional_id_idx ON public.faturas_comissoes USING btree (profissional_id)
+// Table: fluxo_caixa_categorias
+//   CREATE UNIQUE INDEX fluxo_caixa_categorias_nome_key ON public.fluxo_caixa_categorias USING btree (nome)
 // Table: fluxo_caixa_receitas
 //   CREATE UNIQUE INDEX fluxo_caixa_receitas_mes_referencia_ciclo_key ON public.fluxo_caixa_receitas USING btree (mes_referencia, ciclo)
 // Table: marcas_implante
