@@ -23,6 +23,7 @@ import FeriadosAusencias from './pages/configuracoes/FeriadosAusencias'
 import Placeholder from './pages/Placeholder'
 import Comunicados from './pages/operacional/Comunicados'
 import SAC from './pages/operacional/SAC'
+import Pedidos from './pages/operacional/pedidos/Pedidos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
@@ -186,6 +187,17 @@ const AppRoutes = () => {
         />
 
         {/* Operacional Routes */}
+        <Route
+          path="/operacional/pedidos"
+          element={
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={['operacional_pedidos', 'operacional_pedidos_gerenciar']}
+            >
+              <Pedidos />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/operacional/sac"
           element={

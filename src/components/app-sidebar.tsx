@@ -72,6 +72,12 @@ const navData = [
         permission: ['operacional_sac', 'Acessar SAC'],
       },
       {
+        title: 'PEDIDOS DE MATERIAIS',
+        url: '/operacional/pedidos',
+        icon: Package,
+        permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
+      },
+      {
         title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
