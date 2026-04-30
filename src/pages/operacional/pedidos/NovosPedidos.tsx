@@ -223,16 +223,20 @@ export default function NovosPedidos() {
 
   return (
     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-6">
-      <div className="bg-amber-950/50 border-2 border-amber-500/40 p-5 rounded-xl mb-6 shadow-sm">
-        <h3 className="font-extrabold text-amber-400 flex items-center gap-2 mb-3 text-lg uppercase tracking-tight">
-          <AlertCircle className="w-6 h-6" /> Regras Importantes
+      <div className="py-2 mb-6 border-b border-slate-800/50 pb-4">
+        <h3 className="font-bold text-slate-200 flex items-center gap-2 mb-2 text-sm uppercase tracking-wider">
+          <AlertCircle className="w-4 h-4 text-slate-400" /> Lembretes Rápidos
         </h3>
-        <ul className="list-disc pl-6 space-y-2 text-base text-amber-100/90 font-medium">
+        <ul className="list-disc pl-6 space-y-1 text-sm text-slate-400 font-medium">
           <li>Pedidos podem ser salvos como rascunho ao longo da semana.</li>
           <li>
-            O limite para envio do pedido é <strong>sexta-feira até as 11:00 AM</strong>.
+            O limite para envio do pedido é{' '}
+            <strong className="text-amber-500">sexta-feira até as 11:00 AM</strong>.
           </li>
-          <li>É permitida apenas uma solicitação de materiais por semana.</li>
+          <li>
+            É permitida <strong className="text-amber-500">apenas uma solicitação</strong> de
+            materiais por semana.
+          </li>
         </ul>
       </div>
 

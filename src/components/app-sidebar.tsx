@@ -198,10 +198,91 @@ const navData = [
   },
 ]
 
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, profile, permissions, signOut } = useAuth()
+
+  const [badges, setBadges] = useState({
+    pedidos: 0,
+    comunicados: 0,
+    sac: 0,
+  })
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const { count: sacCount } = await supabase
+          .from('sac_demandas')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'resolvido')
+
+        const lastVisitPedidos =
+          localStorage.getItem('last_visit_pedidos') || '2000-01-01T00:00:00.000Z'
+        const { count: pedidosCount } = await supabase
+          .from('pedidos_materiais')
+          .select('*', { count: 'exact', head: true })
+          .gt('data_criacao', lastVisitPedidos)
+
+        const lastVisitComunicados =
+          localStorage.getItem('last_visit_comunicados') || '2000-01-01T00:00:00.000Z'
+        const { count: comunicadosCount } = await supabase
+          .from('compromissos')
+          .select('*', { count: 'exact', head: true })
+          .gt('criado_em', lastVisitComunicados)
+
+        setBadges({
+          pedidos: pedidosCount || 0,
+          comunicados: comunicadosCount || 0,
+          sac: sacCount || 0,
+        })
+      } catch (error) {
+        console.error('Erro ao buscar contadores do sidebar', error)
+      }
+    }
+
+    fetchCounts()
+
+    const channel = supabase
+      .channel('sidebar_badges')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, fetchCounts)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'pedidos_materiais' },
+        fetchCounts,
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'compromissos' },
+        fetchCounts,
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (location.pathname === '/operacional/pedidos') {
+      localStorage.setItem('last_visit_pedidos', new Date().toISOString())
+      setBadges((prev) => ({ ...prev, pedidos: 0 }))
+    }
+    if (location.pathname === '/operacional/comunicados') {
+      localStorage.setItem('last_visit_comunicados', new Date().toISOString())
+      setBadges((prev) => ({ ...prev, comunicados: 0 }))
+    }
+  }, [location.pathname])
+
+  const getBadge = (title: string) => {
+    if (title === 'PEDIDOS' && badges.pedidos > 0) return badges.pedidos
+    if (title === 'COMUNICADOS' && badges.comunicados > 0) return badges.comunicados
+    if (title === 'SAC' && badges.sac > 0) return badges.sac
+    return null
+  }
 
   const handleLogout = async () => {
     await signOut()
@@ -343,9 +424,19 @@ export function AppSidebar() {
                               isActive={location.pathname === item.url}
                               className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white hover:text-white data-[active=true]:font-bold font-medium"
                             >
-                              <Link to={item.url}>
-                                {ItemIcon && <ItemIcon />}
-                                <span>{item.title}</span>
+                              <Link
+                                to={item.url}
+                                className="flex items-center justify-between w-full"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {ItemIcon && <ItemIcon />}
+                                  <span>{item.title}</span>
+                                </div>
+                                {getBadge(item.title) && (
+                                  <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                                    {getBadge(item.title)}
+                                  </span>
+                                )}
                               </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
