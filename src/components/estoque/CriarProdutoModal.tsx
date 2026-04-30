@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ const formSchema = z.object({
   alerta_prazo_dias: z.string().optional(),
   consumo_estimado_valor: z.string().optional(),
   consumo_estimado_frequencia: z.string().default('MES'),
+  observacoes: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -89,6 +91,7 @@ export function CriarProdutoModal({
       alerta_prazo_dias: '',
       consumo_estimado_valor: '',
       consumo_estimado_frequencia: 'MES',
+      observacoes: '',
     },
   })
 
@@ -107,6 +110,7 @@ export function CriarProdutoModal({
         alerta_prazo_dias: '',
         consumo_estimado_valor: '',
         consumo_estimado_frequencia: 'MES',
+        observacoes: '',
       })
       setMostrarEstimativa(false)
       fetchEspecialidades().then((res) => {
@@ -172,6 +176,7 @@ export function CriarProdutoModal({
       consumo_estimado_frequencia: values.consumo_estimado_valor
         ? values.consumo_estimado_frequencia
         : null,
+      observacoes: values.observacoes ? values.observacoes.trim() : null,
     }
 
     const { data, error } = await createProduto(payload as any)
@@ -363,6 +368,24 @@ export function CriarProdutoModal({
                   <p className="text-[10px] text-slate-500 mt-1">
                     Define como o estoque será incrementado nas entradas.
                   </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="observacoes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Observações</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Informações adicionais sobre o produto..."
+                      className="resize-none min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

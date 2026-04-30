@@ -169,11 +169,21 @@ export function VisualizarProdutoModal({
                 {produto.sala || '-'} {produto.numero_armario ? `/ ${produto.numero_armario}` : ''}
               </p>
             </div>
-            <div className="col-span-2 md:col-span-3 bg-slate-50/80 p-3 rounded-lg border border-slate-100 mt-2">
-              <p className="text-sm font-medium text-slate-500">Código de Barras</p>
-              <p className="font-mono text-sm text-slate-900 mt-1 break-all">
-                {produto.codigo_barras || '-'}
-              </p>
+            <div className="col-span-2 md:col-span-3 bg-slate-50/80 p-3 rounded-lg border border-slate-100 mt-2 flex flex-col gap-3">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Código de Barras</p>
+                <p className="font-mono text-sm text-slate-900 mt-1 break-all">
+                  {produto.codigo_barras || '-'}
+                </p>
+              </div>
+              {produto.observacoes && (
+                <div className="border-t border-slate-200 pt-2">
+                  <p className="text-sm font-medium text-slate-500">Observações</p>
+                  <p className="text-sm text-slate-900 mt-1 whitespace-pre-wrap">
+                    {produto.observacoes}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

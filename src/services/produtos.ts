@@ -18,6 +18,7 @@ export interface Produto {
   custo_unitario: number
   quantidade_estoque: number
   quantidade_minima: number
+  observacoes?: string | null
   referencia_consumo?: 'qtd_comprada' | 'itens_embalagem' | null
   alerta_prazo_dias?: number | null
   data_proxima_revisao?: string | null

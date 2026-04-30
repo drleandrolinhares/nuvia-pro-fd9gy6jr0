@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ export function EditarProdutoModal({
   const [consumoEstimadoValor, setConsumoEstimadoValor] = useState('')
   const [consumoEstimadoFrequencia, setConsumoEstimadoFrequencia] = useState('MES')
   const [mostrarEstimativa, setMostrarEstimativa] = useState(false)
+  const [observacoes, setObservacoes] = useState('')
 
   const [camposDinamicos, setCamposDinamicos] = useState<any[]>([])
   const [valoresDinamicos, setValoresDinamicos] = useState<Record<string, string>>({})
@@ -115,6 +117,7 @@ export function EditarProdutoModal({
         setConsumoEstimadoValor(produto.consumo_estimado_valor?.toString() || '')
         setConsumoEstimadoFrequencia(produto.consumo_estimado_frequencia?.toUpperCase() || 'MES')
         setMostrarEstimativa(!!produto.consumo_estimado_valor)
+        setObservacoes(produto.observacoes || '')
 
         if (produto.especialidade_id) {
           fetchEspecialidadeCampos(produto.especialidade_id).then((res) => {
@@ -186,6 +189,7 @@ export function EditarProdutoModal({
       alerta_prazo_dias: controlePorPrazo ? parseInt(alertaPrazoDias) || null : null,
       consumo_estimado_valor: consumoEstimadoValor ? parseFloat(consumoEstimadoValor) : null,
       consumo_estimado_frequencia: consumoEstimadoValor ? consumoEstimadoFrequencia : null,
+      observacoes: observacoes.trim() || null,
     }
 
     if (controlePorPrazo && parseInt(alertaPrazoDias)) {
@@ -346,6 +350,17 @@ export function EditarProdutoModal({
             <p className="text-xs text-slate-500">
               Define como o estoque será incrementado nas próximas entradas.
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="observacoes">Observações</Label>
+            <Textarea
+              id="observacoes"
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Informações adicionais sobre o produto..."
+              className="resize-none min-h-[80px]"
+            />
           </div>
 
           <div className="space-y-4 pt-4 border-t border-slate-200 mt-4">
