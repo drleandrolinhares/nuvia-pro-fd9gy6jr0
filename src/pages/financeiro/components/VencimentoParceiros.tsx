@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { format, parseISO } from 'date-fns'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,17 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import {
-  Trash2,
-  Plus,
-  CheckCircle2,
-  Circle,
-  Users,
-  Building,
-  Stethoscope,
-  Microscope,
-  ClipboardList,
-} from 'lucide-react'
+import { Trash2, Plus, Users, Building, Stethoscope, Microscope, ClipboardList } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -51,7 +40,7 @@ export function VencimentoParceiros() {
   const [formData, setFormData] = useState({
     tipo: '',
     nome: '',
-    data_vencimento: '',
+    dia_vencimento: '',
     valor: '',
     descricao: '',
     criterio_pagamento: '',
@@ -59,12 +48,15 @@ export function VencimentoParceiros() {
   const { toast } = useToast()
 
   const fetchParceiros = async () => {
-    const { data } = await supabase
-      .from('fluxo_caixa_parceiros')
-      .select('*')
-      .order('status', { ascending: false })
-      .order('data_vencimento', { ascending: true })
-    if (data) setParceiros(data)
+    const { data } = await supabase.from('fluxo_caixa_parceiros').select('*')
+    if (data) {
+      const sorted = data.sort((a, b) => {
+        const dayA = parseInt(a.data_vencimento?.split('-')[2] || '0', 10)
+        const dayB = parseInt(b.data_vencimento?.split('-')[2] || '0', 10)
+        return dayA - dayB
+      })
+      setParceiros(sorted)
+    }
   }
 
   useEffect(() => {
@@ -72,18 +64,31 @@ export function VencimentoParceiros() {
   }, [])
 
   const handleSave = async () => {
-    if (!formData.tipo || !formData.nome || !formData.data_vencimento || !formData.valor) {
+    if (!formData.tipo || !formData.nome || !formData.dia_vencimento || !formData.valor) {
       toast({ title: 'Preencha os campos obrigatórios', variant: 'destructive' })
       return
     }
+
+    const dayNum = parseInt(formData.dia_vencimento, 10)
+    if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+      toast({ title: 'Dia inválido. Use um valor de 1 a 31.', variant: 'destructive' })
+      return
+    }
+
+    const dayStr = dayNum.toString().padStart(2, '0')
+    // Salvamos uma data genérica para manter a compatibilidade com a coluna date no DB
+    // e extrair apenas o dia na interface
+    const data_vencimento = `2024-01-${dayStr}`
+
     const dataToSave = {
       tipo: formData.tipo,
       nome: formData.nome,
-      data_vencimento: formData.data_vencimento,
+      data_vencimento,
       valor: parseFloat(formData.valor),
       descricao: formData.descricao || null,
       criterio_pagamento:
         formData.tipo === 'dentista_executor' ? formData.criterio_pagamento || null : null,
+      status: 'pendente', // Mantém compatibilidade caso haja triggers
     }
 
     const { error } = await supabase.from('fluxo_caixa_parceiros').insert(dataToSave)
@@ -94,19 +99,13 @@ export function VencimentoParceiros() {
       setFormData({
         tipo: '',
         nome: '',
-        data_vencimento: '',
+        dia_vencimento: '',
         valor: '',
         descricao: '',
         criterio_pagamento: '',
       })
       fetchParceiros()
     }
-  }
-
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'pendente' ? 'pago' : 'pendente'
-    await supabase.from('fluxo_caixa_parceiros').update({ status: newStatus }).eq('id', id)
-    fetchParceiros()
   }
 
   const handleDelete = async (id: string) => {
@@ -148,21 +147,18 @@ export function VencimentoParceiros() {
             {data.length}
           </span>
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-3">
           {data.map((p) => (
             <Card
               key={p.id}
-              className={cn(
-                'bg-[#0F1A2A] border-slate-700 relative overflow-hidden transition-all',
-                p.status === 'pago' ? 'opacity-60 grayscale' : 'shadow-lg shadow-black/30',
-              )}
+              className="bg-[#0F1A2A] border-slate-700 relative overflow-hidden shadow-sm"
             >
-              <div className={cn('absolute top-0 left-0 w-1.5 h-full', typeColor)} />
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex flex-col gap-1">
+              <div className={cn('absolute top-0 left-0 w-1 h-full', typeColor)} />
+              <CardContent className="p-3 pl-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex-1 w-full">
+                  <div className="flex items-center gap-2 mb-1">
                     <span
-                      className="font-bold text-slate-100 uppercase tracking-wider text-sm truncate max-w-[160px]"
+                      className="font-bold text-slate-100 uppercase tracking-wider text-sm"
                       title={p.nome}
                     >
                       {p.nome}
@@ -170,63 +166,36 @@ export function VencimentoParceiros() {
                     {p.criterio_pagamento && (
                       <Badge
                         variant="outline"
-                        className="w-fit text-[10px] uppercase bg-[#050A13] text-slate-300 border-slate-700"
+                        className="text-[10px] uppercase bg-[#050A13] text-slate-300 border-slate-700 h-5 px-1.5"
                       >
                         {p.criterio_pagamento}
                       </Badge>
                     )}
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      p.status === 'pago'
-                        ? 'text-emerald-400 border-emerald-400/50 bg-emerald-500/10'
-                        : 'text-amber-400 border-amber-400/50 bg-amber-500/10'
-                    }
-                  >
-                    {p.status === 'pago' ? 'Pago' : 'Pendente'}
-                  </Badge>
-                </div>
-                <div className="mb-6">
-                  <div className="text-3xl font-black text-[#C5A059]">
-                    {formatCurrency(p.valor)}
-                  </div>
                   {p.descricao && (
-                    <div className="text-sm text-slate-400 mt-1 line-clamp-1" title={p.descricao}>
+                    <div className="text-xs text-slate-400 line-clamp-1" title={p.descricao}>
                       {p.descricao}
                     </div>
                   )}
                 </div>
-                <div className="bg-[#050A13] p-3 rounded-lg border border-slate-800 mb-4 flex justify-between items-center shadow-inner">
-                  <span className="text-slate-400 text-sm">Vencimento:</span>
-                  <span className="text-slate-100 font-bold text-lg">
-                    {format(parseISO(p.data_vencimento), 'dd/MM/yyyy')}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleToggleStatus(p.id, p.status)}
-                    className={cn(
-                      'font-bold transition-colors',
-                      p.status === 'pago'
-                        ? 'text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10'
-                        : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10',
-                    )}
-                  >
-                    {p.status === 'pago' ? (
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                    ) : (
-                      <Circle className="w-5 h-5 mr-2" />
-                    )}
-                    {p.status === 'pago' ? 'Marcado como Pago' : 'Marcar como Pago'}
-                  </Button>
+
+                <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0 mt-1 sm:mt-0">
+                  <div className="flex items-center gap-2 bg-[#050A13] px-3 py-1 rounded-md border border-slate-800 shrink-0">
+                    <span className="text-slate-400 text-xs">Dia:</span>
+                    <span className="text-slate-100 font-bold">
+                      {parseInt(p.data_vencimento?.split('-')[2] || '0', 10)}
+                    </span>
+                  </div>
+
+                  <div className="text-lg font-black text-[#C5A059] shrink-0 min-w-[100px] text-right">
+                    {formatCurrency(p.valor)}
+                  </div>
+
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(p.id)}
-                    className="text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
+                    className="text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 h-8 w-8 shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -244,10 +213,10 @@ export function VencimentoParceiros() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#0B1320] p-5 rounded-xl border border-slate-800 gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#C5A059]" /> Controle de Parceiros
+            <Users className="w-5 h-5 text-[#C5A059]" /> Acordos com Parceiros
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            Gestão de pagamentos a dentistas, laboratórios e outros parceiros.
+            Controle de acordos, prazos e valores com parceiros da clínica.
           </p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -309,12 +278,14 @@ export function VencimentoParceiros() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Data de Vencimento</Label>
+                <Label>Dia do Mês para Vencimento</Label>
                 <Input
-                  type="date"
-                  style={{ colorScheme: 'dark' }}
-                  value={formData.data_vencimento}
-                  onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
+                  type="number"
+                  min="1"
+                  max="31"
+                  placeholder="Ex: 10"
+                  value={formData.dia_vencimento}
+                  onChange={(e) => setFormData({ ...formData, dia_vencimento: e.target.value })}
                   className="bg-[#050A13] border-slate-700"
                 />
               </div>
@@ -328,7 +299,7 @@ export function VencimentoParceiros() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Descrição</Label>
+                <Label>Descrição / Observações</Label>
                 <Input
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}

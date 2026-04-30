@@ -1215,6 +1215,7 @@ export type Database = {
         Row: {
           atualizado_em: string
           criado_em: string
+          criterio_pagamento: string | null
           data_vencimento: string
           descricao: string | null
           id: string
@@ -1226,6 +1227,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           criado_em?: string
+          criterio_pagamento?: string | null
           data_vencimento: string
           descricao?: string | null
           id?: string
@@ -1237,6 +1239,7 @@ export type Database = {
         Update: {
           atualizado_em?: string
           criado_em?: string
+          criterio_pagamento?: string | null
           data_vencimento?: string
           descricao?: string | null
           id?: string
@@ -3437,6 +3440,7 @@ export const Constants = {
 //   status: text (nullable, default: 'pendente'::text)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   criterio_pagamento: text (nullable)
 // Table: fluxo_caixa_receitas
 //   id: uuid (not null, default: gen_random_uuid())
 //   mes_referencia: text (not null)
@@ -3947,7 +3951,6 @@ export const Constants = {
 //   PRIMARY KEY fluxo_caixa_despesas_pkey: PRIMARY KEY (id)
 // Table: fluxo_caixa_parceiros
 //   PRIMARY KEY fluxo_caixa_parceiros_pkey: PRIMARY KEY (id)
-//   CHECK fluxo_caixa_parceiros_tipo_check: CHECK ((tipo = ANY (ARRAY['dentista'::text, 'laboratorio'::text, 'outro'::text])))
 // Table: fluxo_caixa_receitas
 //   UNIQUE fluxo_caixa_receitas_mes_referencia_ciclo_key: UNIQUE (mes_referencia, ciclo)
 //   PRIMARY KEY fluxo_caixa_receitas_pkey: PRIMARY KEY (id)
