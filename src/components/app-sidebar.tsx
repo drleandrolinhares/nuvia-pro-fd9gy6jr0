@@ -66,10 +66,28 @@ const navData = [
     icon: Activity,
     items: [
       {
+        title: 'PERFORMANCE',
+        url: '/operacional/performance',
+        icon: BarChart3,
+        permission: ['operacional_performance', 'Acessar Performance'],
+      },
+      {
+        title: 'COMUNICADOS',
+        url: '/operacional/comunicados',
+        icon: Bell,
+        permission: ['operacional_comunicados', 'Acessar Comunicados'],
+      },
+      {
         title: 'SAC',
         url: '/operacional/sac',
         icon: MessageSquare,
         permission: ['operacional_sac', 'Acessar SAC'],
+      },
+      {
+        title: 'PARCEIROS',
+        url: '/operacional/parceiros',
+        icon: ClipboardList,
+        permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],
       },
       {
         title: 'PEDIDOS',
@@ -83,24 +101,6 @@ const navData = [
         icon: Clock,
         permission: ['operacional_rotina', 'Acessar Rotina Diária'],
         hideRole: ['admin', 'gestor', 'CEO', 'SÓCIA', 'ceo', 'sócia'],
-      },
-      {
-        title: 'PERFORMANCE',
-        url: '/operacional/performance',
-        icon: BarChart3,
-        permission: ['operacional_performance', 'Acessar Performance'],
-      },
-      {
-        title: 'COMUNICADOS',
-        url: '/operacional/comunicados',
-        icon: Bell,
-        permission: ['operacional_comunicados', 'Acessar Comunicados'],
-      },
-      {
-        title: 'PARCEIROS',
-        url: '/operacional/parceiros',
-        icon: ClipboardList,
-        permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],
       },
     ],
   },
@@ -140,10 +140,10 @@ const navData = [
     defaultOpen: true,
     items: [
       {
-        title: 'ESTOQUE',
-        url: '/estoque',
-        icon: Package,
-        permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
+        title: 'GESTÃO FISCAL',
+        url: '/financeiro/fiscal',
+        icon: Landmark,
+        showRole: ['admin'],
       },
       {
         title: 'FLUXO DE CAIXA',
@@ -152,10 +152,10 @@ const navData = [
         showRole: ['admin'],
       },
       {
-        title: 'GESTÃO FISCAL',
-        url: '/financeiro/fiscal',
-        icon: Landmark,
-        showRole: ['admin'],
+        title: 'ESTOQUE',
+        url: '/estoque',
+        icon: Package,
+        permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
       },
     ],
   },
