@@ -129,9 +129,16 @@ export function VencimentoParceiros() {
     typeColor: string,
   ) => {
     if (data.length === 0) return null
+    const textColorClass = typeColor.replace('bg-', 'text-')
+
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 pb-2 border-b border-slate-200">
+        <h3
+          className={cn(
+            'text-lg font-bold flex items-center gap-2 mb-4 pb-2 border-b border-slate-200',
+            textColorClass,
+          )}
+        >
           <div
             className={cn(
               'p-1.5 rounded-md',

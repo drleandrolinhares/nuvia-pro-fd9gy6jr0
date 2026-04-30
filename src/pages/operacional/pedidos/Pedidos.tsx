@@ -26,22 +26,22 @@ export default function Pedidos() {
         </div>
       </div>
 
-      <div className="py-2 text-base text-slate-300 shrink-0 border-y border-slate-800/50 my-2">
-        <strong className="text-slate-200 block mb-2 text-sm uppercase tracking-wider flex items-center gap-2 font-bold">
-          <Package className="w-4 h-4 text-slate-400" /> Regras Importantes:
+      <div className="bg-white py-4 px-5 text-base text-slate-700 shrink-0 border border-slate-200 rounded-lg my-2">
+        <strong className="text-slate-900 block mb-2 text-sm uppercase tracking-wider flex items-center gap-2 font-bold">
+          <Package className="w-4 h-4 text-slate-500" /> Regras Importantes:
         </strong>
         <ul className="list-disc pl-6 space-y-1 font-medium text-sm">
           <li>
             Todos os pedidos podem ser lançados diariamente até{' '}
-            <strong className="text-amber-500">Sexta-feira às 11:00 da manhã</strong>.
+            <strong className="text-amber-600">Sexta-feira às 11:00 da manhã</strong>.
           </li>
           <li>
             Cada colaborador tem direito a fazer{' '}
-            <strong className="text-amber-500">apenas uma retirada</strong> de produtos por semana.
+            <strong className="text-amber-600">apenas uma retirada</strong> de produtos por semana.
           </li>
           <li>
             Os produtos serão separados e entregues pelo setor financeiro na{' '}
-            <strong className="text-amber-500">Sexta-feira à tarde</strong>.
+            <strong className="text-amber-600">Sexta-feira à tarde</strong>.
           </li>
         </ul>
       </div>
