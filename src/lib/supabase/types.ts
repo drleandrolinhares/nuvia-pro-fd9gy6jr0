@@ -1568,26 +1568,29 @@ export type Database = {
       }
       pedido_itens: {
         Row: {
+          descricao_item: string | null
           id: string
           pedido_id: string
           preco_unitario: number
-          produto_id: string
+          produto_id: string | null
           quantidade: number
           valor_total: number
         }
         Insert: {
+          descricao_item?: string | null
           id?: string
           pedido_id: string
           preco_unitario?: number
-          produto_id: string
+          produto_id?: string | null
           quantidade: number
           valor_total?: number
         }
         Update: {
+          descricao_item?: string | null
           id?: string
           pedido_id?: string
           preco_unitario?: number
-          produto_id?: string
+          produto_id?: string | null
           quantidade?: number
           valor_total?: number
         }
@@ -3602,10 +3605,11 @@ export const Constants = {
 // Table: pedido_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   pedido_id: uuid (not null)
-//   produto_id: uuid (not null)
+//   produto_id: uuid (nullable)
 //   quantidade: integer (not null)
 //   preco_unitario: numeric (not null, default: 0)
 //   valor_total: numeric (not null, default: 0)
+//   descricao_item: text (nullable)
 // Table: pedidos_materiais
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)

@@ -123,6 +123,15 @@ export const enviarPedido = async (pedidoId: string) => {
   if (error) throw error
 }
 
+export const retomarRascunho = async (pedidoId: string) => {
+  const { error } = await supabase
+    .from('pedidos_materiais')
+    .update({ status: 'rascunho', data_envio: null })
+    .eq('id', pedidoId)
+    .eq('status', 'enviado')
+  if (error) throw error
+}
+
 export const entregarPedido = async (pedidoId: string, entregue_por: string) => {
   const { data: pedido, error: pedError } = await supabase
     .from('pedidos_materiais')
