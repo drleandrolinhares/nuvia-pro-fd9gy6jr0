@@ -97,6 +97,14 @@ export default function Compromissos() {
     setSelectKey((prev) => prev + 1)
   }
 
+  const setTodayFilter = () => {
+    const today = startOfDay(new Date())
+    setActiveTab('periodo')
+    setDateRange({ from: today, to: today })
+    setCalendarMonth(today)
+    setSelectKey((prev) => prev + 1)
+  }
+
   const handleAdd = () => {
     setEventoEditando(null)
     setIsModalOpen(true)
@@ -228,10 +236,10 @@ export default function Compromissos() {
           <Button
             variant="outline"
             size="sm"
-            onClick={clearFilters}
+            onClick={setTodayFilter}
             className="h-8 px-3 text-xs font-medium"
           >
-            Hoje / Todos
+            Hoje
           </Button>
         </div>
         <div className="rounded-xl border bg-slate-50/50 p-2 shadow-sm">

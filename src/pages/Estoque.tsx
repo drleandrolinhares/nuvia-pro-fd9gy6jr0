@@ -38,6 +38,7 @@ import { EntradaProdutoModal } from '@/components/estoque/EntradaProdutoModal'
 import { SaidaProdutoModal } from '@/components/estoque/SaidaProdutoModal'
 import { VisualizarProdutoModal } from '@/components/estoque/VisualizarProdutoModal'
 import { EditarProdutoModal } from '@/components/estoque/EditarProdutoModal'
+import { TopImpactoModal } from '@/components/estoque/TopImpactoModal'
 import { PackagePlus, PackageMinus } from 'lucide-react'
 import { useCache } from '@/hooks/use-cache'
 import { supabase } from '@/lib/supabase/client'
@@ -64,6 +65,7 @@ export default function Estoque() {
   const [loading, setLoading] = useState(true)
   const [modalEntradaOpen, setModalEntradaOpen] = useState(false)
   const [modalSaidaOpen, setModalSaidaOpen] = useState(false)
+  const [modalTopImpactoOpen, setModalTopImpactoOpen] = useState(false)
   const [produtoVisualizar, setProdutoVisualizar] = useState<Produto | null>(null)
   const [produtoEditar, setProdutoEditar] = useState<Produto | null>(null)
   const [produtoExcluir, setProdutoExcluir] = useState<Produto | null>(null)
@@ -513,17 +515,27 @@ export default function Estoque() {
                     </div>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setShowCriticalOnly(!showCriticalOnly)}
-                  className={`font-bold tracking-wide transition-all w-full md:w-auto ${
-                    showCriticalOnly
-                      ? 'bg-amber-600 hover:bg-amber-700 text-white ring-2 ring-amber-500 ring-offset-2'
-                      : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                  }`}
-                >
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  {showCriticalOnly ? 'Mostrar Todos' : 'Estoque Crítico'}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto mt-4 md:mt-0">
+                  <Button
+                    onClick={() => setModalTopImpactoOpen(true)}
+                    variant="outline"
+                    className="font-bold tracking-wide transition-all w-full sm:w-auto border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                  >
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Top 10 Impacto
+                  </Button>
+                  <Button
+                    onClick={() => setShowCriticalOnly(!showCriticalOnly)}
+                    className={`font-bold tracking-wide transition-all w-full sm:w-auto ${
+                      showCriticalOnly
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white ring-2 ring-amber-500 ring-offset-2'
+                        : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                    }`}
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    {showCriticalOnly ? 'Mostrar Todos' : 'Estoque Crítico'}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -740,6 +752,11 @@ export default function Estoque() {
             onOpenChange={(open) => !open && setProdutoEditar(null)}
             produto={produtoEditar}
             onSuccess={invalidateCache}
+          />
+          <TopImpactoModal
+            open={modalTopImpactoOpen}
+            onOpenChange={setModalTopImpactoOpen}
+            produtos={produtosDashboard}
           />
           <AlertDialog
             open={!!produtoExcluir}
