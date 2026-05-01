@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { FileText, UserPlus } from 'lucide-react'
+import { FileText, UserPlus, Settings } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useConfigData } from '@/hooks/use-config-data'
 import {
@@ -47,11 +47,23 @@ export function UsuariosTab() {
               Gerencie os usuários, acessos e detalhes administrativos.
             </CardDescription>
           </div>
-          <Button size="sm" className="uppercase tracking-wider text-xs font-bold" asChild>
-            <Link to="/admin/registro">
-              <UserPlus className="size-4 mr-2" /> Novo Usuário
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="uppercase tracking-wider text-xs font-bold"
+              asChild
+            >
+              <Link to="/configuracoes/acesso">
+                <Settings className="size-4 mr-2" /> Acessos
+              </Link>
+            </Button>
+            <Button size="sm" className="uppercase tracking-wider text-xs font-bold" asChild>
+              <Link to="/admin/registro">
+                <UserPlus className="size-4 mr-2" /> Novo Usuário
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">

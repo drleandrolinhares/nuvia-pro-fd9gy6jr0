@@ -589,6 +589,57 @@ export type Database = {
           },
         ]
       }
+      configuracoes_acesso: {
+        Row: {
+          atualizado_em: string | null
+          id: string
+          qua_fim: string | null
+          qua_inicio: string | null
+          qui_fim: string | null
+          qui_inicio: string | null
+          sab_fim: string | null
+          sab_inicio: string | null
+          seg_fim: string | null
+          seg_inicio: string | null
+          sex_fim: string | null
+          sex_inicio: string | null
+          ter_fim: string | null
+          ter_inicio: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          id?: string
+          qua_fim?: string | null
+          qua_inicio?: string | null
+          qui_fim?: string | null
+          qui_inicio?: string | null
+          sab_fim?: string | null
+          sab_inicio?: string | null
+          seg_fim?: string | null
+          seg_inicio?: string | null
+          sex_fim?: string | null
+          sex_inicio?: string | null
+          ter_fim?: string | null
+          ter_inicio?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          id?: string
+          qua_fim?: string | null
+          qua_inicio?: string | null
+          qui_fim?: string | null
+          qui_inicio?: string | null
+          sab_fim?: string | null
+          sab_inicio?: string | null
+          seg_fim?: string | null
+          seg_inicio?: string | null
+          sex_fim?: string | null
+          sex_inicio?: string | null
+          ter_fim?: string | null
+          ter_inicio?: string | null
+        }
+        Relationships: []
+      }
       configuracoes_negociacao: {
         Row: {
           atualizado_em: string
@@ -3401,6 +3452,21 @@ export const Constants = {
 //   arquivado: boolean (not null, default: false)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: configuracoes_acesso
+//   id: uuid (not null, default: gen_random_uuid())
+//   seg_inicio: text (nullable, default: '07:00'::text)
+//   seg_fim: text (nullable, default: '19:00'::text)
+//   ter_inicio: text (nullable, default: '07:00'::text)
+//   ter_fim: text (nullable, default: '19:00'::text)
+//   qua_inicio: text (nullable, default: '07:00'::text)
+//   qua_fim: text (nullable, default: '19:00'::text)
+//   qui_inicio: text (nullable, default: '07:00'::text)
+//   qui_fim: text (nullable, default: '19:00'::text)
+//   sex_inicio: text (nullable, default: '07:00'::text)
+//   sex_fim: text (nullable, default: '19:00'::text)
+//   sab_inicio: text (nullable, default: '07:00'::text)
+//   sab_fim: text (nullable, default: '12:00'::text)
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: configuracoes_negociacao
 //   id: uuid (not null, default: gen_random_uuid())
 //   percentual_entrada_padrao: numeric (not null, default: 0)
@@ -4025,6 +4091,8 @@ export const Constants = {
 // Table: compromissos
 //   PRIMARY KEY compromissos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY compromissos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: configuracoes_acesso
+//   PRIMARY KEY configuracoes_acesso_pkey: PRIMARY KEY (id)
 // Table: configuracoes_negociacao
 //   PRIMARY KEY configuracoes_negociacao_pkey: PRIMARY KEY (id)
 // Table: contatos_follow_up
@@ -4322,6 +4390,10 @@ export const Constants = {
 //   Policy "compromissos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
 //     WITH CHECK: ((usuario_id = auth.uid()) OR has_permission('Editar Compromissos'::text) OR has_permission('Gerenciar Compromissos'::text) OR has_permission('operacional_comunicados'::text) OR is_admin())
+// Table: configuracoes_acesso
+//   Policy "configuracoes_acesso_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: configuracoes_negociacao
 //   Policy "configuracoes_negociacao_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true

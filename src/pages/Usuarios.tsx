@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Link } from 'react-router-dom'
 import {
   Search,
   Plus,
@@ -40,6 +41,7 @@ import {
   ShieldAlert,
   Loader2,
   GripVertical,
+  Settings,
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import {
@@ -314,13 +316,27 @@ export default function Usuarios() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={handleNew}
-          className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Usuário
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          {isAdmin && (
+            <Button
+              asChild
+              variant="outline"
+              className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+            >
+              <Link to="/configuracoes/acesso">
+                <Settings className="w-4 h-4 mr-2" />
+                Controle de Acesso
+              </Link>
+            </Button>
+          )}
+          <Button
+            onClick={handleNew}
+            className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Usuário
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card border rounded-xl shadow-sm p-4 space-y-4">
