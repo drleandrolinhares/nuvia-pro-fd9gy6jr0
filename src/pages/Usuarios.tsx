@@ -42,8 +42,10 @@ import {
   Loader2,
   GripVertical,
   Settings,
+  CalendarClock,
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
+import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,6 +120,7 @@ export default function Usuarios() {
   const [cargoFilter, setCargoFilter] = useState<string>('todos')
 
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [showAusencia, setShowAusencia] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
@@ -318,16 +321,26 @@ export default function Usuarios() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           {isAdmin && (
-            <Button
-              asChild
-              variant="outline"
-              className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-            >
-              <Link to="/configuracoes/acesso">
-                <Settings className="w-4 h-4 mr-2" />
-                Controle de Acesso
-              </Link>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowAusencia(true)}
+                className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+              >
+                <CalendarClock className="w-4 h-4 mr-2" />
+                Ausência Temporária
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+              >
+                <Link to="/configuracoes/acesso">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Controle de Acesso
+                </Link>
+              </Button>
+            </>
           )}
           <Button
             onClick={handleNew}
@@ -648,6 +661,7 @@ export default function Usuarios() {
         onSuccess={load}
         isAdmin={isAdmin}
       />
+      <AusenciaTemporariaDialog open={showAusencia} onOpenChange={setShowAusencia} />
     </div>
   )
 }
