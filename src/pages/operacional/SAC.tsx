@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { format, addDays, parseISO, differenceInDays, startOfDay } from 'date-fns'
 import {
   Plus,
@@ -87,6 +88,7 @@ type DemandaFormValues = z.infer<typeof demandaSchema>
 
 export default function SACPage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [demandas, setDemandas] = useState<any[]>([])
   const [usuarios, setUsuarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -179,6 +181,30 @@ export default function SACPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    const demandaId = searchParams.get('demanda')
+    if (demandaId && demandas.length > 0 && !isOpen) {
+      const d = demandas.find((item) => item.id === demandaId)
+      if (d) {
+        setEditingId(d.id)
+        form.reset({
+          tipo: d.tipo,
+          setor: d.setor || '',
+          paciente_nome: d.paciente_nome,
+          quem_recebeu_id: d.quem_recebeu_id || '',
+          quem_resolve_id: d.quem_resolve_id || '',
+          descricao: d.descricao || '',
+          solucao: d.solucao || '',
+          status: d.status,
+          data_prevista: d.data_prevista || '',
+        })
+        setIsOpen(true)
+        searchParams.delete('demanda')
+        setSearchParams(searchParams, { replace: true })
+      }
+    }
+  }, [demandas, searchParams, setSearchParams, isOpen, form])
 
   const loadHistorico = useCallback(async () => {
     setLoadingHistorico(true)
@@ -1183,10 +1209,8 @@ export default function SACPage() {
               <TableHead className="text-white font-semibold whitespace-nowrap">
                 LIM. CONTATO
               </TableHead>
-              <TableHead className="text-white font-semibold">PACIENTE</TableHead>
-              <TableHead className="text-white font-semibold whitespace-nowrap">
-                RESPONSÁVEL
-              </TableHead>
+              <TableHead className="text-white font-semibold w-[150px]">PACIENTE</TableHead>
+              <TableHead className="text-white font-semibold w-[120px]">RESPONSÁVEL</TableHead>
               <TableHead className="text-white font-semibold text-center">DESC.</TableHead>
               <TableHead className="text-white font-semibold text-center">SOL.</TableHead>
               <TableHead className="text-white font-semibold whitespace-nowrap">
@@ -1236,10 +1260,16 @@ export default function SACPage() {
                   <TableCell className="text-white whitespace-nowrap">
                     {format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')}
                   </TableCell>
-                  <TableCell className="font-medium text-white whitespace-nowrap">
+                  <TableCell
+                    className="font-medium text-white max-w-[150px] truncate"
+                    title={d.paciente_nome}
+                  >
                     {d.paciente_nome}
                   </TableCell>
-                  <TableCell className="text-white whitespace-nowrap">
+                  <TableCell
+                    className="text-white max-w-[120px] truncate"
+                    title={d.quem_resolve?.nome || '-'}
+                  >
                     {d.quem_resolve?.nome || '-'}
                   </TableCell>
                   <TableCell className="text-center">

@@ -2088,6 +2088,7 @@ export type Database = {
           marca: string | null
           nome: string
           numero_armario: string | null
+          observacoes: string | null
           quantidade_estoque: number | null
           quantidade_minima: number | null
           referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
@@ -2113,6 +2114,7 @@ export type Database = {
           marca?: string | null
           nome: string
           numero_armario?: string | null
+          observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
@@ -2138,6 +2140,7 @@ export type Database = {
           marca?: string | null
           nome?: string
           numero_armario?: string | null
+          observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
           referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
@@ -3756,6 +3759,7 @@ export const Constants = {
 //   data_proxima_revisao: date (nullable)
 //   consumo_estimado_valor: numeric (nullable)
 //   consumo_estimado_frequencia: text (nullable)
+//   observacoes: text (nullable)
 // Table: referencias_comissao_crc
 //   id: uuid (not null, default: gen_random_uuid())
 //   faixa_entrada_minima: numeric (nullable)

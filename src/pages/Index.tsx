@@ -336,7 +336,14 @@ const Index = () => {
                       className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800/50 transition-colors"
                     >
                       <div>
-                        <p className="font-semibold text-sm text-slate-200">{d.paciente_nome}</p>
+                        <p className="font-semibold text-sm text-slate-200">
+                          <Link
+                            to={`/operacional/sac?demanda=${d.id}`}
+                            className="hover:text-amber-400 hover:underline"
+                          >
+                            {d.paciente_nome}
+                          </Link>
+                        </p>
                         <p className="text-xs text-slate-500 flex items-center gap-2 mt-1.5">
                           <span
                             className={cn(

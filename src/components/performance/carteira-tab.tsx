@@ -114,8 +114,30 @@ export function CarteiraTab() {
   const handleGerarAdiantamentos = async () => {
     try {
       setLoading(true)
+      await supabase.rpc('gerar_adiantamento_mes_google', { p_mes: selectedMonth })
       await supabase.rpc('gerar_adiantamento_mes_inovacao', { p_mes: selectedMonth })
       await supabase.rpc('gerar_adiantamento_mes_sorriso', { p_mes: selectedMonth })
+
+      const { data: bonificacoes } = await supabase
+        .from('performance_bonificacao')
+        .select('usuario_id')
+        .eq('mes_referencia', selectedMonth)
+
+      const existingUserIds = new Set(bonificacoes?.map((b: any) => b.usuario_id) || [])
+      const toInsert = users
+        .filter((u) => !existingUserIds.has(u.id))
+        .map((u) => ({
+          usuario_id: u.id,
+          mes_referencia: selectedMonth,
+          itens_marcados: [],
+          pontuacao_total: 0,
+          atingiu_meta: false,
+        }))
+
+      if (toInsert.length > 0) {
+        await supabase.from('performance_bonificacao').insert(toInsert)
+      }
+
       toast.success('Adiantamentos gerados com sucesso!')
       loadTransactions(selectedUser, selectedMonth)
     } catch (e) {
