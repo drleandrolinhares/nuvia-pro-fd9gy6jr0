@@ -366,33 +366,34 @@ export function CarteiraTab() {
             <CardTitle className="text-sm font-medium text-slate-200 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-amber-500" />
-                Saldo do Período
+                Saldo Total Acumulado
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight mb-1">
-              R$ {saldoPeriodo.toFixed(2).replace('.', ',')}
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2 pb-1 border-b border-slate-700">
+            <div className="flex items-center justify-between">
+              <div className="text-3xl font-bold tracking-tight mb-1 text-emerald-400">
+                R$ {balance.toFixed(2).replace('.', ',')}
+              </div>
               <button
                 onClick={() => setIsExtratoGlobalOpen(true)}
-                className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors text-xs border border-slate-700"
                 title="Ver Extrato Completo"
               >
-                <History className="w-3.5 h-3.5" />
-                <span className="underline decoration-dashed underline-offset-2 decoration-slate-600 group-hover:decoration-amber-400">
-                  Saldo Total Acumulado:
-                </span>
+                <History className="w-3.5 h-3.5 text-amber-400" />
+                <span>Extrato</span>
               </button>
-              <span className="font-semibold text-emerald-400">
-                R$ {balance.toFixed(2).replace('.', ',')}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2 pb-1 border-b border-slate-700 mt-2">
+              <span>Saldo do Período:</span>
+              <span className="font-semibold text-white">
+                R$ {saldoPeriodo.toFixed(2).replace('.', ',')}
               </span>
             </div>
             <Button
               onClick={() => setIsSaqueDialogOpen(true)}
               disabled={balance <= 0 || (!isAdmin && selectedUser !== user?.id)}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full h-8 text-sm"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold w-full h-8 text-sm mt-2"
             >
               <DollarSign className="w-3 h-3 mr-1" />
               Solicitar Saque

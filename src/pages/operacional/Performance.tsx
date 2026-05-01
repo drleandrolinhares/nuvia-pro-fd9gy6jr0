@@ -6,12 +6,17 @@ import { RelatorioRotinasTab } from '@/components/performance/relatorio-rotinas-
 import { SorrisoDosSonhosTab } from '@/components/performance/sorriso-dos-sonhos-tab'
 import { InovacoesTab } from '@/components/performance/inovacoes-tab'
 import { GoogleTab } from '@/components/performance/google-tab'
-import { Target } from 'lucide-react'
+import { useState } from 'react'
+import { Target, CalendarOff } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
+import { Button } from '@/components/ui/button'
 
 export default function Performance() {
   const { profile } = useAuth()
   const isManager = profile?.role === 'admin' || profile?.role === 'gestor'
+  const [isAusenciaOpen, setIsAusenciaOpen] = useState(false)
+
   return (
     <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
@@ -26,7 +31,19 @@ export default function Performance() {
             </p>
           </div>
         </div>
+        {isManager && (
+          <Button
+            variant="outline"
+            className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 whitespace-nowrap w-full md:w-auto"
+            onClick={() => setIsAusenciaOpen(true)}
+          >
+            <CalendarOff className="w-4 h-4 mr-2 text-amber-500" />
+            Ausência Temporária
+          </Button>
+        )}
       </div>
+
+      <AusenciaTemporariaDialog open={isAusenciaOpen} onOpenChange={setIsAusenciaOpen} />
 
       <Tabs
         defaultValue={isManager || profile?.possui_carteira ? 'carteira' : 'pp-pdm'}

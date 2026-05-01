@@ -3092,6 +3092,10 @@ export type Database = {
       gerar_todos_adiantamentos_mensais: { Args: never; Returns: undefined }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      processar_fechamento_mes_feijao: {
+        Args: { p_mes: string }
+        Returns: undefined
+      }
       processar_fechamento_mes_google: {
         Args: { p_mes: string }
         Returns: undefined
@@ -4694,8 +4698,15 @@ export const Constants = {
 //         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
 //       ) THEN
-//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//         VALUES (v_user.id, 'credito', 100, 'Adiantamento Google Avaliações (Meta 5)', p_mes);
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
+//         VALUES (
+//           v_user.id,
+//           'credito',
+//           100,
+//           'Adiantamento Google Avaliações (Meta 5)',
+//           p_mes,
+//           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//         );
 //       END IF;
 //     END LOOP;
 //   END;
@@ -4717,8 +4728,15 @@ export const Constants = {
 //         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento de Inovação'
 //       ) THEN
-//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//         VALUES (v_user.id, 'credito', 100, 'Adiantamento de Inovação', p_mes);
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
+//         VALUES (
+//           v_user.id,
+//           'credito',
+//           100,
+//           'Adiantamento de Inovação',
+//           p_mes,
+//           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//         );
 //       END IF;
 //     END LOOP;
 //   END;
@@ -4744,8 +4762,15 @@ export const Constants = {
 //           AND mes_referencia = p_mes
 //           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
 //         ) THEN
-//           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//           VALUES (v_user.id, 'credito', 200, 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)', p_mes);
+//           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
+//           VALUES (
+//             v_user.id,
+//             'credito',
+//             200,
+//             'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)',
+//             p_mes,
+//             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//           );
 //         END IF;
 //       END IF;
 //     END LOOP;
@@ -4760,7 +4785,7 @@ export const Constants = {
 //   AS $function$
 //   DECLARE
 //     v_mes_atual text;
-//     v_data_atual date := CURRENT_DATE;
+//     v_data_atual date := (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date;
 //     v_user RECORD;
 //   BEGIN
 //     -- Trava de segurança: Iniciar apenas a partir de 1º de Maio de 2026
@@ -4776,7 +4801,6 @@ export const Constants = {
 //     PERFORM public.gerar_adiantamento_mes_sorriso(v_mes_atual);
 //
 //     -- 2. Gerar registros base de Bonificação Feijão com Arroz para acionar o trigger de adiantamento
-//     -- O trigger trg_sync_carteira_bonificacao fará a inserção do crédito na carteira
 //     FOR v_user IN SELECT id FROM public.usuarios WHERE status = 'ativo' AND possui_carteira = true LOOP
 //       IF NOT EXISTS (
 //         SELECT 1 FROM public.performance_bonificacao
@@ -4846,6 +4870,41 @@ export const Constants = {
 //
 //     SELECT role INTO v_role FROM public.usuarios WHERE id = auth.uid();
 //     RETURN v_role = 'admin';
+//   END;
+//   $function$
+//
+// FUNCTION processar_fechamento_mes_feijao(text)
+//   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_feijao(p_mes text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_bonificacao RECORD;
+//     v_debito_existente boolean;
+//   BEGIN
+//     FOR v_bonificacao IN
+//       SELECT * FROM public.performance_bonificacao
+//       WHERE mes_referencia = p_mes AND atingiu_meta = false
+//     LOOP
+//       SELECT EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE origem_id = v_bonificacao.id AND tipo = 'debito'
+//       ) INTO v_debito_existente;
+//
+//       IF NOT v_debito_existente THEN
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
+//         VALUES (
+//           v_bonificacao.usuario_id,
+//           'debito',
+//           350,
+//           'Débito: Desclassificação Bonificação Feijão com Arroz',
+//           p_mes,
+//           v_bonificacao.id,
+//           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//         );
+//       END IF;
+//     END LOOP;
 //   END;
 //   $function$
 //
@@ -5211,25 +5270,66 @@ export const Constants = {
 //   AS $function$
 //   DECLARE
 //     v_possui_carteira boolean;
+//     v_credito_existente boolean;
+//     v_debito_existente boolean;
+//     v_mes_atual text;
 //   BEGIN
-//     -- Check if user has carteira
+//     -- Verifica se o usuário possui carteira
 //     SELECT possui_carteira INTO v_possui_carteira FROM public.usuarios WHERE id = NEW.usuario_id;
 //
 //     IF COALESCE(v_possui_carteira, true) = false THEN
 //       RETURN NEW;
 //     END IF;
 //
-//     -- Delete old automatic transactions for this origin to recreate them
-//     DELETE FROM public.carteira_transacoes WHERE origem_id = NEW.id;
+//     v_mes_atual := to_char((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM');
 //
-//     -- Always insert the initial credit of 350 for the month
-//     INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
-//     VALUES (NEW.usuario_id, 'credito', 350, 'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia, NEW.mes_referencia, NEW.id);
+//     -- Verifica se o crédito já existe
+//     SELECT EXISTS (
+//       SELECT 1 FROM public.carteira_transacoes
+//       WHERE origem_id = NEW.id AND tipo = 'credito'
+//     ) INTO v_credito_existente;
 //
-//     -- If not eligible, insert the debit
-//     IF NOT NEW.atingiu_meta THEN
-//       INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
-//       VALUES (NEW.usuario_id, 'debito', 350, 'Débito: Desclassificação Bonificação Feijão com Arroz', NEW.mes_referencia, NEW.id);
+//     -- Insere o crédito apenas se não existir, evitando sobrescrever histórico
+//     IF NOT v_credito_existente THEN
+//       INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
+//       VALUES (
+//         NEW.usuario_id,
+//         'credito',
+//         350,
+//         'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia,
+//         NEW.mes_referencia,
+//         NEW.id,
+//         CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//       );
+//     END IF;
+//
+//     -- Gerencia o Débito
+//     IF NEW.atingiu_meta THEN
+//       -- Se atingiu a meta, remove qualquer débito existente (caso tenha sido gerado antes)
+//       DELETE FROM public.carteira_transacoes
+//       WHERE origem_id = NEW.id AND tipo = 'debito';
+//     ELSE
+//       -- Se não atingiu a meta, APENAS adiciona o débito se já PASSOU do mês de referência
+//       -- Isso garante que o adiantamento fique limpo durante o mês corrente
+//       IF NEW.mes_referencia < v_mes_atual THEN
+//         SELECT EXISTS (
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE origem_id = NEW.id AND tipo = 'debito'
+//         ) INTO v_debito_existente;
+//
+//         IF NOT v_debito_existente THEN
+//           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
+//           VALUES (
+//             NEW.usuario_id,
+//             'debito',
+//             350,
+//             'Débito: Desclassificação Bonificação Feijão com Arroz',
+//             NEW.mes_referencia,
+//             NEW.id,
+//             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//           );
+//         END IF;
+//       END IF;
 //     END IF;
 //
 //     RETURN NEW;
