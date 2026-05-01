@@ -77,49 +77,91 @@ const getLocalDateString = (d: Date = getBrtDate()) => {
   return `${yyyy}-${mm}-${dd}`
 }
 
+const appliesToDate = (absence: any, dateStr: string, dateObj: Date) => {
+  if (absence.recorrencia === 'nenhuma' || !absence.recorrencia) {
+    return absence.data === dateStr
+  }
+  if (absence.data > dateStr) return false
+  if (absence.data_fim && absence.data_fim < dateStr) return false
+
+  if (absence.recorrencia === 'semanal') {
+    const dayOfWeek = dateObj.getDay()
+    return (
+      absence.dias_semana &&
+      Array.isArray(absence.dias_semana) &&
+      absence.dias_semana.includes(dayOfWeek)
+    )
+  }
+  if (absence.recorrencia === 'mensal') {
+    return absence.dia_mes === dateObj.getDate()
+  }
+  return false
+}
+
 const isWorkingDay = (date: Date, diasTrabalho: number[], ausencias: any[], userId: string) => {
   const dayOfWeek = date.getDay()
   if (!diasTrabalho.includes(dayOfWeek)) return false
 
   const dateStr = getLocalDateString(date)
-  const isFeriadoGlobal = ausencias?.find((a: any) => !a.usuario_id && a.data === dateStr)
-  const isAusenciaUsuario = ausencias?.find(
-    (a: any) => a.usuario_id === userId && a.data === dateStr,
-  )
+  const todayAbsences = ausencias?.filter((a: any) => appliesToDate(a, dateStr, date)) || []
 
-  if (isFeriadoGlobal || isAusenciaUsuario) return false
+  const fullDayGlobal = todayAbsences.find((a: any) => !a.usuario_id && !a.hora_inicio)
+  const fullDayUser = todayAbsences.find((a: any) => a.usuario_id === userId && !a.hora_inicio)
+
+  if (fullDayGlobal || fullDayUser) return false
 
   return true
 }
 
-const evaluateTasksForDate = (date: Date, tarefas: any[]) => {
+const evaluateTasksForDate = (date: Date, tarefas: any[], ausencias: any[], userId: string) => {
   const currentDayOfWeek = date.getDay()
   const currentDayOfMonth = date.getDate()
+  const dateStr = getLocalDateString(date)
+
+  const todayAbsences = ausencias?.filter((a: any) => appliesToDate(a, dateStr, date)) || []
+  const relevantAbsences = todayAbsences.filter(
+    (a: any) => !a.usuario_id || a.usuario_id === userId,
+  )
+  const partialAbsences = relevantAbsences.filter((a: any) => a.hora_inicio && a.hora_fim)
 
   return tarefas.filter((t: any) => {
     const p = t.periodicidade || 'diaria'
-    if (p === 'diaria') return true
-    if (p === 'semanal') {
-      return (
-        t.dias_semana && Array.isArray(t.dias_semana) && t.dias_semana.includes(currentDayOfWeek)
+    let applies = false
+    if (p === 'diaria') applies = true
+    else if (p === 'semanal') {
+      applies = !!(
+        t.dias_semana &&
+        Array.isArray(t.dias_semana) &&
+        t.dias_semana.includes(currentDayOfWeek)
       )
-    }
-    if (p === 'mensal') {
+    } else if (p === 'mensal') {
       const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
       const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
-      return targetDay === currentDayOfMonth
+      applies = targetDay === currentDayOfMonth
+    } else if (p === 'quinzenal') {
+      if (t.data_inicio_contagem) {
+        const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
+        const startDate = new Date(year, month - 1, day)
+        const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        const diffTime = targetDateOnly.getTime() - startDate.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        applies = diffDays >= 0 && diffDays % 15 === 0
+      }
     }
-    if (p === 'quinzenal') {
-      if (!t.data_inicio_contagem) return false
-      const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
-      const startDate = new Date(year, month - 1, day)
-      const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-      const diffTime = targetDateOnly.getTime() - startDate.getTime()
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
-      if (diffDays < 0) return false
-      return diffDays % 15 === 0
+    if (!applies) return false
+
+    if (t.horario_inicio && partialAbsences.length > 0) {
+      const tStart = timeToMinutes(t.horario_inicio)
+      const tEnd = t.horario_fim ? timeToMinutes(t.horario_fim) : tStart + 30
+      const overlaps = partialAbsences.some((a: any) => {
+        const aStart = timeToMinutes(a.hora_inicio)
+        const aEnd = timeToMinutes(a.hora_fim)
+        return Math.max(tStart, aStart) < Math.min(tEnd, aEnd)
+      })
+      if (overlaps) return false
     }
+
     return true
   })
 }
@@ -559,16 +601,7 @@ export default function RotinaDiaria() {
   const [motivoFolga, setMotivoFolga] = useState('')
 
   const autoCloseRoutine = async (currentTasks: Task[], userId: string, dateStr: string) => {
-    const { data: ausencias } = await supabase
-      .from('ausencias')
-      .select('id')
-      .eq('data', dateStr)
-      .or(`usuario_id.is.null,usuario_id.eq.${userId}`)
-      .limit(1)
-
-    if (ausencias && ausencias.length > 0) {
-      return
-    }
+    if (currentTasks.length === 0) return
 
     const closedAt = new Date().toISOString()
     const updates = currentTasks.filter((t) => !t.fechamento_confirmado)
@@ -682,13 +715,11 @@ export default function RotinaDiaria() {
       const { data: ausencias } = await supabase
         .from('ausencias')
         .select('*')
-        .gte('data', todayDateStr)
-        .lte('data', next15DaysStr)
+        .or(`data.gte.${todayDateStr},recorrencia.in.(semanal,mensal)`)
 
-      const isFeriadoGlobal = ausencias?.find((a) => !a.usuario_id && a.data === todayDateStr)
-      const isAusenciaUsuario = ausencias?.find(
-        (a) => a.usuario_id === user.id && a.data === todayDateStr,
-      )
+      const todayAbsences = ausencias?.filter((a) => appliesToDate(a, todayDateStr, today)) || []
+      const fullDayGlobal = todayAbsences.find((a) => !a.usuario_id && !a.hora_inicio)
+      const fullDayUser = todayAbsences.find((a) => a.usuario_id === user.id && !a.hora_inicio)
 
       if (!diasTrabalho.includes(currentDayOfWeek)) {
         setIsTrabalhoHoje(false)
@@ -697,16 +728,16 @@ export default function RotinaDiaria() {
         return
       }
 
-      if (isFeriadoGlobal) {
+      if (fullDayGlobal) {
         setIsTrabalhoHoje(false)
-        setMotivoFolga(`Feriado ou Recesso: ${isFeriadoGlobal.descricao}`)
+        setMotivoFolga(`Feriado ou Recesso: ${fullDayGlobal.descricao}`)
         setTasks([])
         return
       }
 
-      if (isAusenciaUsuario) {
+      if (fullDayUser) {
         setIsTrabalhoHoje(false)
-        setMotivoFolga(`Ausência Programada: ${isAusenciaUsuario.descricao}`)
+        setMotivoFolga(`Ausência Programada: ${fullDayUser.descricao}`)
         setTasks([])
         return
       }
@@ -759,11 +790,11 @@ export default function RotinaDiaria() {
         if (nonWorkingDays.length > 14) break
       }
 
-      const tasksToday = evaluateTasksForDate(today, tarefas)
+      const tasksToday = evaluateTasksForDate(today, tarefas, ausencias || [], user.id)
       const anticipatedTasks: any[] = []
 
       nonWorkingDays.forEach((nwd) => {
-        const tasksForNwd = evaluateTasksForDate(nwd, tarefas)
+        const tasksForNwd = evaluateTasksForDate(nwd, tarefas, ausencias || [], user.id)
         tasksForNwd.forEach((t) => {
           if (
             !tasksToday.find((td: any) => td.id === t.id) &&
@@ -1008,15 +1039,8 @@ export default function RotinaDiaria() {
     const todayDate = getLocalDateString(brtNow)
     const closedAt = realNow.toISOString()
 
-    const { data: ausencias } = await supabase
-      .from('ausencias')
-      .select('id')
-      .eq('data', todayDate)
-      .or(`usuario_id.is.null,usuario_id.eq.${user!.id}`)
-      .limit(1)
-
-    if (ausencias && ausencias.length > 0) {
-      toast.error('Não é possível fechar rotina em dia de ausência ou feriado.')
+    if (tasks.length === 0) {
+      toast.error('Não há tarefas para fechar hoje.')
       setIsClosing(false)
       return
     }

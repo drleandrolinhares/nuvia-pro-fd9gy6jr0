@@ -81,20 +81,47 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
           .toISOString()
           .split('T')[0]
 
-        const { data: absences } = await supabase.from('ausencias').select('*').eq('data', today)
+        const { data: absences } = await supabase
+          .from('ausencias')
+          .select('*')
+          .or(`data.gte.${today},recorrencia.in.(semanal,mensal)`)
 
         if (absences && absences.length > 0) {
-          const globalAbsence = absences.find((a) => !a.usuario_id)
-          if (globalAbsence) {
-            setBlockReason(`Sistema em recesso/feriado: ${globalAbsence.descricao}`)
+          const appliesToDate = (absence: any, dateStr: string, dateObj: Date) => {
+            if (absence.recorrencia === 'nenhuma' || !absence.recorrencia) {
+              return absence.data === dateStr
+            }
+            if (absence.data > dateStr) return false
+            if (absence.data_fim && absence.data_fim < dateStr) return false
+
+            if (absence.recorrencia === 'semanal') {
+              const dayOfWeek = dateObj.getDay()
+              return (
+                absence.dias_semana &&
+                Array.isArray(absence.dias_semana) &&
+                absence.dias_semana.includes(dayOfWeek)
+              )
+            }
+            if (absence.recorrencia === 'mensal') {
+              return absence.dia_mes === dateObj.getDate()
+            }
+            return false
+          }
+
+          const nowObj = new Date()
+          const todayAbsences = absences.filter((a) => appliesToDate(a, today, nowObj))
+          const fullDayGlobal = todayAbsences.find((a) => !a.usuario_id && !a.hora_inicio)
+          const fullDayUser = todayAbsences.find((a) => a.usuario_id === user.id && !a.hora_inicio)
+
+          if (fullDayGlobal) {
+            setBlockReason(`Sistema em recesso/feriado: ${fullDayGlobal.descricao}`)
             setChecking(false)
             return
           }
 
-          const userAbsence = absences.find((a) => a.usuario_id === user.id)
-          if (userAbsence) {
+          if (fullDayUser) {
             setBlockReason(
-              `Acesso restrito: Você está de ${userAbsence.tipo} (${userAbsence.descricao})`,
+              `Acesso restrito: Você está de ${fullDayUser.tipo} (${fullDayUser.descricao})`,
             )
             setChecking(false)
             return
