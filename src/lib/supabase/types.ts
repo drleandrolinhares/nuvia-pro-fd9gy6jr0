@@ -51,24 +51,42 @@ export type Database = {
         Row: {
           criado_em: string
           data: string
+          data_fim: string | null
           descricao: string
+          dia_mes: number | null
+          dias_semana: Json | null
+          hora_fim: string | null
+          hora_inicio: string | null
           id: string
+          recorrencia: string | null
           tipo: string
           usuario_id: string | null
         }
         Insert: {
           criado_em?: string
           data: string
+          data_fim?: string | null
           descricao: string
+          dia_mes?: number | null
+          dias_semana?: Json | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
           id?: string
+          recorrencia?: string | null
           tipo?: string
           usuario_id?: string | null
         }
         Update: {
           criado_em?: string
           data?: string
+          data_fim?: string | null
           descricao?: string
+          dia_mes?: number | null
+          dias_semana?: Json | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
           id?: string
+          recorrencia?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -3350,6 +3368,12 @@ export const Constants = {
 //   tipo: text (not null, default: 'feriado'::text)
 //   usuario_id: uuid (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
+//   hora_inicio: time without time zone (nullable)
+//   hora_fim: time without time zone (nullable)
+//   recorrencia: text (nullable, default: 'nenhuma'::text)
+//   dias_semana: jsonb (nullable)
+//   dia_mes: integer (nullable)
+//   data_fim: date (nullable)
 // Table: avaliacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   paciente_id: uuid (not null)

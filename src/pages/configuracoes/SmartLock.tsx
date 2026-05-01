@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Loader2, Lock, AlertTriangle, CalendarOff, CalendarClock, Clock } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, differenceInDays } from 'date-fns'
 
 export default function SmartLock() {
   const [loading, setLoading] = useState(true)
@@ -50,11 +50,39 @@ export default function SmartLock() {
 
       if (absencesData) {
         const active = absencesData.filter((a) => appliesToDate(a, todayStr, now))
-        const scheduled = absencesData.filter(
+        let scheduled = absencesData.filter(
           (a) =>
             !appliesToDate(a, todayStr, now) &&
             (a.data > todayStr ||
               (a.recorrencia !== 'nenhuma' && (!a.data_fim || a.data_fim > todayStr))),
+        )
+
+        const recurring = scheduled.filter((a) => a.recorrencia !== 'nenhuma' || !a.data)
+        const nonRecurring = scheduled.filter((a) => a.recorrencia === 'nenhuma' && a.data)
+
+        const grouped = nonRecurring
+          .sort((a, b) => {
+            const kA = `${a.usuario_id}-${a.descricao}-${a.hora_inicio}-${a.hora_fim}`
+            const kB = `${b.usuario_id}-${b.descricao}-${b.hora_inicio}-${b.hora_fim}`
+            return kA === kB ? a.data.localeCompare(b.data) : kA.localeCompare(kB)
+          })
+          .reduce((acc: any[], curr) => {
+            const last = acc[acc.length - 1]
+            if (
+              last &&
+              `${last.usuario_id}-${last.descricao}-${last.hora_inicio}-${last.hora_fim}` ===
+                `${curr.usuario_id}-${curr.descricao}-${curr.hora_inicio}-${curr.hora_fim}` &&
+              differenceInDays(parseISO(curr.data), parseISO(last.data_fim_grouped)) === 1
+            ) {
+              last.data_fim_grouped = curr.data
+            } else {
+              acc.push({ ...curr, data_fim_grouped: curr.data })
+            }
+            return acc
+          }, [])
+
+        scheduled = [...grouped, ...recurring].sort((a, b) =>
+          (a.data || '').localeCompare(b.data || ''),
         )
 
         setActiveAbsences(active)
@@ -80,6 +108,9 @@ export default function SmartLock() {
     }
     if (a.recorrencia === 'mensal') {
       return `Todo dia ${a.dia_mes}`
+    }
+    if (a.data_fim_grouped && a.data_fim_grouped !== a.data) {
+      return `${format(parseISO(a.data), 'dd/MM/yyyy')} a ${format(parseISO(a.data_fim_grouped), 'dd/MM/yyyy')}`
     }
     return format(parseISO(a.data), 'dd/MM/yyyy')
   }
