@@ -35,7 +35,7 @@ WHERE descricao LIKE 'Estorno de:%' AND descricao NOT LIKE '%— Realizado por:%
 
 -- Remove duplicatas de estorno baseadas na transacao_original_id
 DELETE FROM public.carteira_transacoes a USING (
-    SELECT MIN(id) as min_id, transacao_original_id
+    SELECT MIN(id::text)::uuid as min_id, transacao_original_id
     FROM public.carteira_transacoes
     WHERE transacao_original_id IS NOT NULL
     GROUP BY transacao_original_id
@@ -48,7 +48,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS carteira_transacoes_transacao_original_id_idx 
 
 -- Remove duplicatas baseadas na descrição exata (quando feitas pelo sistema antigo sem transacao_original_id)
 DELETE FROM public.carteira_transacoes a USING (
-    SELECT MIN(id) as min_id, usuario_id, mes_referencia, tipo, valor, descricao
+    SELECT MIN(id::text)::uuid as min_id, usuario_id, mes_referencia, tipo, valor, descricao
     FROM public.carteira_transacoes
     WHERE descricao LIKE 'ESTORNO DE:%'
     GROUP BY usuario_id, mes_referencia, tipo, valor, descricao
