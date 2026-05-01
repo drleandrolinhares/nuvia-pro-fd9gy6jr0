@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save, Lock } from 'lucide-react'
 
 export default function ControleAcesso() {
   const [loading, setLoading] = useState(true)
@@ -86,21 +86,30 @@ export default function ControleAcesso() {
   ]
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100">Controle de Acesso</h1>
-        <p className="text-slate-400 mt-1">
-          Configure os horários em que os colaboradores podem acessar o sistema. Fora desse período,
-          o acesso será bloqueado automaticamente.
-        </p>
+    <div className="p-6 max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <Lock className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
+              Controle de Acesso
+            </h1>
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
+              Configure os horários de acesso ao sistema da clínica.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card className="bg-slate-900 border-slate-800 shadow-sm">
         <CardHeader>
-          <CardTitle>Limites de Horário</CardTitle>
-          <CardDescription>
-            Defina o horário de início e fim para cada dia da semana. Domingos são sempre bloqueados
-            por padrão e administradores possuem acesso irrestrito.
+          <CardTitle className="text-xl text-white">Limites de Horário</CardTitle>
+          <CardDescription className="text-slate-400">
+            Defina o horário de início e fim para cada dia da semana. Fora desse período, o acesso
+            será bloqueado automaticamente. Domingos são sempre bloqueados por padrão e
+            administradores possuem acesso irrestrito.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -111,29 +120,35 @@ export default function ControleAcesso() {
                 className="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-center border-b border-slate-800/50 pb-6 last:border-0 last:pb-0"
               >
                 <div className="md:col-span-4">
-                  <span className="font-medium text-slate-200">{day.label}</span>
+                  <span className="font-bold text-slate-100 uppercase tracking-wide text-sm">
+                    {day.label}
+                  </span>
                   {day.id === 'sab' && (
-                    <p className="text-xs text-amber-500/80 mt-1">
+                    <p className="text-xs text-amber-500 mt-1 font-medium">
                       Aos sábados, apenas a página de Performance ficará acessível.
                     </p>
                   )}
                 </div>
                 <div className="md:col-span-4">
-                  <Label className="text-xs text-slate-400 mb-2 block">Horário de Início</Label>
+                  <Label className="text-xs text-slate-300 font-bold uppercase tracking-wider mb-2 block">
+                    Horário de Início
+                  </Label>
                   <Input
                     type="time"
                     value={config[`${day.id}_inicio`]?.substring(0, 5) || ''}
                     onChange={(e) => handleChange(`${day.id}_inicio`, e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-100 [color-scheme:dark]"
+                    className="bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-amber-500 focus-visible:border-amber-500 [color-scheme:dark]"
                   />
                 </div>
                 <div className="md:col-span-4">
-                  <Label className="text-xs text-slate-400 mb-2 block">Horário de Fim</Label>
+                  <Label className="text-xs text-slate-300 font-bold uppercase tracking-wider mb-2 block">
+                    Horário de Fim
+                  </Label>
                   <Input
                     type="time"
                     value={config[`${day.id}_fim`]?.substring(0, 5) || ''}
                     onChange={(e) => handleChange(`${day.id}_fim`, e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-100 [color-scheme:dark]"
+                    className="bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-amber-500 focus-visible:border-amber-500 [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -141,7 +156,11 @@ export default function ControleAcesso() {
           </div>
 
           <div className="pt-6 mt-6 border-t border-slate-800 flex justify-end">
-            <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full md:w-auto bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+            >
               {saving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
