@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Lock, AlertTriangle, Info } from 'lucide-react'
+import { Loader2, Lock, AlertTriangle, Info, CalendarOff } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function SmartLock() {
@@ -60,9 +60,9 @@ export default function SmartLock() {
         </div>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 text-slate-300">
-        <h2 className="text-lg font-bold text-white mb-4">Status do Sistema em Tempo Real</h2>
-        <p className="text-sm mb-6">
+      <div className="bg-card border border-border rounded-xl p-6 text-card-foreground shadow-sm">
+        <h2 className="text-xl font-bold mb-2">Status do Sistema em Tempo Real</h2>
+        <p className="text-sm text-muted-foreground mb-6">
           O Smart Lock monitora ativamente as configurações de ausências e feriados para bloquear
           automaticamente o acesso de usuários quando necessário. Abaixo você pode ver se há alguma
           restrição ativa no momento.
@@ -71,17 +71,17 @@ export default function SmartLock() {
         {globalAbsences.length > 0 && (
           <Alert
             variant="destructive"
-            className="bg-red-500/10 border-red-500/50 text-red-500 mb-6"
+            className="bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-500 mb-6 shadow-sm"
           >
-            <AlertTriangle className="h-5 w-5" />
+            <AlertTriangle className="h-5 w-5 !text-red-600 dark:!text-red-500" />
             <AlertTitle className="text-base font-bold ml-2">SISTEMA BLOQUEADO (GLOBAL)</AlertTitle>
             <AlertDescription className="ml-2 mt-2">
               Hoje está configurado como um feriado ou recesso global no sistema. Todos os
               colaboradores estão com o acesso restrito.
-              <ul className="list-disc pl-5 mt-2 text-red-400">
+              <ul className="list-disc pl-5 mt-3 space-y-1 text-red-700 dark:text-red-400 font-medium">
                 {globalAbsences.map((a) => (
                   <li key={a.id}>
-                    {a.descricao} ({a.tipo})
+                    {a.descricao} <span className="opacity-75 text-sm font-normal">({a.tipo})</span>
                   </li>
                 ))}
               </ul>
@@ -90,18 +90,19 @@ export default function SmartLock() {
         )}
 
         {userAbsences.length > 0 && (
-          <Alert className="bg-amber-500/10 border-amber-500/50 text-amber-500 mb-6">
-            <Info className="h-5 w-5" />
+          <Alert className="bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-500 mb-6 shadow-sm">
+            <CalendarOff className="h-5 w-5 !text-amber-600 dark:!text-amber-500" />
             <AlertTitle className="text-base font-bold ml-2">
               AUSÊNCIAS INDIVIDUAIS ATIVAS
             </AlertTitle>
-            <AlertDescription className="ml-2 mt-2 text-amber-400">
+            <AlertDescription className="ml-2 mt-2 text-amber-700 dark:text-amber-400">
               Os seguintes colaboradores estão com o acesso restrito hoje devido a ausências
               programadas:
-              <ul className="list-disc pl-5 mt-2">
+              <ul className="list-disc pl-5 mt-3 space-y-1 font-medium">
                 {userAbsences.map((a) => (
                   <li key={a.id}>
-                    {a.usuarios?.nome || 'Colaborador'}: {a.descricao} ({a.tipo})
+                    {a.usuarios?.nome || 'Colaborador'} - {a.descricao}{' '}
+                    <span className="opacity-75 text-sm font-normal">({a.tipo})</span>
                   </li>
                 ))}
               </ul>
@@ -110,10 +111,10 @@ export default function SmartLock() {
         )}
 
         {activeAbsences.length === 0 && (
-          <Alert className="bg-emerald-500/10 border-emerald-500/50 text-emerald-500">
-            <Lock className="h-5 w-5" />
+          <Alert className="bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-500 shadow-sm">
+            <Lock className="h-5 w-5 !text-emerald-600 dark:!text-emerald-500" />
             <AlertTitle className="text-base font-bold ml-2">SISTEMA OPERACIONAL</AlertTitle>
-            <AlertDescription className="ml-2 mt-2 text-emerald-400">
+            <AlertDescription className="ml-2 mt-2 text-emerald-700 dark:text-emerald-400">
               Nenhuma restrição especial de calendário (feriados ou ausências) foi detectada para
               hoje. O sistema segue os limites de horário padrão da clínica.
             </AlertDescription>

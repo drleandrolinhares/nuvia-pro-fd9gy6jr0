@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { FileText, UserPlus, Settings } from 'lucide-react'
+import { FileText, UserPlus, Settings, CalendarClock } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useConfigData } from '@/hooks/use-config-data'
 import {
@@ -23,10 +23,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Link } from 'react-router-dom'
+import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 
 export function UsuariosTab() {
   const { usuarios, loading } = useConfigData()
   const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [showAusencia, setShowAusencia] = useState(false)
 
   const getDetalhes = (user: any) => {
     if (!user?.colaboradores_detalhes) return null
@@ -47,7 +49,15 @@ export function UsuariosTab() {
               Gerencie os usuários, acessos e detalhes administrativos.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="uppercase tracking-wider text-xs font-bold"
+              onClick={() => setShowAusencia(true)}
+            >
+              <CalendarClock className="size-4 mr-2" /> Ausência Temporária
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -149,6 +159,8 @@ export function UsuariosTab() {
           </div>
         </CardContent>
       </Card>
+
+      <AusenciaTemporariaDialog open={showAusencia} onOpenChange={setShowAusencia} />
 
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
         <SheetContent className="sm:max-w-md overflow-y-auto">
