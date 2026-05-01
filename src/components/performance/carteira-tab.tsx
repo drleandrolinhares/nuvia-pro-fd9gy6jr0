@@ -266,7 +266,7 @@ export function CarteiraTab() {
       valor: t.valor,
       descricao: descricaoEstorno,
       mes_referencia: t.mes_referencia,
-      origem_id: t.id,
+      origem_id: t.origem_id || null,
     })
 
     if (error) {

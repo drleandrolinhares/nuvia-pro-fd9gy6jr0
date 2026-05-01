@@ -214,6 +214,7 @@ function ScriptPopoverReadOnly({ text }: { text: string }) {
 function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateStr: string }) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [motivoFolga, setMotivoFolga] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -257,6 +258,33 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
         ])
 
         const diasTrabalho = usuario?.dias_trabalho || [1, 2, 3, 4, 5]
+
+        const isFeriadoGlobal = ausencias?.find((a: any) => !a.usuario_id && a.data === dateStr)
+        const isAusenciaUsuario = ausencias?.find(
+          (a: any) => a.usuario_id === usuarioId && a.data === dateStr,
+        )
+
+        const currentDayOfWeek = targetDate.getDay()
+
+        if (!diasTrabalho.includes(currentDayOfWeek)) {
+          setMotivoFolga('Não é um dia configurado na jornada de trabalho.')
+          setTasks([])
+          return
+        }
+
+        if (isFeriadoGlobal) {
+          setMotivoFolga(`Feriado ou Recesso: ${isFeriadoGlobal.descricao}`)
+          setTasks([])
+          return
+        }
+
+        if (isAusenciaUsuario) {
+          setMotivoFolga(`Ausência Programada: ${isAusenciaUsuario.descricao}`)
+          setTasks([])
+          return
+        }
+
+        setMotivoFolga('')
 
         const nonWorkingDays: Date[] = []
         let checkDate = new Date(targetDate)
@@ -504,6 +532,20 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
       <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 p-8">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <p className="text-muted-foreground font-medium">Carregando espelho da rotina...</p>
+      </div>
+    )
+  }
+
+  if (motivoFolga) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px] p-8 space-y-4">
+        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mb-2">
+          <CheckCircle2 className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl font-bold text-center text-blue-600 dark:text-blue-400">
+          Dia de Folga / Exceção
+        </h3>
+        <p className="text-muted-foreground text-center font-medium max-w-sm">{motivoFolga}</p>
       </div>
     )
   }
