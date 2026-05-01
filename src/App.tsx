@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -35,7 +35,103 @@ import Precificacao from './pages/administrativo/Precificacao'
 import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
+import ControleAcesso from './pages/configuracoes/ControleAcesso'
+
+const AccessDeniedMessage = ({ message }: { message: string }) => {
+  const { signOut } = useAuth()
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 max-w-md w-full text-center space-y-4 shadow-xl">
+        <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Lock className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">Acesso Bloqueado</h2>
+        <p className="text-slate-400">{message}</p>
+        <p className="text-sm text-slate-500">
+          Caso precise acessar o sistema fora do seu horário, entre em contato com um administrador.
+        </p>
+        <button
+          onClick={() => signOut()}
+          className="mt-4 px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors"
+        >
+          Sair do Sistema
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const AccessGuard = ({ children }: { children: React.ReactNode }) => {
+  const { profile, acessoConfig, loading } = useAuth()
+  const location = useLocation()
+
+  if (loading) return null
+
+  const userRole = profile?.role || 'visualizacao'
+  const isAdmin = userRole === 'admin'
+
+  if (!isAdmin && acessoConfig) {
+    const now = new Date()
+    const day = now.getDay()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+
+    if (day === 0) {
+      return <AccessDeniedMessage message="O acesso ao sistema não é permitido aos domingos." />
+    }
+
+    let inicio = ''
+    let fim = ''
+
+    switch (day) {
+      case 1:
+        inicio = acessoConfig.seg_inicio
+        fim = acessoConfig.seg_fim
+        break
+      case 2:
+        inicio = acessoConfig.ter_inicio
+        fim = acessoConfig.ter_fim
+        break
+      case 3:
+        inicio = acessoConfig.qua_inicio
+        fim = acessoConfig.qua_fim
+        break
+      case 4:
+        inicio = acessoConfig.qui_inicio
+        fim = acessoConfig.qui_fim
+        break
+      case 5:
+        inicio = acessoConfig.sex_inicio
+        fim = acessoConfig.sex_fim
+        break
+      case 6:
+        inicio = acessoConfig.sab_inicio
+        fim = acessoConfig.sab_fim
+        break
+    }
+
+    if (inicio && fim) {
+      inicio = inicio.substring(0, 5)
+      fim = fim.substring(0, 5)
+
+      if (currentTimeStr < inicio || currentTimeStr > fim) {
+        return (
+          <AccessDeniedMessage
+            message={`O acesso ao sistema hoje é permitido apenas das ${inicio} às ${fim}.`}
+          />
+        )
+      }
+    }
+
+    if (day === 6 && !location.pathname.startsWith('/operacional/performance')) {
+      return <Navigate to="/operacional/performance" replace />
+    }
+  }
+
+  return <>{children}</>
+}
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -47,6 +143,7 @@ const ProtectedRoute = ({
   children: React.ReactNode
 }) => {
   const { profile, permissions, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) return null
 
@@ -59,7 +156,9 @@ const ProtectedRoute = ({
 
   if (allowedPermissions && allowedPermissions.length > 0) {
     const hasAccess = allowedPermissions.some((p) => permissions.includes(p))
-    if (!hasAccess) return <Navigate to="/" replace />
+    const isSaturdayPerformance =
+      new Date().getDay() === 6 && location.pathname.startsWith('/operacional/performance')
+    if (!hasAccess && !isSaturdayPerformance) return <Navigate to="/" replace />
   }
 
   return <>{children}</>
@@ -87,7 +186,13 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route
+        element={
+          <AccessGuard>
+            <Layout />
+          </AccessGuard>
+        }
+      >
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/perfil" element={<Perfil />} />
@@ -182,6 +287,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]}>
               <FeriadosAusencias />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/acesso"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ControleAcesso />
             </ProtectedRoute>
           }
         />

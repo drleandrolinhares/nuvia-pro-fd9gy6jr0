@@ -32,6 +32,7 @@ interface AuthContextType {
   session: Session | null
   profile: UserProfile | null
   permissions: string[]
+  acessoConfig: any
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -50,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [permissions, setPermissions] = useState<string[]>([])
+  const [acessoConfig, setAcessoConfig] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchUserData = async (userId: string) => {
       try {
-        const [profileRes, permsRes, cargoRes] = await Promise.all([
+        const [profileRes, permsRes, cargoRes, configRes] = await Promise.all([
           supabase.from('usuarios').select('*').eq('id', userId).single(),
           supabase.from('usuario_permissoes').select('permissoes(nome)').eq('usuario_id', userId),
           supabase
@@ -65,7 +67,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('cargo_id, cargo_secundario_id')
             .eq('id', userId)
             .single(),
+          supabase
+            .from('configuracoes_acesso' as any)
+            .select('*')
+            .single(),
         ])
+
+        if (isMounted && configRes.data) {
+          setAcessoConfig(configRes.data)
+        }
 
         let newProfile = null
         let newPermissions: string[] = []
@@ -128,6 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           setProfile(null)
           setPermissions([])
+          setAcessoConfig(null)
           setLoading(false)
         }
       }
@@ -144,6 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           setProfile(null)
           setPermissions([])
+          setAcessoConfig(null)
           setLoading(false)
         }
       }
@@ -166,7 +178,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, permissions, signIn, signOut, loading }}>
+    <AuthContext.Provider
+      value={{ user, session, profile, permissions, acessoConfig, signIn, signOut, loading }}
+    >
       {children}
     </AuthContext.Provider>
   )

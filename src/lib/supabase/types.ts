@@ -4910,7 +4910,7 @@ export const Constants = {
 //           v_bonificacao.usuario_id,
 //           'debito',
 //           350,
-//           'Débito: Desclassificação Bonificação Feijão com Arroz',
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
 //           p_mes,
 //           v_bonificacao.id,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
@@ -4941,7 +4941,7 @@ export const Constants = {
 //           SELECT 1 FROM public.carteira_transacoes
 //           WHERE usuario_id = v_user.id
 //           AND mes_referencia = p_mes
-//           AND descricao = 'Ajuste de Meta Google (não atingiu 5)'
+//           AND descricao = 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto'
 //         ) THEN
 //           SELECT COUNT(*) INTO v_count
 //           FROM public.performance_google_reviews
@@ -4951,7 +4951,7 @@ export const Constants = {
 //
 //           IF v_count < 5 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//             VALUES (v_user.id, 'debito', 100, 'Ajuste de Meta Google (não atingiu 5)', p_mes);
+//             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto', p_mes);
 //           END IF;
 //         END IF;
 //       END IF;
@@ -4980,7 +4980,7 @@ export const Constants = {
 //           SELECT 1 FROM public.carteira_transacoes
 //           WHERE usuario_id = v_user.id
 //           AND mes_referencia = p_mes
-//           AND (descricao = 'Ajuste de Inovação (nenhuma validada)' OR descricao = 'Estorno de Adiantamento de Inovação (nenhuma validada)')
+//           AND descricao = 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto'
 //         ) THEN
 //           SELECT COUNT(*) INTO v_count
 //           FROM public.performance_pp_pdm
@@ -4990,7 +4990,7 @@ export const Constants = {
 //
 //           IF v_count = 0 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//             VALUES (v_user.id, 'debito', 100, 'Estorno de Adiantamento de Inovação (nenhuma validada)', p_mes);
+//             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto', p_mes);
 //           END IF;
 //         END IF;
 //       END IF;
@@ -5027,7 +5027,7 @@ export const Constants = {
 //             SELECT 1 FROM public.carteira_transacoes
 //             WHERE usuario_id = v_user.id
 //             AND mes_referencia = p_mes
-//             AND descricao = 'Ajuste de Meta (não atingimento das 4 indicações)'
+//             AND descricao = 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto'
 //           ) THEN
 //             SELECT COUNT(*) INTO v_count
 //             FROM public.sorriso_dos_sonhos_indicacoes
@@ -5040,7 +5040,7 @@ export const Constants = {
 //               v_valor_debito := v_falta * v_valor_por_indicacao;
 //
 //               INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
-//               VALUES (v_user.id, 'debito', v_valor_debito, 'Ajuste de Meta (não atingimento das 4 indicações)', p_mes);
+//               VALUES (v_user.id, 'debito', v_valor_debito, 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto', p_mes);
 //             END IF;
 //           END IF;
 //         END IF;
@@ -5335,7 +5335,7 @@ export const Constants = {
 //             NEW.usuario_id,
 //             'debito',
 //             350,
-//             'Débito: Desclassificação Bonificação Feijão com Arroz',
+//             'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
 //             NEW.mes_referencia,
 //             NEW.id,
 //             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
@@ -5379,6 +5379,8 @@ export const Constants = {
 //   CREATE INDEX campo_opcoes_campo_id_idx ON public.campo_opcoes USING btree (campo_id)
 // Table: campos_personalizados
 //   CREATE UNIQUE INDEX campos_personalizados_nome_key ON public.campos_personalizados USING btree (nome)
+// Table: carteira_transacoes
+//   CREATE UNIQUE INDEX carteira_transacoes_transacao_original_id_idx ON public.carteira_transacoes USING btree (transacao_original_id) WHERE (transacao_original_id IS NOT NULL)
 // Table: compra_itens
 //   CREATE INDEX compra_itens_compra_id_idx ON public.compra_itens USING btree (compra_id)
 //   CREATE INDEX compra_itens_produto_id_idx ON public.compra_itens USING btree (produto_id)
