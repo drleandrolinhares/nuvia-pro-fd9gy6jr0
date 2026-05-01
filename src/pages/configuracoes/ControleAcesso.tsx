@@ -124,7 +124,7 @@ export default function ControleAcesso() {
                     type="time"
                     value={config[`${day.id}_inicio`]?.substring(0, 5) || ''}
                     onChange={(e) => handleChange(`${day.id}_inicio`, e.target.value)}
-                    className="bg-slate-950 border-slate-800"
+                    className="bg-slate-950 border-slate-800 text-slate-100 [color-scheme:dark]"
                   />
                 </div>
                 <div className="md:col-span-4">
@@ -133,7 +133,7 @@ export default function ControleAcesso() {
                     type="time"
                     value={config[`${day.id}_fim`]?.substring(0, 5) || ''}
                     onChange={(e) => handleChange(`${day.id}_fim`, e.target.value)}
-                    className="bg-slate-950 border-slate-800"
+                    className="bg-slate-950 border-slate-800 text-slate-100 [color-scheme:dark]"
                   />
                 </div>
               </div>
