@@ -245,7 +245,24 @@ export function CarteiraTab() {
     }
   }
 
+  const checkIsEstornado = (t: any) => {
+    return globalTransactions.some(
+      (estorno) =>
+        estorno.transacao_original_id === t.id ||
+        (!estorno.transacao_original_id &&
+          estorno.tipo !== t.tipo &&
+          Number(estorno.valor) === Number(t.valor) &&
+          estorno.mes_referencia === t.mes_referencia &&
+          estorno.descricao.startsWith(`Estorno de: ${t.descricao}`)),
+    )
+  }
+
   const handleEstornarTransaction = async (t: any) => {
+    if (checkIsEstornado(t)) {
+      toast.error('Este lançamento já foi estornado.')
+      return
+    }
+
     if (
       !window.confirm(
         'Tem certeza que deseja estornar este lançamento? Uma transação compensatória será criada e o saldo será recalculado.',
@@ -267,6 +284,7 @@ export function CarteiraTab() {
       descricao: descricaoEstorno,
       mes_referencia: t.mes_referencia,
       origem_id: t.origem_id || null,
+      transacao_original_id: t.id,
     })
 
     if (error) {
@@ -490,17 +508,20 @@ export function CarteiraTab() {
                         </TableCell>
                         {isAdmin && (
                           <TableCell>
-                            {!t.descricao.startsWith('Estorno') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
-                                onClick={() => handleEstornarTransaction(t)}
-                                title="Estornar Lançamento"
-                              >
-                                <Undo2 className="w-3 h-3" />
-                              </Button>
-                            )}
+                            {!t.descricao.startsWith('Estorno') &&
+                              (checkIsEstornado(t) ? (
+                                <span className="text-[10px] text-slate-400 italic">Estornado</span>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                  onClick={() => handleEstornarTransaction(t)}
+                                  title="Estornar Lançamento"
+                                >
+                                  <Undo2 className="w-3 h-3" />
+                                </Button>
+                              ))}
                           </TableCell>
                         )}
                       </TableRow>
@@ -615,17 +636,20 @@ export function CarteiraTab() {
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
-                          {!t.descricao.startsWith('Estorno') && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
-                              onClick={() => handleEstornarTransaction(t)}
-                              title="Estornar Lançamento"
-                            >
-                              <Undo2 className="w-3 h-3" />
-                            </Button>
-                          )}
+                          {!t.descricao.startsWith('Estorno') &&
+                            (checkIsEstornado(t) ? (
+                              <span className="text-[10px] text-slate-400 italic">Estornado</span>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                onClick={() => handleEstornarTransaction(t)}
+                                title="Estornar Lançamento"
+                              >
+                                <Undo2 className="w-3 h-3" />
+                              </Button>
+                            ))}
                         </TableCell>
                       )}
                     </TableRow>
