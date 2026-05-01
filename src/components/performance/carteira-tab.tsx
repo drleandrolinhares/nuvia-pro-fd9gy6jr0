@@ -12,6 +12,7 @@ import {
   Trash2,
   History,
   Plus,
+  Undo2,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { format, subMonths } from 'date-fns'
@@ -244,18 +245,35 @@ export function CarteiraTab() {
     }
   }
 
-  const handleDeleteTransaction = async (id: string) => {
+  const handleEstornarTransaction = async (t: any) => {
     if (
-      !window.confirm('Tem certeza que deseja excluir este lançamento? O saldo será recalculado.')
+      !window.confirm(
+        'Tem certeza que deseja estornar este lançamento? Uma transação compensatória será criada e o saldo será recalculado.',
+      )
     )
       return
     setLoading(true)
-    const { error } = await supabase.from('carteira_transacoes').delete().eq('id', id)
+
+    const isSaque = t.tipo === 'saque'
+    const reversedTipo = isSaque ? 'credito' : t.tipo === 'credito' ? 'debito' : 'credito'
+
+    const nomeAdmin = profile?.nome ? profile.nome.split(' ')[0] : 'Administrador'
+    const descricaoEstorno = `Estorno de: ${t.descricao} — Realizado por: ${nomeAdmin}`
+
+    const { error } = await supabase.from('carteira_transacoes').insert({
+      usuario_id: t.usuario_id,
+      tipo: reversedTipo,
+      valor: t.valor,
+      descricao: descricaoEstorno,
+      mes_referencia: t.mes_referencia,
+      origem_id: t.id,
+    })
+
     if (error) {
-      toast.error('Erro ao excluir lançamento')
+      toast.error('Erro ao estornar lançamento')
       setLoading(false)
     } else {
-      toast.success('Lançamento excluído com sucesso')
+      toast.success('Lançamento estornado com sucesso')
       loadTransactions(selectedUser, selectedMonth)
     }
   }
@@ -472,15 +490,17 @@ export function CarteiraTab() {
                         </TableCell>
                         {isAdmin && (
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteTransaction(t.id)}
-                              title="Excluir Lançamento"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            {!t.descricao.startsWith('Estorno') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                onClick={() => handleEstornarTransaction(t)}
+                                title="Estornar Lançamento"
+                              >
+                                <Undo2 className="w-3 h-3" />
+                              </Button>
+                            )}
                           </TableCell>
                         )}
                       </TableRow>
@@ -595,15 +615,17 @@ export function CarteiraTab() {
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteTransaction(t.id)}
-                            title="Excluir Lançamento"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          {!t.descricao.startsWith('Estorno') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                              onClick={() => handleEstornarTransaction(t)}
+                              title="Estornar Lançamento"
+                            >
+                              <Undo2 className="w-3 h-3" />
+                            </Button>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>

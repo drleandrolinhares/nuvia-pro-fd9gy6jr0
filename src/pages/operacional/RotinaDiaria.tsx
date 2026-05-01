@@ -559,6 +559,17 @@ export default function RotinaDiaria() {
   const [motivoFolga, setMotivoFolga] = useState('')
 
   const autoCloseRoutine = async (currentTasks: Task[], userId: string, dateStr: string) => {
+    const { data: ausencias } = await supabase
+      .from('ausencias')
+      .select('id')
+      .eq('data', dateStr)
+      .or(`usuario_id.is.null,usuario_id.eq.${userId}`)
+      .limit(1)
+
+    if (ausencias && ausencias.length > 0) {
+      return
+    }
+
     const closedAt = new Date().toISOString()
     const updates = currentTasks.filter((t) => !t.fechamento_confirmado)
     if (updates.length === 0) return
@@ -996,6 +1007,19 @@ export default function RotinaDiaria() {
     const brtNow = getBrtDate(realNow)
     const todayDate = getLocalDateString(brtNow)
     const closedAt = realNow.toISOString()
+
+    const { data: ausencias } = await supabase
+      .from('ausencias')
+      .select('id')
+      .eq('data', todayDate)
+      .or(`usuario_id.is.null,usuario_id.eq.${user!.id}`)
+      .limit(1)
+
+    if (ausencias && ausencias.length > 0) {
+      toast.error('Não é possível fechar rotina em dia de ausência ou feriado.')
+      setIsClosing(false)
+      return
+    }
 
     for (const t of tasks) {
       if (t.concluida) {
