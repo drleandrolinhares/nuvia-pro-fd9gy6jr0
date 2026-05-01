@@ -138,7 +138,6 @@ const navData = [
   {
     title: 'FINANCEIRO',
     icon: ShieldCheck,
-    defaultOpen: true,
     items: [
       {
         title: 'GESTÃO FISCAL',
