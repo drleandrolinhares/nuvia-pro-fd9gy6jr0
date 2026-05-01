@@ -328,6 +328,7 @@ export type Database = {
           mes_referencia: string
           origem_id: string | null
           tipo: string
+          transacao_original_id: string | null
           usuario_id: string
           valor: number
         }
@@ -338,6 +339,7 @@ export type Database = {
           mes_referencia: string
           origem_id?: string | null
           tipo: string
+          transacao_original_id?: string | null
           usuario_id: string
           valor: number
         }
@@ -348,6 +350,7 @@ export type Database = {
           mes_referencia?: string
           origem_id?: string | null
           tipo?: string
+          transacao_original_id?: string | null
           usuario_id?: string
           valor?: number
         }
@@ -357,6 +360,13 @@ export type Database = {
             columns: ['origem_id']
             isOneToOne: false
             referencedRelation: 'performance_bonificacao'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'carteira_transacoes_transacao_original_id_fkey'
+            columns: ['transacao_original_id']
+            isOneToOne: false
+            referencedRelation: 'carteira_transacoes'
             referencedColumns: ['id']
           },
         ]
@@ -3343,6 +3353,7 @@ export const Constants = {
 //   mes_referencia: text (not null)
 //   origem_id: uuid (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
+//   transacao_original_id: uuid (nullable)
 // Table: colaboradores_detalhes
 //   usuario_id: uuid (not null)
 //   banco: text (nullable)
@@ -3997,6 +4008,7 @@ export const Constants = {
 //   FOREIGN KEY carteira_transacoes_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES performance_bonificacao(id) ON DELETE CASCADE
 //   PRIMARY KEY carteira_transacoes_pkey: PRIMARY KEY (id)
 //   CHECK carteira_transacoes_tipo_check: CHECK ((tipo = ANY (ARRAY['credito'::text, 'debito'::text, 'saque'::text])))
+//   FOREIGN KEY carteira_transacoes_transacao_original_id_fkey: FOREIGN KEY (transacao_original_id) REFERENCES carteira_transacoes(id) ON DELETE SET NULL
 //   FOREIGN KEY carteira_transacoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)

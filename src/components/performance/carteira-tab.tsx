@@ -253,7 +253,8 @@ export function CarteiraTab() {
           estorno.tipo !== t.tipo &&
           Number(estorno.valor) === Number(t.valor) &&
           estorno.mes_referencia === t.mes_referencia &&
-          estorno.descricao.startsWith(`Estorno de: ${t.descricao}`)),
+          (estorno.descricao.startsWith(`Estorno de: ${t.descricao}`) ||
+            estorno.descricao.startsWith(`ESTORNO DE: "${t.descricao}"`))),
     )
   }
 
@@ -275,7 +276,7 @@ export function CarteiraTab() {
     const reversedTipo = isSaque ? 'credito' : t.tipo === 'credito' ? 'debito' : 'credito'
 
     const nomeAdmin = profile?.nome ? profile.nome.split(' ')[0] : 'Administrador'
-    const descricaoEstorno = `Estorno de: ${t.descricao} — Realizado por: ${nomeAdmin}`
+    const descricaoEstorno = `ESTORNO DE: "${t.descricao}" por nao cumprimento do objetivo proposto — Realizado por: ${nomeAdmin}`
 
     const { error } = await supabase.from('carteira_transacoes').insert({
       usuario_id: t.usuario_id,
@@ -509,6 +510,7 @@ export function CarteiraTab() {
                         {isAdmin && (
                           <TableCell>
                             {!t.descricao.startsWith('Estorno') &&
+                              !t.descricao.startsWith('ESTORNO DE:') &&
                               (checkIsEstornado(t) ? (
                                 <span className="text-[10px] text-slate-400 italic">Estornado</span>
                               ) : (
@@ -637,6 +639,7 @@ export function CarteiraTab() {
                       {isAdmin && (
                         <TableCell>
                           {!t.descricao.startsWith('Estorno') &&
+                            !t.descricao.startsWith('ESTORNO DE:') &&
                             (checkIsEstornado(t) ? (
                               <span className="text-[10px] text-slate-400 italic">Estornado</span>
                             ) : (
