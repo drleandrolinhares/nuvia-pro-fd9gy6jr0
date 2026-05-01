@@ -39,6 +39,7 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2, Lock } from 'lucide-react'
 import SmartLock from './pages/configuracoes/SmartLock'
+import ControleAcesso from './pages/configuracoes/ControleAcesso'
 
 const AccessDeniedMessage = ({ message }: { message: string }) => {
   const { signOut } = useAuth()
@@ -347,6 +348,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <SmartLock />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/acesso"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ControleAcesso />
             </ProtectedRoute>
           }
         />
