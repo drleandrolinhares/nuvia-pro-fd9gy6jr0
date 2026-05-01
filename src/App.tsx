@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { supabase } from '@/lib/supabase/client'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -36,7 +38,7 @@ import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import { Loader2, Lock } from 'lucide-react'
-import ControleAcesso from './pages/configuracoes/ControleAcesso'
+import SmartLock from './pages/configuracoes/SmartLock'
 
 const AccessDeniedMessage = ({ message }: { message: string }) => {
   const { signOut } = useAuth()
@@ -63,13 +65,63 @@ const AccessDeniedMessage = ({ message }: { message: string }) => {
 }
 
 const AccessGuard = ({ children }: { children: React.ReactNode }) => {
-  const { profile, acessoConfig, loading } = useAuth()
+  const { profile, acessoConfig, loading, user } = useAuth()
   const location = useLocation()
+  const [checking, setChecking] = useState(true)
+  const [blockReason, setBlockReason] = useState<string | null>(null)
 
-  if (loading) return null
+  useEffect(() => {
+    if (loading || !user) return
+
+    const checkAbsences = async () => {
+      try {
+        const now = new Date()
+        const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+          .toISOString()
+          .split('T')[0]
+
+        const { data: absences } = await supabase.from('ausencias').select('*').eq('data', today)
+
+        if (absences && absences.length > 0) {
+          const globalAbsence = absences.find((a) => !a.usuario_id)
+          if (globalAbsence) {
+            setBlockReason(`Sistema em recesso/feriado: ${globalAbsence.descricao}`)
+            setChecking(false)
+            return
+          }
+
+          const userAbsence = absences.find((a) => a.usuario_id === user.id)
+          if (userAbsence) {
+            setBlockReason(
+              `Acesso restrito: Você está de ${userAbsence.tipo} (${userAbsence.descricao})`,
+            )
+            setChecking(false)
+            return
+          }
+        }
+        setBlockReason(null)
+      } catch (error) {
+        console.error('Error checking absences', error)
+      } finally {
+        setChecking(false)
+      }
+    }
+
+    if (profile?.role === 'admin') {
+      setChecking(false)
+    } else {
+      checkAbsences()
+    }
+  }, [loading, user, profile])
+
+  if (loading || checking) return null
 
   const userRole = profile?.role || 'visualizacao'
   const isAdmin = userRole === 'admin'
+
+  if (!isAdmin && blockReason) {
+    return <AccessDeniedMessage message={blockReason} />
+  }
 
   if (!isAdmin && acessoConfig) {
     const now = new Date()
@@ -291,10 +343,10 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/configuracoes/acesso"
+          path="/configuracoes/smart-lock"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <ControleAcesso />
+              <SmartLock />
             </ProtectedRoute>
           }
         />

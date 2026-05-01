@@ -5,26 +5,30 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Save, Lock } from 'lucide-react'
+import { Loader2, Save, Lock, AlertTriangle, Info } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
-export default function ControleAcesso() {
+export default function SmartLock() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [config, setConfig] = useState<any>(null)
+  const [activeAbsences, setActiveAbsences] = useState<any[]>([])
 
   useEffect(() => {
-    fetchConfig()
+    fetchData()
   }, [])
 
-  const fetchConfig = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: configData, error: configError } = await supabase
         .from('configuracoes_acesso' as any)
         .select('*')
         .single()
-      if (error && error.code !== 'PGRST116') throw error
-      if (data) {
-        setConfig(data)
+
+      if (configError && configError.code !== 'PGRST116') throw configError
+
+      if (configData) {
+        setConfig(configData)
       } else {
         setConfig({
           seg_inicio: '07:00',
@@ -41,8 +45,21 @@ export default function ControleAcesso() {
           sab_fim: '12:00',
         })
       }
+
+      const now = new Date()
+      const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0]
+      const { data: absencesData } = await supabase
+        .from('ausencias')
+        .select('*, usuarios(nome)')
+        .eq('data', today)
+
+      if (absencesData) {
+        setActiveAbsences(absencesData)
+      }
     } catch (error) {
-      toast.error('Erro ao carregar configurações')
+      toast.error('Erro ao carregar dados do Smart Lock')
     } finally {
       setLoading(false)
     }
@@ -85,6 +102,9 @@ export default function ControleAcesso() {
     { id: 'sab', label: 'Sábado' },
   ]
 
+  const globalAbsences = activeAbsences.filter((a) => !a.usuario_id)
+  const userAbsences = activeAbsences.filter((a) => a.usuario_id)
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
@@ -93,20 +113,67 @@ export default function ControleAcesso() {
             <Lock className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Controle de Acesso
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Configure os horários de acesso ao sistema da clínica.
+            <h1 className="text-3xl font-bold tracking-tight text-white uppercase">SMART LOCK</h1>
+            <p className="text-slate-300 mt-1 text-sm uppercase tracking-wider font-medium">
+              Controle Inteligente de Acesso da Clínica
             </p>
           </div>
         </div>
       </div>
 
+      {globalAbsences.length > 0 && (
+        <Alert variant="destructive" className="bg-red-500/10 border-red-500/50 text-red-500 mb-6">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertTitle className="text-base font-bold ml-2">SISTEMA BLOQUEADO (GLOBAL)</AlertTitle>
+          <AlertDescription className="ml-2">
+            Hoje está configurado como um feriado ou recesso global no sistema. Todos os
+            colaboradores estão com o acesso restrito.
+            <ul className="list-disc pl-5 mt-2 text-red-400">
+              {globalAbsences.map((a) => (
+                <li key={a.id}>
+                  {a.descricao} ({a.tipo})
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {userAbsences.length > 0 && (
+        <Alert className="bg-amber-500/10 border-amber-500/50 text-amber-500 mb-6">
+          <Info className="h-5 w-5" />
+          <AlertTitle className="text-base font-bold ml-2">AUSÊNCIAS INDIVIDUAIS ATIVAS</AlertTitle>
+          <AlertDescription className="ml-2 text-amber-400">
+            Os seguintes colaboradores estão com o acesso restrito hoje devido a ausências
+            programadas:
+            <ul className="list-disc pl-5 mt-2">
+              {userAbsences.map((a) => (
+                <li key={a.id}>
+                  {a.usuarios?.nome || 'Colaborador'}: {a.descricao} ({a.tipo})
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {activeAbsences.length === 0 && (
+        <Alert className="bg-emerald-500/10 border-emerald-500/50 text-emerald-500 mb-6">
+          <Lock className="h-5 w-5" />
+          <AlertTitle className="text-base font-bold ml-2">SISTEMA OPERACIONAL</AlertTitle>
+          <AlertDescription className="ml-2 text-emerald-400">
+            Nenhuma restrição especial de calendário (feriados ou ausências) foi detectada para
+            hoje. O sistema segue os limites de horário padrão abaixo.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className="bg-slate-900 border-slate-800 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-xl text-white">Limites de Horário</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-xl text-white uppercase tracking-wider">
+            Limites de Horário
+          </CardTitle>
+          <CardDescription className="text-slate-300">
             Defina o horário de início e fim para cada dia da semana. Fora desse período, o acesso
             será bloqueado automaticamente. Domingos são sempre bloqueados por padrão e
             administradores possuem acesso irrestrito.
