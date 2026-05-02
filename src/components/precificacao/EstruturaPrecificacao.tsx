@@ -348,6 +348,21 @@ export function EstruturaPrecificacao() {
   const margemLucroPerc =
     (data.valor_cobrado || 0) > 0 ? (lucroValor / data.valor_cobrado) * 100 : 0
 
+  // Cálculo Valor Mínimo para meta de 30%
+  const cvPercTotal =
+    globals.taxa_cartao + globals.comissao + globals.inadimplencia + globals.imposto
+  const despesasFixasReais =
+    custoFixo + (data.custo_laboratorio || 0) + (data.custo_material || 0) + dentistaVal
+  const denom = 1 - 30 / 100 - cvPercTotal / 100
+  const valorMinimo = denom > 0 ? despesasFixasReais / denom : 0
+
+  const getProfitColor = (margin: number) => {
+    if (margin < 20) return 'text-red-500'
+    if (margin < 25) return 'text-amber-500'
+    return 'text-emerald-500'
+  }
+  const profitColorClass = getProfitColor(margemLucroPerc)
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-stretch min-h-[750px]">
       {/* Sidebar */}
@@ -509,32 +524,40 @@ export function EstruturaPrecificacao() {
                       iconClassName="text-2xl lg:text-3xl text-amber-500/80 left-0"
                     />
                   </div>
-                </div>
-
-                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center shadow-sm min-h-[130px]">
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Percent className="w-5 h-5" /> Margem de Lucro
-                  </p>
-                  <div
-                    className={cn(
-                      'text-4xl font-bold tracking-tight',
-                      margemLucroPerc >= 0 ? 'text-emerald-400' : 'text-red-400',
-                    )}
-                  >
-                    {margemLucroPerc.toFixed(1)}%
+                  <div className="mt-4 pt-3 border-t border-amber-500/20 flex justify-between items-center">
+                    <span className="text-xs font-bold text-amber-500/80 uppercase">
+                      Valor Mínimo (30% Lucro)
+                    </span>
+                    <span className="text-sm font-bold text-amber-400">
+                      R$ {valorMinimo.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center shadow-sm min-h-[130px]">
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <TrendingUp className="w-5 h-5" /> Lucro em R$
-                  </p>
-                  <div
+                  <p
                     className={cn(
-                      'text-4xl font-bold tracking-tight',
-                      lucroValor >= 0 ? 'text-emerald-400' : 'text-red-400',
+                      'text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5',
+                      profitColorClass,
                     )}
                   >
+                    <Percent className="w-5 h-5" /> Margem de Lucro
+                  </p>
+                  <div className={cn('text-4xl font-bold tracking-tight', profitColorClass)}>
+                    {margemLucroPerc.toFixed(2)}%
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <p
+                    className={cn(
+                      'text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5',
+                      profitColorClass,
+                    )}
+                  >
+                    <TrendingUp className="w-5 h-5" /> Lucro em R$
+                  </p>
+                  <div className={cn('text-4xl font-bold tracking-tight', profitColorClass)}>
                     R$ {lucroValor.toFixed(2)}
                   </div>
                 </div>
@@ -581,7 +604,7 @@ export function EstruturaPrecificacao() {
                     CUSTO FIXO EM %
                   </p>
                   <p className="text-4xl font-bold text-white tracking-tight mt-1">
-                    {percCustoFixo.toFixed(1)}%
+                    {percCustoFixo.toFixed(2)}%
                   </p>
                 </div>
               </div>
@@ -660,14 +683,14 @@ export function EstruturaPrecificacao() {
                           Carga Variável Total
                         </p>
                         <p className="text-3xl font-bold text-blue-400">
-                          {percCustoVariavel.toFixed(1)}%
+                          {percCustoVariavel.toFixed(2)}%
                         </p>
                       </div>
                       <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 shadow-sm min-h-[130px] flex flex-col justify-center">
                         <p className="text-sm text-blue-400 uppercase tracking-wider font-bold mb-2">
                           Total em R$
                         </p>
-                        <p className="text-3xl font-bold text-white">
+                        <p className="text-3xl font-bold text-blue-400">
                           R$ {totalVariavelVal.toFixed(2)}
                         </p>
                       </div>
@@ -742,7 +765,7 @@ export function EstruturaPrecificacao() {
                     <Percent className="w-5 h-5 text-slate-400" />% DO DENTISTA
                   </p>
                   <p className="text-4xl font-bold text-white tracking-tight mt-1">
-                    {percDentista.toFixed(1)}%
+                    {percDentista.toFixed(2)}%
                   </p>
                 </div>
               </div>
