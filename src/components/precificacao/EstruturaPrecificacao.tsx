@@ -12,6 +12,7 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -333,16 +334,17 @@ export function EstruturaPrecificacao() {
   const totalVariavelVal =
     (data.custo_laboratorio || 0) +
     (data.custo_material || 0) +
-    dentistaVal +
     cartaoVal +
     comissaoVal +
-    inadimplenciaVal +
-    impostoVal
+    inadimplenciaVal
+
   const percCustoVariavel =
     (data.valor_cobrado || 0) > 0 ? (totalVariavelVal / data.valor_cobrado) * 100 : 0
 
-  const custoTotal = custoFixo + totalVariavelVal
+  const custoTotal = custoFixo + totalVariavelVal + dentistaVal + impostoVal
   const lucroValor = (data.valor_cobrado || 0) - custoTotal
+
+  const percDentista = (data.valor_cobrado || 0) > 0 ? (dentistaVal / data.valor_cobrado) * 100 : 0
   const margemLucroPerc =
     (data.valor_cobrado || 0) > 0 ? (lucroValor / data.valor_cobrado) * 100 : 0
 
@@ -635,17 +637,6 @@ export function EstruturaPrecificacao() {
                   <div className="space-y-4">
                     <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
                       <label className="text-base font-bold text-slate-100 flex-1">
-                        Honorários Dentista (R$)
-                      </label>
-                      <div className="w-40 currency-wrapper-lg">
-                        <CurrencyInput
-                          value={data.honorarios_dentista || 0}
-                          onChange={(v) => updateProcData('honorarios_dentista', v)}
-                        />
-                      </div>
-                    </div>
-                    <div className="bg-slate-900/80 p-3.5 rounded-lg border border-slate-600 shadow-sm flex items-center justify-between gap-4">
-                      <label className="text-base font-bold text-slate-100 flex-1">
                         Laboratório (R$)
                       </label>
                       <div className="w-40 currency-wrapper-lg">
@@ -688,6 +679,41 @@ export function EstruturaPrecificacao() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Profissional (Dentista) */}
+            <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500/50 rounded-l-xl" />
+              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <Users className="w-5 h-5 text-purple-400" />
+                Honorários do Profissional
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <label className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-slate-400" />
+                    Honorários Dentista (R$)
+                  </label>
+                  <div className="w-full currency-wrapper-lg relative">
+                    <CurrencyInput
+                      value={data.honorarios_dentista || 0}
+                      onChange={(v) => updateProcData('honorarios_dentista', v)}
+                      className="h-12 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-purple-500 pl-12 text-left"
+                      iconClassName="text-xl text-slate-400 left-4"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
+                    <Percent className="w-5 h-5 text-slate-400" />% DO DENTISTA
+                  </p>
+                  <p className="text-4xl font-bold text-white tracking-tight mt-1">
+                    {percDentista.toFixed(1)}%
+                  </p>
                 </div>
               </div>
             </div>
