@@ -92,6 +92,8 @@ export function EstruturaPrecificacao() {
     inadimplencia: 2,
     imposto: 6,
   })
+  const [horasTrabalhadas, setHorasTrabalhadas] = useState(0)
+  const [custosFixos, setCustosFixos] = useState(0)
 
   const [expanded, setExpanded] = useState<string[]>([])
   const [selProc, setSelProc] = useState<string>('')
@@ -103,13 +105,15 @@ export function EstruturaPrecificacao() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [resEsp, resProc, resGlob] = await Promise.all([
+    const [resEsp, resProc, resGlob, resOcupacao, resCustos] = await Promise.all([
       supabase
         .from('precificacao_especialidades' as any)
         .select('*')
         .order('nome'),
       supabase.from('precificacao_procedimentos').select('*').order('nome'),
       supabase.from('precificacao_globais').select('*').limit(1).single(),
+      supabase.from('precificacao_ocupacao_cadeiras' as any).select('horas_trabalhadas'),
+      supabase.from('precificacao_custos_fixos' as any).select('valor'),
     ])
 
     if (resEsp.data) {
@@ -121,6 +125,14 @@ export function EstruturaPrecificacao() {
       if (resProc.data.length > 0) setSelProc(resProc.data[0].id)
     }
     if (resGlob.data) setGlobals(resGlob.data as any)
+    if (resOcupacao.data) {
+      setHorasTrabalhadas(
+        resOcupacao.data.reduce((acc, curr) => acc + (Number(curr.horas_trabalhadas) || 0), 0),
+      )
+    }
+    if (resCustos.data) {
+      setCustosFixos(resCustos.data.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0))
+    }
     setLoading(false)
   }
 
@@ -304,8 +316,11 @@ export function EstruturaPrecificacao() {
     honorarios_dentista: 0,
   }
 
-  const CUSTO_HORA = 90
-  const custoMinuto = CUSTO_HORA / 60
+  const totalHorasDesconto = horasTrabalhadas * 0.8
+  const totalCustoHora = totalHorasDesconto > 0 ? custosFixos / totalHorasDesconto : 0
+  const totalCustoHoraFator = totalCustoHora * 1.15
+  const custoMinuto = totalCustoHoraFator / 60
+
   const custoFixo = (data.tempo_execucao || 0) * custoMinuto
   const percCustoFixo = (data.valor_cobrado || 0) > 0 ? (custoFixo / data.valor_cobrado) * 100 : 0
 
