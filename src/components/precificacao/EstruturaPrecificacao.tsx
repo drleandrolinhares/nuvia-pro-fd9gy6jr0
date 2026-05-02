@@ -620,12 +620,6 @@ export function EstruturaPrecificacao() {
                       onChange={(v) => updateGlobal('inadimplencia', v)}
                       calc={inadimplenciaVal}
                     />
-                    <GlobalVarRow
-                      label="Imposto"
-                      perc={globals.imposto}
-                      onChange={(v) => updateGlobal('imposto', v)}
-                      calc={impostoVal}
-                    />
                   </div>
                 </div>
 
@@ -679,6 +673,42 @@ export function EstruturaPrecificacao() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Impostos */}
+            <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500/50 rounded-l-xl" />
+              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <Percent className="w-5 h-5 text-rose-400" />
+                Impostos
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <label className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                    <Percent className="w-5 h-5 text-slate-400" />
+                    Alíquota de Imposto (%)
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={globals.imposto}
+                      onChange={(e) => updateGlobal('imposto', Number(e.target.value))}
+                      className="h-12 bg-slate-900 border-slate-600 text-white font-bold text-2xl focus-visible:ring-rose-500 text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/50 rounded-xl p-6 border border-slate-800/80 flex flex-col justify-center shadow-sm min-h-[130px]">
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-2 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-slate-400" />
+                    Valor do Imposto (R$)
+                  </p>
+                  <p className="text-4xl font-bold text-white tracking-tight mt-1">
+                    R$ {impostoVal.toFixed(2)}
+                  </p>
                 </div>
               </div>
             </div>
