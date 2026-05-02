@@ -57,9 +57,7 @@ export default function ControleComissoes() {
             <Landmark className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Controle de Comissões
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">Comissões</h1>
             <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
               Gerencie regras, pagamentos e histórico de comissionamento.
             </p>

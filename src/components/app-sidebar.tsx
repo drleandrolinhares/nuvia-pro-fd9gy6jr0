@@ -122,7 +122,7 @@ const navData = [
         permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
       },
       {
-        title: 'CONTROLE DE COMISSÕES',
+        title: 'COMISSÕES',
         url: '/comercial/comissoes',
         icon: Landmark,
         permission: ['comercial_comissoes', 'Acessar Controle de Comissões'],
@@ -390,7 +390,7 @@ export function AppSidebar() {
 
                         if (item.subItems) {
                           return (
-                            <Collapsible key={item.title} className="group/sub" defaultOpen>
+                            <Collapsible key={item.title} className="group/sub">
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
                                   <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent text-white hover:text-white w-full font-medium">
