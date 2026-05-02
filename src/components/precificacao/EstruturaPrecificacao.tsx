@@ -104,14 +104,17 @@ export function EstruturaPrecificacao() {
   const fetchData = async () => {
     setLoading(true)
     const [resEsp, resProc, resGlob] = await Promise.all([
-      supabase.from('especialidades').select('*').order('nome'),
+      supabase
+        .from('precificacao_especialidades' as any)
+        .select('*')
+        .order('nome'),
       supabase.from('precificacao_procedimentos').select('*').order('nome'),
       supabase.from('precificacao_globais').select('*').limit(1).single(),
     ])
 
     if (resEsp.data) {
-      setEspecialidades(resEsp.data)
-      setExpanded(resEsp.data.map((e) => e.id))
+      setEspecialidades(resEsp.data as any)
+      setExpanded((resEsp.data as any).map((e: any) => e.id))
     }
     if (resProc.data) {
       setProcedimentos(resProc.data)
@@ -135,13 +138,17 @@ export function EstruturaPrecificacao() {
   const handleAddEspec = async () => {
     const nome = window.prompt('Nome da nova especialidade:')
     if (!nome) return
-    const { data, error } = await supabase.from('especialidades').insert({ nome }).select().single()
+    const { data, error } = await supabase
+      .from('precificacao_especialidades' as any)
+      .insert({ nome })
+      .select()
+      .single()
     if (error) {
       if (error.code === '23505') toast.error('Especialidade já existe.')
       else toast.error('Erro ao adicionar.')
       return
     }
-    setEspecialidades((p) => [...p, data])
+    setEspecialidades((p) => [...p, data as any])
   }
 
   const handleEditEspec = async (e: React.MouseEvent, espId: string) => {
@@ -150,7 +157,10 @@ export function EstruturaPrecificacao() {
     if (!esp) return
     const nome = window.prompt('Editar especialidade:', esp.nome)
     if (!nome || nome === esp.nome) return
-    const { error } = await supabase.from('especialidades').update({ nome }).eq('id', espId)
+    const { error } = await supabase
+      .from('precificacao_especialidades' as any)
+      .update({ nome })
+      .eq('id', espId)
     if (error) toast.error('Erro ao editar especialidade.')
     else setEspecialidades((p) => p.map((x) => (x.id === espId ? { ...x, nome } : x)))
   }
@@ -158,7 +168,10 @@ export function EstruturaPrecificacao() {
   const handleDeleteEspec = async (e: React.MouseEvent, espId: string) => {
     e.stopPropagation()
     if (!window.confirm('Excluir esta especialidade e todos os seus procedimentos?')) return
-    const { error } = await supabase.from('especialidades').delete().eq('id', espId)
+    const { error } = await supabase
+      .from('precificacao_especialidades' as any)
+      .delete()
+      .eq('id', espId)
     if (error) toast.error('Erro ao excluir.')
     else {
       setEspecialidades((p) => p.filter((x) => x.id !== espId))
