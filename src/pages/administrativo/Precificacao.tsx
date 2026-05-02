@@ -1,9 +1,10 @@
-import { Calculator, Clock, DollarSign, Users, Settings, Calendar } from 'lucide-react'
+import { Calculator, Clock, DollarSign, Users, Settings, Calendar, LineChart } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CustoHoraClinica } from '@/components/precificacao/CustoHoraClinica'
 import { SegmentacaoAgenda } from '@/components/precificacao/SegmentacaoAgenda'
 import { OcupacaoConsultorios } from '@/components/precificacao/OcupacaoConsultorios'
 import { EstruturaPrecificacao } from '@/components/precificacao/EstruturaPrecificacao'
+import { FatoresPrecificacao } from '@/components/precificacao/FatoresPrecificacao'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
@@ -55,6 +56,13 @@ export default function Precificacao() {
             <Users className="w-4 h-4" />
             OCUPAÇÃO DOS CONSULTÓRIOS
           </TabsTrigger>
+          <TabsTrigger
+            value="fatores"
+            className="whitespace-nowrap flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950"
+          >
+            <LineChart className="w-4 h-4" />
+            FATORES DE PRECIFICAÇÃO
+          </TabsTrigger>
 
           {activeTab === 'segmentacao' && (
             <div className="ml-auto pl-2 pr-1 flex items-center">
@@ -93,6 +101,10 @@ export default function Precificacao() {
 
         <TabsContent value="ocupacao" className="animate-fade-in mt-0">
           <OcupacaoConsultorios />
+        </TabsContent>
+
+        <TabsContent value="fatores" className="animate-fade-in mt-0">
+          <FatoresPrecificacao />
         </TabsContent>
       </Tabs>
     </div>

@@ -1967,6 +1967,24 @@ export type Database = {
           },
         ]
       }
+      precificacao_especialidades: {
+        Row: {
+          data_criacao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          data_criacao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          data_criacao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       precificacao_globais: {
         Row: {
           atualizado_em: string
@@ -2102,7 +2120,7 @@ export type Database = {
             foreignKeyName: 'precificacao_procedimentos_especialidade_id_fkey'
             columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: 'especialidades'
+            referencedRelation: 'precificacao_especialidades'
             referencedColumns: ['id']
           },
         ]
@@ -3797,6 +3815,10 @@ export const Constants = {
 //   ordem: integer (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: precificacao_especialidades
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   data_criacao: timestamp with time zone (nullable, default: now())
 // Table: precificacao_globais
 //   id: uuid (not null, default: gen_random_uuid())
 //   taxa_cartao: numeric (not null, default: 3)
@@ -4233,6 +4255,9 @@ export const Constants = {
 // Table: precificacao_custos_fixos_detalhes
 //   FOREIGN KEY precificacao_custos_fixos_detalhes_custo_fixo_id_fkey: FOREIGN KEY (custo_fixo_id) REFERENCES precificacao_custos_fixos(id) ON DELETE CASCADE
 //   PRIMARY KEY precificacao_custos_fixos_detalhes_pkey: PRIMARY KEY (id)
+// Table: precificacao_especialidades
+//   UNIQUE precificacao_especialidades_nome_key: UNIQUE (nome)
+//   PRIMARY KEY precificacao_especialidades_pkey: PRIMARY KEY (id)
 // Table: precificacao_globais
 //   PRIMARY KEY precificacao_globais_pkey: PRIMARY KEY (id)
 // Table: precificacao_ocupacao_cadeiras
@@ -4242,7 +4267,7 @@ export const Constants = {
 //   PRIMARY KEY precificacao_ocupacao_config_pkey: PRIMARY KEY (id)
 //   CHECK precificacao_ocupacao_config_tipo_check: CHECK ((tipo = ANY (ARRAY['especialidade'::text, 'dentista'::text])))
 // Table: precificacao_procedimentos
-//   FOREIGN KEY precificacao_procedimentos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES especialidades(id) ON DELETE CASCADE
+//   FOREIGN KEY precificacao_procedimentos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES precificacao_especialidades(id) ON DELETE CASCADE
 //   PRIMARY KEY precificacao_procedimentos_pkey: PRIMARY KEY (id)
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
@@ -4601,6 +4626,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: precificacao_custos_fixos_detalhes
 //   Policy "precificacao_custos_fixos_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: precificacao_especialidades
+//   Policy "precificacao_especialidades_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: precificacao_globais
@@ -5517,6 +5546,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX performance_pp_pdm_usuario_id_data_registro_key ON public.performance_pp_pdm USING btree (usuario_id, data_registro)
 // Table: permissoes
 //   CREATE UNIQUE INDEX permissoes_nome_key ON public.permissoes USING btree (nome)
+// Table: precificacao_especialidades
+//   CREATE UNIQUE INDEX precificacao_especialidades_nome_key ON public.precificacao_especialidades USING btree (nome)
 // Table: precificacao_ocupacao_cadeiras
 //   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana, semana)
 // Table: precificacao_ocupacao_config
