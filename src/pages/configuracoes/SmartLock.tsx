@@ -1,18 +1,42 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Lock, AlertTriangle, CalendarOff, CalendarClock, Clock } from 'lucide-react'
+import {
+  Loader2,
+  Lock,
+  AlertTriangle,
+  CalendarOff,
+  CalendarClock,
+  Clock,
+  Plus,
+  Edit2,
+  Trash2,
+} from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { format, parseISO, differenceInDays } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
+import { EditarAusenciaDialog } from '@/components/configuracoes/editar-ausencia-dialog'
 
 export default function SmartLock() {
   const [loading, setLoading] = useState(true)
   const [activeAbsences, setActiveAbsences] = useState<any[]>([])
   const [scheduledAbsences, setScheduledAbsences] = useState<any[]>([])
+  const [usuarios, setUsuarios] = useState<any[]>([])
+
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingAbsence, setEditingAbsence] = useState<any>(null)
 
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    if (!isAddOpen) {
+      fetchData()
+    }
+  }, [isAddOpen])
 
   const appliesToDate = (absence: any, dateStr: string, dateObj: Date) => {
     if (absence.recorrencia === 'nenhuma' || !absence.recorrencia) {
@@ -42,6 +66,13 @@ export default function SmartLock() {
         .toISOString()
         .split('T')[0]
 
+      const { data: usersData } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('status', 'ativo')
+        .order('nome')
+      if (usersData) setUsuarios(usersData)
+
       const { data: absencesData } = await supabase
         .from('ausencias')
         .select('*, usuarios(nome)')
@@ -49,7 +80,9 @@ export default function SmartLock() {
         .order('data', { ascending: true })
 
       if (absencesData) {
-        const active = absencesData.filter((a) => appliesToDate(a, todayStr, now))
+        const active = absencesData
+          .filter((a) => appliesToDate(a, todayStr, now))
+          .map((a) => ({ ...a, ids: [a.id] }))
         let scheduled = absencesData.filter(
           (a) =>
             !appliesToDate(a, todayStr, now) &&
@@ -57,7 +90,9 @@ export default function SmartLock() {
               (a.recorrencia !== 'nenhuma' && (!a.data_fim || a.data_fim > todayStr))),
         )
 
-        const recurring = scheduled.filter((a) => a.recorrencia !== 'nenhuma' || !a.data)
+        const recurring = scheduled
+          .filter((a) => a.recorrencia !== 'nenhuma' || !a.data)
+          .map((a) => ({ ...a, ids: [a.id] }))
         const nonRecurring = scheduled.filter((a) => a.recorrencia === 'nenhuma' && a.data)
 
         const grouped = nonRecurring
@@ -75,8 +110,9 @@ export default function SmartLock() {
               differenceInDays(parseISO(curr.data), parseISO(last.data_fim_grouped)) === 1
             ) {
               last.data_fim_grouped = curr.data
+              last.ids.push(curr.id)
             } else {
-              acc.push({ ...curr, data_fim_grouped: curr.data })
+              acc.push({ ...curr, data_fim_grouped: curr.data, ids: [curr.id] })
             }
             return acc
           }, [])
@@ -115,6 +151,23 @@ export default function SmartLock() {
     return format(parseISO(a.data), 'dd/MM/yyyy')
   }
 
+  const handleDelete = async (ids: string[]) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta ausência/exceção?')) return
+    try {
+      const { error } = await supabase.from('ausencias').delete().in('id', ids)
+      if (error) throw error
+      toast.success('Excluído com sucesso')
+      fetchData()
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message)
+    }
+  }
+
+  const handleEditClick = (absence: any) => {
+    setEditingAbsence(absence)
+    setIsEditOpen(true)
+  }
+
   if (loading) {
     return (
       <div className="p-8 flex justify-center">
@@ -140,7 +193,22 @@ export default function SmartLock() {
             </p>
           </div>
         </div>
+        <Button
+          onClick={() => setIsAddOpen(true)}
+          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold whitespace-nowrap w-full md:w-auto"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Nova Ausência / Exceção
+        </Button>
       </div>
+
+      <AusenciaTemporariaDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
+      <EditarAusenciaDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        absence={editingAbsence}
+        onSuccess={fetchData}
+        usuarios={usuarios}
+      />
 
       <div className="bg-card border border-border rounded-xl p-6 text-card-foreground shadow-sm">
         <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
@@ -165,11 +233,34 @@ export default function SmartLock() {
               Hoje possui restrição global no sistema.
               <ul className="list-disc pl-5 mt-3 space-y-2 text-red-700 dark:text-red-400 font-medium">
                 {globalAbsences.map((a) => (
-                  <li key={a.id}>
-                    {a.descricao}{' '}
-                    <span className="opacity-75 text-sm font-normal">
-                      ({formatTimeRange(a.hora_inicio, a.hora_fim)})
-                    </span>
+                  <li
+                    key={a.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-200/50 dark:border-red-500/20 pb-2 last:border-0 last:pb-0"
+                  >
+                    <div>
+                      {a.descricao}{' '}
+                      <span className="opacity-75 text-sm font-normal">
+                        ({formatTimeRange(a.hora_inicio, a.hora_fim)})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 -ml-5 sm:ml-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-700 hover:bg-red-200/50 dark:hover:bg-red-500/20"
+                        onClick={() => handleEditClick(a)}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-700 hover:bg-red-200/50 dark:hover:bg-red-500/20"
+                        onClick={() => handleDelete(a.ids)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -186,11 +277,34 @@ export default function SmartLock() {
             <AlertDescription className="ml-2 mt-2 text-amber-700 dark:text-amber-400">
               <ul className="list-disc pl-5 mt-3 space-y-2 font-medium">
                 {userAbsences.map((a) => (
-                  <li key={a.id}>
-                    {a.usuarios?.nome || 'Colaborador'} - {a.descricao}{' '}
-                    <span className="opacity-75 text-sm font-normal">
-                      ({formatTimeRange(a.hora_inicio, a.hora_fim)})
-                    </span>
+                  <li
+                    key={a.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/50 dark:border-amber-500/20 pb-2 last:border-0 last:pb-0"
+                  >
+                    <div>
+                      {a.usuarios?.nome || 'Colaborador'} - {a.descricao}{' '}
+                      <span className="opacity-75 text-sm font-normal">
+                        ({formatTimeRange(a.hora_inicio, a.hora_fim)})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 -ml-5 sm:ml-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-700 hover:bg-amber-200/50 dark:hover:bg-amber-500/20"
+                        onClick={() => handleEditClick(a)}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-700 hover:bg-amber-200/50 dark:hover:bg-amber-500/20"
+                        onClick={() => handleDelete(a.ids)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -224,30 +338,50 @@ export default function SmartLock() {
             {scheduledAbsences.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors gap-4"
               >
                 <div>
-                  <div className="font-semibold text-sm">
-                    {a.usuario_id ? a.usuarios?.nome : 'Recesso Global'} - {a.descricao}
+                  <div className="font-semibold text-sm text-foreground">
+                    {a.usuario_id ? a.usuarios?.nome : '🌎 Recesso Global'} - {a.descricao}
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-1.5">
                     <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">
                       {formatRecurrence(a)}
                     </span>
                     {(a.hora_inicio || a.hora_fim) && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-slate-200 dark:bg-slate-800 rounded-full font-medium">
                         <Clock className="w-3.5 h-3.5" />
                         {formatTimeRange(a.hora_inicio, a.hora_fim)}
                       </span>
                     )}
                   </div>
                 </div>
-                {a.recorrencia !== 'nenhuma' && (
-                  <div className="text-xs font-medium text-slate-500 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded bg-background">
-                    A partir de {format(parseISO(a.data), 'dd/MM/yy')}
-                    {a.data_fim && ` até ${format(parseISO(a.data_fim), 'dd/MM/yy')}`}
+                <div className="flex items-center gap-3">
+                  {a.recorrencia !== 'nenhuma' && (
+                    <div className="text-xs font-medium text-slate-500 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded bg-background whitespace-nowrap">
+                      A partir de {format(parseISO(a.data), 'dd/MM/yy')}
+                      {a.data_fim && ` até ${format(parseISO(a.data_fim), 'dd/MM/yy')}`}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 border-l pl-3 ml-1 border-border/50">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-500 hover:text-primary"
+                      onClick={() => handleEditClick(a)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-500 hover:text-destructive"
+                      onClick={() => handleDelete(a.ids)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
