@@ -404,9 +404,9 @@ export function EstruturaPrecificacao() {
                   <span className="truncate text-xs font-bold uppercase tracking-wider">
                     {esp.nome}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     {isAdmin && (
-                      <div className="hidden group-hover/esp:flex items-center gap-1 mr-2">
+                      <div className="invisible group-hover/esp:visible opacity-0 group-hover/esp:opacity-100 transition-all flex items-center gap-1 mr-2">
                         <div
                           onClick={(e) => handleAddProc(e, esp.id)}
                           className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
@@ -468,7 +468,7 @@ export function EstruturaPrecificacao() {
                         </button>
 
                         {isAdmin && (
-                          <div className="hidden group-hover/proc:flex items-center gap-1 ml-2">
+                          <div className="invisible group-hover/proc:visible opacity-0 group-hover/proc:opacity-100 transition-all flex items-center gap-1 ml-2 shrink-0">
                             <button
                               onClick={(e) => handleEditProc(e, proc.id)}
                               className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
