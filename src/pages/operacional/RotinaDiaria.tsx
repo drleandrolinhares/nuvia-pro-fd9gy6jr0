@@ -40,6 +40,7 @@ type Task = {
   descricao_tarefa: string
   horario_inicio: string | null
   horario_fim: string | null
+  effective_horario_fim?: string | null
   peso_percentual: number
   periodicidade?: 'diaria' | 'semanal' | 'quinzenal' | 'mensal'
   dias_semana?: number[] | null
@@ -124,46 +125,57 @@ const evaluateTasksForDate = (date: Date, tarefas: any[], ausencias: any[], user
   )
   const partialAbsences = relevantAbsences.filter((a: any) => a.hora_inicio && a.hora_fim)
 
-  return tarefas.filter((t: any) => {
-    const p = t.periodicidade || 'diaria'
-    let applies = false
-    if (p === 'diaria') applies = true
-    else if (p === 'semanal') {
-      applies = !!(
-        t.dias_semana &&
-        Array.isArray(t.dias_semana) &&
-        t.dias_semana.includes(currentDayOfWeek)
-      )
-    } else if (p === 'mensal') {
-      const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-      const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
-      applies = targetDay === currentDayOfMonth
-    } else if (p === 'quinzenal') {
-      if (t.data_inicio_contagem) {
-        const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
-        const startDate = new Date(year, month - 1, day)
-        const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-        const diffTime = targetDateOnly.getTime() - startDate.getTime()
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-        applies = diffDays >= 0 && diffDays % 15 === 0
+  return tarefas
+    .filter((t: any) => {
+      const p = t.periodicidade || 'diaria'
+      let applies = false
+      if (p === 'diaria') applies = true
+      else if (p === 'semanal') {
+        applies = !!(
+          t.dias_semana &&
+          Array.isArray(t.dias_semana) &&
+          t.dias_semana.includes(currentDayOfWeek)
+        )
+      } else if (p === 'mensal') {
+        const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+        const targetDay = (t.dia_mes ?? 1) > lastDayOfMonth ? lastDayOfMonth : t.dia_mes
+        applies = targetDay === currentDayOfMonth
+      } else if (p === 'quinzenal') {
+        if (t.data_inicio_contagem) {
+          const [year, month, day] = t.data_inicio_contagem.split('-').map(Number)
+          const startDate = new Date(year, month - 1, day)
+          const targetDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+          const diffTime = targetDateOnly.getTime() - startDate.getTime()
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+          applies = diffDays >= 0 && diffDays % 15 === 0
+        }
       }
-    }
 
-    if (!applies) return false
+      return applies
+    })
+    .map((t: any) => {
+      let effective_horario_fim = t.horario_fim
+      if (t.horario_inicio && partialAbsences.length > 0) {
+        const tStart = timeToMinutes(t.horario_inicio)
+        const tEnd = t.horario_fim ? timeToMinutes(t.horario_fim) : tStart + 30
+        let newEndMins = tEnd
 
-    if (t.horario_inicio && partialAbsences.length > 0) {
-      const tStart = timeToMinutes(t.horario_inicio)
-      const tEnd = t.horario_fim ? timeToMinutes(t.horario_fim) : tStart + 30
-      const overlaps = partialAbsences.some((a: any) => {
-        const aStart = timeToMinutes(a.hora_inicio)
-        const aEnd = timeToMinutes(a.hora_fim)
-        return Math.max(tStart, aStart) < Math.min(tEnd, aEnd)
-      })
-      if (overlaps) return false
-    }
+        partialAbsences.forEach((a: any) => {
+          const aStart = timeToMinutes(a.hora_inicio)
+          const aEnd = timeToMinutes(a.hora_fim)
+          if (Math.max(tStart, aStart) < Math.min(tEnd, aEnd)) {
+            if (aEnd > newEndMins) newEndMins = aEnd
+          }
+        })
 
-    return true
-  })
+        if (newEndMins > tEnd) {
+          const h = Math.floor(newEndMins / 60)
+          const m = newEndMins % 60
+          effective_horario_fim = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+        }
+      }
+      return { ...t, effective_horario_fim }
+    })
 }
 
 function ScriptPopover({ text }: { text: string }) {
@@ -257,7 +269,9 @@ function ResumoFechamento({
         let dynamicDelay = t.minutos_atrasado || 0
         if (t.concluidaEm && t.horario_inicio) {
           const concluidaMins = timeToMinutes(t.concluidaEm)
-          const compareTime = timeToMinutes(t.horario_fim || t.horario_inicio)
+          const compareTime = timeToMinutes(
+            t.effective_horario_fim || t.horario_fim || t.horario_inicio,
+          )
           const diff = concluidaMins - compareTime
           dynamicDelay = diff > 0 ? diff : 0
         }
@@ -843,6 +857,7 @@ export default function RotinaDiaria() {
           descricao_tarefa: t.descricao_tarefa,
           horario_inicio: t.horario_inicio,
           horario_fim: t.horario_fim,
+          effective_horario_fim: t.effective_horario_fim,
           peso_percentual: t.peso_percentual,
           periodicidade: t.periodicidade,
           dias_semana: t.dias_semana,
@@ -973,7 +988,7 @@ export default function RotinaDiaria() {
       const { data, error } = await supabase.functions.invoke('calcular_criticidade', {
         body: {
           tarefa_id: taskId,
-          horario_fim: task.horario_fim,
+          horario_fim: task.effective_horario_fim || task.horario_fim,
           timestamp_conclusao,
         },
       })
@@ -982,8 +997,9 @@ export default function RotinaDiaria() {
         min_atrasado = data.minutos_atrasado
         nivel_crit = data.nivel_criticidade
       } else {
-        if (task.horario_fim) {
-          const [hFim, mFim] = task.horario_fim.split(':').map(Number)
+        const effFim = task.effective_horario_fim || task.horario_fim
+        if (effFim) {
+          const [hFim, mFim] = effFim.split(':').map(Number)
           const fimDate = new Date(brtNow)
           fimDate.setHours(hFim, mFim, 0, 0)
           min_atrasado = Math.max(0, Math.floor((brtNow.getTime() - fimDate.getTime()) / 60000))
@@ -1099,7 +1115,9 @@ export default function RotinaDiaria() {
         let dynamicDelay = t.minutos_atrasado || 0
         if (t.concluidaEm && t.horario_inicio) {
           const concluidaMins = timeToMinutes(t.concluidaEm)
-          const compareTime = timeToMinutes(t.horario_fim || t.horario_inicio)
+          const compareTime = timeToMinutes(
+            t.effective_horario_fim || t.horario_fim || t.horario_inicio,
+          )
           const diff = concluidaMins - compareTime
           dynamicDelay = diff > 0 ? diff : 0
         }
@@ -1117,8 +1135,9 @@ export default function RotinaDiaria() {
     tasks.length > 0 &&
     tasks.every((t) => {
       if (t.concluida) return true
-      if (!t.horario_fim) return true
-      const endMins = timeToMinutes(t.horario_fim)
+      const effFim = t.effective_horario_fim || t.horario_fim
+      if (!effFim) return true
+      const endMins = timeToMinutes(effFim)
       return currentMinutes > endMins
     })
 
@@ -1182,7 +1201,9 @@ export default function RotinaDiaria() {
       let dynamicDelay = task.minutos_atrasado || 0
       if (task.horario_inicio) {
         const concluidaMins = timeToMinutes(task.concluidaEm)
-        const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+        const compareTime = timeToMinutes(
+          task.effective_horario_fim || task.horario_fim || task.horario_inicio,
+        )
         const diff = concluidaMins - compareTime
         dynamicDelay = diff > 0 ? diff : 0
       }
@@ -1227,8 +1248,9 @@ export default function RotinaDiaria() {
       )
     }
 
-    if (task.horario_fim) {
-      const endMins = timeToMinutes(task.horario_fim)
+    const effFim = task.effective_horario_fim || task.horario_fim
+    if (effFim) {
+      const endMins = timeToMinutes(effFim)
       if (currentMinutes > endMins) {
         const minutesLate = currentMinutes - endMins
         const isCritical = minutesLate > 60
@@ -1355,12 +1377,13 @@ export default function RotinaDiaria() {
                 {tasks.map((task) => {
                   const hasTime = !!task.horario_inicio
                   const startMins = hasTime ? timeToMinutes(task.horario_inicio) : 0
+                  const effFim = task.effective_horario_fim || task.horario_fim
 
                   let isWithinWindow = false
                   if (!hasTime) {
                     isWithinWindow = true
-                  } else if (task.horario_fim) {
-                    const endMins = timeToMinutes(task.horario_fim)
+                  } else if (effFim) {
+                    const endMins = timeToMinutes(effFim)
                     isWithinWindow = currentMinutes >= startMins - 5 && currentMinutes <= endMins
                   } else {
                     isWithinWindow = currentMinutes >= startMins - 5
@@ -1374,11 +1397,11 @@ export default function RotinaDiaria() {
                   let dynamicDelay = task.minutos_atrasado || 0
                   if (task.concluidaEm && task.horario_inicio) {
                     const concluidaMins = timeToMinutes(task.concluidaEm)
-                    const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                    const compareTime = timeToMinutes(effFim || task.horario_inicio)
                     const diff = concluidaMins - compareTime
                     dynamicDelay = diff > 0 ? diff : 0
                   } else if (!task.concluida && task.horario_inicio) {
-                    const compareTime = timeToMinutes(task.horario_fim || task.horario_inicio)
+                    const compareTime = timeToMinutes(effFim || task.horario_inicio)
                     const diff = currentMinutes - compareTime
                     dynamicDelay = diff > 0 ? diff : 0
                   }
@@ -1457,9 +1480,29 @@ export default function RotinaDiaria() {
                               <>
                                 <Clock className="w-3.5 h-3.5" />
                                 {formatTime(task.horario_inicio)}
-                                {task.horario_fim
-                                  ? ` - ${formatTime(task.horario_fim)}`
-                                  : ' (sem prazo)'}
+                                {task.horario_fim ? (
+                                  <>
+                                    {' - '}
+                                    <span
+                                      className={
+                                        task.effective_horario_fim &&
+                                        task.effective_horario_fim !== task.horario_fim
+                                          ? 'line-through opacity-70'
+                                          : ''
+                                      }
+                                    >
+                                      {formatTime(task.horario_fim)}
+                                    </span>
+                                    {task.effective_horario_fim &&
+                                      task.effective_horario_fim !== task.horario_fim && (
+                                        <span className="ml-1 text-amber-500 font-bold">
+                                          até {formatTime(task.effective_horario_fim)}
+                                        </span>
+                                      )}
+                                  </>
+                                ) : (
+                                  ' (sem prazo)'
+                                )}
                               </>
                             ) : (
                               <>
