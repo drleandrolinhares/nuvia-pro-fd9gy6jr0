@@ -246,121 +246,173 @@ export function GestaoRH() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-slate-400 uppercase bg-slate-950 border-b border-slate-800 tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Colaborador</th>
-                  <th className="px-6 py-4 font-semibold">Período Aquisitivo</th>
-                  <th className="px-6 py-4 font-semibold">Prazo Limite</th>
-                  <th className="px-6 py-4 font-semibold text-center">Dias (Gozo / Resta)</th>
-                  <th className="px-6 py-4 font-semibold text-center">Status</th>
-                  <th className="px-6 py-4 font-semibold text-right">Ação</th>
+                  <th className="px-4 py-4 font-semibold">Colaborador</th>
+                  <th className="px-4 py-4 font-semibold">Período Aquisitivo</th>
+                  <th className="px-4 py-4 font-semibold">Vencimento (1 Ano)</th>
+                  <th className="px-4 py-4 font-semibold">Prazo Limite</th>
+                  <th className="px-4 py-4 font-semibold text-center">Dias (Gozo / Resta)</th>
+                  <th className="px-4 py-4 font-semibold text-center">Status</th>
+                  <th className="px-4 py-4 font-semibold text-right">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {displayData.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8 border border-slate-700">
-                          <AvatarImage
-                            src={
-                              item.usuario.avatar_url ||
-                              `https://img.usecurling.com/ppl/thumbnail?seed=${item.usuario.id}`
-                            }
-                          />
-                          <AvatarFallback className="bg-slate-800 text-slate-300">
-                            {item.usuario.nome.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
-                          <p className="text-xs text-slate-500">
-                            Admissão:{' '}
-                            {item.usuario.data_admissao
-                              ? format(parseISO(item.usuario.data_admissao), 'dd/MM/yyyy')
-                              : '-'}
-                          </p>
+                {displayData.map((item, idx) => {
+                  let countdownText = ''
+                  let isAdquirido = false
+
+                  if (item.periodo) {
+                    const target = parseISO(item.periodo.periodo_fim)
+                    const now = new Date()
+
+                    if (isBefore(now, target)) {
+                      const diffDays = differenceInDays(target, now)
+                      if (diffDays > 30) {
+                        const diffMonths = Math.floor(diffDays / 30)
+                        const remainingDays = diffDays % 30
+                        if (remainingDays === 0) {
+                          countdownText = `Faltam ${diffMonths} ${diffMonths === 1 ? 'mês' : 'meses'}`
+                        } else {
+                          countdownText = `Faltam ${diffMonths}m e ${remainingDays}d`
+                        }
+                      } else {
+                        countdownText = `Faltam ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`
+                      }
+                    } else {
+                      countdownText = 'Adquirido (Direito a Férias)'
+                      isAdquirido = true
+                    }
+                  }
+
+                  return (
+                    <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-8 border border-slate-700">
+                            <AvatarImage
+                              src={
+                                item.usuario.avatar_url ||
+                                `https://img.usecurling.com/ppl/thumbnail?seed=${item.usuario.id}`
+                              }
+                            />
+                            <AvatarFallback className="bg-slate-800 text-slate-300">
+                              {item.usuario.nome.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
+                            <p className="text-xs text-slate-500">
+                              Admissão:{' '}
+                              {item.usuario.data_admissao
+                                ? format(parseISO(item.usuario.data_admissao), 'dd/MM/yyyy')
+                                : '-'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-300">
-                      {item.periodo ? (
-                        <div className="flex flex-col">
-                          <span>
-                            {format(parseISO(item.periodo.periodo_inicio), 'dd/MM/yy')} até{' '}
-                            {format(parseISO(item.periodo.periodo_fim), 'dd/MM/yy')}
-                          </span>
-                        </div>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {item.periodo ? (
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              'font-medium',
-                              item.statusSemaforo === 'red'
-                                ? 'text-red-400'
-                                : item.statusSemaforo === 'yellow'
-                                  ? 'text-amber-400'
-                                  : 'text-slate-300',
+                      </td>
+                      <td className="px-4 py-4 text-slate-300">
+                        {item.periodo ? (
+                          <div className="flex flex-col">
+                            <span className="text-xs">
+                              {format(parseISO(item.periodo.periodo_inicio), 'dd/MM/yy')} até{' '}
+                              <br className="hidden lg:block" />
+                              {format(parseISO(item.periodo.periodo_fim), 'dd/MM/yy')}
+                            </span>
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {item.periodo ? (
+                          <div className="flex flex-col gap-1.5 items-start">
+                            <span className="font-medium text-slate-200">
+                              {format(parseISO(item.periodo.periodo_fim), 'dd/MM/yyyy')}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'text-[10px] px-1.5 py-0 font-semibold tracking-wide border whitespace-nowrap',
+                                isAdquirido
+                                  ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
+                                  : 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+                              )}
+                            >
+                              {countdownText}
+                            </Badge>
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {item.periodo ? (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                'font-medium',
+                                item.statusSemaforo === 'red'
+                                  ? 'text-red-400'
+                                  : item.statusSemaforo === 'yellow'
+                                    ? 'text-amber-400'
+                                    : 'text-slate-300',
+                              )}
+                            >
+                              {format(parseISO(item.periodo.prazo_limite), 'dd/MM/yyyy')}
+                            </span>
+                            {item.statusSemaforo === 'red' && (
+                              <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
                             )}
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {item.periodo ? (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 shadow-sm">
+                            <span className="text-emerald-400 font-bold">
+                              {item.periodo.dias_gozados}
+                            </span>
+                            <span className="text-slate-600">/</span>
+                            <span className="text-amber-500 font-bold">{item.diasRestantes}</span>
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {item.statusSemaforo === 'red' ? (
+                          <Badge className="bg-red-500/20 text-red-400 border-0 uppercase font-bold text-[10px]">
+                            Crítico
+                          </Badge>
+                        ) : item.statusSemaforo === 'yellow' ? (
+                          <Badge className="bg-amber-500/20 text-amber-400 border-0 uppercase font-bold text-[10px]">
+                            Atenção
+                          </Badge>
+                        ) : item.statusSemaforo === 'blue' ? (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-0 uppercase font-bold text-[10px]">
+                            Concluído
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-slate-800 text-slate-300 border-0 uppercase font-bold text-[10px]">
+                            No Prazo
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        {item.periodo && item.diasRestantes > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenModal(item.usuario, item.periodo!)}
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
                           >
-                            {format(parseISO(item.periodo.prazo_limite), 'dd/MM/yyyy')}
-                          </span>
-                          {item.statusSemaforo === 'red' && (
-                            <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
-                          )}
-                        </div>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {item.periodo ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 shadow-sm">
-                          <span className="text-emerald-400 font-bold">
-                            {item.periodo.dias_gozados}
-                          </span>
-                          <span className="text-slate-600">/</span>
-                          <span className="text-amber-500 font-bold">{item.diasRestantes}</span>
-                        </div>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {item.statusSemaforo === 'red' ? (
-                        <Badge className="bg-red-500/20 text-red-400 border-0 uppercase font-bold text-[10px]">
-                          Crítico
-                        </Badge>
-                      ) : item.statusSemaforo === 'yellow' ? (
-                        <Badge className="bg-amber-500/20 text-amber-400 border-0 uppercase font-bold text-[10px]">
-                          Atenção
-                        </Badge>
-                      ) : item.statusSemaforo === 'blue' ? (
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-0 uppercase font-bold text-[10px]">
-                          Concluído
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-slate-800 text-slate-300 border-0 uppercase font-bold text-[10px]">
-                          No Prazo
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {item.periodo && item.diasRestantes > 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenModal(item.usuario, item.periodo!)}
-                          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
-                        >
-                          <Plus className="w-3 h-3 mr-1.5" /> Registrar
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                            <Plus className="w-3 h-3 mr-1.5" /> Registrar
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
