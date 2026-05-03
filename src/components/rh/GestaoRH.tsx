@@ -15,6 +15,7 @@ import {
   differenceInYears,
   differenceInMonths,
   addMonths,
+  addDays,
 } from 'date-fns'
 import {
   Dialog,
@@ -78,9 +79,16 @@ export function GestaoRH() {
   const [usuarios, setUsuarios] = useState<UsuarioRH[]>([])
   const [periodos, setPeriodos] = useState<PeriodoFerias[]>([])
   const [loading, setLoading] = useState(true)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+
   const [selectedUser, setSelectedUser] = useState<UsuarioRH | null>(null)
   const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFerias | null>(null)
+  const [selectedUserHistory, setSelectedUserHistory] = useState<{
+    usuario: UsuarioRH
+    periodos: PeriodoFerias[]
+  } | null>(null)
 
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
@@ -109,7 +117,6 @@ export function GestaoRH() {
 
       const fetchedPeriodos = periodosData || []
 
-      // Correção automática de prazos baseada no início do período
       for (const p of fetchedPeriodos) {
         if (p.periodo_inicio) {
           const dateISO = parseISO(p.periodo_inicio)
@@ -121,11 +128,7 @@ export function GestaoRH() {
           let updated = false
           const updates: any = {}
 
-          // Se o periodo_fim foi salvo com o bug de addYears +1 exato, corrige
-          if (
-            p.periodo_fim !== expectedFim &&
-            p.periodo_fim === format(addYears(pInicio, 1), 'yyyy-MM-dd')
-          ) {
+          if (p.periodo_fim !== expectedFim) {
             p.periodo_fim = expectedFim
             updates.periodo_fim = expectedFim
             updated = true
@@ -144,18 +147,66 @@ export function GestaoRH() {
       }
 
       for (const u of usersData || []) {
-        const userPeriodos = fetchedPeriodos.filter((p) => p.usuario_id === u.id)
-        if (userPeriodos.length === 0 && u.data_admissao) {
-          const dateISO = parseISO(u.data_admissao)
-          if (isValid(dateISO)) {
-            const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
-            const pFim = subDays(addYears(admissao, 1), 1)
-            const limite = subDays(addYears(admissao, 2), 1)
+        if (!u.data_admissao) continue
+        const dateISO = parseISO(u.data_admissao)
+        if (!isValid(dateISO)) continue
+
+        const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        let userPeriodos = fetchedPeriodos.filter((p) => p.usuario_id === u.id)
+        userPeriodos.sort((a, b) => a.periodo_inicio.localeCompare(b.periodo_inicio))
+
+        if (userPeriodos.length === 0) {
+          const pFim = subDays(addYears(admissao, 1), 1)
+          const limite = subDays(addYears(admissao, 2), 1)
+          const novo = {
+            usuario_id: u.id,
+            periodo_inicio: format(admissao, 'yyyy-MM-dd'),
+            periodo_fim: format(pFim, 'yyyy-MM-dd'),
+            prazo_limite: format(limite, 'yyyy-MM-dd'),
+            dias_direito: 30,
+            dias_gozados: 0,
+            historico: [],
+            status: 'pendente',
+          }
+          const { data: inserted, error } = await supabase
+            .from('rh_ferias')
+            .insert(novo)
+            .select()
+            .single()
+          if (!error && inserted) {
+            fetchedPeriodos.push(inserted)
+            userPeriodos.push(inserted)
+          }
+        }
+
+        let latest = userPeriodos[userPeriodos.length - 1]
+        let safeguard = 0
+        while (safeguard < 10 && latest) {
+          const lastFimDate = parseISO(latest.periodo_fim)
+          const lastFim = new Date(
+            lastFimDate.getFullYear(),
+            lastFimDate.getMonth(),
+            lastFimDate.getDate(),
+          )
+
+          if (isBefore(lastFim, today)) {
+            const nextInicio = addDays(lastFim, 1)
+            const nextFim = subDays(addYears(nextInicio, 1), 1)
+            const nextLimite = subDays(addYears(nextInicio, 2), 1)
+
+            const existing = userPeriodos.find(
+              (p) => p.periodo_inicio === format(nextInicio, 'yyyy-MM-dd'),
+            )
+            if (existing) break
+
             const novo = {
               usuario_id: u.id,
-              periodo_inicio: format(admissao, 'yyyy-MM-dd'),
-              periodo_fim: format(pFim, 'yyyy-MM-dd'),
-              prazo_limite: format(limite, 'yyyy-MM-dd'),
+              periodo_inicio: format(nextInicio, 'yyyy-MM-dd'),
+              periodo_fim: format(nextFim, 'yyyy-MM-dd'),
+              prazo_limite: format(nextLimite, 'yyyy-MM-dd'),
               dias_direito: 30,
               dias_gozados: 0,
               historico: [],
@@ -166,8 +217,18 @@ export function GestaoRH() {
               .insert(novo)
               .select()
               .single()
-            if (!error && inserted) fetchedPeriodos.push(inserted)
+
+            if (!error && inserted) {
+              fetchedPeriodos.push(inserted)
+              userPeriodos.push(inserted)
+              latest = inserted
+            } else {
+              break
+            }
+          } else {
+            break
           }
+          safeguard++
         }
       }
 
@@ -199,6 +260,11 @@ export function GestaoRH() {
     setDataFim('')
     setDataRetorno('')
     setIsModalOpen(true)
+  }
+
+  const handleOpenHistory = (u: UsuarioRH, periodos: PeriodoFerias[]) => {
+    setSelectedUserHistory({ usuario: u, periodos })
+    setIsHistoryModalOpen(true)
   }
 
   const handleSaveFerias = async () => {
@@ -260,31 +326,42 @@ export function GestaoRH() {
   const displayData = usuarios
     .map((u) => {
       const userPeriodos = periodos.filter((p) => p.usuario_id === u.id)
+      userPeriodos.sort((a, b) => a.periodo_inicio.localeCompare(b.periodo_inicio))
+
       let active = userPeriodos.find((p) => p.status !== 'concluido')
 
       if (!active && userPeriodos.length > 0) {
-        active = userPeriodos.sort((a, b) => b.periodo_fim.localeCompare(a.periodo_fim))[0]
+        active = userPeriodos[userPeriodos.length - 1]
       }
 
       let statusSemaforo = 'green'
       let diasRestantes = 0
       let mesesAteLimite = 999
+      let diffDays = 9999
 
       if (active) {
         diasRestantes = active.dias_direito - active.dias_gozados
         if (diasRestantes > 0) {
-          const diffDays = differenceInDays(parseISO(active.prazo_limite), new Date())
+          diffDays = differenceInDays(parseISO(active.prazo_limite), new Date())
           mesesAteLimite = diffDays / 30
-          if (mesesAteLimite < 2) statusSemaforo = 'red'
+          if (diffDays < 0) statusSemaforo = 'red'
+          else if (mesesAteLimite < 2) statusSemaforo = 'red'
           else if (mesesAteLimite < 4) statusSemaforo = 'yellow'
         } else {
           statusSemaforo = 'blue'
         }
       }
 
-      return { usuario: u, periodo: active, statusSemaforo, diasRestantes, mesesAteLimite }
+      return {
+        usuario: u,
+        periodo: active,
+        statusSemaforo,
+        diasRestantes,
+        diffDays,
+        todosPeriodos: userPeriodos,
+      }
     })
-    .sort((a, b) => a.mesesAteLimite - b.mesesAteLimite)
+    .sort((a, b) => a.diffDays - b.diffDays)
 
   return (
     <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col">
@@ -378,7 +455,7 @@ export function GestaoRH() {
                       if (parts.length > 0) {
                         countdownText = `Vencido há ${parts.join(' e ')}`
                       } else {
-                        countdownText = 'Venceu hoje'
+                        countdownText = 'Venceu recentemente'
                       }
                     }
                   }
@@ -507,15 +584,25 @@ export function GestaoRH() {
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        {item.periodo && item.diasRestantes > 0 && (
+                        <div className="flex items-center justify-end gap-2">
                           <Button
                             size="sm"
-                            onClick={() => handleOpenModal(item.usuario, item.periodo!)}
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
+                            variant="outline"
+                            onClick={() => handleOpenHistory(item.usuario, item.todosPeriodos)}
+                            className="h-8 text-[10px] uppercase font-bold border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300"
                           >
-                            <Plus className="w-3 h-3 mr-1.5" /> Registrar
+                            Histórico
                           </Button>
-                        )}
+                          {item.periodo && item.diasRestantes > 0 && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenModal(item.usuario, item.periodo!)}
+                              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
+                            >
+                              <Plus className="w-3 h-3 mr-1.5" /> Registrar
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -572,6 +659,143 @@ export function GestaoRH() {
                 <CheckCircle className="w-4 h-4 mr-2" />
               )}{' '}
               Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isHistoryModalOpen} onOpenChange={setIsHistoryModalOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-slate-100">Histórico de Férias</DialogTitle>
+          </DialogHeader>
+          {selectedUserHistory && (
+            <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+                <Avatar className="size-10 border border-slate-700">
+                  <AvatarImage
+                    src={
+                      selectedUserHistory.usuario.avatar_url ||
+                      `https://img.usecurling.com/ppl/thumbnail?seed=${selectedUserHistory.usuario.id}`
+                    }
+                  />
+                  <AvatarFallback className="bg-slate-800 text-slate-300">
+                    {selectedUserHistory.usuario.nome.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-slate-200">{selectedUserHistory.usuario.nome}</p>
+                  <p className="text-xs text-slate-500">
+                    Admissão:{' '}
+                    {selectedUserHistory.usuario.data_admissao
+                      ? format(parseISO(selectedUserHistory.usuario.data_admissao), 'dd/MM/yyyy')
+                      : '-'}
+                  </p>
+                </div>
+              </div>
+
+              {selectedUserHistory.periodos.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-4">
+                  Nenhum período registrado.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {selectedUserHistory.periodos.map((p, i) => (
+                    <div key={p.id} className="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-200">
+                            Período {i + 1}: {format(parseISO(p.periodo_inicio), 'dd/MM/yyyy')} a{' '}
+                            {format(parseISO(p.periodo_fim), 'dd/MM/yyyy')}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Prazo Limite:{' '}
+                            <span className="text-slate-300">
+                              {format(parseISO(p.prazo_limite), 'dd/MM/yyyy')}
+                            </span>
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            p.status === 'concluido'
+                              ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
+                              : 'text-amber-400 border-amber-400/30 bg-amber-400/10',
+                          )}
+                        >
+                          {p.status === 'concluido' ? 'Concluído' : 'Pendente'}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm mb-4">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-slate-500">Direito</span>
+                          <span className="font-medium text-slate-300">{p.dias_direito} dias</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-slate-500">Gozados</span>
+                          <span className="font-medium text-emerald-400">
+                            {p.dias_gozados} dias
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-slate-500">Restantes</span>
+                          <span className="font-medium text-amber-500">
+                            {p.dias_direito - p.dias_gozados} dias
+                          </span>
+                        </div>
+                      </div>
+
+                      {p.historico && p.historico.length > 0 ? (
+                        <div className="space-y-2 mt-3 pt-3 border-t border-slate-800">
+                          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+                            Lançamentos
+                          </p>
+                          {p.historico.map((h: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center bg-slate-900 rounded px-3 py-2 text-sm border border-slate-800/50"
+                            >
+                              <div className="flex gap-4">
+                                <div>
+                                  <span className="text-xs text-slate-500 block">Início</span>
+                                  <span className="text-slate-300">
+                                    {format(parseISO(h.data_inicio), 'dd/MM/yyyy')}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-slate-500 block">Fim</span>
+                                  <span className="text-slate-300">
+                                    {format(parseISO(h.data_fim), 'dd/MM/yyyy')}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-slate-500 block">Retorno</span>
+                                  <span className="text-slate-300">
+                                    {format(parseISO(h.data_retorno), 'dd/MM/yyyy')}
+                                  </span>
+                                </div>
+                              </div>
+                              <Badge className="bg-slate-800 text-slate-300">{h.dias} dias</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-3 pt-3 border-t border-slate-800">
+                          <p className="text-xs text-slate-500 italic">
+                            Nenhum lançamento registrado neste período.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHistoryModalOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
