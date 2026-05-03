@@ -134,7 +134,7 @@ export function EstruturaPrecificacao() {
 
     if (resEsp.data) {
       setEspecialidades(resEsp.data as any)
-      setExpanded((resEsp.data as any).map((e: any) => e.id))
+      setExpanded([])
     }
     if (resProc.data) {
       setProcedimentos(resProc.data)
