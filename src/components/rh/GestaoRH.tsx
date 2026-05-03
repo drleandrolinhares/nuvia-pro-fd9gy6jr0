@@ -4,7 +4,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Users, CalendarDays, CheckCircle, AlertTriangle, Plus, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
-import { format, parseISO, addYears, subDays, differenceInDays, isBefore, isValid } from 'date-fns'
+import {
+  format,
+  parseISO,
+  addYears,
+  subDays,
+  differenceInDays,
+  isBefore,
+  isValid,
+  differenceInYears,
+  differenceInMonths,
+  addMonths,
+} from 'date-fns'
 import {
   Dialog,
   DialogContent,
@@ -35,6 +46,32 @@ interface PeriodoFerias {
   dias_gozados: number
   historico: any[]
   status: string
+}
+
+const getTempoDeCasa = (dataAdmissao: string) => {
+  const dateISO = parseISO(dataAdmissao)
+  if (!isValid(dateISO)) return '0 dias'
+
+  const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+
+  if (isBefore(now, admissao)) return '0 dias'
+
+  const years = differenceInYears(now, admissao)
+  const admissaoPlusYears = addYears(admissao, years)
+
+  const months = differenceInMonths(now, admissaoPlusYears)
+  const admissaoPlusMonths = addMonths(admissaoPlusYears, months)
+
+  const days = differenceInDays(now, admissaoPlusMonths)
+
+  const parts = []
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`)
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`)
+  if (days > 0) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`)
+
+  return parts.length > 0 ? parts.join(', ') : '0 dias'
 }
 
 export function GestaoRH() {
@@ -72,13 +109,48 @@ export function GestaoRH() {
 
       const fetchedPeriodos = periodosData || []
 
+      // Correção automática de prazos baseada no início do período
+      for (const p of fetchedPeriodos) {
+        if (p.periodo_inicio) {
+          const dateISO = parseISO(p.periodo_inicio)
+          const pInicio = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+
+          const expectedFim = format(subDays(addYears(pInicio, 1), 1), 'yyyy-MM-dd')
+          const expectedLimite = format(subDays(addYears(pInicio, 2), 1), 'yyyy-MM-dd')
+
+          let updated = false
+          const updates: any = {}
+
+          // Se o periodo_fim foi salvo com o bug de addYears +1 exato, corrige
+          if (
+            p.periodo_fim !== expectedFim &&
+            p.periodo_fim === format(addYears(pInicio, 1), 'yyyy-MM-dd')
+          ) {
+            p.periodo_fim = expectedFim
+            updates.periodo_fim = expectedFim
+            updated = true
+          }
+
+          if (p.prazo_limite !== expectedLimite) {
+            p.prazo_limite = expectedLimite
+            updates.prazo_limite = expectedLimite
+            updated = true
+          }
+
+          if (updated) {
+            supabase.from('rh_ferias').update(updates).eq('id', p.id).then()
+          }
+        }
+      }
+
       for (const u of usersData || []) {
         const userPeriodos = fetchedPeriodos.filter((p) => p.usuario_id === u.id)
         if (userPeriodos.length === 0 && u.data_admissao) {
-          const admissao = parseISO(u.data_admissao)
-          if (isValid(admissao)) {
-            const pFim = addYears(admissao, 1)
-            const limite = subDays(addYears(pFim, 1), 1)
+          const dateISO = parseISO(u.data_admissao)
+          if (isValid(dateISO)) {
+            const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+            const pFim = subDays(addYears(admissao, 1), 1)
+            const limite = subDays(addYears(admissao, 2), 1)
             const novo = {
               usuario_id: u.id,
               periodo_inicio: format(admissao, 'yyyy-MM-dd'),
@@ -261,25 +333,53 @@ export function GestaoRH() {
                   let isAdquirido = false
 
                   if (item.periodo) {
-                    const target = parseISO(item.periodo.periodo_fim)
+                    const targetDateISO = parseISO(item.periodo.periodo_fim)
+                    const target = new Date(
+                      targetDateISO.getFullYear(),
+                      targetDateISO.getMonth(),
+                      targetDateISO.getDate(),
+                    )
                     const now = new Date()
+                    now.setHours(0, 0, 0, 0)
 
                     if (isBefore(now, target)) {
-                      const diffDays = differenceInDays(target, now)
-                      if (diffDays > 30) {
-                        const diffMonths = Math.floor(diffDays / 30)
-                        const remainingDays = diffDays % 30
-                        if (remainingDays === 0) {
-                          countdownText = `Faltam ${diffMonths} ${diffMonths === 1 ? 'mês' : 'meses'}`
-                        } else {
-                          countdownText = `Faltam ${diffMonths}m e ${remainingDays}d`
-                        }
+                      const years = differenceInYears(target, now)
+                      const nowPlusYears = addYears(now, years)
+                      const months = differenceInMonths(target, nowPlusYears)
+                      const nowPlusMonths = addMonths(nowPlusYears, months)
+                      const days = differenceInDays(target, nowPlusMonths)
+
+                      const parts = []
+                      if (years > 0) parts.push(`${years}a`)
+                      if (months > 0) parts.push(`${months}m`)
+                      if (days > 0) parts.push(`${days}d`)
+
+                      if (parts.length > 0) {
+                        countdownText = `Faltam ${parts.join(' e ')}`
                       } else {
-                        countdownText = `Faltam ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`
+                        countdownText = `Vence amanhã`
                       }
-                    } else {
-                      countdownText = 'Adquirido (Direito a Férias)'
+                    } else if (target.getTime() === now.getTime()) {
                       isAdquirido = true
+                      countdownText = 'Vence hoje'
+                    } else {
+                      isAdquirido = true
+                      const years = differenceInYears(now, target)
+                      const targetPlusYears = addYears(target, years)
+                      const months = differenceInMonths(now, targetPlusYears)
+                      const targetPlusMonths = addMonths(targetPlusYears, months)
+                      const days = differenceInDays(now, targetPlusMonths)
+
+                      const parts = []
+                      if (years > 0) parts.push(`${years}a`)
+                      if (months > 0) parts.push(`${months}m`)
+                      if (days > 0) parts.push(`${days}d`)
+
+                      if (parts.length > 0) {
+                        countdownText = `Vencido há ${parts.join(' e ')}`
+                      } else {
+                        countdownText = 'Venceu hoje'
+                      }
                     }
                   }
 
@@ -300,12 +400,19 @@ export function GestaoRH() {
                           </Avatar>
                           <div>
                             <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
-                            <p className="text-xs text-slate-500">
-                              Admissão:{' '}
-                              {item.usuario.data_admissao
-                                ? format(parseISO(item.usuario.data_admissao), 'dd/MM/yyyy')
-                                : '-'}
-                            </p>
+                            <div className="flex flex-col text-xs text-slate-500 mt-0.5 gap-0.5">
+                              <span>
+                                Admissão:{' '}
+                                {item.usuario.data_admissao
+                                  ? format(parseISO(item.usuario.data_admissao), 'dd/MM/yyyy')
+                                  : '-'}
+                              </span>
+                              {item.usuario.data_admissao && (
+                                <span className="text-[10px] text-amber-500/80 font-medium">
+                                  Tempo de casa: {getTempoDeCasa(item.usuario.data_admissao)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
