@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Users, CalendarDays, CheckCircle, AlertTriangle, Plus, Loader2 } from 'lucide-react'
+import {
+  Users,
+  CalendarDays,
+  CheckCircle,
+  AlertTriangle,
+  Plus,
+  Loader2,
+  ArrowUpDown,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import {
   format,
@@ -24,6 +32,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
@@ -94,6 +109,9 @@ export function GestaoRH() {
   const [dataFim, setDataFim] = useState('')
   const [dataRetorno, setDataRetorno] = useState('')
   const [saving, setSaving] = useState(false)
+  const [ordenacao, setOrdenacao] = useState<'urgencia' | 'mais_antigos' | 'mais_recentes'>(
+    'urgencia',
+  )
 
   const loadData = async () => {
     setLoading(true)
@@ -323,49 +341,59 @@ export function GestaoRH() {
     }
   }
 
-  const displayData = usuarios
-    .map((u) => {
-      const userPeriodos = periodos.filter((p) => p.usuario_id === u.id)
-      userPeriodos.sort((a, b) => a.periodo_inicio.localeCompare(b.periodo_inicio))
+  const baseData = usuarios.map((u) => {
+    const userPeriodos = periodos.filter((p) => p.usuario_id === u.id)
+    userPeriodos.sort((a, b) => a.periodo_inicio.localeCompare(b.periodo_inicio))
 
-      let active = userPeriodos.find((p) => p.status !== 'concluido')
+    let active = userPeriodos.find((p) => p.status !== 'concluido')
 
-      if (!active && userPeriodos.length > 0) {
-        active = userPeriodos[userPeriodos.length - 1]
+    if (!active && userPeriodos.length > 0) {
+      active = userPeriodos[userPeriodos.length - 1]
+    }
+
+    let statusSemaforo = 'green'
+    let diasRestantes = 0
+    let mesesAteLimite = 999
+    let diffDays = 9999
+
+    if (active) {
+      diasRestantes = active.dias_direito - active.dias_gozados
+      if (diasRestantes > 0) {
+        diffDays = differenceInDays(parseISO(active.prazo_limite), new Date())
+        mesesAteLimite = diffDays / 30
+        if (diffDays < 0) statusSemaforo = 'red'
+        else if (mesesAteLimite < 2) statusSemaforo = 'red'
+        else if (mesesAteLimite < 4) statusSemaforo = 'yellow'
+      } else {
+        statusSemaforo = 'blue'
       }
+    }
 
-      let statusSemaforo = 'green'
-      let diasRestantes = 0
-      let mesesAteLimite = 999
-      let diffDays = 9999
+    return {
+      usuario: u,
+      periodo: active,
+      statusSemaforo,
+      diasRestantes,
+      diffDays,
+      todosPeriodos: userPeriodos,
+    }
+  })
 
-      if (active) {
-        diasRestantes = active.dias_direito - active.dias_gozados
-        if (diasRestantes > 0) {
-          diffDays = differenceInDays(parseISO(active.prazo_limite), new Date())
-          mesesAteLimite = diffDays / 30
-          if (diffDays < 0) statusSemaforo = 'red'
-          else if (mesesAteLimite < 2) statusSemaforo = 'red'
-          else if (mesesAteLimite < 4) statusSemaforo = 'yellow'
-        } else {
-          statusSemaforo = 'blue'
-        }
-      }
-
-      return {
-        usuario: u,
-        periodo: active,
-        statusSemaforo,
-        diasRestantes,
-        diffDays,
-        todosPeriodos: userPeriodos,
-      }
-    })
-    .sort((a, b) => a.diffDays - b.diffDays)
+  const displayData = [...baseData].sort((a, b) => {
+    if (ordenacao === 'urgencia') {
+      return a.diffDays - b.diffDays
+    }
+    const dateA = a.usuario.data_admissao ? parseISO(a.usuario.data_admissao).getTime() : 0
+    const dateB = b.usuario.data_admissao ? parseISO(b.usuario.data_admissao).getTime() : 0
+    if (ordenacao === 'mais_antigos') {
+      return dateA - dateB
+    }
+    return dateB - dateA
+  })
 
   return (
     <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-amber-500/10 rounded-md">
             <Users className="size-5 text-amber-500" />
@@ -373,6 +401,19 @@ export function GestaoRH() {
           <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
             Gestão de RH (Férias)
           </CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-4 h-4 text-slate-400" />
+          <Select value={ordenacao} onValueChange={(val: any) => setOrdenacao(val)}>
+            <SelectTrigger className="w-[180px] h-8 bg-slate-950 border-slate-800 text-xs">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="urgencia">Prioridade (Vencimento)</SelectItem>
+              <SelectItem value="mais_antigos">Mais Antigos</SelectItem>
+              <SelectItem value="mais_recentes">Mais Recentes</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
@@ -460,11 +501,44 @@ export function GestaoRH() {
                     }
                   }
 
+                  let inExperiencia = false
+                  let diasRestantesExperiencia = 0
+                  if (item.usuario.data_admissao) {
+                    const dateISO = parseISO(item.usuario.data_admissao)
+                    if (isValid(dateISO)) {
+                      const admissao = new Date(
+                        dateISO.getFullYear(),
+                        dateISO.getMonth(),
+                        dateISO.getDate(),
+                      )
+                      const now = new Date()
+                      now.setHours(0, 0, 0, 0)
+                      const diasDesdeAdmissao = differenceInDays(now, admissao)
+                      if (diasDesdeAdmissao >= 0 && diasDesdeAdmissao <= 90) {
+                        inExperiencia = true
+                        diasRestantesExperiencia = 90 - diasDesdeAdmissao
+                      }
+                    }
+                  }
+
                   return (
-                    <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                    <tr
+                      key={idx}
+                      className={cn(
+                        'hover:bg-slate-800/30 transition-colors',
+                        inExperiencia && 'bg-purple-500/5 hover:bg-purple-500/10',
+                      )}
+                    >
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="size-8 border border-slate-700">
+                          <Avatar
+                            className={cn(
+                              'size-8 border',
+                              inExperiencia
+                                ? 'border-purple-500 ring-2 ring-purple-500/30'
+                                : 'border-slate-700',
+                            )}
+                          >
                             <AvatarImage
                               src={
                                 item.usuario.avatar_url ||
@@ -476,7 +550,17 @@ export function GestaoRH() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
+                              {inExperiencia && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[9px] px-1.5 py-0 h-4 font-semibold uppercase tracking-wider"
+                                >
+                                  Experiência ({diasRestantesExperiencia}d)
+                                </Badge>
+                              )}
+                            </div>
                             <div className="flex flex-col text-xs text-slate-500 mt-0.5 gap-0.5">
                               <span>
                                 Admissão:{' '}
