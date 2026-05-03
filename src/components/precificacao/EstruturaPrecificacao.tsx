@@ -8,6 +8,10 @@ import {
   Calculator,
   Percent,
   TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  XCircle,
+  Filter,
   Plus,
   Pencil,
   Trash2,
@@ -17,6 +21,14 @@ import {
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { CurrencyInput } from './CurrencyInput'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -99,6 +111,9 @@ export function EstruturaPrecificacao() {
   const [expanded, setExpanded] = useState<string[]>([])
   const [selProc, setSelProc] = useState<string>('')
   const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'lt_30' | 'top_10_plus' | 'top_10_minus'>(
+    'all',
+  )
 
   useEffect(() => {
     fetchData()
@@ -244,6 +259,38 @@ export function EstruturaPrecificacao() {
     }
   }
 
+  useEffect(() => {
+    if (filterType !== 'all') {
+      setExpanded(especialidades.map((esp) => esp.id))
+    }
+  }, [filterType, especialidades])
+
+  const calcMargemLucro = (proc: Procedimento) => {
+    const totalHorasDesconto = horasTrabalhadas * 0.8
+    const totalCustoHora = totalHorasDesconto > 0 ? custosFixos / totalHorasDesconto : 0
+    const totalCustoHoraFator = totalCustoHora * 1.15
+    const custoMinuto = totalCustoHoraFator / 60
+
+    const custoFixo = (proc.tempo_execucao || 0) * custoMinuto
+    const cartaoVal = ((proc.valor_cobrado || 0) * globals.taxa_cartao) / 100
+    const comissaoVal = ((proc.valor_cobrado || 0) * globals.comissao) / 100
+    const inadimplenciaVal = ((proc.valor_cobrado || 0) * globals.inadimplencia) / 100
+    const impostoVal = ((proc.valor_cobrado || 0) * globals.imposto) / 100
+    const dentistaVal = proc.honorarios_dentista || 0
+
+    const totalVariavelVal =
+      (proc.custo_laboratorio || 0) +
+      (proc.custo_material || 0) +
+      cartaoVal +
+      comissaoVal +
+      inadimplenciaVal
+
+    const custoTotal = custoFixo + totalVariavelVal + dentistaVal + impostoVal
+    const lucroValor = (proc.valor_cobrado || 0) - custoTotal
+
+    return (proc.valor_cobrado || 0) > 0 ? (lucroValor / proc.valor_cobrado) * 100 : 0
+  }
+
   const handleSave = async () => {
     if (!selProc) return
     setSaving(true)
@@ -283,18 +330,40 @@ export function EstruturaPrecificacao() {
     }
   }
 
+  const filteredProcedimentos = useMemo(() => {
+    if (filterType === 'all') return procedimentos
+
+    const procsWithMargin = procedimentos.map((p) => ({ ...p, margem: calcMargemLucro(p) }))
+
+    if (filterType === 'lt_30') {
+      return procsWithMargin.filter((p) => p.margem < 30)
+    }
+
+    if (filterType === 'top_10_plus') {
+      return procsWithMargin.sort((a, b) => b.margem - a.margem).slice(0, 10)
+    }
+
+    if (filterType === 'top_10_minus') {
+      return procsWithMargin.sort((a, b) => a.margem - b.margem).slice(0, 10)
+    }
+
+    return procedimentos
+  }, [procedimentos, filterType, horasTrabalhadas, custosFixos, globals])
+
   const filteredEspes = useMemo(() => {
     return especialidades
       .map((esp) => {
-        const procs = procedimentos
+        const procs = filteredProcedimentos
           .filter((p) => p.especialidade_id === esp.id)
           .filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()))
         return { ...esp, procs }
       })
       .filter(
-        (esp) => esp.procs.length > 0 || esp.nome.toLowerCase().includes(search.toLowerCase()),
+        (esp) =>
+          esp.procs.length > 0 ||
+          (filterType === 'all' && esp.nome.toLowerCase().includes(search.toLowerCase())),
       )
-  }, [especialidades, procedimentos, search])
+  }, [especialidades, filteredProcedimentos, search, filterType])
 
   const activeProc = useMemo(
     () => procedimentos.find((p) => p.id === selProc),
@@ -380,6 +449,76 @@ export function EstruturaPrecificacao() {
               className="pl-9 bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-amber-500"
             />
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(
+                  'bg-slate-950 border-slate-800 shrink-0 transition-colors',
+                  filterType !== 'all'
+                    ? 'text-amber-500 hover:text-amber-400 border-amber-500/50'
+                    : 'text-slate-400 hover:text-slate-300',
+                )}
+                title="Filtros e Insights"
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-64 border-slate-800 bg-slate-950 text-slate-200"
+            >
+              <DropdownMenuLabel className="text-slate-400">
+                Insights de Lucratividade
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuItem
+                onClick={() => setFilterType('lt_30')}
+                className={cn(
+                  'cursor-pointer focus:bg-slate-800 focus:text-white',
+                  filterType === 'lt_30' && 'bg-slate-800 text-white',
+                )}
+              >
+                <AlertTriangle className="w-4 h-4 mr-2 text-amber-500" />
+                <span className="flex-1">Alerta: Lucro &lt; 30%</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterType('top_10_plus')}
+                className={cn(
+                  'cursor-pointer focus:bg-slate-800 focus:text-white',
+                  filterType === 'top_10_plus' && 'bg-slate-800 text-white',
+                )}
+              >
+                <TrendingUp className="w-4 h-4 mr-2 text-emerald-500" />
+                <span className="flex-1">Top 10+ Lucrativos</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterType('top_10_minus')}
+                className={cn(
+                  'cursor-pointer focus:bg-slate-800 focus:text-white',
+                  filterType === 'top_10_minus' && 'bg-slate-800 text-white',
+                )}
+              >
+                <TrendingDown className="w-4 h-4 mr-2 text-rose-500" />
+                <span className="flex-1">Top 10- Menos Lucrativos</span>
+              </DropdownMenuItem>
+              {filterType !== 'all' && (
+                <>
+                  <DropdownMenuSeparator className="bg-slate-800" />
+                  <DropdownMenuItem
+                    onClick={() => setFilterType('all')}
+                    className="cursor-pointer text-amber-500 focus:bg-slate-800 focus:text-amber-400"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    <span className="flex-1">Limpar Filtros</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {isAdmin && (
             <Button
               variant="outline"
@@ -404,39 +543,41 @@ export function EstruturaPrecificacao() {
                   <span className="truncate text-xs font-bold uppercase tracking-wider">
                     {esp.nome}
                   </span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {isAdmin && (
-                      <div className="invisible group-hover/esp:visible opacity-0 group-hover/esp:opacity-100 transition-all flex items-center gap-1 mr-2">
-                        <div
-                          onClick={(e) => handleAddProc(e, esp.id)}
-                          className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
-                          title="Novo Procedimento"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
+                  <div className="flex items-center shrink-0 min-h-[28px]">
+                    <div className="flex items-center justify-end w-[84px]">
+                      {isAdmin && (
+                        <div className="opacity-0 group-hover/esp:opacity-100 pointer-events-none group-hover/esp:pointer-events-auto transition-opacity flex items-center gap-1 mr-1">
+                          <div
+                            onClick={(e) => handleAddProc(e, esp.id)}
+                            className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
+                            title="Novo Procedimento"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </div>
+                          <div
+                            onClick={(e) => handleEditEspec(e, esp.id)}
+                            className="p-1 text-amber-500/70 hover:text-blue-400 transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </div>
+                          <div
+                            onClick={(e) => handleDeleteEspec(e, esp.id)}
+                            className="p-1 text-amber-500/70 hover:text-red-400 transition-colors cursor-pointer"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </div>
                         </div>
-                        <div
-                          onClick={(e) => handleEditEspec(e, esp.id)}
-                          className="p-1 text-amber-500/70 hover:text-blue-400 transition-colors cursor-pointer"
-                          title="Editar"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </div>
-                        <div
-                          onClick={(e) => handleDeleteEspec(e, esp.id)}
-                          className="p-1 text-amber-500/70 hover:text-red-400 transition-colors cursor-pointer"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-                    )}
-                    <span className="text-amber-500/70 group-hover/esp:text-amber-400 transition-colors">
-                      {expanded.includes(esp.id) ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
                       )}
-                    </span>
+                      <span className="text-amber-500/70 group-hover/esp:text-amber-400 transition-colors w-5 flex justify-center shrink-0">
+                        {expanded.includes(esp.id) ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -467,24 +608,28 @@ export function EstruturaPrecificacao() {
                           {proc.nome}
                         </button>
 
-                        {isAdmin && (
-                          <div className="invisible group-hover/proc:visible opacity-0 group-hover/proc:opacity-100 transition-all flex items-center gap-1 ml-2 shrink-0">
-                            <button
-                              onClick={(e) => handleEditProc(e, proc.id)}
-                              className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
-                              title="Editar"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={(e) => handleDeleteProc(e, proc.id)}
-                              className="p-1 text-slate-400 hover:text-red-400 transition-colors"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                        <div className="flex items-center shrink-0 min-h-[24px]">
+                          <div className="flex items-center justify-end w-[52px]">
+                            {isAdmin && (
+                              <div className="opacity-0 group-hover/proc:opacity-100 pointer-events-none group-hover/proc:pointer-events-auto transition-opacity flex items-center gap-1">
+                                <button
+                                  onClick={(e) => handleEditProc(e, proc.id)}
+                                  className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                                  title="Editar"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteProc(e, proc.id)}
+                                  className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
