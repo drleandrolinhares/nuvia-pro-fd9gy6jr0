@@ -1836,6 +1836,7 @@ export type Database = {
       performance_pp_pdm: {
         Row: {
           atualizado_em: string
+          consideracoes_gestao: Json | null
           criado_em: string
           data_registro: string
           id: string
@@ -1846,10 +1847,12 @@ export type Database = {
           pontos_melhoria: string
           pontos_positivos: string
           pp_validado: boolean | null
+          status_gestao: string | null
           usuario_id: string
         }
         Insert: {
           atualizado_em?: string
+          consideracoes_gestao?: Json | null
           criado_em?: string
           data_registro?: string
           id?: string
@@ -1860,10 +1863,12 @@ export type Database = {
           pontos_melhoria: string
           pontos_positivos: string
           pp_validado?: boolean | null
+          status_gestao?: string | null
           usuario_id: string
         }
         Update: {
           atualizado_em?: string
+          consideracoes_gestao?: Json | null
           criado_em?: string
           data_registro?: string
           id?: string
@@ -1874,6 +1879,7 @@ export type Database = {
           pontos_melhoria?: string
           pontos_positivos?: string
           pp_validado?: boolean | null
+          status_gestao?: string | null
           usuario_id?: string
         }
         Relationships: []
@@ -3847,6 +3853,8 @@ export const Constants = {
 //   inovacoes: text (nullable, default: ''::text)
 //   pp_validado: boolean (nullable, default: false)
 //   inovacao_validada: boolean (nullable, default: false)
+//   status_gestao: text (nullable, default: 'aguardando_acao'::text)
+//   consideracoes_gestao: jsonb (nullable, default: '[]'::jsonb)
 // Table: permissoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)

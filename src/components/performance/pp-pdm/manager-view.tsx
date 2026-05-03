@@ -69,6 +69,101 @@ function PendingUserCard({ u }: { u: any }) {
   )
 }
 
+function GestorConsiderationBlock({
+  title,
+  gestorKey,
+  isOwner,
+  consideration,
+  onSave,
+}: {
+  title: string
+  gestorKey: string
+  isOwner: boolean
+  consideration: any
+  onSave: (texto: string) => Promise<void>
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [text, setText] = useState(consideration?.texto || '')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setText(consideration?.texto || '')
+  }, [consideration])
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onSave(text)
+    setSaving(false)
+    setIsEditing(false)
+  }
+
+  return (
+    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-slate-700 text-sm">{title}</span>
+          {consideration?.texto ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-amber-500" />
+          )}
+        </div>
+        {isOwner && !isEditing && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            className="h-6 text-xs px-2 text-slate-500 hover:text-slate-800"
+          >
+            {consideration?.texto ? 'Editar' : 'Adicionar'}
+          </Button>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2 mt-2">
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="text-sm min-h-[80px] bg-white resize-none"
+            placeholder="Digite suas considerações..."
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsEditing(false)
+                setText(consideration?.texto || '')
+              }}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={!text.trim() || saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Salvar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-1">
+          {consideration?.texto ? (
+            <div className="text-sm text-slate-600 whitespace-pre-wrap">
+              {consideration.texto}
+              <div className="text-[10px] text-slate-400 mt-2 font-medium">
+                Salvo em {format(new Date(consideration.data), 'dd/MM/yyyy HH:mm')}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 italic">Nenhuma consideração registrada.</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FilledUserCard({
   u,
   submission,
@@ -80,8 +175,6 @@ function FilledUserCard({
 }) {
   const { profile } = useAuth()
   const [open, setOpen] = useState(false)
-  const [newConsideration, setNewConsideration] = useState('')
-  const [savingConsideration, setSavingConsideration] = useState(false)
 
   const handleTogglePP = async (id: string, currentVal: boolean, currentNota: number) => {
     const newVal = !currentVal
@@ -115,21 +208,46 @@ function FilledUserCard({
     }
   }
 
-  const handleAddConsideration = async () => {
-    if (!newConsideration.trim()) return
-    setSavingConsideration(true)
+  const historico = Array.isArray(submission.consideracoes_gestao)
+    ? submission.consideracoes_gestao
+    : []
 
-    const newCons = {
-      admin_id: profile?.id,
-      admin_nome: profile?.nome || 'Administrador',
-      data: new Date().toISOString(),
-      texto: newConsideration,
-    }
+  const consLeandro = historico.find(
+    (c: any) =>
+      c.gestor === 'leandro' ||
+      c.admin_nome?.toLowerCase().includes('leandro') ||
+      c.admin_email?.includes('leandro'),
+  )
+  const consStephani = historico.find(
+    (c: any) => c.gestor === 'stephani' || c.admin_nome?.toLowerCase().includes('stephani'),
+  )
+  const consHeloisa = historico.find(
+    (c: any) => c.gestor === 'heloisa' || c.admin_nome?.toLowerCase().includes('heloisa'),
+  )
 
+  const isLeandro = Boolean(
+    profile?.nome?.toLowerCase().includes('leandro') ||
+    profile?.email?.toLowerCase().includes('leandro'),
+  )
+  const isStephani = Boolean(profile?.nome?.toLowerCase().includes('stephani'))
+  const isHeloisa = Boolean(profile?.nome?.toLowerCase().includes('heloisa'))
+
+  const allFilled = !!(consLeandro?.texto && consStephani?.texto && consHeloisa?.texto)
+
+  const handleSaveGestor = async (gestorKey: string, texto: string) => {
     const historicoAtual = Array.isArray(submission.consideracoes_gestao)
       ? submission.consideracoes_gestao
       : []
-    const novoHistorico = [...historicoAtual, newCons]
+    const novoHistorico = historicoAtual.filter(
+      (c: any) => c.gestor !== gestorKey && !c.admin_nome?.toLowerCase().includes(gestorKey),
+    )
+    novoHistorico.push({
+      gestor: gestorKey,
+      admin_id: profile?.id,
+      admin_nome: profile?.nome || gestorKey,
+      data: new Date().toISOString(),
+      texto,
+    })
 
     const { error } = await supabase
       .from('performance_pp_pdm' as any)
@@ -137,14 +255,22 @@ function FilledUserCard({
       .eq('id', submission.id)
 
     if (!error) {
-      toast.success('Consideração adicionada!')
-      setNewConsideration('')
+      toast.success('Consideração salva!')
       onReload()
     } else {
-      toast.error('Erro ao adicionar consideração.')
+      toast.error('Erro ao salvar consideração.')
     }
-    setSavingConsideration(false)
   }
+
+  const outrasConsideracoes = historico.filter(
+    (c: any) =>
+      c.gestor !== 'leandro' &&
+      c.gestor !== 'stephani' &&
+      c.gestor !== 'heloisa' &&
+      !c.admin_nome?.toLowerCase().includes('leandro') &&
+      !c.admin_nome?.toLowerCase().includes('stephani') &&
+      !c.admin_nome?.toLowerCase().includes('heloisa'),
+  )
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -293,10 +419,15 @@ function FilledUserCard({
               </div>
 
               <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-                  <h4 className="font-bold text-slate-800 text-base">
-                    Ações e Considerações da Gestão
-                  </h4>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b border-slate-100 pb-3 gap-3">
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-base">
+                      Ações e Considerações da Gestão
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      O status "Resolvido" exige a análise dos 3 gestores.
+                    </p>
+                  </div>
                   <Select
                     value={submission.status_gestao || 'aguardando_acao'}
                     onValueChange={(val) => handleUpdateStatus(submission.id, val)}
@@ -308,56 +439,63 @@ function FilledUserCard({
                       <SelectItem value="aguardando_acao">Aguardando Ação</SelectItem>
                       <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
                       <SelectItem value="requer_reuniao">Requer Reunião</SelectItem>
-                      <SelectItem value="resolvido">Resolvido</SelectItem>
+                      <SelectItem value="resolvido" disabled={!allFilled}>
+                        Resolvido {!allFilled ? '(Pendente)' : ''}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-3 mb-4 max-h-[200px] overflow-y-auto pr-2">
-                  {submission.consideracoes_gestao && submission.consideracoes_gestao.length > 0 ? (
-                    submission.consideracoes_gestao.map((cons: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm"
-                      >
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="font-bold text-slate-700 text-xs">
-                            {cons.admin_nome}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {format(new Date(cons.data), 'dd/MM/yyyy HH:mm')}
-                          </span>
-                        </div>
-                        <p className="text-slate-600 whitespace-pre-wrap text-sm">{cons.texto}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-400 italic text-center py-2">
-                      Nenhuma consideração registrada ainda.
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
-                  <Textarea
-                    placeholder="Adicionar consideração (plano de ação, análise, decisão)..."
-                    value={newConsideration}
-                    onChange={(e) => setNewConsideration(e.target.value)}
-                    className="text-sm min-h-[80px] bg-white resize-none"
+                <div className="space-y-3 mb-4 pr-2">
+                  <GestorConsiderationBlock
+                    title="Considerações Leandro"
+                    gestorKey="leandro"
+                    isOwner={isLeandro}
+                    consideration={consLeandro}
+                    onSave={(texto) => handleSaveGestor('leandro', texto)}
                   />
-                  <div className="flex justify-end">
-                    <Button
-                      size="sm"
-                      onClick={handleAddConsideration}
-                      disabled={!newConsideration.trim() || savingConsideration}
-                      className="bg-slate-800 hover:bg-slate-700 text-white"
-                    >
-                      {savingConsideration ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : null}
-                      Salvar Consideração
-                    </Button>
-                  </div>
+                  <GestorConsiderationBlock
+                    title="Considerações Stephani"
+                    gestorKey="stephani"
+                    isOwner={isStephani}
+                    consideration={consStephani}
+                    onSave={(texto) => handleSaveGestor('stephani', texto)}
+                  />
+                  <GestorConsiderationBlock
+                    title="Considerações Heloisa"
+                    gestorKey="heloisa"
+                    isOwner={isHeloisa}
+                    consideration={consHeloisa}
+                    onSave={(texto) => handleSaveGestor('heloisa', texto)}
+                  />
+
+                  {outrasConsideracoes.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        Outras Considerações Históricas
+                      </h5>
+                      <div className="space-y-2">
+                        {outrasConsideracoes.map((cons: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="bg-slate-50 p-2.5 rounded border border-slate-100 text-sm"
+                          >
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-bold text-slate-600 text-xs">
+                                {cons.admin_nome}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {format(new Date(cons.data), 'dd/MM/yyyy HH:mm')}
+                              </span>
+                            </div>
+                            <p className="text-slate-600 whitespace-pre-wrap text-xs">
+                              {cons.texto}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
