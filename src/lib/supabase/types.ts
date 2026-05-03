@@ -2330,6 +2330,56 @@ export type Database = {
         }
         Relationships: []
       }
+      rh_ferias: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          dias_direito: number
+          dias_gozados: number
+          historico: Json | null
+          id: string
+          periodo_fim: string
+          periodo_inicio: string
+          prazo_limite: string
+          status: string
+          usuario_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          dias_direito?: number
+          dias_gozados?: number
+          historico?: Json | null
+          id?: string
+          periodo_fim: string
+          periodo_inicio: string
+          prazo_limite: string
+          status?: string
+          usuario_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          dias_direito?: number
+          dias_gozados?: number
+          historico?: Json | null
+          id?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          prazo_limite?: string
+          status?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rh_ferias_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       rotinas_usuarios: {
         Row: {
           ativa: boolean
@@ -2921,6 +2971,7 @@ export type Database = {
           data_admissao: string | null
           data_nascimento: string | null
           dias_trabalho: Json | null
+          elegivel_ferias: boolean | null
           email: string
           endereco: string | null
           exigir_rotina: boolean
@@ -2952,6 +3003,7 @@ export type Database = {
           data_admissao?: string | null
           data_nascimento?: string | null
           dias_trabalho?: Json | null
+          elegivel_ferias?: boolean | null
           email: string
           endereco?: string | null
           exigir_rotina?: boolean
@@ -2983,6 +3035,7 @@ export type Database = {
           data_admissao?: string | null
           data_nascimento?: string | null
           dias_trabalho?: Json | null
+          elegivel_ferias?: boolean | null
           email?: string
           endereco?: string | null
           exigir_rotina?: boolean
@@ -3903,6 +3956,18 @@ export const Constants = {
 //   status: text (nullable, default: 'ativo'::text)
 //   criado_em: timestamp with time zone (nullable, default: now())
 //   atualizado_em: timestamp with time zone (nullable, default: now())
+// Table: rh_ferias
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   periodo_inicio: date (not null)
+//   periodo_fim: date (not null)
+//   prazo_limite: date (not null)
+//   dias_direito: integer (not null, default: 30)
+//   dias_gozados: integer (not null, default: 0)
+//   historico: jsonb (nullable, default: '[]'::jsonb)
+//   status: text (not null, default: 'pendente'::text)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: rotinas_usuarios
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (nullable)
@@ -4056,6 +4121,7 @@ export const Constants = {
 //   possui_carteira: boolean (not null, default: true)
 //   dias_trabalho: jsonb (nullable, default: '[1, 2, 3, 4, 5]'::jsonb)
 //   exigir_rotina: boolean (not null, default: true)
+//   elegivel_ferias: boolean (nullable, default: false)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
@@ -4283,6 +4349,9 @@ export const Constants = {
 //   PRIMARY KEY referencias_comissao_crc_pkey: PRIMARY KEY (id)
 // Table: referencias_comissao_dentista
 //   PRIMARY KEY referencias_comissao_dentista_pkey: PRIMARY KEY (id)
+// Table: rh_ferias
+//   PRIMARY KEY rh_ferias_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY rh_ferias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: rotinas_usuarios
 //   FOREIGN KEY rotinas_usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   PRIMARY KEY rotinas_usuarios_pkey: PRIMARY KEY (id)
@@ -4668,6 +4737,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: referencias_comissao_dentista
 //   Policy "referencias_comissao_dentista_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: rh_ferias
+//   Policy "rh_ferias_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: rotinas_usuarios
