@@ -83,6 +83,7 @@ export default function ColaboradorFormSheet({
             ...det,
             possui_carteira: usuario.possui_carteira ?? true,
             exigir_rotina: usuario.exigir_rotina ?? true,
+            elegivel_ferias: (usuario as any).elegivel_ferias ?? false,
             dias_trabalho: (usuario as any).dias_trabalho ?? [1, 2, 3, 4, 5],
             emergencia_nome: em.nome,
             emergencia_telefone: em.telefone,
@@ -103,6 +104,7 @@ export default function ColaboradorFormSheet({
         ...data,
         possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
         exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
+        elegivel_ferias: data.elegivel_ferias !== undefined ? data.elegivel_ferias : false,
         horario_entrada: data.horario_entrada || null,
         inicio_lanche_manha: data.inicio_lanche_manha || null,
         fim_lanche_manha: data.fim_lanche_manha || null,
@@ -362,6 +364,23 @@ export default function ColaboradorFormSheet({
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                           <span className="text-sm text-muted-foreground">
                             {field.value ? 'Sim (Com rotina)' : 'Não (Sem rotina)'}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Elegível para Férias (CLT)?" error={errors.elegivel_ferias}>
+                    <Controller
+                      name="elegivel_ferias"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Monitorar Férias)' : 'Não'}
                           </span>
                         </div>
                       )}

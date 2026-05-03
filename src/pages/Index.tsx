@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
+import { GestaoRH } from '@/components/rh/GestaoRH'
 import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
@@ -297,269 +298,272 @@ const Index = () => {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* SAC */}
-          <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-md">
-                  <MessageSquare className="size-5 text-amber-500" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                    SAC
-                  </CardTitle>
-                  <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2 py-0.5 rounded-full">
-                    {minhasDemandas.length}
-                  </Badge>
-                </div>
+      {/* Linha 1: SAC e Estoque */}
+      <div className="grid gap-6 md:grid-cols-2 mb-6">
+        {/* SAC */}
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-md">
+                <MessageSquare className="size-5 text-amber-500" />
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-8 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2"
-              >
-                <Link to="/operacional/sac">
-                  Ver Tudo <ArrowRight className="ml-1 size-3" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-              {minhasDemandas.length > 0 ? (
-                <div className="flex flex-col gap-3 pr-2">
-                  {minhasDemandas.map((d) => (
-                    <div
-                      key={d.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800/50 transition-colors"
-                    >
-                      <div>
-                        <p className="font-semibold text-sm text-slate-200">
-                          <Link
-                            to={`/operacional/sac?demanda=${d.id}`}
-                            className="hover:text-amber-400 hover:underline"
-                          >
-                            {d.paciente_nome}
-                          </Link>
-                        </p>
-                        <p className="text-xs text-slate-500 flex items-center gap-2 mt-1.5">
-                          <span
-                            className={cn(
-                              'px-1.5 py-0.5 rounded text-[10px] uppercase font-bold shadow-sm',
-                              d.tipo === 'reclamacao'
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/20'
-                                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20',
-                            )}
-                          >
-                            {d.tipo}
-                          </span>
-                          <span className="font-medium">
-                            Prazo:{' '}
-                            {d.limite_primeiro_contato
-                              ? format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')
-                              : '-'}
-                          </span>
-                        </p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          'uppercase text-[10px] tracking-wider font-bold shadow-sm border-0',
-                          d.status === 'recebido' && 'text-red-400 bg-red-400/10',
-                          d.status === 'sendo_tratado' && 'text-yellow-400 bg-yellow-400/10',
-                        )}
-                      >
-                        {d.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                  <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                    Nenhuma demanda pendente
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* ANIVERSARIANTES */}
-          <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-md">
-                  <Cake className="size-5 text-amber-500" />
-                </div>
+              <div className="flex items-center gap-2">
                 <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                  Aniversariantes
+                  SAC
                 </CardTitle>
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2 py-0.5 rounded-full">
+                  {minhasDemandas.length}
+                </Badge>
               </div>
-              <Select
-                value={selectedMonth.toString()}
-                onValueChange={(v) => setSelectedMonth(parseInt(v))}
-              >
-                <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-300">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
-                  {MESES.map((mes, idx) => (
-                    <SelectItem
-                      key={idx}
-                      value={idx.toString()}
-                      className="text-xs focus:bg-slate-800 focus:text-slate-100"
-                    >
-                      {mes}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-              {loading ? (
-                <div className="text-sm text-slate-500">Carregando...</div>
-              ) : aniversariantes.length > 0 ? (
-                <div className="space-y-3 pr-2">
-                  {aniversariantes.map((a) => (
-                    <div
-                      key={a.id}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="h-8 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2"
+            >
+              <Link to="/operacional/sac">
+                Ver Tudo <ArrowRight className="ml-1 size-3" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
+            {minhasDemandas.length > 0 ? (
+              <div className="flex flex-col gap-3 pr-2">
+                {minhasDemandas.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div>
+                      <p className="font-semibold text-sm text-slate-200">
+                        <Link
+                          to={`/operacional/sac?demanda=${d.id}`}
+                          className="hover:text-amber-400 hover:underline"
+                        >
+                          {d.paciente_nome}
+                        </Link>
+                      </p>
+                      <p className="text-xs text-slate-500 flex items-center gap-2 mt-1.5">
+                        <span
+                          className={cn(
+                            'px-1.5 py-0.5 rounded text-[10px] uppercase font-bold shadow-sm',
+                            d.tipo === 'reclamacao'
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/20'
+                              : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20',
+                          )}
+                        >
+                          {d.tipo}
+                        </span>
+                        <span className="font-medium">
+                          Prazo:{' '}
+                          {d.limite_primeiro_contato
+                            ? format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')
+                            : '-'}
+                        </span>
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
                       className={cn(
-                        'flex items-center gap-3',
-                        a.isPast ? 'opacity-50 grayscale' : '',
+                        'uppercase text-[10px] tracking-wider font-bold shadow-sm border-0',
+                        d.status === 'recebido' && 'text-red-400 bg-red-400/10',
+                        d.status === 'sendo_tratado' && 'text-yellow-400 bg-yellow-400/10',
                       )}
                     >
-                      <Avatar className="size-8 border border-slate-700">
-                        <AvatarImage
-                          src={
-                            a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
-                          }
-                        />
-                        <AvatarFallback className="bg-slate-800 text-slate-300">
-                          {a.nome.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
-                        <p className="text-xs text-slate-500">
-                          Dia {a.day.toString().padStart(2, '0')}
-                        </p>
-                      </div>
-                      {!a.isPast &&
-                        selectedMonth === new Date().getMonth() &&
-                        a.day === new Date().getDate() && (
-                          <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-0 uppercase shrink-0 font-bold border-0">
-                            Hoje!
-                          </Badge>
-                        )}
+                      {d.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
+                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
+                  Nenhuma demanda pendente
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* GESTÃO DE ESTOQUE */}
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
+            <div className="p-2 bg-amber-500/10 rounded-md">
+              <Package className="size-5 text-amber-500" />
+            </div>
+            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+              Gestão de Estoque
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
+            {itemsAvisos.length > 0 ? (
+              <div className="flex flex-col gap-3 pr-2">
+                {itemsAvisos.map((item) => (
+                  <Link
+                    key={item.id}
+                    to={`/estoque?q=${encodeURIComponent(item.nome)}`}
+                    className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800 transition-colors cursor-pointer group"
+                  >
+                    <div>
+                      <p className="font-semibold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">
+                        {item.nome}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {item.marca || 'Sem marca'} - {item.variacao || 'S/V'}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                  <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                    Nenhum aniversariante neste mês
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      {item.data_proxima_revisao &&
+                      new Date(
+                        new Date(item.data_proxima_revisao).getTime() +
+                          new Date(item.data_proxima_revisao).getTimezoneOffset() * 60000,
+                      ) <= new Date(new Date().setHours(0, 0, 0, 0)) ? (
+                        <p className="font-bold text-amber-600 text-[11px] uppercase bg-amber-50 px-2 py-1 rounded inline-block border border-amber-200 shadow-sm">
+                          Prazo de Compra Atingido
+                        </p>
+                      ) : null}
+                      {(item.quantidade_estoque || 0) <= (item.quantidade_minima || 0) && (
+                        <p className="font-bold text-destructive text-sm bg-red-500/10 px-2 py-1 rounded inline-block">
+                          {item.quantidade_estoque} em estoque
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-500">Mínimo: {item.quantidade_minima}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
+                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
+                  Nenhum alerta no momento. Tudo em ordem.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* GESTÃO DE ESTOQUE */}
-          <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
+      {/* Linha 2: Gestão de RH */}
+      <div className="mb-6">
+        <GestaoRH />
+      </div>
+
+      {/* Linha 3: Aniversariantes e Atalhos */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* ANIVERSARIANTES */}
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-500/10 rounded-md">
-                <Package className="size-5 text-amber-500" />
+                <Cake className="size-5 text-amber-500" />
               </div>
               <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                Gestão de Estoque
+                Aniversariantes
               </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-              {itemsAvisos.length > 0 ? (
-                <div className="flex flex-col gap-3 pr-2">
-                  {itemsAvisos.map((item) => (
-                    <Link
-                      key={item.id}
-                      to={`/estoque?q=${encodeURIComponent(item.nome)}`}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800 transition-colors cursor-pointer group"
-                    >
-                      <div>
-                        <p className="font-semibold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">
-                          {item.nome}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {item.marca || 'Sem marca'} - {item.variacao || 'S/V'}
-                        </p>
-                      </div>
-                      <div className="text-right flex flex-col items-end gap-1">
-                        {item.data_proxima_revisao &&
-                        new Date(
-                          new Date(item.data_proxima_revisao).getTime() +
-                            new Date(item.data_proxima_revisao).getTimezoneOffset() * 60000,
-                        ) <= new Date(new Date().setHours(0, 0, 0, 0)) ? (
-                          <p className="font-bold text-amber-600 text-[11px] uppercase bg-amber-50 px-2 py-1 rounded inline-block border border-amber-200 shadow-sm">
-                            Prazo de Compra Atingido
-                          </p>
-                        ) : null}
-                        {(item.quantidade_estoque || 0) <= (item.quantidade_minima || 0) && (
-                          <p className="font-bold text-destructive text-sm bg-red-500/10 px-2 py-1 rounded inline-block">
-                            {item.quantidade_estoque} em estoque
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-500">Mínimo: {item.quantidade_minima}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                  <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                    Nenhum alerta no momento. Tudo em ordem.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* ATALHOS */}
-          <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
-              <div className="p-2 bg-amber-500/10 rounded-md">
-                <LayoutDashboard className="size-5 text-amber-500" />
+            </div>
+            <Select
+              value={selectedMonth.toString()}
+              onValueChange={(v) => setSelectedMonth(parseInt(v))}
+            >
+              <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-300">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
+                {MESES.map((mes, idx) => (
+                  <SelectItem
+                    key={idx}
+                    value={idx.toString()}
+                    className="text-xs focus:bg-slate-800 focus:text-slate-100"
+                  >
+                    {mes}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
+            {loading ? (
+              <div className="text-sm text-slate-500">Carregando...</div>
+            ) : aniversariantes.length > 0 ? (
+              <div className="space-y-3 pr-2">
+                {aniversariantes.map((a) => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      'flex items-center gap-3',
+                      a.isPast ? 'opacity-50 grayscale' : '',
+                    )}
+                  >
+                    <Avatar className="size-8 border border-slate-700">
+                      <AvatarImage
+                        src={
+                          a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
+                        }
+                      />
+                      <AvatarFallback className="bg-slate-800 text-slate-300">
+                        {a.nome.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
+                      <p className="text-xs text-slate-500">
+                        Dia {a.day.toString().padStart(2, '0')}
+                      </p>
+                    </div>
+                    {!a.isPast &&
+                      selectedMonth === new Date().getMonth() &&
+                      a.day === new Date().getDate() && (
+                        <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-0 uppercase shrink-0 font-bold border-0">
+                          Hoje!
+                        </Badge>
+                      )}
+                  </div>
+                ))}
               </div>
-              <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                Atalhos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 pt-6 flex flex-col gap-4">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
-              >
-                <Link to="/operacional/comunicados">
-                  <Calendar className="mr-3 h-5 w-5" />
-                  Compromissos de Hoje
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
-              >
-                <Link to="/estoque">
-                  <RefreshCcw className="mr-3 h-5 w-5" />
-                  Atualizar Estoque
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
+                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
+                  Nenhum aniversariante neste mês
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ATALHOS */}
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
+            <div className="p-2 bg-amber-500/10 rounded-md">
+              <LayoutDashboard className="size-5 text-amber-500" />
+            </div>
+            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+              Atalhos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 pt-6 flex flex-col gap-4">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
+            >
+              <Link to="/operacional/comunicados">
+                <Calendar className="mr-3 h-5 w-5" />
+                Compromissos de Hoje
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
+            >
+              <Link to="/estoque">
+                <RefreshCcw className="mr-3 h-5 w-5" />
+                Atualizar Estoque
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
