@@ -265,32 +265,6 @@ export function EstruturaPrecificacao() {
     }
   }, [filterType, especialidades])
 
-  const calcMargemLucro = (proc: Procedimento) => {
-    const totalHorasDesconto = horasTrabalhadas * 0.8
-    const totalCustoHora = totalHorasDesconto > 0 ? custosFixos / totalHorasDesconto : 0
-    const totalCustoHoraFator = totalCustoHora * 1.15
-    const custoMinuto = totalCustoHoraFator / 60
-
-    const custoFixo = (proc.tempo_execucao || 0) * custoMinuto
-    const cartaoVal = ((proc.valor_cobrado || 0) * globals.taxa_cartao) / 100
-    const comissaoVal = ((proc.valor_cobrado || 0) * globals.comissao) / 100
-    const inadimplenciaVal = ((proc.valor_cobrado || 0) * globals.inadimplencia) / 100
-    const impostoVal = ((proc.valor_cobrado || 0) * globals.imposto) / 100
-    const dentistaVal = proc.honorarios_dentista || 0
-
-    const totalVariavelVal =
-      (proc.custo_laboratorio || 0) +
-      (proc.custo_material || 0) +
-      cartaoVal +
-      comissaoVal +
-      inadimplenciaVal
-
-    const custoTotal = custoFixo + totalVariavelVal + dentistaVal + impostoVal
-    const lucroValor = (proc.valor_cobrado || 0) - custoTotal
-
-    return (proc.valor_cobrado || 0) > 0 ? (lucroValor / proc.valor_cobrado) * 100 : 0
-  }
-
   const handleSave = async () => {
     if (!selProc) return
     setSaving(true)
@@ -330,32 +304,58 @@ export function EstruturaPrecificacao() {
     }
   }
 
-  const filteredProcedimentos = useMemo(() => {
-    if (filterType === 'all') return procedimentos
+  const procsWithMargin = useMemo(() => {
+    return procedimentos.map((proc) => {
+      const totalHorasDesconto = horasTrabalhadas * 0.8
+      const totalCustoHora = totalHorasDesconto > 0 ? custosFixos / totalHorasDesconto : 0
+      const totalCustoHoraFator = totalCustoHora * 1.15
+      const custoMinuto = totalCustoHoraFator / 60
 
-    const procsWithMargin = procedimentos.map((p) => ({ ...p, margem: calcMargemLucro(p) }))
+      const custoFixo = (proc.tempo_execucao || 0) * custoMinuto
+      const cartaoVal = ((proc.valor_cobrado || 0) * globals.taxa_cartao) / 100
+      const comissaoVal = ((proc.valor_cobrado || 0) * globals.comissao) / 100
+      const inadimplenciaVal = ((proc.valor_cobrado || 0) * globals.inadimplencia) / 100
+      const impostoVal = ((proc.valor_cobrado || 0) * globals.imposto) / 100
+      const dentistaVal = proc.honorarios_dentista || 0
+
+      const totalVariavelVal =
+        (proc.custo_laboratorio || 0) +
+        (proc.custo_material || 0) +
+        cartaoVal +
+        comissaoVal +
+        inadimplenciaVal
+
+      const custoTotal = custoFixo + totalVariavelVal + dentistaVal + impostoVal
+      const lucroValor = (proc.valor_cobrado || 0) - custoTotal
+
+      const margem = (proc.valor_cobrado || 0) > 0 ? (lucroValor / proc.valor_cobrado) * 100 : 0
+
+      return { ...proc, margem }
+    })
+  }, [procedimentos, horasTrabalhadas, custosFixos, globals])
+
+  const filteredAndSortedProcs = useMemo(() => {
+    let result = procsWithMargin
+
+    if (search) {
+      result = result.filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()))
+    }
 
     if (filterType === 'lt_30') {
-      return procsWithMargin.filter((p) => p.margem < 30)
+      result = result.filter((p) => p.margem < 30).sort((a, b) => a.margem - b.margem)
+    } else if (filterType === 'top_10_plus') {
+      result = [...result].sort((a, b) => b.margem - a.margem).slice(0, 10)
+    } else if (filterType === 'top_10_minus') {
+      result = [...result].sort((a, b) => a.margem - b.margem).slice(0, 10)
     }
 
-    if (filterType === 'top_10_plus') {
-      return procsWithMargin.sort((a, b) => b.margem - a.margem).slice(0, 10)
-    }
-
-    if (filterType === 'top_10_minus') {
-      return procsWithMargin.sort((a, b) => a.margem - b.margem).slice(0, 10)
-    }
-
-    return procedimentos
-  }, [procedimentos, filterType, horasTrabalhadas, custosFixos, globals])
+    return result
+  }, [procsWithMargin, filterType, search])
 
   const filteredEspes = useMemo(() => {
     return especialidades
       .map((esp) => {
-        const procs = filteredProcedimentos
-          .filter((p) => p.especialidade_id === esp.id)
-          .filter((p) => p.nome.toLowerCase().includes(search.toLowerCase()))
+        const procs = filteredAndSortedProcs.filter((p) => p.especialidade_id === esp.id)
         return { ...esp, procs }
       })
       .filter(
@@ -363,12 +363,24 @@ export function EstruturaPrecificacao() {
           esp.procs.length > 0 ||
           (filterType === 'all' && esp.nome.toLowerCase().includes(search.toLowerCase())),
       )
-  }, [especialidades, filteredProcedimentos, search, filterType])
+  }, [especialidades, filteredAndSortedProcs, search, filterType])
 
   const activeProc = useMemo(
     () => procedimentos.find((p) => p.id === selProc),
     [procedimentos, selProc],
   )
+
+  const getProfitColor = (margin: number) => {
+    if (margin < 20) return 'text-rose-500'
+    if (margin < 30) return 'text-amber-500'
+    return 'text-emerald-500'
+  }
+
+  const getProfitBadgeClass = (margin: number) => {
+    if (margin < 20) return 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+    if (margin < 30) return 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+  }
 
   if (loading) {
     return (
@@ -417,7 +429,6 @@ export function EstruturaPrecificacao() {
   const margemLucroPerc =
     (data.valor_cobrado || 0) > 0 ? (lucroValor / data.valor_cobrado) * 100 : 0
 
-  // Cálculo Valor Mínimo para meta de 30%
   const cvPercTotal =
     globals.taxa_cartao + globals.comissao + globals.inadimplencia + globals.imposto
   const despesasFixasReais =
@@ -425,12 +436,8 @@ export function EstruturaPrecificacao() {
   const denom = 1 - 30 / 100 - cvPercTotal / 100
   const valorMinimo = denom > 0 ? despesasFixasReais / denom : 0
 
-  const getProfitColor = (margin: number) => {
-    if (margin < 20) return 'text-red-500'
-    if (margin < 25) return 'text-amber-500'
-    return 'text-emerald-500'
-  }
   const profitColorClass = getProfitColor(margemLucroPerc)
+  const isFlatView = filterType !== 'all'
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-stretch min-h-[750px]">
@@ -533,51 +540,126 @@ export function EstruturaPrecificacao() {
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar mt-2">
-          {filteredEspes.length > 0 ? (
+          {isFlatView ? (
+            filteredAndSortedProcs.length > 0 ? (
+              <div className="space-y-1.5 mt-2 pr-1">
+                {filteredAndSortedProcs.map((proc) => {
+                  const espNome =
+                    especialidades.find((e) => e.id === proc.especialidade_id)?.nome || ''
+                  return (
+                    <div
+                      key={proc.id}
+                      className={cn(
+                        'w-full flex items-center justify-between p-3 text-sm rounded-lg border transition-all duration-200 group/proc relative cursor-pointer',
+                        selProc === proc.id
+                          ? 'bg-slate-800 border-slate-700 shadow-sm'
+                          : 'bg-slate-900/50 border-transparent hover:bg-slate-800/80 hover:border-slate-700/50',
+                      )}
+                      onClick={() => setSelProc(proc.id)}
+                    >
+                      <div className="flex-1 min-w-0 pr-3">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <div
+                            className={cn(
+                              'w-2 h-2 rounded-full shrink-0',
+                              selProc === proc.id ? 'bg-amber-500' : 'bg-slate-600',
+                            )}
+                          />
+                          <p className="font-medium text-slate-200 truncate">{proc.nome}</p>
+                        </div>
+                        <p className="text-xs text-slate-500 truncate pl-4">{espNome}</p>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div
+                          className={cn(
+                            'px-2 py-1 rounded-md text-xs font-bold border',
+                            getProfitBadgeClass(proc.margem),
+                          )}
+                        >
+                          {proc.margem.toFixed(1)}%
+                        </div>
+
+                        {isAdmin && (
+                          <div className="opacity-0 group-hover/proc:opacity-100 flex items-center gap-1 transition-opacity w-[52px] justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditProc(e, proc.id)
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-950/50 hover:bg-slate-900 rounded transition-colors"
+                              title="Editar"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteProc(e, proc.id)
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-950/50 hover:bg-slate-900 rounded transition-colors"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-slate-500 text-sm">
+                Nenhum procedimento encontrado.
+              </div>
+            )
+          ) : filteredEspes.length > 0 ? (
             filteredEspes.map((esp) => (
               <div key={esp.id} className="space-y-1 group/esp">
                 <div
                   onClick={() => toggle(esp.id)}
                   className="flex items-center w-full justify-between py-2 px-3 rounded-md hover:bg-slate-800/50 transition-colors text-amber-500 hover:text-amber-400 cursor-pointer"
                 >
-                  <span className="truncate text-xs font-bold uppercase tracking-wider">
+                  <span className="truncate text-xs font-bold uppercase tracking-wider flex-1">
                     {esp.nome}
                   </span>
-                  <div className="flex items-center shrink-0 min-h-[28px]">
-                    <div className="flex items-center justify-end w-[84px]">
-                      {isAdmin && (
-                        <div className="opacity-0 group-hover/esp:opacity-100 pointer-events-none group-hover/esp:pointer-events-auto transition-opacity flex items-center gap-1 mr-1">
-                          <div
-                            onClick={(e) => handleAddProc(e, esp.id)}
-                            className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
-                            title="Novo Procedimento"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </div>
-                          <div
-                            onClick={(e) => handleEditEspec(e, esp.id)}
-                            className="p-1 text-amber-500/70 hover:text-blue-400 transition-colors cursor-pointer"
-                            title="Editar"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </div>
-                          <div
-                            onClick={(e) => handleDeleteEspec(e, esp.id)}
-                            className="p-1 text-amber-500/70 hover:text-red-400 transition-colors cursor-pointer"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </div>
+                  <div className="flex items-center shrink-0 min-h-[28px] gap-2">
+                    <span className="text-xs font-semibold text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded-full">
+                      {esp.procs.length} proc
+                    </span>
+                    {isAdmin && (
+                      <div className="opacity-0 group-hover/esp:opacity-100 pointer-events-none group-hover/esp:pointer-events-auto transition-opacity flex items-center gap-1 mr-1">
+                        <div
+                          onClick={(e) => handleAddProc(e, esp.id)}
+                          className="p-1 text-amber-500/70 hover:text-emerald-400 transition-colors cursor-pointer"
+                          title="Novo Procedimento"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
                         </div>
+                        <div
+                          onClick={(e) => handleEditEspec(e, esp.id)}
+                          className="p-1 text-amber-500/70 hover:text-blue-400 transition-colors cursor-pointer"
+                          title="Editar"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </div>
+                        <div
+                          onClick={(e) => handleDeleteEspec(e, esp.id)}
+                          className="p-1 text-amber-500/70 hover:text-red-400 transition-colors cursor-pointer"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    )}
+                    <span className="text-amber-500/70 group-hover/esp:text-amber-400 transition-colors w-5 flex justify-center shrink-0">
+                      {expanded.includes(esp.id) ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
                       )}
-                      <span className="text-amber-500/70 group-hover/esp:text-amber-400 transition-colors w-5 flex justify-center shrink-0">
-                        {expanded.includes(esp.id) ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </span>
-                    </div>
+                    </span>
                   </div>
                 </div>
 
@@ -587,41 +669,53 @@ export function EstruturaPrecificacao() {
                       <div
                         key={proc.id}
                         className={cn(
-                          'w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all duration-200 group/proc relative',
+                          'w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-all duration-200 group/proc relative cursor-pointer',
                           selProc === proc.id
                             ? 'bg-slate-800/80 text-white font-medium shadow-sm'
                             : 'bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/40',
                         )}
+                        onClick={() => setSelProc(proc.id)}
                       >
-                        <button
-                          onClick={() => setSelProc(proc.id)}
-                          className="flex-1 text-left truncate flex items-center gap-2"
-                        >
+                        <div className="flex-1 truncate flex items-center gap-2">
                           <div
                             className={cn(
-                              'w-1.5 h-1.5 rounded-full transition-colors',
+                              'w-1.5 h-1.5 rounded-full transition-colors shrink-0',
                               selProc === proc.id
                                 ? 'bg-amber-500'
                                 : 'bg-slate-600 group-hover/proc:bg-slate-400',
                             )}
                           />
-                          {proc.nome}
-                        </button>
+                          <span className="truncate">{proc.nome}</span>
+                        </div>
 
-                        <div className="flex items-center shrink-0 min-h-[24px]">
+                        <div className="flex items-center shrink-0 ml-3 gap-2">
+                          <span
+                            className={cn(
+                              'text-xs font-bold px-1.5 py-0.5 rounded border',
+                              getProfitBadgeClass(proc.margem),
+                            )}
+                          >
+                            {proc.margem.toFixed(1)}%
+                          </span>
                           <div className="flex items-center justify-end w-[52px]">
                             {isAdmin && (
-                              <div className="opacity-0 group-hover/proc:opacity-100 pointer-events-none group-hover/proc:pointer-events-auto transition-opacity flex items-center gap-1">
+                              <div className="opacity-0 group-hover/proc:opacity-100 transition-opacity flex items-center gap-1">
                                 <button
-                                  onClick={(e) => handleEditProc(e, proc.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEditProc(e, proc.id)
+                                  }}
                                   className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
                                   title="Editar"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                  onClick={(e) => handleDeleteProc(e, proc.id)}
-                                  className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteProc(e, proc.id)
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-rose-400 transition-colors"
                                   title="Excluir"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
