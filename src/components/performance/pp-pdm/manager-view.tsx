@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { format, startOfWeek, addDays, isAfter } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,7 @@ import {
   XCircle,
   GraduationCap,
 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 function getPastSaturdays(count = 10) {
   const dates = []
@@ -44,10 +46,331 @@ function getPastSaturdays(count = 10) {
   return dates
 }
 
+function PendingUserCard({ u }: { u: any }) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-rose-100 bg-rose-50/30">
+      <div className="w-8 h-8 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
+        {u.avatar_url ? (
+          <img src={u.avatar_url} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-rose-500 font-medium text-xs">
+            {u.nome.substring(0, 2).toUpperCase()}
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="font-medium text-sm text-slate-800">{u.nome}</p>
+        <div className="flex items-center gap-1 mt-0.5">
+          <XCircle className="w-3.5 h-3.5 text-rose-500" />
+          <span className="text-xs text-rose-600 font-medium">Aguardando Envio</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FilledUserCard({
+  u,
+  submission,
+  onReload,
+}: {
+  u: any
+  submission: any
+  onReload: () => void
+}) {
+  const { profile } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [newConsideration, setNewConsideration] = useState('')
+  const [savingConsideration, setSavingConsideration] = useState(false)
+
+  const handleTogglePP = async (id: string, currentVal: boolean, currentNota: number) => {
+    const newVal = !currentVal
+    let newNota = currentNota || 0
+    if (newVal) {
+      newNota = Math.min(newNota + 2, 10)
+    } else {
+      newNota = Math.max(newNota - 2, 0)
+    }
+
+    const { error } = await supabase
+      .from('performance_pp_pdm' as any)
+      .update({ pp_validado: newVal, nota_pdm: newNota })
+      .eq('id', id)
+
+    if (!error) {
+      toast.success(newVal ? 'Ponto Positivo validado!' : 'Ponto Positivo invalidado!')
+      onReload()
+    }
+  }
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('performance_pp_pdm' as any)
+      .update({ status_gestao: newStatus })
+      .eq('id', id)
+
+    if (!error) {
+      toast.success('Status atualizado!')
+      onReload()
+    }
+  }
+
+  const handleAddConsideration = async () => {
+    if (!newConsideration.trim()) return
+    setSavingConsideration(true)
+
+    const newCons = {
+      admin_id: profile?.id,
+      admin_nome: profile?.nome || 'Administrador',
+      data: new Date().toISOString(),
+      texto: newConsideration,
+    }
+
+    const historicoAtual = Array.isArray(submission.consideracoes_gestao)
+      ? submission.consideracoes_gestao
+      : []
+    const novoHistorico = [...historicoAtual, newCons]
+
+    const { error } = await supabase
+      .from('performance_pp_pdm' as any)
+      .update({ consideracoes_gestao: novoHistorico })
+      .eq('id', submission.id)
+
+    if (!error) {
+      toast.success('Consideração adicionada!')
+      setNewConsideration('')
+      onReload()
+    } else {
+      toast.error('Erro ao adicionar consideração.')
+    }
+    setSavingConsideration(false)
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'resolvido':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+          >
+            Resolvido
+          </Badge>
+        )
+      case 'em_acompanhamento':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100"
+          >
+            Em Acompanhamento
+          </Badge>
+        )
+      case 'requer_reuniao':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100"
+          >
+            Requer Reunião
+          </Badge>
+        )
+      default:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100"
+          >
+            Aguardando Ação
+          </Badge>
+        )
+    }
+  }
+
+  return (
+    <div className="flex flex-col p-3 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-colors shadow-sm gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-200">
+            {u.avatar_url ? (
+              <img src={u.avatar_url} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-500 font-medium text-xs">
+                {u.nome.substring(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="font-medium text-sm text-slate-800">{u.nome}</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-xs text-slate-500 font-medium">Enviado</span>
+            </div>
+          </div>
+        </div>
+        {getStatusBadge(submission.status_gestao || 'aguardando_acao')}
+      </div>
+
+      <div className="flex items-center justify-end border-t border-slate-100 pt-3 mt-1">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 bg-slate-50">
+              <Eye className="w-4 h-4" /> Analisar Feedback
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-50">
+            <DialogHeader>
+              <DialogTitle className="text-slate-800">Feedback e Ações - {u.nome}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-emerald-50/50 border border-emerald-100 flex flex-col">
+                  <div className="flex items-center justify-between mb-3 border-b border-emerald-100 pb-2">
+                    <h4 className="font-bold text-emerald-800 text-sm">Pontos Positivos (PP)</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-medium text-emerald-700">
+                        Validar (+2 pts)
+                      </span>
+                      <Switch
+                        checked={submission.pp_validado}
+                        onCheckedChange={() =>
+                          handleTogglePP(submission.id, submission.pp_validado, submission.nota_pdm)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-emerald-900 whitespace-pre-wrap flex-1">
+                    {submission.pontos_positivos || 'Nenhum ponto positivo registrado.'}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-rose-50/50 border border-rose-100 flex flex-col">
+                  <div className="flex items-center justify-between mb-3 border-b border-rose-100 pb-2">
+                    <h4 className="font-bold text-rose-800 text-sm">Pontos de Melhoria (PDM)</h4>
+                    {submission.nota_pdm !== null && submission.nota_pdm !== undefined && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white text-rose-700 border-rose-200 text-[10px]"
+                      >
+                        Nota: {submission.nota_pdm}/10
+                      </Badge>
+                    )}
+                  </div>
+                  {submission.pdm_itens &&
+                  Array.isArray(submission.pdm_itens) &&
+                  submission.pdm_itens.length > 0 ? (
+                    <div className="space-y-3 flex-1">
+                      {submission.pdm_itens.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="bg-white p-2.5 rounded border border-rose-100 shadow-sm space-y-1.5"
+                        >
+                          <div>
+                            <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block">
+                              Crítica
+                            </span>
+                            <p className="text-xs text-slate-800 whitespace-pre-wrap">
+                              {item.melhoria}
+                            </p>
+                          </div>
+                          <div className="pt-1.5 border-t border-slate-50">
+                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider block">
+                              Sugestão
+                            </span>
+                            <p className="text-xs text-slate-800 whitespace-pre-wrap">
+                              {item.sugestao}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-rose-900 whitespace-pre-wrap flex-1">
+                      {submission.pontos_melhoria || 'Nenhum ponto de melhoria registrado.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                  <h4 className="font-bold text-slate-800 text-base">
+                    Ações e Considerações da Gestão
+                  </h4>
+                  <Select
+                    value={submission.status_gestao || 'aguardando_acao'}
+                    onValueChange={(val) => handleUpdateStatus(submission.id, val)}
+                  >
+                    <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aguardando_acao">Aguardando Ação</SelectItem>
+                      <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
+                      <SelectItem value="requer_reuniao">Requer Reunião</SelectItem>
+                      <SelectItem value="resolvido">Resolvido</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3 mb-4 max-h-[200px] overflow-y-auto pr-2">
+                  {submission.consideracoes_gestao && submission.consideracoes_gestao.length > 0 ? (
+                    submission.consideracoes_gestao.map((cons: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm"
+                      >
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="font-bold text-slate-700 text-xs">
+                            {cons.admin_nome}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {format(new Date(cons.data), 'dd/MM/yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 whitespace-pre-wrap text-sm">{cons.texto}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400 italic text-center py-2">
+                      Nenhuma consideração registrada ainda.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                  <Textarea
+                    placeholder="Adicionar consideração (plano de ação, análise, decisão)..."
+                    value={newConsideration}
+                    onChange={(e) => setNewConsideration(e.target.value)}
+                    className="text-sm min-h-[80px] bg-white resize-none"
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      onClick={handleAddConsideration}
+                      disabled={!newConsideration.trim() || savingConsideration}
+                      className="bg-slate-800 hover:bg-slate-700 text-white"
+                    >
+                      {savingConsideration ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      Salvar Consideração
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}
+
 export function ManagerPPDMView() {
   const pastWeeks = getPastSaturdays(10)
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0])
-  const [isGenerating, setIsGenerating] = useState(false)
   const [users, setUsers] = useState<any[]>([])
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,32 +428,15 @@ export function ManagerPPDMView() {
     setLoading(false)
   }
 
-  const handleTogglePP = async (id: string, currentVal: boolean, currentNota: number) => {
-    const newVal = !currentVal
-    let newNota = currentNota || 0
-    if (newVal) {
-      newNota = Math.min(newNota + 2, 10)
-    } else {
-      newNota = Math.max(newNota - 2, 0)
-    }
-
-    const { error } = await supabase
-      .from('performance_pp_pdm' as any)
-      .update({ pp_validado: newVal, nota_pdm: newNota })
-      .eq('id', id)
-
-    if (!error) {
-      toast.success(newVal ? 'Ponto Positivo validado!' : 'Ponto Positivo invalidado!')
-      loadData()
-    }
-  }
+  const filledUsers = users.filter((u) => submissions.find((s) => s.usuario_id === u.id))
+  const pendingUsers = users.filter((u) => !submissions.find((s) => s.usuario_id === u.id))
 
   return (
     <div className="space-y-6 mt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-lg font-bold text-slate-800">Painel de Acompanhamento</h2>
-          <p className="text-sm text-slate-500">Visualize as entregas semanais obrigatórias</p>
+          <p className="text-sm text-slate-500">Visualize e direcione as entregas semanais</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={selectedWeek} onValueChange={setSelectedWeek}>
@@ -258,156 +564,60 @@ export function ManagerPPDMView() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Status da Semana Selecionada</CardTitle>
-              <CardDescription>Colaboradores com preenchimento obrigatório</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {users.map((u) => {
-                  const submission = submissions.find((s) => s.usuario_id === u.id)
-                  const hasFilled = !!submission
-
-                  return (
-                    <div
-                      key={u.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
-                          {u.avatar_url ? (
-                            <img src={u.avatar_url} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-500 font-medium text-xs">
-                              {u.nome.substring(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm text-slate-800">{u.nome}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            {hasFilled ? (
-                              <>
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="text-xs text-emerald-600 font-medium">
-                                  Preenchido
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                <span className="text-xs text-rose-600 font-medium">Pendente</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={!hasFilled}
-                            className="gap-2"
-                          >
-                            <Eye className="w-4 h-4" /> Ler Feedback
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Feedback Semanal - {u.nome}</DialogTitle>
-                          </DialogHeader>
-                          {submission && (
-                            <div className="space-y-6 pt-4">
-                              <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-bold text-emerald-800">
-                                    Pontos Positivos (PP)
-                                  </h4>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-emerald-700">
-                                      Validar PP (+2 pts)?
-                                    </span>
-                                    <Switch
-                                      checked={submission.pp_validado}
-                                      onCheckedChange={() =>
-                                        handleTogglePP(
-                                          submission.id,
-                                          submission.pp_validado,
-                                          submission.nota_pdm,
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                                <p className="text-sm text-emerald-900 whitespace-pre-wrap">
-                                  {submission.pontos_positivos ||
-                                    'Nenhum ponto positivo registrado.'}
-                                </p>
-                              </div>
-
-                              <div className="p-4 rounded-lg bg-rose-50 border border-rose-100">
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="font-bold text-rose-800">
-                                    Pontos de Melhoria (PDM)
-                                  </h4>
-                                  {submission.nota_pdm !== null &&
-                                    submission.nota_pdm !== undefined && (
-                                      <Badge
-                                        variant="outline"
-                                        className="bg-white text-rose-700 border-rose-200"
-                                      >
-                                        Nota: {submission.nota_pdm}/10
-                                      </Badge>
-                                    )}
-                                </div>
-                                {submission.pdm_itens &&
-                                Array.isArray(submission.pdm_itens) &&
-                                submission.pdm_itens.length > 0 ? (
-                                  <div className="space-y-3">
-                                    {submission.pdm_itens.map((item: any, idx: number) => (
-                                      <div
-                                        key={idx}
-                                        className="bg-white p-3 rounded-lg border border-rose-100 shadow-sm space-y-2"
-                                      >
-                                        <div>
-                                          <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider block mb-0.5">
-                                            Crítica
-                                          </span>
-                                          <p className="text-sm text-slate-800 whitespace-pre-wrap">
-                                            {item.melhoria}
-                                          </p>
-                                        </div>
-                                        <div className="pt-2 border-t border-slate-100">
-                                          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider block mb-0.5">
-                                            Sugestão de Solução
-                                          </span>
-                                          <p className="text-sm text-slate-800 whitespace-pre-wrap">
-                                            {item.sugestao}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-sm text-rose-900 whitespace-pre-wrap">
-                                    {submission.pontos_melhoria ||
-                                      'Nenhum ponto de melhoria registrado.'}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-emerald-100 shadow-sm bg-white">
+              <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 pb-4">
+                <CardTitle className="text-emerald-800 flex items-center gap-2 text-base">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Feedbacks Recebidos (
+                  {filledUsers.length})
+                </CardTitle>
+                <CardDescription className="text-emerald-600/70">
+                  Colaboradores que já enviaram e aguardam análise
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {filledUsers.length === 0 ? (
+                    <div className="text-center py-8 text-emerald-600/60 text-sm">
+                      Nenhum feedback recebido ainda.
                     </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                  ) : (
+                    filledUsers.map((u) => (
+                      <FilledUserCard
+                        key={u.id}
+                        u={u}
+                        submission={submissions.find((s) => s.usuario_id === u.id)}
+                        onReload={loadData}
+                      />
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-rose-100 shadow-sm bg-white">
+              <CardHeader className="bg-rose-50/50 border-b border-rose-100 pb-4">
+                <CardTitle className="text-rose-800 flex items-center gap-2 text-base">
+                  <XCircle className="w-5 h-5 text-rose-600" /> Feedbacks Pendentes (
+                  {pendingUsers.length})
+                </CardTitle>
+                <CardDescription className="text-rose-600/70">
+                  Colaboradores que ainda não enviaram nesta semana
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {pendingUsers.length === 0 ? (
+                    <div className="text-center py-8 text-emerald-600 font-medium text-sm">
+                      Todos os colaboradores preencheram! 🎉
+                    </div>
+                  ) : (
+                    pendingUsers.map((u) => <PendingUserCard key={u.id} u={u} />)
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </>
       )}
     </div>
