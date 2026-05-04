@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Landmark, Save, Loader2, User as UserIcon, Building2, TrendingUp } from 'lucide-react'
+import {
+  Landmark,
+  Save,
+  Loader2,
+  User as UserIcon,
+  Building2,
+  TrendingUp,
+  Info,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -60,7 +69,8 @@ export default function GestaoFiscal() {
   }, [])
 
   const pf_receita_calc = c.pf_despesa + 3000
-  const pj1_receita_calc = c.pj1_despesa_folha * (1 + c.pj1_margem_perc / 100)
+  const pj1_receita_calc =
+    c.pj1_margem_perc > 0 ? Math.max(0, c.pj1_despesa_folha / (c.pj1_margem_perc / 100) - 1000) : 0
   const excedente = Math.max(0, c.faturamento_previsto - pf_receita_calc - pj1_receita_calc)
 
   const impPj1 = pj1_receita_calc * (c.pj1_imposto_perc / 100)
@@ -187,15 +197,34 @@ export default function GestaoFiscal() {
                 })}
               </div>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
-                Automático: Despesa Folha + Proporção
+                Automático: (Despesa Folha ÷ Proporção) - R$ 1.000 (Margem de segurança)
               </p>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Despesa (Folha)
-                  </label>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Despesa (Folha)
+                    </label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className="cursor-help outline-none">
+                          <Info className="w-3.5 h-3.5 text-slate-500 hover:text-blue-400 transition-colors" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-800 border border-slate-700 text-slate-200 max-w-[280px] p-3 shadow-xl z-50">
+                        <p className="text-xs mb-2">
+                          <strong>O que incluir:</strong> Salários de todos os colaboradores,
+                          pró-labores, INSS e FGTS.
+                        </p>
+                        <p className="text-xs text-blue-300">
+                          <strong>Aviso de competência:</strong> A despesa do mês atual (ex: Abril)
+                          é a base para o teto de receita do mês seguinte (ex: Maio).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <CurrencyInput
                     value={c.pj1_despesa_folha}
                     onChange={(v: number) => setC({ ...c, pj1_despesa_folha: v })}

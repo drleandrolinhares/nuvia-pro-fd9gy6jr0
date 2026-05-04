@@ -4508,7 +4508,6 @@ export const Constants = {
 //   FOREIGN KEY vendas_confirmadas_oportunidade_id_fkey: FOREIGN KEY (oportunidade_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
 //   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
 // Table: vendas_diarias
-//   UNIQUE vendas_diarias_data_venda_key: UNIQUE (data_venda)
 //   PRIMARY KEY vendas_diarias_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY vendas_diarias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 
@@ -5740,5 +5739,3 @@ export const Constants = {
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas
 //   CREATE INDEX vendas_confirmadas_oportunidade_id_idx ON public.vendas_confirmadas USING btree (oportunidade_id)
-// Table: vendas_diarias
-//   CREATE UNIQUE INDEX vendas_diarias_data_venda_key ON public.vendas_diarias USING btree (data_venda)
