@@ -77,23 +77,19 @@ const Index = () => {
   const [modalVendasOpen, setModalVendasOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [novaVendaValor, setNovaVendaValor] = useState('')
+
+  // Novos campos de venda
+  const [pacienteNome, setPacienteNome] = useState('')
+  const [valorTratamento, setValorTratamento] = useState('')
+  const [formaPagamento, setFormaPagamento] = useState('')
+  const [destinoPagamento, setDestinoPagamento] = useState('')
+  const [destinoFiscal, setDestinoFiscal] = useState('')
+
   const [salvandoVendas, setSalvandoVendas] = useState(false)
   const { dataVersion, invalidateCache } = useCache()
 
   const loadData = async () => {
     setLoading(true)
-    const { data } = await fetchProdutos()
-    if (data) {
-      setProdutos(data)
-    }
-
-    const { data: configFiscal } = await supabase
-      .from('gestao_fiscal_config')
-      .select('faturamento_previsto')
-      .single()
-    if (configFiscal) {
-      setMetaFaturamento(configFiscal.faturamento_previsto)
-    }
 
     const todayDate = new Date()
     const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
@@ -103,25 +99,35 @@ const Index = () => {
       .toISOString()
       .split('T')[0]
 
-    const { data: vendas } = await supabase
-      .from('vendas_diarias')
-      .select('*')
-      .gte('data_venda', startOfMonth)
-      .lte('data_venda', endOfMonth)
+    const [{ data: pData }, { data: configFiscal }, { data: vendas }] = await Promise.all([
+      fetchProdutos(),
+      supabase.from('gestao_fiscal_config').select('faturamento_previsto').single(),
+      supabase
+        .from('vendas_diarias')
+        .select('*')
+        .gte('data_venda', startOfMonth)
+        .lte('data_venda', endOfMonth),
+    ])
 
-    if (vendas) {
-      setVendasDiarias(vendas)
-    }
+    if (pData) setProdutos(pData)
+    if (configFiscal) setMetaFaturamento(configFiscal.faturamento_previsto)
+    if (vendas) setVendasDiarias(vendas)
 
     if (user) {
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('possui_carteira')
-        .eq('id', user.id)
-        .single()
+      const [{ data: userData }, { data: usuarios }] = await Promise.all([
+        supabase.from('usuarios').select('possui_carteira').eq('id', user.id).single(),
+        supabase
+          .from('usuarios')
+          .select('id, nome, data_nascimento, avatar_url')
+          .eq('status', 'ativo')
+          .not('data_nascimento', 'is', null),
+      ])
 
       if (userData) {
         setPossuiCarteira(userData.possui_carteira)
+      }
+      if (usuarios) {
+        setTodosUsuarios(usuarios)
       }
 
       if (userData?.possui_carteira) {
@@ -142,16 +148,6 @@ const Index = () => {
           setSaldoAtual(creditos - debitos - saques)
           setSaldoPerdido(debitos)
         }
-      }
-
-      const { data: usuarios } = await supabase
-        .from('usuarios')
-        .select('id, nome, data_nascimento, avatar_url')
-        .eq('status', 'ativo')
-        .not('data_nascimento', 'is', null)
-
-      if (usuarios) {
-        setTodosUsuarios(usuarios)
       }
 
       const isAdmin =
@@ -215,16 +211,29 @@ const Index = () => {
   }, [invalidateCache])
 
   const handleAddVenda = async () => {
-    if (!novaVendaValor || Number(novaVendaValor) <= 0) return
+    if (!novaVendaValor || Number(novaVendaValor) <= 0 || !pacienteNome) {
+      return
+    }
     setSalvandoVendas(true)
     try {
       const { error } = await supabase.from('vendas_diarias').insert({
         data_venda: selectedDate,
         valor: Number(novaVendaValor),
         usuario_id: user?.id,
+        paciente_nome: pacienteNome,
+        valor_tratamento: valorTratamento ? Number(valorTratamento) : null,
+        forma_pagamento: formaPagamento,
+        destino_pagamento: destinoPagamento,
+        destino_fiscal: destinoFiscal,
       })
       if (error) throw error
+
       setNovaVendaValor('')
+      setPacienteNome('')
+      setValorTratamento('')
+      setFormaPagamento('')
+      setDestinoPagamento('')
+      setDestinoFiscal('')
       invalidateCache()
     } catch (error) {
       console.error('Erro ao adicionar venda:', error)
@@ -739,93 +748,181 @@ const Index = () => {
 
       {/* Modal Lançamento de Vendas */}
       <Dialog open={modalVendasOpen} onOpenChange={setModalVendasOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-md">
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Lançamento de Vendas Diárias</DialogTitle>
+            <DialogTitle>Lançamento de Vendas / Receitas</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Adicione vendas individuais. O sistema somará automaticamente para o dia selecionado.
+              Preencha os detalhes do lançamento. As entradas são totalizadas e compõem o
+              faturamento do mês.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-4">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">Data</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">Data *</Label>
                 <Input
                   type="date"
-                  min={
-                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                      .toISOString()
-                      .split('T')[0]
-                  }
-                  max={
-                    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
-                      .toISOString()
-                      .split('T')[0]
-                  }
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
                 />
               </div>
-              <div className="flex-1 space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">Valor (R$)</Label>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Nome do Paciente *
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Ex: João da Silva"
+                  value={pacienteNome}
+                  onChange={(e) => setPacienteNome(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Valor do Tratamento Total (R$)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={valorTratamento}
+                  onChange={(e) => setValorTratamento(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                  placeholder="0,00"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Valor Recebido / Entrada (R$) *
+                </Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={novaVendaValor}
                   onChange={(e) => setNovaVendaValor(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9 border-emerald-500/50 focus-visible:border-emerald-500"
                   placeholder="0,00"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddVenda()
-                  }}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Forma de Pgto
+                </Label>
+                <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                    <SelectItem value="credito">Crédito</SelectItem>
+                    <SelectItem value="debito">Débito</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Destino Pgto
+                </Label>
+                <Select value={destinoPagamento} onValueChange={setDestinoPagamento}>
+                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                    <SelectItem value="a vista">À Vista (Caixa)</SelectItem>
+                    <SelectItem value="CC Sicoob PP">CC Sicoob PP</SelectItem>
+                    <SelectItem value="CC Santander PJ">CC Santander PJ</SelectItem>
+                    <SelectItem value="CC Sicoob Pf">CC Sicoob PF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                  Destino Fiscal
+                </Label>
+                <Select value={destinoFiscal} onValueChange={setDestinoFiscal}>
+                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                    <SelectItem value="PESSOA FISICA">Pessoa Física</SelectItem>
+                    <SelectItem value="VITALI ODONTOLOGIA">Vitali Odontologia</SelectItem>
+                    <SelectItem value="SOUZA FILHO ODONTOLOGIA">Souza Filho Odontologia</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
               <Button
                 onClick={handleAddVenda}
-                disabled={salvandoVendas || !novaVendaValor || Number(novaVendaValor) <= 0}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-3"
+                disabled={
+                  salvandoVendas || !novaVendaValor || Number(novaVendaValor) <= 0 || !pacienteNome
+                }
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-6"
               >
                 {salvandoVendas ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-2" />
                 )}
+                Lançar Recebimento
               </Button>
             </div>
 
-            <div className="border border-slate-800 rounded-lg p-4 bg-slate-950/50">
+            <div className="border border-slate-800 rounded-lg p-4 bg-slate-950/50 mt-4">
               <div className="flex justify-between items-center mb-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Vendas do Dia
+                  Lançamentos do Dia
                 </h4>
                 <span className="text-sm font-bold text-emerald-400">
                   Total: R$ {totalDoDia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
-              <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
                 {vendasDoDia.length > 0 ? (
                   vendasDoDia.map((v) => (
                     <div
                       key={v.id}
                       className="flex justify-between items-center bg-slate-900 p-2.5 rounded border border-slate-800 group hover:border-slate-700 transition-colors"
                     >
-                      <span className="text-sm font-medium text-slate-200">
-                        R$ {Number(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500 uppercase font-medium">
-                          {v.criado_em ? format(parseISO(v.criado_em), 'HH:mm') : ''}
+                      <div className="flex flex-col gap-0.5 max-w-[70%]">
+                        <span className="text-sm font-bold text-slate-200 truncate">
+                          {v.paciente_nome || 'Paciente não informado'}
                         </span>
+                        <div className="flex gap-2 text-[10px] text-slate-500 uppercase font-medium">
+                          <span>{v.destino_fiscal || 'S/ Destino Fiscal'}</span>
+                          <span>•</span>
+                          <span>{v.forma_pagamento || 'S/ Forma Pgto'}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-bold text-emerald-400">
+                            R${' '}
+                            {Number(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-slate-500 uppercase font-medium">
+                            {v.criado_em ? format(parseISO(v.criado_em), 'HH:mm') : ''}
+                          </span>
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleDeleteVenda(v.id)}
                         >
-                          <Trash className="h-3 w-3" />
+                          <Trash className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -833,7 +930,7 @@ const Index = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-6 text-center">
                     <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
-                      Nenhuma venda registrada
+                      Nenhum recebimento hoje
                     </p>
                   </div>
                 )}

@@ -480,17 +480,17 @@ export default function SACPage() {
 
   const demandasDoMes = demandas.filter((d) => d.data_recebimento?.startsWith(mesReferencia))
 
-  const recTotal = demandasDoMes.filter((d) => d.tipo === 'reclamacao').length
-  const recRecebido = demandasDoMes.filter(
+  const recRecebido = demandas.filter(
     (d) => d.tipo === 'reclamacao' && d.status === 'recebido',
   ).length
-  const recSendoTratado = demandasDoMes.filter(
+  const recSendoTratado = demandas.filter(
     (d) => d.tipo === 'reclamacao' && d.status === 'sendo_tratado',
   ).length
   const recResolvido = demandasDoMes.filter(
     (d) => d.tipo === 'reclamacao' && d.status === 'resolvido',
   )
   const recResolvidoCount = recResolvido.length
+  const recTotal = recRecebido + recSendoTratado + recResolvidoCount
   const recMediaDias =
     recResolvidoCount > 0
       ? recResolvido.reduce(
@@ -499,17 +499,17 @@ export default function SACPage() {
         ) / recResolvidoCount
       : 0
 
-  const sugTotal = demandasDoMes.filter((d) => d.tipo === 'sugestao').length
-  const sugRecebido = demandasDoMes.filter(
+  const sugRecebido = demandas.filter(
     (d) => d.tipo === 'sugestao' && d.status === 'recebido',
   ).length
-  const sugSendoTratado = demandasDoMes.filter(
+  const sugSendoTratado = demandas.filter(
     (d) => d.tipo === 'sugestao' && d.status === 'sendo_tratado',
   ).length
   const sugResolvido = demandasDoMes.filter(
     (d) => d.tipo === 'sugestao' && d.status === 'resolvido',
   )
   const sugResolvidoCount = sugResolvido.length
+  const sugTotal = sugRecebido + sugSendoTratado + sugResolvidoCount
   const sugMediaDias =
     sugResolvidoCount > 0
       ? sugResolvido.reduce(

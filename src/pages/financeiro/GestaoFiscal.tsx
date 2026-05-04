@@ -52,23 +52,56 @@ export default function GestaoFiscal() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [id, setId] = useState('')
+  const [realizadoPF, setRealizadoPF] = useState(0)
+  const [realizadoPJ1, setRealizadoPJ1] = useState(0)
+  const [realizadoPJ2, setRealizadoPJ2] = useState(0)
 
   useEffect(() => {
-    supabase
-      .from('gestao_fiscal_config')
-      .select('*')
-      .limit(1)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setId(data.id)
-          setC(data)
-        }
-        setLoading(false)
-      })
+    const fetchData = async () => {
+      const { data } = await supabase.from('gestao_fiscal_config').select('*').limit(1).single()
+
+      if (data) {
+        setId(data.id)
+        setC(data)
+      }
+
+      const todayDate = new Date()
+      const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
+        .toISOString()
+        .split('T')[0]
+      const endOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0)
+        .toISOString()
+        .split('T')[0]
+
+      const { data: vendas } = await supabase
+        .from('vendas_diarias')
+        .select('valor, destino_fiscal')
+        .gte('data_venda', startOfMonth)
+        .lte('data_venda', endOfMonth)
+
+      if (vendas) {
+        let pf = 0
+        let pj1 = 0
+        let pj2 = 0
+
+        vendas.forEach((v) => {
+          if (v.destino_fiscal === 'PESSOA FISICA') pf += Number(v.valor)
+          else if (v.destino_fiscal === 'VITALI ODONTOLOGIA') pj1 += Number(v.valor)
+          else if (v.destino_fiscal === 'SOUZA FILHO ODONTOLOGIA') pj2 += Number(v.valor)
+        })
+
+        setRealizadoPF(pf)
+        setRealizadoPJ1(pj1)
+        setRealizadoPJ2(pj2)
+      }
+
+      setLoading(false)
+    }
+
+    fetchData()
   }, [])
 
-  const pf_receita_calc = c.pf_despesa + 3000
+  const pf_receita_calc = c.pf_despesa + 4000
   const pj1_receita_calc =
     c.pj1_margem_perc > 0 ? Math.max(0, c.pj1_despesa_folha / (c.pj1_margem_perc / 100) - 1000) : 0
   const excedente = Math.max(0, c.faturamento_previsto - pf_receita_calc - pj1_receita_calc)
@@ -141,10 +174,15 @@ export default function GestaoFiscal() {
             </h2>
           </div>
           <div className="flex flex-col flex-1">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                VALOR A RECEBER
-              </label>
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center shrink-0">
+              <div className="flex justify-between items-start mb-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  TETO DE RECEITA
+                </label>
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
+                  REALIZADO: R$ {realizadoPF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
               <div className="text-3xl font-bold tracking-tight text-amber-400 truncate h-10 flex items-center">
                 R${' '}
                 {pf_receita_calc.toLocaleString('pt-BR', {
@@ -153,8 +191,19 @@ export default function GestaoFiscal() {
                 })}
               </div>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
-                Automático: Despesa Livro Caixa + R$ 3.000,00
+                Automático: Despesa Livro Caixa + R$ 4.000,00
               </p>
+              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    realizadoPF > pf_receita_calc ? 'bg-red-500' : 'bg-amber-500',
+                  )}
+                  style={{
+                    width: `${Math.min(100, pf_receita_calc > 0 ? (realizadoPF / pf_receita_calc) * 100 : 0)}%`,
+                  }}
+                />
+              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div>
@@ -185,10 +234,15 @@ export default function GestaoFiscal() {
             />
           </div>
           <div className="flex flex-col flex-1">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Teto de Receita Permitida
-              </label>
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center shrink-0">
+              <div className="flex justify-between items-start mb-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  Teto de Receita Permitida
+                </label>
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
+                  REALIZADO: R$ {realizadoPJ1.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
               <div className="text-3xl font-bold tracking-tight text-blue-400 truncate h-10 flex items-center">
                 R${' '}
                 {pj1_receita_calc.toLocaleString('pt-BR', {
@@ -199,6 +253,17 @@ export default function GestaoFiscal() {
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
                 Automático: (Despesa Folha ÷ Proporção) - R$ 1.000 (Margem de segurança)
               </p>
+              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    realizadoPJ1 > pj1_receita_calc ? 'bg-red-500' : 'bg-blue-500',
+                  )}
+                  style={{
+                    width: `${Math.min(100, pj1_receita_calc > 0 ? (realizadoPJ1 / pj1_receita_calc) * 100 : 0)}%`,
+                  }}
+                />
+              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div className="grid grid-cols-2 gap-3">
@@ -277,10 +342,15 @@ export default function GestaoFiscal() {
             />
           </div>
           <div className="flex flex-col flex-1">
-            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center h-[120px] shrink-0">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Receita Excedente
-              </label>
+            <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center shrink-0">
+              <div className="flex justify-between items-start mb-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  Receita Excedente
+                </label>
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
+                  REALIZADO: R$ {realizadoPJ2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
               <div className="text-3xl font-bold tracking-tight text-emerald-400 truncate h-10 flex items-center">
                 R${' '}
                 {excedente.toLocaleString('pt-BR', {
@@ -291,6 +361,17 @@ export default function GestaoFiscal() {
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
                 Automático: Faturamento - PF - PJ 01
               </p>
+              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    realizadoPJ2 > excedente ? 'bg-red-500' : 'bg-emerald-500',
+                  )}
+                  style={{
+                    width: `${Math.min(100, excedente > 0 ? (realizadoPJ2 / excedente) * 100 : 0)}%`,
+                  }}
+                />
+              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div className="mt-auto flex justify-between items-center pt-4">
