@@ -770,7 +770,7 @@ export default function SACPage() {
                   <Plus className="w-4 h-4" /> Nova Demanda
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-[800px] bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-slate-100">
                     {editingId ? 'Editar' : 'Nova'} Demanda
@@ -1187,13 +1187,13 @@ export default function SACPage() {
                               Nenhuma ação registrada. Clique em "Nova Ação" para adicionar.
                             </div>
                           ) : (
-                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                               {fields.map((field, index) => (
                                 <div
                                   key={field.id}
-                                  className="flex gap-3 items-start bg-slate-950/50 p-3 rounded-lg border border-slate-800"
+                                  className="flex flex-col sm:flex-row gap-4 items-start bg-slate-950/50 p-4 rounded-lg border border-slate-800"
                                 >
-                                  <div className="w-32 shrink-0">
+                                  <div className="w-full sm:w-40 shrink-0">
                                     <FormField
                                       control={form.control}
                                       name={`acoes.${index}.data_acao`}
@@ -1203,7 +1203,7 @@ export default function SACPage() {
                                             <Input
                                               type="date"
                                               {...f}
-                                              className="h-9 bg-slate-900 border-slate-700 text-slate-200 text-sm"
+                                              className="h-10 bg-slate-900 border-slate-700 text-slate-200 text-sm w-full"
                                             />
                                           </FormControl>
                                           <FormMessage />
@@ -1211,7 +1211,7 @@ export default function SACPage() {
                                       )}
                                     />
                                   </div>
-                                  <div className="flex-1">
+                                  <div className="flex-1 w-full">
                                     <FormField
                                       control={form.control}
                                       name={`acoes.${index}.descricao`}
@@ -1221,7 +1221,7 @@ export default function SACPage() {
                                             <Textarea
                                               placeholder="Descreva a ação realizada..."
                                               {...f}
-                                              className="min-h-[60px] bg-slate-900 border-slate-700 text-slate-200 resize-none text-sm"
+                                              className="min-h-[120px] bg-slate-900 border-slate-700 text-slate-200 resize-y text-sm"
                                             />
                                           </FormControl>
                                           <FormMessage />
@@ -1234,7 +1234,7 @@ export default function SACPage() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => remove(index)}
-                                    className="h-9 w-9 text-slate-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                                    className="h-10 w-10 text-slate-500 hover:text-red-400 hover:bg-red-400/10 shrink-0 sm:mt-0 self-end sm:self-start"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>

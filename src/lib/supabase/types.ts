@@ -2428,6 +2428,41 @@ export type Database = {
           },
         ]
       }
+      sac_acoes_solucao: {
+        Row: {
+          criado_em: string
+          data_acao: string
+          demanda_id: string
+          descricao: string
+          id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          criado_em?: string
+          data_acao?: string
+          demanda_id: string
+          descricao: string
+          id?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          criado_em?: string
+          data_acao?: string
+          demanda_id?: string
+          descricao?: string
+          id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sac_acoes_solucao_demanda_id_fkey'
+            columns: ['demanda_id']
+            isOneToOne: false
+            referencedRelation: 'sac_demandas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       sac_configuracoes: {
         Row: {
           atualizado_em: string
@@ -3983,6 +4018,13 @@ export const Constants = {
 //   ativa: boolean (not null, default: true)
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   data_atualizacao: timestamp with time zone (not null, default: now())
+// Table: sac_acoes_solucao
+//   id: uuid (not null, default: gen_random_uuid())
+//   demanda_id: uuid (not null)
+//   data_acao: date (not null, default: CURRENT_DATE)
+//   descricao: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   usuario_id: uuid (nullable)
 // Table: sac_configuracoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   orientacao_status: text (not null, default: 'STATUS: este campo deve ser alterado pela pessoa responsável pela solução da demanda. Ao tomar ciência e mudar para SENDO TRATADO, mostra para todos os gestores e colaboradores que você já tem ciência da situação e que resolverá.'::text)
@@ -4364,6 +4406,10 @@ export const Constants = {
 //   FOREIGN KEY rotinas_usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   PRIMARY KEY rotinas_usuarios_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY rotinas_usuarios_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: sac_acoes_solucao
+//   FOREIGN KEY sac_acoes_solucao_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES sac_demandas(id) ON DELETE CASCADE
+//   PRIMARY KEY sac_acoes_solucao_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY sac_acoes_solucao_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: sac_configuracoes
 //   PRIMARY KEY sac_configuracoes_pkey: PRIMARY KEY (id)
 // Table: sac_demandas
@@ -4756,6 +4802,10 @@ export const Constants = {
 //     USING: (is_admin() OR has_permission('configuracoes_geral'::text) OR has_permission('configuracoes_rotinas'::text))
 //   Policy "rotinas_usuarios_read" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: sac_acoes_solucao
+//   Policy "sac_acoes_solucao_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: sac_configuracoes
 //   Policy "sac_configuracoes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
