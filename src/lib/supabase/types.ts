@@ -3267,23 +3267,38 @@ export type Database = {
         Row: {
           criado_em: string
           data_venda: string
+          destino_fiscal: string | null
+          destino_pagamento: string | null
+          forma_pagamento: string | null
           id: string
+          paciente_nome: string | null
           usuario_id: string | null
           valor: number
+          valor_tratamento: number | null
         }
         Insert: {
           criado_em?: string
           data_venda: string
+          destino_fiscal?: string | null
+          destino_pagamento?: string | null
+          forma_pagamento?: string | null
           id?: string
+          paciente_nome?: string | null
           usuario_id?: string | null
           valor?: number
+          valor_tratamento?: number | null
         }
         Update: {
           criado_em?: string
           data_venda?: string
+          destino_fiscal?: string | null
+          destino_pagamento?: string | null
+          forma_pagamento?: string | null
           id?: string
+          paciente_nome?: string | null
           usuario_id?: string | null
           valor?: number
+          valor_tratamento?: number | null
         }
         Relationships: []
       }
@@ -4230,6 +4245,11 @@ export const Constants = {
 //   valor: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   usuario_id: uuid (nullable)
+//   paciente_nome: text (nullable)
+//   valor_tratamento: numeric (nullable)
+//   forma_pagamento: text (nullable)
+//   destino_pagamento: text (nullable)
+//   destino_fiscal: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: auditoria_tarefas_rotina

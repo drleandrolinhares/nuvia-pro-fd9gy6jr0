@@ -13,6 +13,7 @@ import {
   Target,
   Plus,
   Trash,
+  Edit2,
   Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -65,7 +66,10 @@ const MESES = [
 const Index = () => {
   const { user, profile } = useAuth()
   const [produtos, setProdutos] = useState<Produto[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loadingMeta, setLoadingMeta] = useState(true)
+  const [loadingEstoque, setLoadingEstoque] = useState(true)
+  const [loadingUsuarios, setLoadingUsuarios] = useState(true)
+  const [loadingSAC, setLoadingSAC] = useState(true)
   const [todosUsuarios, setTodosUsuarios] = useState<any[]>([])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [possuiCarteira, setPossuiCarteira] = useState(false)
@@ -86,11 +90,12 @@ const Index = () => {
   const [destinoFiscal, setDestinoFiscal] = useState('')
 
   const [salvandoVendas, setSalvandoVendas] = useState(false)
+  const [editingVendaId, setEditingVendaId] = useState<string | null>(null)
   const { dataVersion, invalidateCache } = useCache()
 
-  const loadData = async () => {
-    setLoading(true)
+  const loading = loadingMeta || loadingEstoque || loadingUsuarios || loadingSAC
 
+  const loadData = () => {
     const todayDate = new Date()
     const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
       .toISOString()
@@ -99,44 +104,41 @@ const Index = () => {
       .toISOString()
       .split('T')[0]
 
-    const [{ data: pData }, { data: configFiscal }, { data: vendas }] = await Promise.all([
-      fetchProdutos(),
+    setLoadingMeta(true)
+    Promise.all([
       supabase.from('gestao_fiscal_config').select('faturamento_previsto').single(),
       supabase
         .from('vendas_diarias')
         .select('*')
         .gte('data_venda', startOfMonth)
         .lte('data_venda', endOfMonth),
-    ])
+    ]).then(([{ data: configFiscal }, { data: vendas }]) => {
+      if (configFiscal) setMetaFaturamento(configFiscal.faturamento_previsto)
+      if (vendas) setVendasDiarias(vendas)
+      setLoadingMeta(false)
+    })
 
-    if (pData) setProdutos(pData)
-    if (configFiscal) setMetaFaturamento(configFiscal.faturamento_previsto)
-    if (vendas) setVendasDiarias(vendas)
+    setLoadingEstoque(true)
+    fetchProdutos().then(({ data: pData }) => {
+      if (pData) setProdutos(pData)
+      setLoadingEstoque(false)
+    })
 
     if (user) {
-      const [{ data: userData }, { data: usuarios }] = await Promise.all([
+      setLoadingUsuarios(true)
+      Promise.all([
         supabase.from('usuarios').select('possui_carteira').eq('id', user.id).single(),
         supabase
           .from('usuarios')
           .select('id, nome, data_nascimento, avatar_url')
           .eq('status', 'ativo')
           .not('data_nascimento', 'is', null),
-      ])
+        supabase.from('carteira_transacoes').select('tipo, valor').eq('usuario_id', user.id),
+      ]).then(([{ data: userData }, { data: usuarios }, { data: transacoes }]) => {
+        if (userData) setPossuiCarteira(userData.possui_carteira)
+        if (usuarios) setTodosUsuarios(usuarios)
 
-      if (userData) {
-        setPossuiCarteira(userData.possui_carteira)
-      }
-      if (usuarios) {
-        setTodosUsuarios(usuarios)
-      }
-
-      if (userData?.possui_carteira) {
-        const { data: transacoes } = await supabase
-          .from('carteira_transacoes')
-          .select('tipo, valor')
-          .eq('usuario_id', user.id)
-
-        if (transacoes) {
+        if (userData?.possui_carteira && transacoes) {
           let creditos = 0
           let debitos = 0
           let saques = 0
@@ -148,8 +150,10 @@ const Index = () => {
           setSaldoAtual(creditos - debitos - saques)
           setSaldoPerdido(debitos)
         }
-      }
+        setLoadingUsuarios(false)
+      })
 
+      setLoadingSAC(true)
       const isAdmin =
         profile?.role === 'admin' ||
         user.email === 'drleandro@nuvia.com' ||
@@ -165,14 +169,14 @@ const Index = () => {
         query = query.eq('quem_resolve_id', user.id)
       }
 
-      const { data: demandas } = await query
-
-      if (demandas) {
-        setMinhasDemandas(demandas)
-      }
+      query.then(({ data: demandas }) => {
+        if (demandas) setMinhasDemandas(demandas)
+        setLoadingSAC(false)
+      })
+    } else {
+      setLoadingUsuarios(false)
+      setLoadingSAC(false)
     }
-
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -210,13 +214,34 @@ const Index = () => {
     }
   }, [invalidateCache])
 
+  const handleEditVenda = (venda: any) => {
+    setEditingVendaId(venda.id)
+    setNovaVendaValor(venda.valor.toString())
+    setPacienteNome(venda.paciente_nome || '')
+    setValorTratamento(venda.valor_tratamento ? venda.valor_tratamento.toString() : '')
+    setFormaPagamento(venda.forma_pagamento || '')
+    setDestinoPagamento(venda.destino_pagamento || '')
+    setDestinoFiscal(venda.destino_fiscal || '')
+    setSelectedDate(venda.data_venda)
+  }
+
+  const cancelEdit = () => {
+    setEditingVendaId(null)
+    setNovaVendaValor('')
+    setPacienteNome('')
+    setValorTratamento('')
+    setFormaPagamento('')
+    setDestinoPagamento('')
+    setDestinoFiscal('')
+  }
+
   const handleAddVenda = async () => {
     if (!novaVendaValor || Number(novaVendaValor) <= 0 || !pacienteNome) {
       return
     }
     setSalvandoVendas(true)
     try {
-      const { error } = await supabase.from('vendas_diarias').insert({
+      const payload = {
         data_venda: selectedDate,
         valor: Number(novaVendaValor),
         usuario_id: user?.id,
@@ -225,18 +250,23 @@ const Index = () => {
         forma_pagamento: formaPagamento,
         destino_pagamento: destinoPagamento,
         destino_fiscal: destinoFiscal,
-      })
-      if (error) throw error
+      }
 
-      setNovaVendaValor('')
-      setPacienteNome('')
-      setValorTratamento('')
-      setFormaPagamento('')
-      setDestinoPagamento('')
-      setDestinoFiscal('')
+      if (editingVendaId) {
+        const { error } = await supabase
+          .from('vendas_diarias')
+          .update(payload)
+          .eq('id', editingVendaId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('vendas_diarias').insert(payload)
+        if (error) throw error
+      }
+
+      cancelEdit()
       invalidateCache()
     } catch (error) {
-      console.error('Erro ao adicionar venda:', error)
+      console.error('Erro ao adicionar/editar venda:', error)
     } finally {
       setSalvandoVendas(false)
     }
@@ -376,7 +406,7 @@ const Index = () => {
               Meta
             </span>
             <span className="text-xl font-bold text-slate-200">
-              {loading
+              {loadingMeta
                 ? '...'
                 : `R$ ${metaFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </span>
@@ -388,7 +418,7 @@ const Index = () => {
               Vendas Atuais
             </span>
             <span className="text-xl font-bold text-emerald-400">
-              {loading
+              {loadingMeta
                 ? '...'
                 : `R$ ${totalVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </span>
@@ -408,7 +438,7 @@ const Index = () => {
               Falta para Meta (R$)
             </span>
             <span className="text-xl font-bold text-amber-400">
-              {loading
+              {loadingMeta
                 ? '...'
                 : `R$ ${valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </span>
@@ -420,7 +450,7 @@ const Index = () => {
               Meta Alcançada
             </span>
             <span className="text-xl font-bold text-emerald-400">
-              {loading ? '...' : `${percentualAlcancado.toFixed(1)}%`}
+              {loadingMeta ? '...' : `${percentualAlcancado.toFixed(1)}%`}
             </span>
           </div>
 
@@ -430,7 +460,7 @@ const Index = () => {
               Falta para Meta (%)
             </span>
             <span className="text-xl font-bold text-amber-400">
-              {loading ? '...' : `${percentualFaltante.toFixed(1)}%`}
+              {loadingMeta ? '...' : `${percentualFaltante.toFixed(1)}%`}
             </span>
           </div>
         </div>
@@ -447,7 +477,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-center">
               <div className="text-4xl font-bold text-slate-100">
-                {loading
+                {loadingUsuarios
                   ? '...'
                   : `R$ ${saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
               </div>
@@ -466,7 +496,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-center">
               <div className="text-4xl font-bold text-destructive">
-                {loading
+                {loadingUsuarios
                   ? '...'
                   : `R$ ${saldoPerdido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
               </div>
@@ -663,7 +693,7 @@ const Index = () => {
             </Select>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-            {loading ? (
+            {loadingUsuarios ? (
               <div className="text-sm text-slate-500">Carregando...</div>
             ) : aniversariantes.length > 0 ? (
               <div className="space-y-3 pr-2">
@@ -747,7 +777,13 @@ const Index = () => {
       </div>
 
       {/* Modal Lançamento de Vendas */}
-      <Dialog open={modalVendasOpen} onOpenChange={setModalVendasOpen}>
+      <Dialog
+        open={modalVendasOpen}
+        onOpenChange={(open) => {
+          setModalVendasOpen(open)
+          if (!open) cancelEdit()
+        }}
+      >
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl">
           <DialogHeader>
             <DialogTitle>Lançamento de Vendas / Receitas</DialogTitle>
@@ -862,7 +898,17 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-2 gap-2">
+              {editingVendaId && (
+                <Button
+                  variant="outline"
+                  onClick={cancelEdit}
+                  disabled={salvandoVendas}
+                  className="h-9 px-4 border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Cancelar Edição
+                </Button>
+              )}
               <Button
                 onClick={handleAddVenda}
                 disabled={
@@ -872,10 +918,12 @@ const Index = () => {
               >
                 {salvandoVendas ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : editingVendaId ? (
+                  <Edit2 className="h-4 w-4 mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}
-                Lançar Recebimento
+                {editingVendaId ? 'Salvar Edição' : 'Lançar Recebimento'}
               </Button>
             </div>
 
@@ -906,8 +954,8 @@ const Index = () => {
                           <span>{v.forma_pagamento || 'S/ Forma Pgto'}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-1">
+                        <div className="flex flex-col items-end mr-2">
                           <span className="text-sm font-bold text-emerald-400">
                             R${' '}
                             {Number(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -919,8 +967,18 @@ const Index = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 text-slate-500 hover:text-amber-400 hover:bg-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleEditVenda(v)}
+                          title="Editar Lançamento"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleDeleteVenda(v.id)}
+                          title="Excluir Lançamento"
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
