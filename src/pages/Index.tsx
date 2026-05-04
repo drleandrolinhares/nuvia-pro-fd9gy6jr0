@@ -10,12 +10,24 @@ import {
   LayoutDashboard,
   MessageSquare,
   ArrowRight,
+  Target,
+  Plus,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { GestaoRH } from '@/components/rh/GestaoRH'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
@@ -58,6 +70,11 @@ const Index = () => {
   const [saldoAtual, setSaldoAtual] = useState(0)
   const [saldoPerdido, setSaldoPerdido] = useState(0)
   const [minhasDemandas, setMinhasDemandas] = useState<any[]>([])
+  const [metaFaturamento, setMetaFaturamento] = useState(0)
+  const [vendasDiarias, setVendasDiarias] = useState<any[]>([])
+  const [modalVendasOpen, setModalVendasOpen] = useState(false)
+  const [valoresVendas, setValoresVendas] = useState<Record<number, string>>({})
+  const [salvandoVendas, setSalvandoVendas] = useState(false)
   const { dataVersion, invalidateCache } = useCache()
 
   const loadData = async () => {
@@ -65,6 +82,32 @@ const Index = () => {
     const { data } = await fetchProdutos()
     if (data) {
       setProdutos(data)
+    }
+
+    const { data: configFiscal } = await supabase
+      .from('gestao_fiscal_config')
+      .select('faturamento_previsto')
+      .single()
+    if (configFiscal) {
+      setMetaFaturamento(configFiscal.faturamento_previsto)
+    }
+
+    const todayDate = new Date()
+    const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
+      .toISOString()
+      .split('T')[0]
+    const endOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0]
+
+    const { data: vendas } = await supabase
+      .from('vendas_diarias')
+      .select('*')
+      .gte('data_venda', startOfMonth)
+      .lte('data_venda', endOfMonth)
+
+    if (vendas) {
+      setVendasDiarias(vendas)
     }
 
     if (user) {
@@ -158,12 +201,90 @@ const Index = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, () =>
         invalidateCache(),
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_diarias' }, () =>
+        invalidateCache(),
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [invalidateCache])
+
+  useEffect(() => {
+    if (modalVendasOpen) {
+      const todayDate = new Date()
+      const year = todayDate.getFullYear()
+      const month = todayDate.getMonth()
+
+      const newValores: Record<number, string> = {}
+      vendasDiarias.forEach((v) => {
+        const dateParts = v.data_venda.split('-')
+        const dateObj = new Date(
+          parseInt(dateParts[0]),
+          parseInt(dateParts[1]) - 1,
+          parseInt(dateParts[2]),
+        )
+        if (dateObj.getMonth() === month && dateObj.getFullYear() === year) {
+          newValores[dateObj.getDate()] = v.valor.toString()
+        }
+      })
+      setValoresVendas(newValores)
+    }
+  }, [modalVendasOpen, vendasDiarias])
+
+  const handleSaveVendas = async () => {
+    setSalvandoVendas(true)
+    try {
+      const todayDate = new Date()
+      const year = todayDate.getFullYear()
+      const month = todayDate.getMonth()
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+      const upserts = []
+      for (let day = 1; day <= daysInMonth; day++) {
+        const valStr = valoresVendas[day]
+        const val = valStr ? parseFloat(valStr) : 0
+
+        const dataVenda = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const existing = vendasDiarias.find((v) => v.data_venda === dataVenda)
+
+        if (existing && existing.valor !== val) {
+          upserts.push({ id: existing.id, data_venda: dataVenda, valor: val, usuario_id: user?.id })
+        } else if (!existing && val > 0) {
+          upserts.push({ data_venda: dataVenda, valor: val, usuario_id: user?.id })
+        }
+      }
+
+      if (upserts.length > 0) {
+        const { error } = await supabase
+          .from('vendas_diarias')
+          .upsert(upserts, { onConflict: 'data_venda' })
+        if (error) throw error
+      }
+
+      setModalVendasOpen(false)
+      invalidateCache()
+    } catch (error) {
+      console.error('Erro ao salvar vendas:', error)
+    } finally {
+      setSalvandoVendas(false)
+    }
+  }
+
+  const totalVendasMes = vendasDiarias.reduce((acc, curr) => acc + Number(curr.valor), 0)
+  const valorRestante = Math.max(0, metaFaturamento - totalVendasMes)
+  const percentualAlcancado = metaFaturamento > 0 ? (totalVendasMes / metaFaturamento) * 100 : 0
+  const percentualFaltante = Math.max(0, 100 - percentualAlcancado)
+
+  const daysArray = useMemo(
+    () =>
+      Array.from(
+        { length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() },
+        (_, i) => i + 1,
+      ),
+    [],
+  )
 
   const produtosDashboard = useMemo(() => {
     return produtos.map((p) => {
@@ -252,6 +373,86 @@ const Index = () => {
             <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
               Visão Geral da Gestão de Estoque e Rotinas.
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* NOVO BLOCO GESTÃO DE META */}
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm mb-6 animate-fade-in-down">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/10 rounded-md">
+              <Target className="w-5 h-5 text-emerald-500" />
+            </div>
+            <h2 className="text-lg font-bold uppercase tracking-wider text-slate-100">
+              Gestão de Meta
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {/* 1. Meta */}
+          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+              Meta
+            </span>
+            <span className="text-xl font-bold text-slate-200">
+              {loading
+                ? '...'
+                : `R$ ${metaFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            </span>
+          </div>
+
+          {/* 2. Vendas Atuais */}
+          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center relative group">
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+              Vendas Atuais
+            </span>
+            <span className="text-xl font-bold text-emerald-400">
+              {loading
+                ? '...'
+                : `R$ ${totalVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            </span>
+            <Button
+              onClick={() => setModalVendasOpen(true)}
+              size="icon"
+              className="absolute top-2 right-2 h-7 w-7 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 rounded-md transition-colors"
+              title="Lançar Venda Diária"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* 3. Valor Restante */}
+          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+              Falta para Meta (R$)
+            </span>
+            <span className="text-xl font-bold text-amber-400">
+              {loading
+                ? '...'
+                : `R$ ${valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            </span>
+          </div>
+
+          {/* 4. Meta Alcançada (%) */}
+          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+              Meta Alcançada
+            </span>
+            <span className="text-xl font-bold text-emerald-400">
+              {loading ? '...' : `${percentualAlcancado.toFixed(1)}%`}
+            </span>
+          </div>
+
+          {/* 5. Falta para Meta (%) */}
+          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+              Falta para Meta (%)
+            </span>
+            <span className="text-xl font-bold text-amber-400">
+              {loading ? '...' : `${percentualFaltante.toFixed(1)}%`}
+            </span>
           </div>
         </div>
       </div>
@@ -565,6 +766,52 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Lançamento de Vendas */}
+      <Dialog open={modalVendasOpen} onOpenChange={setModalVendasOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Lançamento de Vendas Diárias</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Insira o total de vendas para cada dia do mês atual. Valores em branco ou zero serão
+              ignorados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[50vh] overflow-y-auto p-1 custom-scrollbar">
+            {daysArray.map((day) => (
+              <div key={day} className="flex flex-col gap-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">Dia {day}</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={valoresVendas[day] || ''}
+                  onChange={(e) => setValoresVendas((v) => ({ ...v, [day]: e.target.value }))}
+                  className="bg-slate-950 border-slate-800 h-8 text-sm focus-visible:ring-emerald-500"
+                  placeholder="0.00"
+                />
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter className="mt-4 pt-4 border-t border-slate-800">
+            <Button
+              variant="outline"
+              onClick={() => setModalVendasOpen(false)}
+              className="border-slate-700 hover:bg-slate-800 text-slate-300"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveVendas}
+              disabled={salvandoVendas}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {salvandoVendas ? 'Salvando...' : 'Salvar Lançamentos'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

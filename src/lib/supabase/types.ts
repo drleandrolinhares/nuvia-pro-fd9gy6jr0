@@ -3165,6 +3165,38 @@ export type Database = {
           },
         ]
       }
+      vendas_diarias: {
+        Row: {
+          id: string
+          data_venda: string
+          valor: number
+          criado_em: string
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: string
+          data_venda: string
+          valor?: number
+          criado_em?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: string
+          data_venda?: string
+          valor?: number
+          criado_em?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vendas_diarias_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       vendas_confirmadas: {
         Row: {
           atualizado_em: string
