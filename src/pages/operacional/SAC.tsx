@@ -45,7 +45,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useToast } from '@/hooks/use-toast'
@@ -61,7 +61,15 @@ const demandaSchema = z
     quem_recebeu_id: z.string().optional(),
     quem_resolve_id: z.string().min(1, 'Obrigatório'),
     descricao: z.string().optional(),
-    solucao: z.string().optional(),
+    acoes: z
+      .array(
+        z.object({
+          id: z.string().optional(),
+          data_acao: z.string().min(1, 'Obrigatório'),
+          descricao: z.string().min(1, 'Obrigatório'),
+        }),
+      )
+      .default([]),
     status: z.enum(['recebido', 'sendo_tratado', 'resolvido']).default('recebido'),
     data_prevista: z.string().optional(),
   })
@@ -74,11 +82,11 @@ const demandaSchema = z
           path: ['data_prevista'],
         })
       }
-      if (!val.solucao || val.solucao.trim().length === 0) {
+      if (!val.acoes || val.acoes.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Obrigatório',
-          path: ['solucao'],
+          message: 'Obrigatório adicionar pelo menos uma ação',
+          path: ['acoes'],
         })
       }
     }
@@ -122,10 +130,15 @@ export default function SACPage() {
       quem_recebeu_id: '',
       quem_resolve_id: '',
       descricao: '',
-      solucao: '',
+      acoes: [],
       status: 'recebido',
       data_prevista: '',
     },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'acoes',
   })
 
   const fetchData = useCallback(async () => {
@@ -138,7 +151,8 @@ export default function SACPage() {
           .select(`
           *,
           quem_recebeu:usuarios!sac_demandas_quem_recebeu_id_fkey(nome),
-          quem_resolve:usuarios!sac_demandas_quem_resolve_id_fkey(nome)
+          quem_resolve:usuarios!sac_demandas_quem_resolve_id_fkey(nome),
+          acoes:sac_acoes_solucao(id, data_acao, descricao, criado_em)
         `)
           .order('criado_em', { ascending: false }),
         supabase
@@ -195,7 +209,14 @@ export default function SACPage() {
           quem_recebeu_id: d.quem_recebeu_id || '',
           quem_resolve_id: d.quem_resolve_id || '',
           descricao: d.descricao || '',
-          solucao: d.solucao || '',
+          acoes: d.acoes
+            ? d.acoes
+                .map((a: any) => ({ id: a.id, data_acao: a.data_acao, descricao: a.descricao }))
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(a.data_acao).getTime() - new Date(b.data_acao).getTime(),
+                )
+            : [],
           status: d.status,
           data_prevista: d.data_prevista || '',
         })
@@ -279,6 +300,17 @@ export default function SACPage() {
       const dtRec = new Date()
       const limite = addDays(dtRec, values.tipo === 'reclamacao' ? 1 : 2)
 
+      const payload = {
+        tipo: values.tipo,
+        setor: values.setor || null,
+        paciente_nome: values.paciente_nome,
+        quem_recebeu_id: values.quem_recebeu_id || null,
+        quem_resolve_id: values.quem_resolve_id || null,
+        descricao: values.descricao || null,
+        status: values.status,
+        data_prevista: values.data_prevista || null,
+      }
+
       if (editingId) {
         const old = demandas.find((d) => d.id === editingId)
         const changes = []
@@ -300,23 +332,52 @@ export default function SACPage() {
             `Data da Solução: ${old.data_prevista ? format(parseISO(old.data_prevista), 'dd/MM/yyyy') : '-'} -> ${values.data_prevista ? format(parseISO(values.data_prevista), 'dd/MM/yyyy') : '-'}`,
           )
         }
+
+        const oldAcoes = old.acoes || []
+        const isAcoesChanged =
+          oldAcoes.length !== values.acoes.length ||
+          values.acoes.some(
+            (a) => !a.id || oldAcoes.find((oa: any) => oa.id === a.id)?.descricao !== a.descricao,
+          )
+
         if (
-          old.solucao !== values.solucao &&
+          isAcoesChanged &&
           (values.status === 'sendo_tratado' || values.status === 'resolvido')
         ) {
-          changes.push(`Solução atualizada`)
+          changes.push(`Histórico de ações atualizado`)
         }
 
         const { error } = await supabase
           .from('sac_demandas' as any)
-          .update({
-            status: values.status,
-            quem_resolve_id: values.quem_resolve_id,
-            data_prevista: values.data_prevista || null,
-            solucao: values.solucao || null,
-          })
+          .update(payload)
           .eq('id', editingId)
         if (error) throw error
+
+        const existingAcoesIds = values.acoes.filter((a) => a.id).map((a) => a.id)
+        if (existingAcoesIds.length > 0) {
+          await supabase
+            .from('sac_acoes_solucao' as any)
+            .delete()
+            .eq('demanda_id', editingId)
+            .not('id', 'in', `(${existingAcoesIds.join(',')})`)
+        } else {
+          await supabase
+            .from('sac_acoes_solucao' as any)
+            .delete()
+            .eq('demanda_id', editingId)
+        }
+
+        const acoesToUpsert = values.acoes.map((a) => ({
+          ...(a.id ? { id: a.id } : {}),
+          demanda_id: editingId,
+          data_acao: a.data_acao,
+          descricao: a.descricao,
+          usuario_id: user?.id,
+        }))
+
+        if (acoesToUpsert.length > 0) {
+          await supabase.from('sac_acoes_solucao' as any).upsert(acoesToUpsert)
+        }
 
         if (changes.length > 0 && user) {
           await supabase.from('sac_historico' as any).insert({
@@ -328,11 +389,6 @@ export default function SACPage() {
         }
         toast({ title: 'Atualizado com sucesso' })
       } else {
-        const payload = {
-          ...values,
-          data_prevista: values.data_prevista || null,
-          solucao: values.solucao || null,
-        }
         const { data: newDemanda, error } = await supabase
           .from('sac_demandas' as any)
           .insert({
@@ -344,6 +400,16 @@ export default function SACPage() {
           .single()
 
         if (error) throw error
+
+        if (values.acoes && values.acoes.length > 0) {
+          const acoesToInsert = values.acoes.map((a) => ({
+            demanda_id: newDemanda.id,
+            data_acao: a.data_acao,
+            descricao: a.descricao,
+            usuario_id: user?.id,
+          }))
+          await supabase.from('sac_acoes_solucao' as any).insert(acoesToInsert)
+        }
 
         if (user && newDemanda) {
           await supabase.from('sac_historico' as any).insert({
@@ -373,7 +439,13 @@ export default function SACPage() {
       quem_recebeu_id: d.quem_recebeu_id || '',
       quem_resolve_id: d.quem_resolve_id || '',
       descricao: d.descricao || '',
-      solucao: d.solucao || '',
+      acoes: d.acoes
+        ? d.acoes
+            .map((a: any) => ({ id: a.id, data_acao: a.data_acao, descricao: a.descricao }))
+            .sort(
+              (a: any, b: any) => new Date(a.data_acao).getTime() - new Date(b.data_acao).getTime(),
+            )
+        : [],
       status: d.status,
       data_prevista: d.data_prevista || '',
     })
@@ -619,18 +691,47 @@ export default function SACPage() {
                               )}
                             </TableCell>
                             <TableCell className="text-center">
-                              {d.solucao ? (
+                              {d.acoes && d.acoes.length > 0 ? (
                                 <Popover>
                                   <PopoverTrigger asChild>
                                     <button
                                       type="button"
-                                      className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center"
+                                      className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center relative"
                                     >
                                       <Eye className="h-4 w-4" />
+                                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[9px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">
+                                        {d.acoes.length}
+                                      </span>
                                     </button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
-                                    {d.solucao}
+                                  <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm z-50 p-0 overflow-hidden">
+                                    <div className="bg-slate-950 px-4 py-3 border-b border-slate-800">
+                                      <h4 className="font-semibold text-slate-100">
+                                        Histórico de Ações
+                                      </h4>
+                                    </div>
+                                    <div className="p-4 max-h-[300px] overflow-y-auto space-y-4">
+                                      {d.acoes
+                                        .sort(
+                                          (a: any, b: any) =>
+                                            new Date(a.data_acao).getTime() -
+                                            new Date(b.data_acao).getTime(),
+                                        )
+                                        .map((acao: any, idx: number) => (
+                                          <div
+                                            key={acao.id || idx}
+                                            className="relative pl-4 border-l border-slate-700 pb-1 last:border-0 last:pb-0"
+                                          >
+                                            <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[5px] top-1"></div>
+                                            <span className="text-xs text-slate-400 font-semibold">
+                                              {format(parseISO(acao.data_acao), 'dd/MM/yyyy')}
+                                            </span>
+                                            <p className="text-sm mt-1 whitespace-pre-wrap">
+                                              {acao.descricao}
+                                            </p>
+                                          </div>
+                                        ))}
+                                    </div>
                                   </PopoverContent>
                                 </Popover>
                               ) : (
@@ -1053,23 +1154,95 @@ export default function SACPage() {
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name="solucao"
-                          render={({ field }) => (
-                            <FormItem className="col-span-1 md:col-span-2">
-                              <FormLabel className="text-slate-200">Solução Proposta</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Descreva detalhadamente a solução adotada..."
-                                  {...field}
-                                  className="bg-slate-950 border-slate-800 text-slate-100 min-h-[80px] resize-none"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+
+                        <div className="col-span-1 md:col-span-2 space-y-3">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <FormLabel className="text-slate-200 text-base mb-0">
+                              Histórico de Tratativa (Solução)
+                            </FormLabel>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                              onClick={() =>
+                                append({
+                                  data_acao: format(new Date(), 'yyyy-MM-dd'),
+                                  descricao: '',
+                                })
+                              }
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Nova Ação
+                            </Button>
+                          </div>
+
+                          {form.formState.errors.acoes?.message && (
+                            <p className="text-sm font-medium text-destructive">
+                              {form.formState.errors.acoes.message}
+                            </p>
                           )}
-                        />
+
+                          {fields.length === 0 ? (
+                            <div className="text-center p-6 border border-dashed border-slate-800 rounded-lg text-slate-500 text-sm">
+                              Nenhuma ação registrada. Clique em "Nova Ação" para adicionar.
+                            </div>
+                          ) : (
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                              {fields.map((field, index) => (
+                                <div
+                                  key={field.id}
+                                  className="flex gap-3 items-start bg-slate-950/50 p-3 rounded-lg border border-slate-800"
+                                >
+                                  <div className="w-32 shrink-0">
+                                    <FormField
+                                      control={form.control}
+                                      name={`acoes.${index}.data_acao`}
+                                      render={({ field: f }) => (
+                                        <FormItem>
+                                          <FormControl>
+                                            <Input
+                                              type="date"
+                                              {...f}
+                                              className="h-9 bg-slate-900 border-slate-700 text-slate-200 text-sm"
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <FormField
+                                      control={form.control}
+                                      name={`acoes.${index}.descricao`}
+                                      render={({ field: f }) => (
+                                        <FormItem>
+                                          <FormControl>
+                                            <Textarea
+                                              placeholder="Descreva a ação realizada..."
+                                              {...f}
+                                              className="min-h-[60px] bg-slate-900 border-slate-700 text-slate-200 resize-none text-sm"
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => remove(index)}
+                                    className="h-9 w-9 text-slate-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -1292,18 +1465,44 @@ export default function SACPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {d.solucao ? (
+                    {d.acoes && d.acoes.length > 0 ? (
                       <Popover>
                         <PopoverTrigger asChild>
                           <button
                             type="button"
-                            className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center"
+                            className="text-blue-500 hover:text-blue-400 p-1.5 rounded hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center relative"
                           >
                             <Eye className="h-4 w-4" />
+                            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[9px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">
+                              {d.acoes.length}
+                            </span>
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm whitespace-pre-wrap break-words z-50">
-                          {d.solucao}
+                        <PopoverContent className="w-80 bg-slate-900 border-slate-800 text-slate-200 text-sm z-50 p-0 overflow-hidden">
+                          <div className="bg-slate-950 px-4 py-3 border-b border-slate-800">
+                            <h4 className="font-semibold text-slate-100">Histórico de Ações</h4>
+                          </div>
+                          <div className="p-4 max-h-[300px] overflow-y-auto space-y-4">
+                            {d.acoes
+                              .sort(
+                                (a: any, b: any) =>
+                                  new Date(a.data_acao).getTime() - new Date(b.data_acao).getTime(),
+                              )
+                              .map((acao: any, idx: number) => (
+                                <div
+                                  key={acao.id || idx}
+                                  className="relative pl-4 border-l border-slate-700 pb-1 last:border-0 last:pb-0"
+                                >
+                                  <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[5px] top-1"></div>
+                                  <span className="text-xs text-slate-400 font-semibold">
+                                    {format(parseISO(acao.data_acao), 'dd/MM/yyyy')}
+                                  </span>
+                                  <p className="text-sm mt-1 whitespace-pre-wrap">
+                                    {acao.descricao}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
                         </PopoverContent>
                       </Popover>
                     ) : (
