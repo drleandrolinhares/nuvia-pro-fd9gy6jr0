@@ -565,9 +565,13 @@ export function EstruturaPrecificacao() {
                               selProc === proc.id ? 'bg-amber-500' : 'bg-slate-600',
                             )}
                           />
-                          <p className="font-medium text-slate-200 truncate">{proc.nome}</p>
+                          <p className="font-medium text-slate-200 truncate" title={proc.nome}>
+                            {proc.nome}
+                          </p>
                         </div>
-                        <p className="text-xs text-slate-500 truncate pl-4">{espNome}</p>
+                        <p className="text-xs text-slate-500 truncate pl-4" title={espNome}>
+                          {espNome}
+                        </p>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
@@ -621,7 +625,10 @@ export function EstruturaPrecificacao() {
                   onClick={() => toggle(esp.id)}
                   className="flex items-center w-full justify-between py-2 px-3 rounded-md hover:bg-slate-800/50 transition-colors text-amber-500 hover:text-amber-400 cursor-pointer"
                 >
-                  <span className="truncate text-xs font-bold uppercase tracking-wider flex-1">
+                  <span
+                    className="truncate text-xs font-bold uppercase tracking-wider flex-1"
+                    title={esp.nome}
+                  >
                     {esp.nome}
                   </span>
                   <div className="flex items-center shrink-0 min-h-[28px] gap-2">
@@ -676,7 +683,7 @@ export function EstruturaPrecificacao() {
                         )}
                         onClick={() => setSelProc(proc.id)}
                       >
-                        <div className="flex-1 truncate flex items-center gap-2">
+                        <div className="flex-1 truncate flex items-center gap-2" title={proc.nome}>
                           <div
                             className={cn(
                               'w-1.5 h-1.5 rounded-full transition-colors shrink-0',
