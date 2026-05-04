@@ -12,6 +12,8 @@ import {
   ArrowRight,
   Target,
   Plus,
+  Trash,
+  Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -73,7 +75,8 @@ const Index = () => {
   const [metaFaturamento, setMetaFaturamento] = useState(0)
   const [vendasDiarias, setVendasDiarias] = useState<any[]>([])
   const [modalVendasOpen, setModalVendasOpen] = useState(false)
-  const [valoresVendas, setValoresVendas] = useState<Record<number, string>>({})
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [novaVendaValor, setNovaVendaValor] = useState('')
   const [salvandoVendas, setSalvandoVendas] = useState(false)
   const { dataVersion, invalidateCache } = useCache()
 
@@ -211,64 +214,32 @@ const Index = () => {
     }
   }, [invalidateCache])
 
-  useEffect(() => {
-    if (modalVendasOpen) {
-      const todayDate = new Date()
-      const year = todayDate.getFullYear()
-      const month = todayDate.getMonth()
-
-      const newValores: Record<number, string> = {}
-      vendasDiarias.forEach((v) => {
-        const dateParts = v.data_venda.split('-')
-        const dateObj = new Date(
-          parseInt(dateParts[0]),
-          parseInt(dateParts[1]) - 1,
-          parseInt(dateParts[2]),
-        )
-        if (dateObj.getMonth() === month && dateObj.getFullYear() === year) {
-          newValores[dateObj.getDate()] = v.valor.toString()
-        }
-      })
-      setValoresVendas(newValores)
-    }
-  }, [modalVendasOpen, vendasDiarias])
-
-  const handleSaveVendas = async () => {
+  const handleAddVenda = async () => {
+    if (!novaVendaValor || Number(novaVendaValor) <= 0) return
     setSalvandoVendas(true)
     try {
-      const todayDate = new Date()
-      const year = todayDate.getFullYear()
-      const month = todayDate.getMonth()
-      const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-      const upserts = []
-      for (let day = 1; day <= daysInMonth; day++) {
-        const valStr = valoresVendas[day]
-        const val = valStr ? parseFloat(valStr) : 0
-
-        const dataVenda = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-        const existing = vendasDiarias.find((v) => v.data_venda === dataVenda)
-
-        if (existing && existing.valor !== val) {
-          upserts.push({ id: existing.id, data_venda: dataVenda, valor: val, usuario_id: user?.id })
-        } else if (!existing && val > 0) {
-          upserts.push({ data_venda: dataVenda, valor: val, usuario_id: user?.id })
-        }
-      }
-
-      if (upserts.length > 0) {
-        const { error } = await supabase
-          .from('vendas_diarias')
-          .upsert(upserts, { onConflict: 'data_venda' })
-        if (error) throw error
-      }
-
-      setModalVendasOpen(false)
+      const { error } = await supabase.from('vendas_diarias').insert({
+        data_venda: selectedDate,
+        valor: Number(novaVendaValor),
+        usuario_id: user?.id,
+      })
+      if (error) throw error
+      setNovaVendaValor('')
       invalidateCache()
     } catch (error) {
-      console.error('Erro ao salvar vendas:', error)
+      console.error('Erro ao adicionar venda:', error)
     } finally {
       setSalvandoVendas(false)
+    }
+  }
+
+  const handleDeleteVenda = async (id: string) => {
+    try {
+      const { error } = await supabase.from('vendas_diarias').delete().eq('id', id)
+      if (error) throw error
+      invalidateCache()
+    } catch (error) {
+      console.error('Erro ao deletar venda:', error)
     }
   }
 
@@ -277,14 +248,13 @@ const Index = () => {
   const percentualAlcancado = metaFaturamento > 0 ? (totalVendasMes / metaFaturamento) * 100 : 0
   const percentualFaltante = Math.max(0, 100 - percentualAlcancado)
 
-  const daysArray = useMemo(
-    () =>
-      Array.from(
-        { length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() },
-        (_, i) => i + 1,
-      ),
-    [],
-  )
+  const vendasDoDia = useMemo(() => {
+    return vendasDiarias
+      .filter((v) => v.data_venda === selectedDate)
+      .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
+  }, [vendasDiarias, selectedDate])
+
+  const totalDoDia = vendasDoDia.reduce((acc, curr) => acc + Number(curr.valor), 0)
 
   const produtosDashboard = useMemo(() => {
     return produtos.map((p) => {
@@ -769,47 +739,107 @@ const Index = () => {
 
       {/* Modal Lançamento de Vendas */}
       <Dialog open={modalVendasOpen} onOpenChange={setModalVendasOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl">
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-md">
           <DialogHeader>
             <DialogTitle>Lançamento de Vendas Diárias</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Insira o total de vendas para cada dia do mês atual. Valores em branco ou zero serão
-              ignorados.
+              Adicione vendas individuais. O sistema somará automaticamente para o dia selecionado.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[50vh] overflow-y-auto p-1 custom-scrollbar">
-            {daysArray.map((day) => (
-              <div key={day} className="flex flex-col gap-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">Dia {day}</Label>
+          <div className="space-y-4 pt-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">Data</Label>
+                <Input
+                  type="date"
+                  min={
+                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                      .toISOString()
+                      .split('T')[0]
+                  }
+                  max={
+                    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+                      .toISOString()
+                      .split('T')[0]
+                  }
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label className="text-[11px] text-slate-400 uppercase font-bold">Valor (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
-                  value={valoresVendas[day] || ''}
-                  onChange={(e) => setValoresVendas((v) => ({ ...v, [day]: e.target.value }))}
-                  className="bg-slate-950 border-slate-800 h-8 text-sm focus-visible:ring-emerald-500"
-                  placeholder="0.00"
+                  value={novaVendaValor}
+                  onChange={(e) => setNovaVendaValor(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                  placeholder="0,00"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddVenda()
+                  }}
                 />
               </div>
-            ))}
-          </div>
+              <Button
+                onClick={handleAddVenda}
+                disabled={salvandoVendas || !novaVendaValor || Number(novaVendaValor) <= 0}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-3"
+              >
+                {salvandoVendas ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
 
-          <DialogFooter className="mt-4 pt-4 border-t border-slate-800">
-            <Button
-              variant="outline"
-              onClick={() => setModalVendasOpen(false)}
-              className="border-slate-700 hover:bg-slate-800 text-slate-300"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveVendas}
-              disabled={salvandoVendas}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              {salvandoVendas ? 'Salvando...' : 'Salvar Lançamentos'}
-            </Button>
-          </DialogFooter>
+            <div className="border border-slate-800 rounded-lg p-4 bg-slate-950/50">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Vendas do Dia
+                </h4>
+                <span className="text-sm font-bold text-emerald-400">
+                  Total: R$ {totalDoDia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar">
+                {vendasDoDia.length > 0 ? (
+                  vendasDoDia.map((v) => (
+                    <div
+                      key={v.id}
+                      className="flex justify-between items-center bg-slate-900 p-2.5 rounded border border-slate-800 group hover:border-slate-700 transition-colors"
+                    >
+                      <span className="text-sm font-medium text-slate-200">
+                        R$ {Number(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-slate-500 uppercase font-medium">
+                          {v.criado_em ? format(parseISO(v.criado_em), 'HH:mm') : ''}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteVenda(v.id)}
+                        >
+                          <Trash className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
+                      Nenhuma venda registrada
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -3165,38 +3165,6 @@ export type Database = {
           },
         ]
       }
-      vendas_diarias: {
-        Row: {
-          id: string
-          data_venda: string
-          valor: number
-          criado_em: string
-          usuario_id: string | null
-        }
-        Insert: {
-          id?: string
-          data_venda: string
-          valor?: number
-          criado_em?: string
-          usuario_id?: string | null
-        }
-        Update: {
-          id?: string
-          data_venda?: string
-          valor?: number
-          criado_em?: string
-          usuario_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'vendas_diarias_usuario_id_fkey'
-            columns: ['usuario_id']
-            isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       vendas_confirmadas: {
         Row: {
           atualizado_em: string
@@ -3294,6 +3262,30 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      vendas_diarias: {
+        Row: {
+          criado_em: string
+          data_venda: string
+          id: string
+          usuario_id: string | null
+          valor: number
+        }
+        Insert: {
+          criado_em?: string
+          data_venda: string
+          id?: string
+          usuario_id?: string | null
+          valor?: number
+        }
+        Update: {
+          criado_em?: string
+          data_venda?: string
+          id?: string
+          usuario_id?: string | null
+          valor?: number
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -4232,6 +4224,12 @@ export const Constants = {
 //   status_comissao: text (nullable, default: 'em_aberto'::text)
 //   percentual_comissao: numeric (nullable)
 //   valor_comissao: numeric (nullable)
+// Table: vendas_diarias
+//   id: uuid (not null, default: gen_random_uuid())
+//   data_venda: date (not null)
+//   valor: numeric (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   usuario_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
 // Table: auditoria_tarefas_rotina
@@ -4509,6 +4507,10 @@ export const Constants = {
 //   FOREIGN KEY vendas_confirmadas_fatura_comissao_id_fkey: FOREIGN KEY (fatura_comissao_id) REFERENCES faturas_comissoes(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_oportunidade_id_fkey: FOREIGN KEY (oportunidade_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
 //   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
+// Table: vendas_diarias
+//   UNIQUE vendas_diarias_data_venda_key: UNIQUE (data_venda)
+//   PRIMARY KEY vendas_diarias_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY vendas_diarias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: auditoria_tarefas_rotina
@@ -4923,6 +4925,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: vendas_confirmadas
 //   Policy "vendas_confirmadas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: vendas_diarias
+//   Policy "vendas_diarias_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 
@@ -5734,3 +5740,5 @@ export const Constants = {
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas
 //   CREATE INDEX vendas_confirmadas_oportunidade_id_idx ON public.vendas_confirmadas USING btree (oportunidade_id)
+// Table: vendas_diarias
+//   CREATE UNIQUE INDEX vendas_diarias_data_venda_key ON public.vendas_diarias USING btree (data_venda)
