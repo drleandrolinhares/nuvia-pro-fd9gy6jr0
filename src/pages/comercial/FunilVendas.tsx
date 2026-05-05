@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Settings } from 'lucide-react'
+import { Loader2, Settings, Filter, BarChart3 } from 'lucide-react'
 
 export default function FunilVendas() {
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
@@ -46,31 +46,46 @@ export default function FunilVendas() {
   })
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">Funil de Vendas</h2>
-          <p className="text-slate-400">Análise e controle de captação de leads e conversão</p>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
+            <BarChart3 className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Funil de Vendas</h2>
+            <p className="text-sm text-slate-400 mt-1">
+              Análise e controle de captação de leads e conversão
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={mesReferencia} onValueChange={setMesReferencia}>
-            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-800 text-white focus:ring-0 focus:ring-offset-0">
-              <SelectValue placeholder="Selecione o mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {mesesOptions.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <Filter className="w-4 h-4 text-slate-400 hidden sm:block" />
+            <Select value={mesReferencia} onValueChange={setMesReferencia}>
+              <SelectTrigger className="w-full sm:w-[200px] bg-slate-950 border-slate-700 text-white font-medium focus:ring-amber-500">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                {mesesOptions.map((m) => (
+                  <SelectItem
+                    key={m.value}
+                    value={m.value}
+                    className="focus:bg-slate-800 focus:text-white"
+                  >
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <GerenciarOrigensDialog origens={origens} onUpdate={fetchData}>
             <Button
               variant="outline"
-              className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800 hover:text-white"
+              className="bg-slate-950 border-slate-700 text-white hover:bg-slate-800 hover:text-white font-medium whitespace-nowrap"
             >
-              <Settings className="w-4 h-4 mr-2" />
+              <Settings className="w-4 h-4 mr-2 text-slate-400" />
               Origens
             </Button>
           </GerenciarOrigensDialog>
@@ -78,7 +93,7 @@ export default function FunilVendas() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64 bg-slate-900/50 rounded-lg border border-slate-800">
           <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
         </div>
       ) : (

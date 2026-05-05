@@ -1428,6 +1428,104 @@ export type Database = {
         }
         Relationships: []
       }
+      funil_dados_mensais: {
+        Row: {
+          agendamentos_realizado: number
+          atualizado_em: string
+          comparecimentos_realizado: number
+          criado_em: string
+          fechamentos_qtde_realizado: number
+          fechamentos_valor_realizado: number
+          id: string
+          investimento: number
+          leads_realizado: number
+          mes_referencia: string
+          meta_agendamentos_perc: number
+          meta_agendamentos_qtde: number
+          meta_comparecimentos_perc: number
+          meta_comparecimentos_qtde: number
+          meta_fechamento_valor: number
+          meta_leads: number
+          origem_id: string
+          ticket_medio_esperado: number
+        }
+        Insert: {
+          agendamentos_realizado?: number
+          atualizado_em?: string
+          comparecimentos_realizado?: number
+          criado_em?: string
+          fechamentos_qtde_realizado?: number
+          fechamentos_valor_realizado?: number
+          id?: string
+          investimento?: number
+          leads_realizado?: number
+          mes_referencia: string
+          meta_agendamentos_perc?: number
+          meta_agendamentos_qtde?: number
+          meta_comparecimentos_perc?: number
+          meta_comparecimentos_qtde?: number
+          meta_fechamento_valor?: number
+          meta_leads?: number
+          origem_id: string
+          ticket_medio_esperado?: number
+        }
+        Update: {
+          agendamentos_realizado?: number
+          atualizado_em?: string
+          comparecimentos_realizado?: number
+          criado_em?: string
+          fechamentos_qtde_realizado?: number
+          fechamentos_valor_realizado?: number
+          id?: string
+          investimento?: number
+          leads_realizado?: number
+          mes_referencia?: string
+          meta_agendamentos_perc?: number
+          meta_agendamentos_qtde?: number
+          meta_comparecimentos_perc?: number
+          meta_comparecimentos_qtde?: number
+          meta_fechamento_valor?: number
+          meta_leads?: number
+          origem_id?: string
+          ticket_medio_esperado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funil_dados_mensais_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funil_origens: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          criado_em: string
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: []
+      }
       gestao_fiscal_config: {
         Row: {
           atualizado_em: string
@@ -3843,6 +3941,32 @@ export const Constants = {
 //   senha: text (nullable)
 //   usuario_login: text (nullable)
 //   data_criacao: timestamp with time zone (nullable, default: now())
+// Table: funil_dados_mensais
+//   id: uuid (not null, default: gen_random_uuid())
+//   origem_id: uuid (not null)
+//   mes_referencia: text (not null)
+//   investimento: numeric (not null, default: 0)
+//   meta_leads: integer (not null, default: 0)
+//   leads_realizado: integer (not null, default: 0)
+//   meta_agendamentos_qtde: integer (not null, default: 0)
+//   meta_agendamentos_perc: numeric (not null, default: 0)
+//   agendamentos_realizado: integer (not null, default: 0)
+//   meta_comparecimentos_qtde: integer (not null, default: 0)
+//   meta_comparecimentos_perc: numeric (not null, default: 0)
+//   comparecimentos_realizado: integer (not null, default: 0)
+//   meta_fechamento_valor: numeric (not null, default: 0)
+//   ticket_medio_esperado: numeric (not null, default: 0)
+//   fechamentos_qtde_realizado: integer (not null, default: 0)
+//   fechamentos_valor_realizado: numeric (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: funil_origens
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   ativo: boolean (not null, default: true)
+//   ordem: integer (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: gestao_fiscal_config
 //   id: uuid (not null, default: gen_random_uuid())
 //   faturamento_previsto: numeric (not null, default: 0)
@@ -4400,6 +4524,13 @@ export const Constants = {
 //   PRIMARY KEY fluxo_caixa_receitas_pkey: PRIMARY KEY (id)
 // Table: fornecedores
 //   PRIMARY KEY fornecedores_pkey: PRIMARY KEY (id)
+// Table: funil_dados_mensais
+//   FOREIGN KEY funil_dados_mensais_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
+//   UNIQUE funil_dados_mensais_origem_id_mes_referencia_key: UNIQUE (origem_id, mes_referencia)
+//   PRIMARY KEY funil_dados_mensais_pkey: PRIMARY KEY (id)
+// Table: funil_origens
+//   UNIQUE funil_origens_nome_key: UNIQUE (nome)
+//   PRIMARY KEY funil_origens_pkey: PRIMARY KEY (id)
 // Table: gestao_fiscal_config
 //   PRIMARY KEY gestao_fiscal_config_pkey: PRIMARY KEY (id)
 // Table: historico_compras
@@ -4762,6 +4893,14 @@ export const Constants = {
 //   Policy "fornecedores_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
+// Table: funil_dados_mensais
+//   Policy "funil_dados_mensais_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: funil_origens
+//   Policy "funil_origens_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: gestao_fiscal_config
 //   Policy "gestao_fiscal_config_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -5758,6 +5897,10 @@ export const Constants = {
 //   CREATE UNIQUE INDEX fluxo_caixa_categorias_nome_key ON public.fluxo_caixa_categorias USING btree (nome)
 // Table: fluxo_caixa_receitas
 //   CREATE UNIQUE INDEX fluxo_caixa_receitas_mes_referencia_ciclo_key ON public.fluxo_caixa_receitas USING btree (mes_referencia, ciclo)
+// Table: funil_dados_mensais
+//   CREATE UNIQUE INDEX funil_dados_mensais_origem_id_mes_referencia_key ON public.funil_dados_mensais USING btree (origem_id, mes_referencia)
+// Table: funil_origens
+//   CREATE UNIQUE INDEX funil_origens_nome_key ON public.funil_origens USING btree (nome)
 // Table: marcas_implante
 //   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
 // Table: normas_aceites

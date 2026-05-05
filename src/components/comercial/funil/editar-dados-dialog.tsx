@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Edit2, Loader2 } from 'lucide-react'
+import { Edit2, Loader2, Save } from 'lucide-react'
 
 export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any) {
   const [open, setOpen] = useState(false)
@@ -74,173 +74,217 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="h-8 w-8 p-0 text-slate-400 hover:text-white transition-colors"
+          className="h-9 px-3 bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white transition-colors"
         >
-          <Edit2 className="w-4 h-4" />
+          <Edit2 className="w-3.5 h-3.5 mr-2 text-slate-400" />
+          Editar Valores
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            Editar Dados: {origem.nome} ({mesReferencia})
+      <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-6 border-b border-slate-800 bg-slate-900/80 sticky top-0 z-10 backdrop-blur-sm">
+          <DialogTitle className="text-xl">
+            Lançamento de Dados: <span className="text-amber-500">{origem.nome}</span> (
+            {mesReferencia})
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
-              <h4 className="font-semibold text-amber-500 uppercase text-xs tracking-wider">
-                Investimento
-              </h4>
-              <div className="space-y-2">
-                <Label>Valor Investido (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  name="investimento"
-                  value={formData.investimento}
-                  onChange={handleChange}
-                  className="bg-slate-950 border-slate-700 focus-visible:ring-amber-500"
-                />
-              </div>
-            </div>
+            {/* Investimento & Leads */}
+            <div className="space-y-4">
+              <div className="bg-slate-800/30 p-5 rounded-xl border border-slate-700/50">
+                <h4 className="font-bold text-slate-300 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                  Investimento e Captação
+                </h4>
 
-            <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
-              <h4 className="font-semibold text-white uppercase text-xs tracking-wider">Leads</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label>Realizado (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="leads_realizado"
-                    value={formData.leads_realizado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Meta (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="meta_leads"
-                    value={formData.meta_leads}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-              </div>
-            </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Valor Investido (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      name="investimento"
+                      value={formData.investimento}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-700 focus-visible:ring-amber-500 font-medium"
+                    />
+                  </div>
 
-            <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
-              <h4 className="font-semibold text-blue-400 uppercase text-xs tracking-wider">
-                Agendamentos
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label>Realizado (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="agendamentos_realizado"
-                    value={formData.agendamentos_realizado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Meta (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="meta_agendamentos_qtde"
-                    value={formData.meta_agendamentos_qtde}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Leads (Realizado)</Label>
+                      <Input
+                        type="number"
+                        name="leads_realizado"
+                        value={formData.leads_realizado}
+                        onChange={handleChange}
+                        className="bg-slate-950 border-slate-700 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-400">Meta de Leads</Label>
+                      <Input
+                        type="number"
+                        name="meta_leads"
+                        value={formData.meta_leads}
+                        onChange={handleChange}
+                        className="bg-slate-950 border-slate-800 text-slate-400"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
-              <h4 className="font-semibold text-purple-400 uppercase text-xs tracking-wider">
-                Comparecimentos
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <Label>Realizado (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="comparecimentos_realizado"
-                    value={formData.comparecimentos_realizado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Meta (Qtd)</Label>
-                  <Input
-                    type="number"
-                    name="meta_comparecimentos_qtde"
-                    value={formData.meta_comparecimentos_qtde}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
+            {/* Agendamentos */}
+            <div className="space-y-4">
+              <div className="bg-blue-950/10 p-5 rounded-xl border border-blue-900/30">
+                <h4 className="font-bold text-blue-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Agendamentos
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Qtd Realizado</Label>
+                    <Input
+                      type="number"
+                      name="agendamentos_realizado"
+                      value={formData.agendamentos_realizado}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-700 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta (Qtd)</Label>
+                    <Input
+                      type="number"
+                      name="meta_agendamentos_qtde"
+                      value={formData.meta_agendamentos_qtde}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label className="text-slate-400">Meta de Conversão (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      name="meta_agendamentos_perc"
+                      value={formData.meta_agendamentos_perc}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 md:col-span-2">
-              <h4 className="font-semibold text-emerald-400 uppercase text-xs tracking-wider">
-                Fechamentos
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Qtd Realizado</Label>
-                  <Input
-                    type="number"
-                    name="fechamentos_qtde_realizado"
-                    value={formData.fechamentos_qtde_realizado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
+            {/* Comparecimentos */}
+            <div className="space-y-4">
+              <div className="bg-purple-950/10 p-5 rounded-xl border border-purple-900/30">
+                <h4 className="font-bold text-purple-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  Comparecimentos
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Qtd Realizado</Label>
+                    <Input
+                      type="number"
+                      name="comparecimentos_realizado"
+                      value={formData.comparecimentos_realizado}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-700 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta (Qtd)</Label>
+                    <Input
+                      type="number"
+                      name="meta_comparecimentos_qtde"
+                      value={formData.meta_comparecimentos_qtde}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label className="text-slate-400">Meta de Conversão (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      name="meta_comparecimentos_perc"
+                      value={formData.meta_comparecimentos_perc}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Valor Realizado (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    name="fechamentos_valor_realizado"
-                    value={formData.fechamentos_valor_realizado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Meta Valor (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    name="meta_fechamento_valor"
-                    value={formData.meta_fechamento_valor}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Ticket Médio Esp. (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    name="ticket_medio_esperado"
-                    value={formData.ticket_medio_esperado}
-                    onChange={handleChange}
-                    className="bg-slate-950 border-slate-700"
-                  />
+              </div>
+            </div>
+
+            {/* Fechamentos */}
+            <div className="space-y-4">
+              <div className="bg-emerald-950/10 p-5 rounded-xl border border-emerald-900/30 h-full">
+                <h4 className="font-bold text-emerald-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Fechamentos (Vendas)
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Qtd Realizado</Label>
+                    <Input
+                      type="number"
+                      name="fechamentos_qtde_realizado"
+                      value={formData.fechamentos_qtde_realizado}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-700 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Receita Realizada (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      name="fechamentos_valor_realizado"
+                      value={formData.fechamentos_valor_realizado}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-700 font-medium text-emerald-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta Receita (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      name="meta_fechamento_valor"
+                      value={formData.meta_fechamento_valor}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Ticket Médio Esp. (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      name="ticket_medio_esperado"
+                      value={formData.ticket_medio_esperado}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
             <Button
               type="button"
               variant="ghost"
@@ -252,10 +296,14 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
             <Button
               type="submit"
               disabled={loading}
-              className="bg-amber-500 text-slate-950 hover:bg-amber-600 font-semibold"
+              className="bg-amber-500 text-slate-950 hover:bg-amber-600 font-bold px-6"
             >
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Salvar Dados
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar Dados do Funil
             </Button>
           </div>
         </form>

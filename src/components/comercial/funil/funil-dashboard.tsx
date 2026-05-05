@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { OrigemCard } from './origem-card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell } from 'recharts'
+import { Users, DollarSign, Target, TrendingUp, PieChart as PieChartIcon } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any) {
   const totais = useMemo(() => {
@@ -36,7 +37,16 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
       .filter((x: any) => x.value > 0)
   }, [origens, dados])
 
-  const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#d946ef']
+  const COLORS = [
+    '#f59e0b',
+    '#3b82f6',
+    '#10b981',
+    '#ef4444',
+    '#8b5cf6',
+    '#d946ef',
+    '#f97316',
+    '#06b6d4',
+  ]
 
   const chartConfig = {
     value: { label: 'Leads', color: 'hsl(var(--chart-1))' },
@@ -48,46 +58,56 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-400 uppercase tracking-wider">
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Total Leads
             </CardTitle>
+            <Users className="w-4 h-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{totais.leads}</div>
+            <p className="text-xs text-slate-400 mt-1">Captação do período</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-400 uppercase tracking-wider">
+
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               CPL Médio
             </CardTitle>
+            <Target className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">
               {totais.leads ? formatBrl(totais.investimento / totais.leads) : 'R$ 0,00'}
             </div>
+            <p className="text-xs text-slate-400 mt-1">Custo por Lead</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800 relative overflow-hidden">
+
+        <Card className="bg-slate-900 border-slate-800 relative overflow-hidden shadow-sm transition-all hover:border-slate-700">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-400 uppercase tracking-wider">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between pl-5">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Total Vendas
             </CardTitle>
+            <DollarSign className="w-4 h-4 text-emerald-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-500">
+          <CardContent className="pl-5">
+            <div className="text-3xl font-bold text-emerald-400">
               {formatBrl(totais.valor_fechado)}
             </div>
+            <p className="text-xs text-slate-400 mt-1">Receita gerada</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-400 uppercase tracking-wider">
+
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Ticket Médio
             </CardTitle>
+            <TrendingUp className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">
@@ -95,16 +115,20 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
                 ? formatBrl(totais.valor_fechado / totais.fechamentos)
                 : 'R$ 0,00'}
             </div>
+            <p className="text-xs text-slate-400 mt-1">Por fechamento</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">Distribuição de Leads</CardTitle>
+        <Card className="bg-slate-900 border-slate-800 shadow-sm">
+          <CardHeader className="border-b border-slate-800/50 pb-4">
+            <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+              <PieChartIcon className="w-5 h-5 text-amber-500" />
+              Distribuição de Leads por Origem
+            </CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[320px] pt-6">
             {pieData.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-full w-full">
                 <PieChart>
@@ -114,8 +138,11 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
                     nameKey="name"
                     cx="50%"
                     cy="50%"
+                    innerRadius={60}
                     outerRadius={100}
-                    label
+                    paddingAngle={2}
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    labelLine={false}
                   >
                     {pieData.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -125,18 +152,25 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
                 </PieChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-slate-500">
-                Sem dados de leads no período
+              <div className="flex flex-col h-full items-center justify-center text-slate-500 gap-2">
+                <Users className="w-8 h-8 text-slate-700" />
+                <span>Sem dados de leads no período</span>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-white mt-8 tracking-wide">
-          Detalhamento da Cascata por Origem
-        </h3>
+      <div className="space-y-6 pt-4">
+        <div className="flex items-center gap-3">
+          <div className="h-px bg-slate-800 flex-1"></div>
+          <h3 className="text-xl font-bold text-white tracking-wide uppercase px-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-amber-500" />
+            Detalhamento da Cascata
+          </h3>
+          <div className="h-px bg-slate-800 flex-1"></div>
+        </div>
+
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {origens
             .filter((o: any) => o.ativo)
@@ -150,8 +184,12 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
               />
             ))}
           {origens.filter((o: any) => o.ativo).length === 0 && (
-            <div className="col-span-full p-8 text-center text-slate-500 bg-slate-900/50 rounded-lg border border-slate-800">
-              Nenhuma origem ativa encontrada. Adicione fontes em "Origens" no topo da página.
+            <div className="col-span-full p-12 text-center text-slate-400 bg-slate-900/50 rounded-lg border border-slate-800 flex flex-col items-center gap-3">
+              <Target className="w-12 h-12 text-slate-700" />
+              <p className="text-lg">Nenhuma origem ativa encontrada.</p>
+              <p className="text-sm">
+                Adicione fontes em "Origens" no topo da página para começar a analisar seu funil.
+              </p>
             </div>
           )}
         </div>
