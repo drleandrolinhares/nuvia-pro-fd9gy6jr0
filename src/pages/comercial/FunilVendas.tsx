@@ -3,7 +3,7 @@ import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
 import { FunilDashboard } from '@/components/comercial/funil/funil-dashboard'
-import { GerenciarOrigensDialog } from '@/components/comercial/funil/gerenciar-origens-dialog'
+import { FunilConfiguracoes } from '@/components/comercial/funil/funil-configuracoes'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -17,16 +17,24 @@ import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kan
 import { cn } from '@/lib/utils'
 
 export default function FunilVendas() {
-  const [view, setView] = useState<'dashboard' | 'kanban'>('dashboard')
+  const [view, setView] = useState<'kanban' | 'dashboard' | 'configuracoes'>('kanban')
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
   const [origens, setOrigens] = useState<any[]>([])
+  const [etapas, setEtapas] = useState<any[]>([])
+  const [temperaturas, setTemperaturas] = useState<any[]>([])
   const [dadosMensais, setDadosMensais] = useState<any[]>([])
 
   const fetchData = async () => {
     setLoading(true)
     const { data: origensData } = await supabase.from('funil_origens').select('*').order('ordem')
     setOrigens(origensData || [])
+
+    const { data: etapasData } = await supabase.from('funil_etapas').select('*').order('ordem')
+    setEtapas(etapasData || [])
+
+    const { data: tempData } = await supabase.from('funil_temperaturas').select('*').order('ordem')
+    setTemperaturas(tempData || [])
 
     const { data: dadosData } = await supabase
       .from('funil_dados_mensais')
@@ -64,33 +72,6 @@ export default function FunilVendas() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800">
-            <button
-              onClick={() => setView('dashboard')}
-              className={cn(
-                'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
-                view === 'dashboard'
-                  ? 'bg-slate-800 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900',
-              )}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </button>
-            <button
-              onClick={() => setView('kanban')}
-              className={cn(
-                'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
-                view === 'kanban'
-                  ? 'bg-slate-800 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900',
-              )}
-            >
-              <KanbanSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">Gestão de Leads</span>
-            </button>
-          </div>
-
           <div className="flex items-center gap-2 flex-1 sm:flex-none">
             <Filter className="w-4 h-4 text-slate-400 hidden lg:block" />
             <Select value={mesReferencia} onValueChange={setMesReferencia}>
@@ -110,16 +91,46 @@ export default function FunilVendas() {
               </SelectContent>
             </Select>
           </div>
-          <GerenciarOrigensDialog origens={origens} onUpdate={fetchData}>
-            <Button
-              variant="outline"
-              className="bg-slate-950 border-slate-700 text-white hover:bg-slate-800 hover:text-white font-medium whitespace-nowrap"
-            >
-              <Settings className="w-4 h-4 mr-2 text-slate-400" />
-              Origens
-            </Button>
-          </GerenciarOrigensDialog>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-6 border-b border-slate-800">
+        <button
+          onClick={() => setView('kanban')}
+          className={cn(
+            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
+            view === 'kanban' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
+          )}
+        >
+          Gestão de Leads
+          {view === 'kanban' && (
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setView('dashboard')}
+          className={cn(
+            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
+            view === 'dashboard' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
+          )}
+        >
+          Dashboard
+          {view === 'dashboard' && (
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setView('configuracoes')}
+          className={cn(
+            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
+            view === 'configuracoes' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
+          )}
+        >
+          Configurações
+          {view === 'configuracoes' && (
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
+          )}
+        </button>
       </div>
 
       {loading ? (
@@ -133,8 +144,21 @@ export default function FunilVendas() {
           mesReferencia={mesReferencia}
           onUpdate={fetchData}
         />
+      ) : view === 'configuracoes' ? (
+        <FunilConfiguracoes
+          origens={origens}
+          etapas={etapas}
+          temperaturas={temperaturas}
+          onUpdate={fetchData}
+        />
       ) : (
-        <GestaoLeadsKanban origens={origens} mesReferencia={mesReferencia} onUpdate={fetchData} />
+        <GestaoLeadsKanban
+          origens={origens}
+          etapas={etapas}
+          temperaturas={temperaturas}
+          mesReferencia={mesReferencia}
+          onUpdate={fetchData}
+        />
       )}
     </div>
   )

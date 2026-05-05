@@ -230,11 +230,11 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
       </div>
 
       <div className="space-y-6 pt-4">
-        <div className="flex items-center gap-4 py-2">
+        <div className="flex items-center gap-4 py-2 mt-4">
           <div className="h-px bg-slate-800 flex-1"></div>
-          <div className="flex items-center gap-2 bg-slate-800/50 px-6 py-2.5 rounded-full border border-slate-700/50 shadow-sm">
+          <div className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-md border border-slate-700 shadow-sm">
             <Target className="w-5 h-5 text-amber-500" />
-            <h3 className="text-sm font-bold text-slate-200 tracking-widest uppercase">
+            <h3 className="text-sm font-bold text-white tracking-widest uppercase">
               Detalhamento da Cascata
             </h3>
           </div>

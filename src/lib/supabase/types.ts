@@ -1499,6 +1499,53 @@ export type Database = {
           },
         ]
       }
+      funil_leads: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          descricao: string | null
+          id: string
+          mes_referencia: string
+          nome: string
+          origem_id: string
+          status: string | null
+          telefone: string | null
+          temperatura: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          id?: string
+          mes_referencia: string
+          nome: string
+          origem_id: string
+          status?: string | null
+          telefone?: string | null
+          temperatura?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          id?: string
+          mes_referencia?: string
+          nome?: string
+          origem_id?: string
+          status?: string | null
+          telefone?: string | null
+          temperatura?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funil_leads_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       funil_origens: {
         Row: {
           ativo: boolean
@@ -3960,6 +4007,17 @@ export const Constants = {
 //   fechamentos_valor_realizado: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: funil_leads
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   telefone: text (nullable)
+//   origem_id: uuid (not null)
+//   descricao: text (nullable)
+//   temperatura: text (nullable, default: 'frio'::text)
+//   status: text (nullable, default: 'novo'::text)
+//   mes_referencia: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: funil_origens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -4528,6 +4586,9 @@ export const Constants = {
 //   FOREIGN KEY funil_dados_mensais_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
 //   UNIQUE funil_dados_mensais_origem_id_mes_referencia_key: UNIQUE (origem_id, mes_referencia)
 //   PRIMARY KEY funil_dados_mensais_pkey: PRIMARY KEY (id)
+// Table: funil_leads
+//   FOREIGN KEY funil_leads_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
+//   PRIMARY KEY funil_leads_pkey: PRIMARY KEY (id)
 // Table: funil_origens
 //   UNIQUE funil_origens_nome_key: UNIQUE (nome)
 //   PRIMARY KEY funil_origens_pkey: PRIMARY KEY (id)
@@ -4895,6 +4956,10 @@ export const Constants = {
 //     WITH CHECK: (is_admin() OR has_permission('Gerenciar Estoque'::text))
 // Table: funil_dados_mensais
 //   Policy "funil_dados_mensais_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: funil_leads
+//   Policy "funil_leads_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: funil_origens
@@ -5837,6 +5902,81 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_update_funil_dados_mensais_from_leads()
+//   CREATE OR REPLACE FUNCTION public.trg_update_funil_dados_mensais_from_leads()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_origem_id UUID;
+//     v_mes_referencia TEXT;
+//     v_total_leads INT;
+//     v_agendamentos INT;
+//     v_comparecimentos INT;
+//   BEGIN
+//     IF TG_OP = 'DELETE' THEN
+//       v_origem_id := OLD.origem_id;
+//       v_mes_referencia := OLD.mes_referencia;
+//     ELSE
+//       v_origem_id := NEW.origem_id;
+//       v_mes_referencia := NEW.mes_referencia;
+//     END IF;
+//
+//     SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
+//     SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia AND status IN ('agendado', 'atendido', 'faltou');
+//     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia AND status = 'atendido';
+//
+//     INSERT INTO public.funil_dados_mensais (
+//       origem_id,
+//       mes_referencia,
+//       leads_realizado,
+//       agendamentos_realizado,
+//       comparecimentos_realizado,
+//       investimento,
+//       meta_leads,
+//       meta_agendamentos_qtde,
+//       meta_agendamentos_perc,
+//       meta_comparecimentos_qtde,
+//       meta_comparecimentos_perc,
+//       meta_fechamento_valor,
+//       ticket_medio_esperado,
+//       fechamentos_qtde_realizado,
+//       fechamentos_valor_realizado
+//     )
+//     VALUES (
+//       v_origem_id,
+//       v_mes_referencia,
+//       v_total_leads,
+//       v_agendamentos,
+//       v_comparecimentos,
+//       0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+//     )
+//     ON CONFLICT (origem_id, mes_referencia)
+//     DO UPDATE SET
+//       leads_realizado = EXCLUDED.leads_realizado,
+//       agendamentos_realizado = EXCLUDED.agendamentos_realizado,
+//       comparecimentos_realizado = EXCLUDED.comparecimentos_realizado,
+//       atualizado_em = NOW();
+//
+//     -- Se alterou a origem ou o mês, atualiza também a contagem da origem/mês antigo
+//     IF TG_OP = 'UPDATE' AND (NEW.origem_id != OLD.origem_id OR NEW.mes_referencia != OLD.mes_referencia) THEN
+//       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia;
+//       SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia AND status IN ('agendado', 'atendido', 'faltou');
+//       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia AND status = 'atendido';
+//
+//       UPDATE public.funil_dados_mensais
+//       SET
+//         leads_realizado = v_total_leads,
+//         agendamentos_realizado = v_agendamentos,
+//         comparecimentos_realizado = v_comparecimentos,
+//         atualizado_em = NOW()
+//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia;
+//     END IF;
+//
+//     RETURN NULL;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: compra_itens
@@ -5846,6 +5986,8 @@ export const Constants = {
 //   after_compra_status_change: CREATE TRIGGER after_compra_status_change AFTER UPDATE OF status ON public.compras FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
+// Table: funil_leads
+//   trg_update_funil_dados_mensais_leads: CREATE TRIGGER trg_update_funil_dados_mensais_leads AFTER INSERT OR DELETE OR UPDATE ON public.funil_leads FOR EACH ROW EXECUTE FUNCTION trg_update_funil_dados_mensais_from_leads()
 // Table: performance_bonificacao
 //   sync_carteira_bonificacao_trigger: CREATE TRIGGER sync_carteira_bonificacao_trigger AFTER INSERT OR UPDATE ON public.performance_bonificacao FOR EACH ROW EXECUTE FUNCTION trg_sync_carteira_bonificacao()
 // Table: saida_produtos

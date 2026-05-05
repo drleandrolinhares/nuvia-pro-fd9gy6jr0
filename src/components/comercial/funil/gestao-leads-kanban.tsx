@@ -16,35 +16,31 @@ import { Loader2, Plus, Phone, Tag, Trash2, Edit2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-const COLUMNS = [
-  { id: 'novo', title: 'Novos', color: 'bg-slate-800/50 border-slate-700' },
-  { id: 'nao_responde', title: 'Não Responde', color: 'bg-slate-800/50 border-slate-700' },
-  { id: 'agendado', title: 'Agendado', color: 'bg-blue-900/20 border-blue-800/50' },
-  { id: 'faltou', title: 'Faltou', color: 'bg-red-900/20 border-red-800/50' },
-  { id: 'atendido', title: 'Atendido', color: 'bg-emerald-900/20 border-emerald-800/50' },
-  { id: 'demitido', title: 'Demitido', color: 'bg-slate-900/50 border-slate-800' },
-]
-
-const TemperaturaBadge = ({ temp }: { temp: string }) => {
-  const colors: Record<string, string> = {
-    quente: 'bg-red-500/10 text-red-500 border-red-500/20',
-    morno: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    frio: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  }
+const TemperaturaBadge = ({
+  tempSlug,
+  temperaturas,
+}: {
+  tempSlug: string
+  temperaturas: any[]
+}) => {
+  const temp = temperaturas.find((t: any) => t.slug === tempSlug)
+  if (!temp) return null
   return (
     <span
       className={cn(
         'text-[10px] px-1.5 py-0.5 rounded border uppercase font-bold tracking-wider',
-        colors[temp] || colors.frio,
+        temp.cor || 'bg-slate-500/10 text-slate-500 border-slate-500/20',
       )}
     >
-      {temp}
+      {temp.nome}
     </span>
   )
 }
 
-export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
+export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas, onUpdate }: any) {
   const [leads, setLeads] = useState<any[]>([])
+  const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
@@ -79,6 +75,14 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+  }
+
+  const saveEditing = async (lead: any) => {
+    if (editName.trim() && editName !== lead.nome) {
+      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: editName.trim() } : l)))
+      await supabase.from('funil_leads').update({ nome: editName.trim() }).eq('id', lead.id)
+    }
+    setEditingLeadId(null)
   }
 
   const handleDrop = async (e: React.DragEvent, statusId: string) => {
@@ -117,8 +121,8 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
         telefone: formData.telefone,
         origem_id: formData.origem_id,
         descricao: formData.descricao,
-        temperatura: formData.temperatura,
-        status: formData.status,
+        temperatura: formData.temperatura || temperaturas[0]?.slug || 'frio',
+        status: formData.status || etapas[0]?.slug || 'novo',
         mes_referencia: mesReferencia,
       }
 
@@ -155,8 +159,8 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
       telefone: '',
       origem_id: origens.filter((o: any) => o.ativo)[0]?.id || '',
       descricao: '',
-      temperatura: 'frio',
-      status: 'novo',
+      temperatura: temperaturas.filter((t: any) => t.ativo)[0]?.slug || 'frio',
+      status: etapas.filter((e: any) => e.ativo)[0]?.slug || 'novo',
     })
     setDialogOpen(true)
   }
@@ -195,87 +199,115 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-4 pt-2 snap-x hide-scrollbar min-h-[600px] h-[calc(100vh-280px)]">
-          {COLUMNS.map((col) => {
-            const colLeads = leads.filter((l) => l.status === col.id)
-            return (
-              <div
-                key={col.id}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, col.id)}
-                className={cn(
-                  'flex flex-col min-w-[280px] max-w-[280px] rounded-xl border p-3 snap-start transition-colors',
-                  col.color,
-                )}
-              >
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h4 className="font-semibold text-slate-200">{col.title}</h4>
-                  <span className="text-xs bg-slate-950 text-slate-400 px-2.5 py-0.5 rounded-full font-medium shadow-sm">
-                    {colLeads.length}
-                  </span>
-                </div>
+          {etapas
+            .filter((e: any) => e.ativo)
+            .map((col: any) => {
+              const colLeads = leads.filter((l) => l.status === col.slug)
+              return (
+                <div
+                  key={col.slug}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, col.slug)}
+                  className="flex flex-col min-w-[280px] max-w-[280px] rounded-xl bg-slate-100 border border-slate-200 p-3 snap-start transition-colors shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h4 className="font-bold text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: col.cor || '#cbd5e1' }}
+                      ></span>
+                      {col.nome}
+                    </h4>
+                    <span className="text-xs bg-white text-slate-600 px-2.5 py-0.5 rounded-full font-bold shadow-sm border border-slate-200">
+                      {colLeads.length}
+                    </span>
+                  </div>
 
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                  {colLeads.map((lead) => {
-                    const origemNome =
-                      origens.find((o: any) => o.id === lead.origem_id)?.nome || 'Desconhecida'
-                    return (
-                      <div
-                        key={lead.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, lead.id)}
-                        className="bg-slate-950/80 p-3.5 rounded-lg border border-slate-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-600 transition-all group relative"
-                      >
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-slate-900/90 rounded-md p-0.5 border border-slate-800 shadow-sm">
-                          <button
-                            onClick={() => openEdit(lead)}
-                            className="p-1 hover:text-amber-500 text-slate-400 transition-colors"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(lead.id)}
-                            className="p-1 hover:text-red-500 text-slate-400 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        <div className="flex justify-between items-start mb-3 pr-10">
-                          <span className="font-semibold text-white text-sm">{lead.nome}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between mb-3">
-                          <TemperaturaBadge temp={lead.temperatura} />
-                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-slate-900 px-2 py-1 rounded-md border border-slate-800">
-                            <Tag className="w-3 h-3 text-slate-500" />
-                            <span className="truncate max-w-[100px]">{origemNome}</span>
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                    {colLeads.map((lead) => {
+                      const origemNome =
+                        origens.find((o: any) => o.id === lead.origem_id)?.nome || 'Desconhecida'
+                      return (
+                        <div
+                          key={lead.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, lead.id)}
+                          className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-300 transition-all group relative overflow-hidden"
+                          style={{ borderLeftColor: col.cor || '#cbd5e1', borderLeftWidth: '4px' }}
+                        >
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 rounded-md p-0.5 border border-slate-100 shadow-sm z-10 backdrop-blur-sm">
+                            <button
+                              onClick={() => openEdit(lead)}
+                              className="p-1 hover:text-amber-500 text-slate-400 transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(lead.id)}
+                              className="p-1 hover:text-red-500 text-slate-400 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                        </div>
 
-                        {lead.telefone && (
-                          <div className="flex items-center gap-2 text-xs text-slate-400 mb-2 bg-slate-900/50 p-1.5 rounded-md">
-                            <Phone className="w-3.5 h-3.5 text-slate-500" />
-                            <span>{lead.telefone}</span>
+                          <div className="flex justify-between items-start mb-3 pr-10 min-h-[20px]">
+                            {editingLeadId === lead.id ? (
+                              <input
+                                autoFocus
+                                className="font-semibold text-slate-900 text-sm bg-slate-50 border border-amber-500 rounded px-1 w-full outline-none"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={() => saveEditing(lead)}
+                                onKeyDown={(e) => e.key === 'Enter' && saveEditing(lead)}
+                              />
+                            ) : (
+                              <span
+                                className="font-bold text-slate-800 text-sm cursor-text hover:text-amber-600 transition-colors"
+                                onDoubleClick={() => {
+                                  setEditingLeadId(lead.id)
+                                  setEditName(lead.nome)
+                                }}
+                              >
+                                {lead.nome}
+                              </span>
+                            )}
                           </div>
-                        )}
 
-                        {lead.descricao && (
-                          <p className="text-xs text-slate-500 line-clamp-2 mt-2 pt-2 border-t border-slate-800/50 leading-relaxed">
-                            {lead.descricao}
-                          </p>
-                        )}
+                          <div className="flex items-center justify-between mb-3">
+                            <TemperaturaBadge
+                              tempSlug={lead.temperatura}
+                              temperaturas={temperaturas}
+                            />
+                            <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                              <Tag className="w-3 h-3 text-slate-400" />
+                              <span className="truncate max-w-[90px]">{origemNome}</span>
+                            </div>
+                          </div>
+
+                          {lead.telefone && (
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2 bg-slate-50 p-1.5 rounded-md border border-slate-100/50">
+                              <Phone className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="font-medium">{lead.telefone}</span>
+                            </div>
+                          )}
+
+                          {lead.descricao && (
+                            <p className="text-xs text-slate-600 line-clamp-2 mt-2 pt-2 border-t border-slate-100 leading-relaxed">
+                              {lead.descricao}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
+                    {colLeads.length === 0 && (
+                      <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg">
+                        <span className="text-xs text-slate-500 font-medium">Solte cards aqui</span>
                       </div>
-                    )
-                  })}
-                  {colLeads.length === 0 && (
-                    <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-800/50 rounded-lg">
-                      <span className="text-xs text-slate-600 font-medium">Solte cards aqui</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
         </div>
       )}
 
@@ -334,9 +366,13 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                    <SelectItem value="quente">Quente</SelectItem>
-                    <SelectItem value="morno">Morno</SelectItem>
-                    <SelectItem value="frio">Frio</SelectItem>
+                    {temperaturas
+                      .filter((t: any) => t.ativo)
+                      .map((t: any) => (
+                        <SelectItem key={t.slug} value={t.slug}>
+                          {t.nome}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -351,11 +387,13 @@ export function GestaoLeadsKanban({ mesReferencia, origens, onUpdate }: any) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  {COLUMNS.map((col) => (
-                    <SelectItem key={col.id} value={col.id}>
-                      {col.title}
-                    </SelectItem>
-                  ))}
+                  {etapas
+                    .filter((e: any) => e.ativo)
+                    .map((col: any) => (
+                      <SelectItem key={col.slug} value={col.slug}>
+                        {col.nome}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
