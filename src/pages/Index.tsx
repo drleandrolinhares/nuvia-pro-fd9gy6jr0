@@ -15,11 +15,14 @@ import {
   Trash,
   Edit2,
   Loader2,
+  Search,
+  Lock,
+  CheckCircle2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { GestaoRH } from '@/components/rh/GestaoRH'
 import {
   Dialog,
@@ -27,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,7 +41,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { parseISO, format } from 'date-fns'
+import { parseISO, format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 import {
   Select,
   SelectContent,
@@ -47,6 +49,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
 
 const MESES = [
   'Janeiro',
@@ -65,6 +75,7 @@ const MESES = [
 
 const Index = () => {
   const { user, profile } = useAuth()
+  const { toast } = useToast()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
   const [loadingEstoque, setLoadingEstoque] = useState(true)
@@ -77,32 +88,39 @@ const Index = () => {
   const [saldoPerdido, setSaldoPerdido] = useState(0)
   const [minhasDemandas, setMinhasDemandas] = useState<any[]>([])
   const [metaFaturamento, setMetaFaturamento] = useState(0)
-  const [vendasDiarias, setVendasDiarias] = useState<any[]>([])
+  const [vendasDiarias, setVendasDiarias] = useState<any[]>([]) // Used for goal calculation
+
+  // Modal States
   const [modalVendasOpen, setModalVendasOpen] = useState(false)
+  const [modalTab, setModalTab] = useState('lancamento')
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [novaVendaValor, setNovaVendaValor] = useState('')
-
-  // Novos campos de venda
   const [pacienteNome, setPacienteNome] = useState('')
   const [valorTratamento, setValorTratamento] = useState('')
   const [formaPagamento, setFormaPagamento] = useState('')
   const [destinoPagamento, setDestinoPagamento] = useState('')
   const [destinoFiscal, setDestinoFiscal] = useState('')
-
   const [salvandoVendas, setSalvandoVendas] = useState(false)
   const [editingVendaId, setEditingVendaId] = useState<string | null>(null)
+
+  // History & Filtering States
+  const [filtroVendas, setFiltroVendas] = useState('7d')
+  const [dataInicioFiltro, setDataInicioFiltro] = useState(
+    format(subDays(new Date(), 6), 'yyyy-MM-dd'),
+  )
+  const [dataFimFiltro, setDataFimFiltro] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [vendasHistorico, setVendasHistorico] = useState<any[]>([])
+  const [fechamentosDiarios, setFechamentosDiarios] = useState<any[]>([])
+  const [loadingHistorico, setLoadingHistorico] = useState(false)
+
   const { dataVersion, invalidateCache } = useCache()
 
   const loading = loadingMeta || loadingEstoque || loadingUsuarios || loadingSAC
 
   const loadData = () => {
     const todayDate = new Date()
-    const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
-      .toISOString()
-      .split('T')[0]
-    const endOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0)
-      .toISOString()
-      .split('T')[0]
+    const startOfMonthStr = format(startOfMonth(todayDate), 'yyyy-MM-dd')
+    const endOfMonthStr = format(endOfMonth(todayDate), 'yyyy-MM-dd')
 
     setLoadingMeta(true)
     Promise.all([
@@ -110,8 +128,8 @@ const Index = () => {
       supabase
         .from('vendas_diarias')
         .select('*')
-        .gte('data_venda', startOfMonth)
-        .lte('data_venda', endOfMonth),
+        .gte('data_venda', startOfMonthStr)
+        .lte('data_venda', endOfMonthStr),
     ]).then(([{ data: configFiscal }, { data: vendas }]) => {
       if (configFiscal) setMetaFaturamento(configFiscal.faturamento_previsto)
       if (vendas) setVendasDiarias(vendas)
@@ -214,6 +232,55 @@ const Index = () => {
     }
   }, [invalidateCache])
 
+  const fetchHistorico = useCallback(async () => {
+    let sd = ''
+    let ed = ''
+    const today = new Date()
+    const todayStr = format(today, 'yyyy-MM-dd')
+
+    if (filtroVendas === 'hoje') {
+      sd = todayStr
+      ed = todayStr
+    } else if (filtroVendas === '7d') {
+      sd = format(subDays(today, 6), 'yyyy-MM-dd')
+      ed = todayStr
+    } else if (filtroVendas === '15d') {
+      sd = format(subDays(today, 14), 'yyyy-MM-dd')
+      ed = todayStr
+    } else if (filtroVendas === 'mes') {
+      sd = format(startOfMonth(today), 'yyyy-MM-dd')
+      ed = format(endOfMonth(today), 'yyyy-MM-dd')
+    } else if (filtroVendas === 'custom') {
+      sd = dataInicioFiltro
+      ed = dataFimFiltro
+    }
+
+    if (!sd || !ed) return
+
+    setLoadingHistorico(true)
+    try {
+      const [vendasRes, fechamentosRes] = await Promise.all([
+        supabase.from('vendas_diarias').select('*').gte('data_venda', sd).lte('data_venda', ed),
+        supabase
+          .from('caixa_diario_fechamentos')
+          .select('*')
+          .gte('data_referencia', sd)
+          .lte('data_referencia', ed),
+      ])
+
+      if (vendasRes.data) setVendasHistorico(vendasRes.data)
+      if (fechamentosRes.data) setFechamentosDiarios(fechamentosRes.data)
+    } finally {
+      setLoadingHistorico(false)
+    }
+  }, [filtroVendas, dataInicioFiltro, dataFimFiltro])
+
+  useEffect(() => {
+    if (modalVendasOpen) {
+      fetchHistorico()
+    }
+  }, [modalVendasOpen, fetchHistorico, dataVersion])
+
   const handleEditVenda = (venda: any) => {
     setEditingVendaId(venda.id)
     setNovaVendaValor(venda.valor.toString())
@@ -223,6 +290,7 @@ const Index = () => {
     setDestinoPagamento(venda.destino_pagamento || '')
     setDestinoFiscal(venda.destino_fiscal || '')
     setSelectedDate(venda.data_venda)
+    setModalTab('lancamento')
   }
 
   const cancelEdit = () => {
@@ -239,6 +307,19 @@ const Index = () => {
     if (!novaVendaValor || Number(novaVendaValor) <= 0 || !pacienteNome) {
       return
     }
+
+    const isConferido = fechamentosDiarios.find(
+      (f) => f.data_referencia === selectedDate,
+    )?.conferido
+    if (isConferido) {
+      toast({
+        title: 'Atenção',
+        description: 'O caixa deste dia já foi conferido e fechado. Não é possível alterar.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setSalvandoVendas(true)
     try {
       const payload = {
@@ -263,22 +344,70 @@ const Index = () => {
         if (error) throw error
       }
 
+      toast({
+        title: 'Sucesso',
+        description: editingVendaId
+          ? 'Lançamento editado com sucesso!'
+          : 'Lançamento registrado com sucesso!',
+      })
       cancelEdit()
       invalidateCache()
+      setModalTab('historico')
     } catch (error) {
       console.error('Erro ao adicionar/editar venda:', error)
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o lançamento.',
+        variant: 'destructive',
+      })
     } finally {
       setSalvandoVendas(false)
     }
   }
 
-  const handleDeleteVenda = async (id: string) => {
+  const handleDeleteVenda = async (id: string, date: string) => {
+    const isConferido = fechamentosDiarios.find((f) => f.data_referencia === date)?.conferido
+    if (isConferido) {
+      toast({
+        title: 'Atenção',
+        description: 'O caixa deste dia já foi fechado. Não é possível excluir.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       const { error } = await supabase.from('vendas_diarias').delete().eq('id', id)
       if (error) throw error
       invalidateCache()
+      toast({ title: 'Sucesso', description: 'Lançamento excluído.' })
     } catch (error) {
       console.error('Erro ao deletar venda:', error)
+    }
+  }
+
+  const handleFecharCaixa = async (date: string) => {
+    try {
+      const { error } = await supabase.from('caixa_diario_fechamentos').upsert(
+        {
+          data_referencia: date,
+          conferido: true,
+          conferido_por: user?.id,
+          conferido_em: new Date().toISOString(),
+        },
+        { onConflict: 'data_referencia' },
+      )
+
+      if (error) throw error
+      toast({ title: 'Sucesso', description: 'Caixa conferido e fechado!' })
+      fetchHistorico()
+    } catch (error: any) {
+      console.error('Erro ao fechar caixa:', error)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível fechar o caixa.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -287,13 +416,23 @@ const Index = () => {
   const percentualAlcancado = metaFaturamento > 0 ? (totalVendasMes / metaFaturamento) * 100 : 0
   const percentualFaltante = Math.max(0, 100 - percentualAlcancado)
 
-  const vendasDoDia = useMemo(() => {
-    return vendasDiarias
-      .filter((v) => v.data_venda === selectedDate)
-      .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
-  }, [vendasDiarias, selectedDate])
-
-  const totalDoDia = vendasDoDia.reduce((acc, curr) => acc + Number(curr.valor), 0)
+  const vendasAgrupadas = useMemo(() => {
+    const groups: Record<string, any[]> = {}
+    vendasHistorico.forEach((v) => {
+      if (!groups[v.data_venda]) groups[v.data_venda] = []
+      groups[v.data_venda].push(v)
+    })
+    return Object.keys(groups)
+      .sort((a, b) => b.localeCompare(a))
+      .map((date) => ({
+        date,
+        vendas: groups[date].sort(
+          (x, y) => new Date(y.criado_em).getTime() - new Date(x.criado_em).getTime(),
+        ),
+        total: groups[date].reduce((acc, curr) => acc + Number(curr.valor), 0),
+        fechamento: fechamentosDiarios.find((f) => f.data_referencia === date),
+      }))
+  }, [vendasHistorico, fechamentosDiarios])
 
   const produtosDashboard = useMemo(() => {
     return produtos.map((p) => {
@@ -386,7 +525,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* NOVO BLOCO GESTÃO DE META */}
       <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm mb-6 animate-fade-in-down">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -400,7 +538,6 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {/* 1. Meta */}
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
               Meta
@@ -412,7 +549,6 @@ const Index = () => {
             </span>
           </div>
 
-          {/* 2. Vendas Atuais */}
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center relative group">
             <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
               Vendas Atuais
@@ -426,13 +562,12 @@ const Index = () => {
               onClick={() => setModalVendasOpen(true)}
               size="icon"
               className="absolute top-2 right-2 h-7 w-7 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 rounded-md transition-colors"
-              title="Lançar Venda Diária"
+              title="Gestão de Receitas"
             >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* 3. Valor Restante */}
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
               Falta para Meta (R$)
@@ -444,7 +579,6 @@ const Index = () => {
             </span>
           </div>
 
-          {/* 4. Meta Alcançada (%) */}
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
               Meta Alcançada
@@ -454,7 +588,6 @@ const Index = () => {
             </span>
           </div>
 
-          {/* 5. Falta para Meta (%) */}
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
             <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
               Falta para Meta (%)
@@ -508,9 +641,7 @@ const Index = () => {
         </div>
       )}
 
-      {/* Linha 1: SAC e Estoque */}
       <div className="grid gap-6 md:grid-cols-2 mb-6">
-        {/* SAC */}
         <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
             <div className="flex items-center gap-3">
@@ -596,7 +727,6 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* GESTÃO DE ESTOQUE */}
         <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
           <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
             <div className="p-2 bg-amber-500/10 rounded-md">
@@ -654,14 +784,11 @@ const Index = () => {
         </Card>
       </div>
 
-      {/* Linha 2: Gestão de RH */}
       <div className="mb-6">
         <GestaoRH />
       </div>
 
-      {/* Linha 3: Aniversariantes e Atalhos */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* ANIVERSARIANTES */}
         <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
             <div className="flex items-center gap-3">
@@ -741,7 +868,6 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* ATALHOS */}
         <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
           <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
             <div className="p-2 bg-amber-500/10 rounded-md">
@@ -776,225 +902,343 @@ const Index = () => {
         </Card>
       </div>
 
-      {/* Modal Lançamento de Vendas */}
       <Dialog
         open={modalVendasOpen}
         onOpenChange={(open) => {
           setModalVendasOpen(open)
-          if (!open) cancelEdit()
+          if (!open) {
+            cancelEdit()
+            setModalTab('lancamento')
+          }
         }}
       >
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Lançamento de Vendas / Receitas</DialogTitle>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-3xl max-h-[90vh] flex flex-col overflow-hidden p-6">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Gestão de Vendas / Receitas</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Preencha os detalhes do lançamento. As entradas são totalizadas e compõem o
-              faturamento do mês.
+              Registre novos recebimentos e acompanhe o histórico de caixa.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">Data *</Label>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Nome do Paciente *
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Ex: João da Silva"
-                  value={pacienteNome}
-                  onChange={(e) => setPacienteNome(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Valor do Tratamento Total (R$)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={valorTratamento}
-                  onChange={(e) => setValorTratamento(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Valor Recebido / Entrada (R$) *
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={novaVendaValor}
-                  onChange={(e) => setNovaVendaValor(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9 border-emerald-500/50 focus-visible:border-emerald-500"
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Forma de Pgto
-                </Label>
-                <Select value={formaPagamento} onValueChange={setFormaPagamento}>
-                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                    <SelectItem value="credito">Crédito</SelectItem>
-                    <SelectItem value="debito">Débito</SelectItem>
-                    <SelectItem value="pix">PIX</SelectItem>
-                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Destino Pgto
-                </Label>
-                <Select value={destinoPagamento} onValueChange={setDestinoPagamento}>
-                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                    <SelectItem value="a vista">À Vista (Caixa)</SelectItem>
-                    <SelectItem value="CC Sicoob PP">CC Sicoob PP</SelectItem>
-                    <SelectItem value="CC Santander PJ">CC Santander PJ</SelectItem>
-                    <SelectItem value="CC Sicoob Pf">CC Sicoob PF</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-400 uppercase font-bold">
-                  Destino Fiscal
-                </Label>
-                <Select value={destinoFiscal} onValueChange={setDestinoFiscal}>
-                  <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                    <SelectItem value="PESSOA FISICA">Pessoa Física</SelectItem>
-                    <SelectItem value="VITALI ODONTOLOGIA">Vitali Odontologia</SelectItem>
-                    <SelectItem value="SOUZA FILHO ODONTOLOGIA">Souza Filho Odontologia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2 gap-2">
-              {editingVendaId && (
-                <Button
-                  variant="outline"
-                  onClick={cancelEdit}
-                  disabled={salvandoVendas}
-                  className="h-9 px-4 border-slate-700 text-slate-300 hover:bg-slate-800"
-                >
-                  Cancelar Edição
-                </Button>
-              )}
-              <Button
-                onClick={handleAddVenda}
-                disabled={
-                  salvandoVendas || !novaVendaValor || Number(novaVendaValor) <= 0 || !pacienteNome
-                }
-                className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-6"
+          <Tabs
+            value={modalTab}
+            onValueChange={setModalTab}
+            className="w-full mt-4 flex flex-col overflow-hidden"
+          >
+            <TabsList className="grid w-full grid-cols-2 bg-slate-950 shrink-0 mb-4">
+              <TabsTrigger
+                value="lancamento"
+                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold uppercase tracking-wider text-xs"
               >
-                {salvandoVendas ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : editingVendaId ? (
-                  <Edit2 className="h-4 w-4 mr-2" />
-                ) : (
-                  <Plus className="h-4 w-4 mr-2" />
-                )}
-                {editingVendaId ? 'Salvar Edição' : 'Lançar Recebimento'}
-              </Button>
-            </div>
+                {editingVendaId ? 'Editar Lançamento' : 'Novo Lançamento'}
+              </TabsTrigger>
+              <TabsTrigger
+                value="historico"
+                className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-bold uppercase tracking-wider text-xs"
+              >
+                Histórico e Conferência
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="border border-slate-800 rounded-lg p-4 bg-slate-950/50 mt-4">
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Lançamentos do Dia
-                </h4>
-                <span className="text-sm font-bold text-emerald-400">
-                  Total: R$ {totalDoDia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-
-              <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                {vendasDoDia.length > 0 ? (
-                  vendasDoDia.map((v) => (
-                    <div
-                      key={v.id}
-                      className="flex justify-between items-center bg-slate-900 p-2.5 rounded border border-slate-800 group hover:border-slate-700 transition-colors"
-                    >
-                      <div className="flex flex-col gap-0.5 max-w-[70%]">
-                        <span className="text-sm font-bold text-slate-200 truncate">
-                          {v.paciente_nome || 'Paciente não informado'}
-                        </span>
-                        <div className="flex gap-2 text-[10px] text-slate-500 uppercase font-medium">
-                          <span>{v.destino_fiscal || 'S/ Destino Fiscal'}</span>
-                          <span>•</span>
-                          <span>{v.forma_pagamento || 'S/ Forma Pgto'}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="flex flex-col items-end mr-2">
-                          <span className="text-sm font-bold text-emerald-400">
-                            R${' '}
-                            {Number(v.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                          <span className="text-[10px] text-slate-500 uppercase font-medium">
-                            {v.criado_em ? format(parseISO(v.criado_em), 'HH:mm') : ''}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-500 hover:text-amber-400 hover:bg-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleEditVenda(v)}
-                          title="Editar Lançamento"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteVenda(v.id)}
-                          title="Excluir Lançamento"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
-                      Nenhum recebimento hoje
-                    </p>
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+              <TabsContent value="lancamento" className="space-y-4 mt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">Data *</Label>
+                    <Input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                    />
                   </div>
-                )}
-              </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Nome do Paciente *
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="Ex: João da Silva"
+                      value={pacienteNome}
+                      onChange={(e) => setPacienteNome(e.target.value)}
+                      className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Valor do Tratamento Total (R$)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={valorTratamento}
+                      onChange={(e) => setValorTratamento(e.target.value)}
+                      className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9"
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Valor Recebido / Entrada (R$) *
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={novaVendaValor}
+                      onChange={(e) => setNovaVendaValor(e.target.value)}
+                      className="bg-slate-950 border-slate-800 text-sm focus-visible:ring-emerald-500 h-9 border-emerald-500/50 focus-visible:border-emerald-500"
+                      placeholder="0,00"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Forma de Pgto
+                    </Label>
+                    <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+                      <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <SelectItem value="credito">Crédito</SelectItem>
+                        <SelectItem value="debito">Débito</SelectItem>
+                        <SelectItem value="pix">PIX</SelectItem>
+                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="cheque">Cheque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Destino Pgto
+                    </Label>
+                    <Select value={destinoPagamento} onValueChange={setDestinoPagamento}>
+                      <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <SelectItem value="a vista">À Vista (Caixa)</SelectItem>
+                        <SelectItem value="CC Sicoob PP">CC Sicoob PP</SelectItem>
+                        <SelectItem value="CC Santander PJ">CC Santander PJ</SelectItem>
+                        <SelectItem value="CC Sicoob Pf">CC Sicoob PF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-slate-400 uppercase font-bold">
+                      Destino Fiscal
+                    </Label>
+                    <Select value={destinoFiscal} onValueChange={setDestinoFiscal}>
+                      <SelectTrigger className="bg-slate-950 border-slate-800 h-9 text-sm">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <SelectItem value="PESSOA FISICA">Pessoa Física</SelectItem>
+                        <SelectItem value="VITALI ODONTOLOGIA">Vitali Odontologia</SelectItem>
+                        <SelectItem value="SOUZA FILHO ODONTOLOGIA">
+                          Souza Filho Odontologia
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 gap-2">
+                  {editingVendaId && (
+                    <Button
+                      variant="outline"
+                      onClick={cancelEdit}
+                      disabled={salvandoVendas}
+                      className="h-9 px-4 border-slate-700 text-slate-300 hover:bg-slate-800"
+                    >
+                      Cancelar Edição
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleAddVenda}
+                    disabled={
+                      salvandoVendas ||
+                      !novaVendaValor ||
+                      Number(novaVendaValor) <= 0 ||
+                      !pacienteNome
+                    }
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-6"
+                  >
+                    {salvandoVendas ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : editingVendaId ? (
+                      <Edit2 className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    {editingVendaId ? 'Salvar Edição' : 'Lançar Recebimento'}
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="historico" className="space-y-4 mt-0">
+                <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center justify-between bg-slate-950/50 p-3 rounded-lg border border-slate-800">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Label className="text-xs uppercase font-bold text-slate-400 whitespace-nowrap">
+                      Período:
+                    </Label>
+                    <Select value={filtroVendas} onValueChange={setFiltroVendas}>
+                      <SelectTrigger className="bg-slate-900 border-slate-700 h-8 text-xs w-[140px]">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                        <SelectItem value="hoje">Hoje</SelectItem>
+                        <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                        <SelectItem value="15d">Últimos 15 dias</SelectItem>
+                        <SelectItem value="mes">Mês Atual</SelectItem>
+                        <SelectItem value="custom">Personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {filtroVendas === 'custom' && (
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Input
+                        type="date"
+                        value={dataInicioFiltro}
+                        onChange={(e) => setDataInicioFiltro(e.target.value)}
+                        className="h-8 bg-slate-900 border-slate-700 text-xs w-[120px]"
+                      />
+                      <span className="text-slate-500 text-xs">até</span>
+                      <Input
+                        type="date"
+                        value={dataFimFiltro}
+                        onChange={(e) => setDataFimFiltro(e.target.value)}
+                        className="h-8 bg-slate-900 border-slate-700 text-xs w-[120px]"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="border border-slate-800 rounded-lg bg-slate-950/30">
+                  {loadingHistorico ? (
+                    <div className="p-8 text-center text-slate-500 flex flex-col items-center">
+                      <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                      <span className="text-xs uppercase tracking-wider font-medium">
+                        Carregando histórico...
+                      </span>
+                    </div>
+                  ) : vendasAgrupadas.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500">
+                      <span className="text-xs uppercase tracking-wider font-medium">
+                        Nenhum registro encontrado no período
+                      </span>
+                    </div>
+                  ) : (
+                    <Accordion type="multiple" className="w-full">
+                      {vendasAgrupadas.map((group) => (
+                        <AccordionItem
+                          key={group.date}
+                          value={group.date}
+                          className="border-slate-800 px-4"
+                        >
+                          <AccordionTrigger className="hover:no-underline py-3">
+                            <div className="flex justify-between items-center w-full pr-4">
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold text-sm text-slate-200">
+                                  {format(parseISO(group.date), 'dd/MM/yyyy')}
+                                </span>
+                                {group.fechamento?.conferido && (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold uppercase text-[10px] tracking-wider py-0"
+                                  >
+                                    Conferido <CheckCircle2 className="w-3 h-3 ml-1 inline-block" />
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="font-bold text-emerald-400 text-sm">
+                                R${' '}
+                                {group.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-4">
+                            <div className="space-y-2">
+                              {group.vendas.map((v) => (
+                                <div
+                                  key={v.id}
+                                  className="flex justify-between items-center bg-slate-900 p-2.5 rounded border border-slate-800 group hover:border-slate-700 transition-colors"
+                                >
+                                  <div className="flex flex-col gap-0.5 max-w-[70%]">
+                                    <span className="text-sm font-bold text-slate-200 truncate">
+                                      {v.paciente_nome || 'Paciente não informado'}
+                                    </span>
+                                    <div className="flex gap-2 text-[10px] text-slate-500 uppercase font-medium">
+                                      <span>{v.destino_fiscal || 'S/ Destino Fiscal'}</span>
+                                      <span>•</span>
+                                      <span>{v.forma_pagamento || 'S/ Forma Pgto'}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <div className="flex flex-col items-end mr-2">
+                                      <span className="text-sm font-bold text-emerald-400">
+                                        R${' '}
+                                        {Number(v.valor).toLocaleString('pt-BR', {
+                                          minimumFractionDigits: 2,
+                                        })}
+                                      </span>
+                                      <span className="text-[10px] text-slate-500 uppercase font-medium">
+                                        {v.criado_em ? format(parseISO(v.criado_em), 'HH:mm') : ''}
+                                      </span>
+                                    </div>
+                                    {!group.fechamento?.conferido && (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-slate-500 hover:text-amber-400 hover:bg-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          onClick={() => handleEditVenda(v)}
+                                          title="Editar Lançamento"
+                                        >
+                                          <Edit2 className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          onClick={() => handleDeleteVenda(v.id, group.date)}
+                                          title="Excluir Lançamento"
+                                        >
+                                          <Trash className="h-4 w-4" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+
+                              {!group.fechamento?.conferido && (
+                                <div className="flex justify-end mt-3 pt-3 border-t border-slate-800/50">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleFecharCaixa(group.date)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs font-bold uppercase tracking-wider"
+                                  >
+                                    <Lock className="w-3.5 h-3.5 mr-1.5" /> Finalizar Conferência do
+                                    Dia
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </div>
+              </TabsContent>
             </div>
-          </div>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>
