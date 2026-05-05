@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { OrigemCard } from './origem-card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { PieChart, Pie, Cell } from 'recharts'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { Users, DollarSign, Target, TrendingUp, PieChart as PieChartIcon } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any) {
@@ -50,6 +50,25 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
 
   const chartConfig = {
     value: { label: 'Leads', color: 'hsl(var(--chart-1))' },
+  }
+
+  const barData = useMemo(() => {
+    return origens
+      .filter((o: any) => o.ativo)
+      .map((o: any) => {
+        const d = dados.find((x: any) => x.origem_id === o.id)
+        return {
+          name: o.nome,
+          investimento: d ? Number(d.investimento) : 0,
+          receita: d ? Number(d.fechamentos_valor_realizado) : 0,
+        }
+      })
+      .filter((x: any) => x.investimento > 0 || x.receita > 0)
+  }, [origens, dados])
+
+  const barChartConfig = {
+    investimento: { label: 'Investimento', color: '#ef4444' },
+    receita: { label: 'Receita', color: '#10b981' },
   }
 
   const formatBrl = (v: number) =>
@@ -159,15 +178,66 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
             )}
           </CardContent>
         </Card>
+
+        <Card className="bg-slate-900 border-slate-800 shadow-sm">
+          <CardHeader className="border-b border-slate-800/50 pb-4">
+            <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-500" />
+              Performance Financeira
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[320px] pt-6">
+            {barData.length > 0 ? (
+              <ChartContainer config={barChartConfig} className="h-full w-full">
+                <BarChart data={barData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#94a3b8"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#94a3b8"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `R$ ${value / 1000}k`}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent formatter={(value) => formatBrl(Number(value))} />
+                    }
+                  />
+                  <Bar
+                    dataKey="investimento"
+                    fill="#ef4444"
+                    radius={[4, 4, 0, 0]}
+                    name="Investimento"
+                  />
+                  <Bar dataKey="receita" fill="#10b981" radius={[4, 4, 0, 0]} name="Receita" />
+                </BarChart>
+              </ChartContainer>
+            ) : (
+              <div className="flex flex-col h-full items-center justify-center text-slate-500 gap-2">
+                <DollarSign className="w-8 h-8 text-slate-700" />
+                <span>Sem dados financeiros no período</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="space-y-6 pt-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 py-2">
           <div className="h-px bg-slate-800 flex-1"></div>
-          <h3 className="text-xl font-bold text-white tracking-wide uppercase px-4 flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-slate-800/50 px-6 py-2.5 rounded-full border border-slate-700/50 shadow-sm">
             <Target className="w-5 h-5 text-amber-500" />
-            Detalhamento da Cascata
-          </h3>
+            <h3 className="text-sm font-bold text-slate-200 tracking-widest uppercase">
+              Detalhamento da Cascata
+            </h3>
+          </div>
           <div className="h-px bg-slate-800 flex-1"></div>
         </div>
 

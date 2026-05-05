@@ -12,9 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Settings, Filter, BarChart3 } from 'lucide-react'
+import { Loader2, Settings, Filter, BarChart3, KanbanSquare } from 'lucide-react'
+import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kanban'
+import { cn } from '@/lib/utils'
 
 export default function FunilVendas() {
+  const [view, setView] = useState<'dashboard' | 'kanban'>('dashboard')
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
   const [origens, setOrigens] = useState<any[]>([])
@@ -61,8 +64,35 @@ export default function FunilVendas() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800">
+            <button
+              onClick={() => setView('dashboard')}
+              className={cn(
+                'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+                view === 'dashboard'
+                  ? 'bg-slate-800 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900',
+              )}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setView('kanban')}
+              className={cn(
+                'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+                view === 'kanban'
+                  ? 'bg-slate-800 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900',
+              )}
+            >
+              <KanbanSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Gestão de Leads</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-2 flex-1 sm:flex-none">
-            <Filter className="w-4 h-4 text-slate-400 hidden sm:block" />
+            <Filter className="w-4 h-4 text-slate-400 hidden lg:block" />
             <Select value={mesReferencia} onValueChange={setMesReferencia}>
               <SelectTrigger className="w-full sm:w-[200px] bg-slate-950 border-slate-700 text-white font-medium focus:ring-amber-500">
                 <SelectValue placeholder="Selecione o mês" />
@@ -96,13 +126,15 @@ export default function FunilVendas() {
         <div className="flex items-center justify-center h-64 bg-slate-900/50 rounded-lg border border-slate-800">
           <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
         </div>
-      ) : (
+      ) : view === 'dashboard' ? (
         <FunilDashboard
           origens={origens}
           dados={dadosMensais}
           mesReferencia={mesReferencia}
           onUpdate={fetchData}
         />
+      ) : (
+        <GestaoLeadsKanban origens={origens} mesReferencia={mesReferencia} onUpdate={fetchData} />
       )}
     </div>
   )
