@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -9,257 +8,213 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { FileText, Search, Undo2 } from 'lucide-react'
+import { Edit2, Loader2 } from 'lucide-react'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Input } from '@/components/ui/input'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 
-interface Props {
-  onRevertSuccess?: () => void
-}
-
-export function VendasConcretizadasLista({ onRevertSuccess }: Props = {}) {
+export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess: () => void }) {
+  const { toast } = useToast()
   const [vendas, setVendas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const [revertDialogOpen, setRevertDialogOpen] = useState(false)
-  const [vendaToRevert, setVendaToRevert] = useState<any>(null)
-  const [reverting, setReverting] = useState(false)
-
-  useEffect(() => {
-    fetchVendas()
-  }, [])
+  const [dentistas, setDentistas] = useState<any[]>([])
+  const [crcs, setCrcs] = useState<any[]>([])
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedVenda, setSelectedVenda] = useState<any>(null)
+  const [saving, setSaving] = useState(false)
 
   const fetchVendas = async () => {
     setLoading(true)
+    const { data } = await supabase
+      .from('vendas_confirmadas')
+      .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
+      .order('data_fechamento', { ascending: false })
+    if (data) setVendas(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchVendas()
+    supabase
+      .from('dentistas_avaliadores')
+      .select('id, nome')
+      .eq('status', 'ativo')
+      .then(({ data }) => setDentistas(data || []))
+    supabase
+      .from('crc_comercial')
+      .select('id, nome')
+      .eq('status', 'ativo')
+      .then(({ data }) => setCrcs(data || []))
+  }, [])
+
+  const handleEdit = (venda: any) => {
+    setSelectedVenda({
+      id: venda.id,
+      dentista_avaliador: venda.dentista_avaliador || 'nenhum',
+      crc: venda.crc || 'nenhum',
+    })
+    setEditModalOpen(true)
+  }
+
+  const saveEdit = async () => {
+    setSaving(true)
     try {
-      const { data, error } = await supabase
+      const dentista =
+        selectedVenda.dentista_avaliador !== 'nenhum' ? selectedVenda.dentista_avaliador : null
+      const crc = selectedVenda.crc !== 'nenhum' ? selectedVenda.crc : null
+      const { error } = await supabase
         .from('vendas_confirmadas')
-        .select(`
-          id,
-          paciente_nome,
-          data_fechamento,
-          valor_tratamento,
-          valor_entrada,
-          percentual_entrada,
-          tratamento,
-          oportunidade_id,
-          dentistas_avaliadores (nome),
-          crc_comercial (nome),
-          avaliacoes (paciente_id)
-        `)
-        .order('data_fechamento', { ascending: false })
+        .update({
+          dentista_avaliador: dentista,
+          crc: crc,
+        })
+        .eq('id', selectedVenda.id)
 
       if (error) throw error
-      setVendas(data || [])
+      toast({ title: 'Sucesso', description: 'Venda atualizada com sucesso!' })
+      setEditModalOpen(false)
+      fetchVendas()
+      onRevertSuccess()
     } catch (err: any) {
-      toast({ title: 'Erro ao buscar vendas', description: err.message, variant: 'destructive' })
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' })
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
-
-  const formatarData = (dataStr: string | null) => {
-    if (!dataStr) return '-'
-    const [year, month, day] = dataStr.substring(0, 10).split('-')
-    if (year && month && day) return `${day}/${month}/${year}`
-    return dataStr
+  const formatDate = (d: string) => {
+    if (!d) return '-'
+    const [y, m, day] = d.substring(0, 10).split('-')
+    return `${day}/${m}/${y}`
   }
-
-  const handleRevertVenda = async () => {
-    if (!vendaToRevert) return
-    setReverting(true)
-    try {
-      const { error: delError } = await supabase
-        .from('vendas_confirmadas')
-        .delete()
-        .eq('id', vendaToRevert.id)
-
-      if (delError) throw delError
-
-      if (vendaToRevert.oportunidade_id) {
-        const { error: updError } = await supabase
-          .from('avaliacoes')
-          .update({ status: 'avaliacao_realizada' })
-          .eq('id', vendaToRevert.oportunidade_id)
-
-        if (updError) throw updError
-      }
-
-      toast({
-        title: 'Venda revertida com sucesso',
-        description: 'A oportunidade voltou para a aba de Oportunidades Comerciais.',
-      })
-      setRevertDialogOpen(false)
-      setVendaToRevert(null)
-      fetchVendas()
-      if (onRevertSuccess) {
-        onRevertSuccess()
-      }
-    } catch (err: any) {
-      toast({ title: 'Erro ao reverter venda', description: err.message, variant: 'destructive' })
-    } finally {
-      setReverting(false)
-    }
-  }
-
-  const filteredVendas = vendas.filter(
-    (v) =>
-      v.paciente_nome?.toLowerCase().includes(search.toLowerCase()) ||
-      v.tratamento?.toLowerCase().includes(search.toLowerCase()),
-  )
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Vendas Concretizadas</CardTitle>
-        <CardDescription>
-          Histórico de todas as vendas finalizadas e confirmadas com sucesso.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 max-w-md">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por paciente ou tratamento..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9"
-          />
-        </div>
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader className="bg-[#1e3a5f]">
-              <TableRow className="hover:bg-[#1e3a5f]">
-                <TableHead className="text-white">Paciente</TableHead>
-                <TableHead className="text-white">Data Fechamento</TableHead>
-                <TableHead className="text-white">Tratamento</TableHead>
-                <TableHead className="text-white">Valor Total</TableHead>
-                <TableHead className="text-white">Entrada</TableHead>
-                <TableHead className="text-white">Avaliador / CRC</TableHead>
-                <TableHead className="text-white text-right pr-4">Ações</TableHead>
+    <div className="space-y-4">
+      <div className="rounded-md border bg-white dark:bg-slate-900 overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-slate-100 dark:bg-slate-800">
+            <TableRow>
+              <TableHead>Paciente</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Valor Total</TableHead>
+              <TableHead>Entrada</TableHead>
+              <TableHead>Avaliador</TableHead>
+              <TableHead>CRC</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  Carregando...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Carregando vendas...
+            ) : vendas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Nenhuma venda encontrada.
+                </TableCell>
+              </TableRow>
+            ) : (
+              vendas.map((v) => (
+                <TableRow key={v.id}>
+                  <TableCell className="font-medium">{v.paciente_nome}</TableCell>
+                  <TableCell>{formatDate(v.data_fechamento)}</TableCell>
+                  <TableCell>{formatCurrency(v.valor_tratamento)}</TableCell>
+                  <TableCell>
+                    {formatCurrency(v.valor_entrada)} ({v.percentual_entrada?.toFixed(1)}%)
+                  </TableCell>
+                  <TableCell>{v.dentistas_avaliadores?.nome || '-'}</TableCell>
+                  <TableCell>{v.crc_comercial?.nome || '-'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(v)}
+                      title="Editar Profissionais"
+                    >
+                      <Edit2 className="w-4 h-4 text-blue-500" />
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ) : filteredVendas.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhuma venda encontrada.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredVendas.map((venda) => (
-                  <TableRow key={venda.id} className="hover:bg-slate-50">
-                    <TableCell className="font-medium">{venda.paciente_nome}</TableCell>
-                    <TableCell>{formatarData(venda.data_fechamento)}</TableCell>
-                    <TableCell>{venda.tratamento || '-'}</TableCell>
-                    <TableCell>{formatCurrency(venda.valor_tratamento)}</TableCell>
-                    <TableCell>
-                      {formatCurrency(venda.valor_entrada)}
-                      <span className="text-xs text-muted-foreground ml-1 block sm:inline">
-                        ({Number(venda.percentual_entrada).toFixed(1)}%)
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      <div className="flex flex-col">
-                        <span>{venda.dentistas_avaliadores?.nome || '-'}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {venda.crc_comercial?.nome || ''}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right pr-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                          title="Ver Ficha"
-                          onClick={() => {
-                            const pId = venda.avaliacoes?.paciente_id
-                            if (pId) navigate(`/comercial/pacientes?id=${pId}`)
-                          }}
-                        >
-                          <FileText className="w-4 h-4" />
-                          <span className="hidden sm:inline ml-2">Ficha</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          title="Reverter Venda"
-                          onClick={() => {
-                            setVendaToRevert(venda)
-                            setRevertDialogOpen(true)
-                          }}
-                        >
-                          <Undo2 className="w-4 h-4" />
-                          <span className="hidden sm:inline ml-2">Reverter</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza que deseja reverter esta venda?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação removerá o registro de venda confirmada do paciente{' '}
-              <strong className="text-slate-800">{vendaToRevert?.paciente_nome}</strong> e a
-              oportunidade voltará para a lista de negociações em aberto.
-              <br />
-              <br />
-              <span className="text-amber-600 font-medium">
-                Aviso: Isto não altera nenhum cálculo do fluxo original, apenas retrocede o status
-                da oportunidade.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={reverting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                handleRevertVenda()
-              }}
-              disabled={reverting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {reverting ? 'Revertendo...' : 'Sim, reverter venda'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Card>
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Profissionais da Venda</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Dentista Avaliador</Label>
+              <Select
+                value={selectedVenda?.dentista_avaliador}
+                onValueChange={(v) => setSelectedVenda({ ...selectedVenda, dentista_avaliador: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhum">Nenhum</SelectItem>
+                  {dentistas.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>CRC Comercial</Label>
+              <Select
+                value={selectedVenda?.crc}
+                onValueChange={(v) => setSelectedVenda({ ...selectedVenda, crc: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhum">Nenhum</SelectItem>
+                  {crcs.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEdit} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
