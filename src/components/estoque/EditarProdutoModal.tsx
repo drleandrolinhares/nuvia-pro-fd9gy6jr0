@@ -447,7 +447,7 @@ export function EditarProdutoModal({
           {camposDinamicos.length > 0 && (
             <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
               <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider">
-                DADOS DO IMPLANTE
+                DADOS DO {especialidades.find((e) => e.id === especialidadeId)?.nome || 'MATERIAL'}
               </h3>
               <div className="grid grid-cols-1 gap-4">
                 {camposDinamicos.map((config) => {

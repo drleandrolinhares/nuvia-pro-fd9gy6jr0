@@ -86,10 +86,10 @@ const formSchema = z.object({
   estoque_minimo: z.coerce.number().min(0).optional(),
 
   controle_prazo: z.boolean().default(false),
-  alerta_prazo_dias: z.coerce.number().min(1).optional(),
+  alerta_prazo_dias: z.union([z.string(), z.number()]).optional(),
 
   estimar_consumo: z.boolean().default(false),
-  consumo_estimado_valor: z.coerce.number().min(0.01).optional(),
+  consumo_estimado_valor: z.union([z.string(), z.number()]).optional(),
   consumo_estimado_frequencia: z.string().optional(),
 
   observacoes: z.string().optional(),
@@ -153,9 +153,9 @@ export function EntradaProdutoModal({
       numero_armario: '',
       estoque_minimo: 0,
       controle_prazo: false,
-      alerta_prazo_dias: 0,
+      alerta_prazo_dias: '',
       estimar_consumo: false,
-      consumo_estimado_valor: 0,
+      consumo_estimado_valor: '',
       consumo_estimado_frequencia: 'MES',
       observacoes: '',
       observacoes_criticas: '',
@@ -298,9 +298,9 @@ export function EntradaProdutoModal({
           observacoes_criticas: '',
           manter_campos: false,
           controle_prazo: false,
-          alerta_prazo_dias: 0,
+          alerta_prazo_dias: '',
           estimar_consumo: false,
-          consumo_estimado_valor: 0,
+          consumo_estimado_valor: '',
           consumo_estimado_frequencia: 'MES',
           campos_dinamicos: {},
         })
@@ -331,9 +331,9 @@ export function EntradaProdutoModal({
       form.setValue('numero_armario', produto.numero_armario || '')
       form.setValue('estoque_minimo', produto.quantidade_minima || 0)
       form.setValue('controle_prazo', !!produto.alerta_prazo_dias)
-      form.setValue('alerta_prazo_dias', produto.alerta_prazo_dias || 0)
+      form.setValue('alerta_prazo_dias', produto.alerta_prazo_dias || '')
       form.setValue('estimar_consumo', !!produto.consumo_estimado_valor)
-      form.setValue('consumo_estimado_valor', produto.consumo_estimado_valor || 0)
+      form.setValue('consumo_estimado_valor', produto.consumo_estimado_valor || '')
       form.setValue(
         'consumo_estimado_frequencia',
         (produto.consumo_estimado_frequencia?.toUpperCase() as any) || 'MES',
@@ -411,11 +411,14 @@ export function EntradaProdutoModal({
     const valorAtribSubmit = totalAdicSubmit > 0 ? precoTotalCalc / totalAdicSubmit : 0
 
     let dataProximaRevisaoParsed = null
-    if (values.controle_prazo && values.alerta_prazo_dias) {
+    const alertaDias = Number(values.alerta_prazo_dias) || null
+    if (values.controle_prazo && alertaDias) {
       const d = new Date()
-      d.setDate(d.getDate() + values.alerta_prazo_dias)
+      d.setDate(d.getDate() + alertaDias)
       dataProximaRevisaoParsed = d.toISOString().split('T')[0]
     }
+
+    const consumoEstimadoValor = Number(values.consumo_estimado_valor) || null
 
     if (!finalProdutoId) {
       const { data: novoProduto, error } = await createProduto({
@@ -431,9 +434,9 @@ export function EntradaProdutoModal({
         custo_unitario: valorAtribSubmit,
         validade: dataValidadeParsed,
         referencia_consumo: values.referencia_consumo,
-        alerta_prazo_dias: values.controle_prazo ? values.alerta_prazo_dias : null,
+        alerta_prazo_dias: values.controle_prazo ? alertaDias : null,
         data_proxima_revisao: dataProximaRevisaoParsed,
-        consumo_estimado_valor: values.estimar_consumo ? values.consumo_estimado_valor : null,
+        consumo_estimado_valor: values.estimar_consumo ? consumoEstimadoValor : null,
         consumo_estimado_frequencia: values.estimar_consumo
           ? values.consumo_estimado_frequencia
           : null,
@@ -456,9 +459,9 @@ export function EntradaProdutoModal({
         quantidade_minima: values.estoque_minimo,
         validade: dataValidadeParsed,
         referencia_consumo: values.referencia_consumo,
-        alerta_prazo_dias: values.controle_prazo ? values.alerta_prazo_dias : null,
+        alerta_prazo_dias: values.controle_prazo ? alertaDias : null,
         data_proxima_revisao: dataProximaRevisaoParsed,
-        consumo_estimado_valor: values.estimar_consumo ? values.consumo_estimado_valor : null,
+        consumo_estimado_valor: values.estimar_consumo ? consumoEstimadoValor : null,
         consumo_estimado_frequencia: values.estimar_consumo
           ? values.consumo_estimado_frequencia
           : null,
