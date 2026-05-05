@@ -253,22 +253,11 @@ export function EntradaProdutoModal({
   }, [])
 
   useEffect(() => {
-    if (watchedEspecialidadeId) {
-      supabase
-        .from('especialidade_campos')
-        .select('*, campos_personalizados(*)')
-        .eq('especialidade_id', watchedEspecialidadeId)
-        .eq('ativo', true)
-        .order('ordem', { ascending: true })
-        .then((res) => {
-          if (res.data && res.data.length > 0) {
-            setCamposDinamicosConfig(res.data)
-          } else {
-            fetchEspecialidadeCampos(watchedEspecialidadeId).then((res2) => {
-              if (res2.data) setCamposDinamicosConfig(res2.data)
-            })
-          }
-        })
+    if (watchedEspecialidadeId && watchedEspecialidadeId !== 'none') {
+      fetchEspecialidadeCampos(watchedEspecialidadeId).then((res) => {
+        if (res.data) setCamposDinamicosConfig(res.data)
+        else setCamposDinamicosConfig([])
+      })
     } else {
       setCamposDinamicosConfig([])
     }
@@ -752,7 +741,7 @@ export function EntradaProdutoModal({
             {camposDinamicosConfig.length > 0 && (
               <div className="bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md">
                 <h3 className="text-[#d4af37] font-extrabold mb-5 text-xs tracking-widest border-b border-[#d4af37]/30 pb-2 uppercase">
-                  DADOS DO{' '}
+                  DADOS ADICIONAIS -{' '}
                   {especialidades.find((e) => e.id === watchedEspecialidadeId)?.nome || 'MATERIAL'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

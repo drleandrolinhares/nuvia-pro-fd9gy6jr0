@@ -190,7 +190,7 @@ export function VisualizarProdutoModal({
           {camposExtras.length > 0 && (
             <div className="bg-[#1a2a4a] text-white p-5 rounded-xl space-y-4 shadow-sm animate-fade-in">
               <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider border-b border-white/10 pb-2">
-                Dados do Implante
+                Dados Adicionais
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {camposExtras.map((campo, idx) => (
