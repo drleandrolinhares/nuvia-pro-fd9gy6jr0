@@ -30,6 +30,7 @@ import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
+import FunilVendas from './pages/comercial/FunilVendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
 import Precificacao from './pages/administrativo/Precificacao'
@@ -442,6 +443,17 @@ const AppRoutes = () => {
         />
 
         {/* Comercial Routes */}
+        <Route
+          path="/comercial/funil"
+          element={
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={['comercial_funil', 'Acessar Funil de Vendas']}
+            >
+              <FunilVendas />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/comercial/vendas"
           element={

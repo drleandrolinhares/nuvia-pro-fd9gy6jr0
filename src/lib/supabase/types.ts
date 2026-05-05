@@ -179,6 +179,30 @@ export type Database = {
           },
         ]
       }
+      caixa_diario_fechamentos: {
+        Row: {
+          conferido: boolean
+          conferido_em: string | null
+          conferido_por: string | null
+          criado_em: string
+          data_referencia: string
+        }
+        Insert: {
+          conferido?: boolean
+          conferido_em?: string | null
+          conferido_por?: string | null
+          criado_em?: string
+          data_referencia: string
+        }
+        Update: {
+          conferido?: boolean
+          conferido_em?: string | null
+          conferido_por?: string | null
+          criado_em?: string
+          data_referencia?: string
+        }
+        Relationships: []
+      }
       campo_configuracao: {
         Row: {
           ativo: boolean | null
@@ -3542,6 +3566,12 @@ export const Constants = {
 //   data_fechamento: date (nullable)
 //   valor_entrada: numeric (nullable)
 //   observacoes_fechamento: text (nullable)
+// Table: caixa_diario_fechamentos
+//   data_referencia: date (not null)
+//   conferido: boolean (not null, default: false)
+//   conferido_por: uuid (nullable)
+//   conferido_em: timestamp with time zone (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: campo_configuracao
 //   id: uuid (not null, default: gen_random_uuid())
 //   especialidade_id: uuid (nullable)
@@ -4264,6 +4294,9 @@ export const Constants = {
 //   FOREIGN KEY avaliacoes_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
 //   FOREIGN KEY avaliacoes_paciente_id_fkey: FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
+// Table: caixa_diario_fechamentos
+//   FOREIGN KEY caixa_diario_fechamentos_conferido_por_fkey: FOREIGN KEY (conferido_por) REFERENCES auth.users(id) ON DELETE SET NULL
+//   PRIMARY KEY caixa_diario_fechamentos_pkey: PRIMARY KEY (data_referencia)
 // Table: campo_configuracao
 //   FOREIGN KEY campo_configuracao_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   UNIQUE campo_configuracao_especialidade_id_campo_id_key: UNIQUE (especialidade_id, campo_id)
@@ -4543,6 +4576,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: avaliacoes
 //   Policy "avaliacoes_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: caixa_diario_fechamentos
+//   Policy "caixa_diario_fechamentos_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: campo_configuracao

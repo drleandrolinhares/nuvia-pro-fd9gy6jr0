@@ -8,6 +8,7 @@ import {
   Clock,
   CloudCog,
   Database,
+  Filter,
   FileBarChart,
   FileText,
   Handshake,
@@ -109,6 +110,12 @@ const navData = [
     title: 'COMERCIAL',
     icon: Briefcase,
     items: [
+      {
+        title: 'FUNIL DE VENDAS',
+        url: '/comercial/funil',
+        icon: Filter,
+        permission: ['comercial_funil', 'Acessar Funil de Vendas'],
+      },
       {
         title: 'NEGOCIAÇÃO',
         url: '/comercial/negociacao',
