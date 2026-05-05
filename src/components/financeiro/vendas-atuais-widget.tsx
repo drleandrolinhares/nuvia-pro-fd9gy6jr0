@@ -19,15 +19,31 @@ export function VendasAtuaisWidget() {
       const startOfMonthStr = format(startOfMonth(todayDate), 'yyyy-MM-dd')
       const endOfMonthStr = format(endOfMonth(todayDate), 'yyyy-MM-dd')
 
-      const { data } = await supabase
-        .from('vendas_confirmadas')
-        .select('valor_tratamento')
-        .gte('data_fechamento', startOfMonthStr)
-        .lte('data_fechamento', endOfMonthStr)
+      const [resConfirmadas, resDiarias] = await Promise.all([
+        supabase
+          .from('vendas_confirmadas')
+          .select('valor_tratamento')
+          .gte('data_fechamento', startOfMonthStr)
+          .lte('data_fechamento', endOfMonthStr),
+        supabase
+          .from('vendas_diarias')
+          .select('valor')
+          .gte('data_venda', startOfMonthStr)
+          .lte('data_venda', endOfMonthStr),
+      ])
 
-      if (data) {
-        setTotalVendasMes(data.reduce((acc, curr) => acc + Number(curr.valor_tratamento), 0))
+      let total = 0
+      if (resConfirmadas.data) {
+        total += resConfirmadas.data.reduce(
+          (acc, curr) => acc + Number(curr.valor_tratamento || 0),
+          0,
+        )
       }
+      if (resDiarias.data) {
+        total += resDiarias.data.reduce((acc, curr) => acc + Number(curr.valor || 0), 0)
+      }
+
+      setTotalVendasMes(total)
       setLoading(false)
     }
     fetchVendas()
