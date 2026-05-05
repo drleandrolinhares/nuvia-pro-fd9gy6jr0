@@ -20,13 +20,13 @@ export function VendasAtuaisWidget() {
       const endOfMonthStr = format(endOfMonth(todayDate), 'yyyy-MM-dd')
 
       const { data } = await supabase
-        .from('vendas_diarias')
-        .select('valor')
-        .gte('data_venda', startOfMonthStr)
-        .lte('data_venda', endOfMonthStr)
+        .from('vendas_confirmadas')
+        .select('valor_tratamento')
+        .gte('data_fechamento', startOfMonthStr)
+        .lte('data_fechamento', endOfMonthStr)
 
       if (data) {
-        setTotalVendasMes(data.reduce((acc, curr) => acc + Number(curr.valor), 0))
+        setTotalVendasMes(data.reduce((acc, curr) => acc + Number(curr.valor_tratamento), 0))
       }
       setLoading(false)
     }

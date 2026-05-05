@@ -3406,7 +3406,7 @@ export type Database = {
           id: string
           observacoes: string | null
           observacoes_fechamento: string | null
-          oportunidade_id: string
+          oportunidade_id: string | null
           paciente_nome: string
           percentual_comissao: number | null
           percentual_entrada: number
@@ -3428,7 +3428,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
-          oportunidade_id: string
+          oportunidade_id?: string | null
           paciente_nome: string
           percentual_comissao?: number | null
           percentual_entrada: number
@@ -3450,7 +3450,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
-          oportunidade_id?: string
+          oportunidade_id?: string | null
           paciente_nome?: string
           percentual_comissao?: number | null
           percentual_entrada?: number
@@ -4508,7 +4508,7 @@ export const Constants = {
 //   criado_em: timestamp with time zone (not null, default: now())
 // Table: vendas_confirmadas
 //   id: uuid (not null, default: gen_random_uuid())
-//   oportunidade_id: uuid (not null)
+//   oportunidade_id: uuid (nullable)
 //   paciente_nome: text (not null)
 //   telefone: text (nullable)
 //   data_original: date (nullable)
