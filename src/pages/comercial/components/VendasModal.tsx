@@ -38,6 +38,8 @@ const initialForm = {
   dentista_avaliador_id: '',
   crc_comercial_id: '',
   valor_orcamento: '',
+  valor_entrada: '',
+  destino_fiscal: 'PESSOA FISICA',
   tipo_tratamento: '',
   observacoes: '',
   status: 'avaliacao_realizada',
@@ -109,21 +111,44 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
       if (!formData.dentista_avaliador_id) throw new Error('Selecione o Dentista Avaliador')
       if (!formData.crc_comercial_id) throw new Error('Selecione o CRC Comercial')
       if (!formData.valor_orcamento) throw new Error('Informe o valor do tratamento')
+      if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
       if (!formData.tipo_tratamento) throw new Error('Selecione o tipo de tratamento')
 
-      const { error } = await supabase.from('avaliacoes').insert({
+      const payload: any = {
         paciente_id: currentPacienteId,
         dentista_avaliador_id: formData.dentista_avaliador_id,
         crc_comercial_id: formData.crc_comercial_id,
         data_avaliacao: formData.data_avaliacao,
         valor_orcamento: Number(formData.valor_orcamento),
+        valor_entrada: Number(formData.valor_entrada),
+        destino_fiscal: formData.destino_fiscal,
         tipo_tratamento: formData.tipo_tratamento,
         observacoes: formData.observacoes,
         status: formData.status,
         temperatura_lead: formData.temperatura_lead,
-      })
+      }
+
+      const { error, data: avaliacao } = await supabase
+        .from('avaliacoes')
+        .insert(payload)
+        .select('id')
+        .single()
 
       if (error) throw error
+
+      const pNome = isCreating
+        ? formData.novo_paciente_nome
+        : pacientes.find((x) => x.id === currentPacienteId)?.nome
+
+      await supabase.from('vendas_diarias').insert({
+        crc_comercial_id: formData.crc_comercial_id,
+        dentista_avaliador_id: formData.dentista_avaliador_id,
+        data_venda: formData.data_avaliacao,
+        valor: Number(formData.valor_entrada),
+        valor_tratamento: Number(formData.valor_orcamento),
+        destino_fiscal: formData.destino_fiscal,
+        paciente_nome: pNome || 'Paciente Cadastrado',
+      })
       toast({ title: 'Sucesso', description: 'Avaliação cadastrada!' })
       setOpen(false)
       onSuccess()
@@ -249,7 +274,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Valor *</Label>
+                <Label>Valor Total do Tratamento *</Label>
                 <Input
                   required
                   type="number"
@@ -258,6 +283,36 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                   value={formData.valor_orcamento}
                   onChange={(e) => setFormData({ ...formData, valor_orcamento: e.target.value })}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label>Valor da Entrada *</Label>
+                <Input
+                  required
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.valor_entrada}
+                  onChange={(e) => setFormData({ ...formData, valor_entrada: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Destino Fiscal *</Label>
+                <Select
+                  value={formData.destino_fiscal}
+                  onValueChange={(v) => setFormData({ ...formData, destino_fiscal: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PESSOA FISICA">PESSOA FISICA</SelectItem>
+                    <SelectItem value="VITALI ODONTOLOGIA">VITALI ODONTOLOGIA</SelectItem>
+                    <SelectItem value="SOUZA FILHO ODONTOLOGIA">SOUZA FILHO ODONTOLOGIA</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>Tratamento *</Label>
