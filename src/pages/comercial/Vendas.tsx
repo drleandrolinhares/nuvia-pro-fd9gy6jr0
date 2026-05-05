@@ -11,6 +11,7 @@ import { VendasRankingDentistas } from './components/VendasRankingDentistas'
 import { VendasConcretizadasLista } from './components/VendasConcretizadasLista'
 import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
+import { VendasAtuaisWidget } from '@/components/financeiro/vendas-atuais-widget'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -193,7 +194,10 @@ export default function Vendas() {
             </p>
           </div>
         </div>
-        {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <VendasAtuaisWidget />
+          {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
+        </div>
       </div>
 
       <Tabs defaultValue="oportunidades" className="space-y-4">

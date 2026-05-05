@@ -1499,6 +1499,36 @@ export type Database = {
           },
         ]
       }
+      funil_etapas: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          criado_em: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          criado_em?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
       funil_leads: {
         Row: {
           atualizado_em: string
@@ -1570,6 +1600,36 @@ export type Database = {
           id?: string
           nome?: string
           ordem?: number
+        }
+        Relationships: []
+      }
+      funil_temperaturas: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          criado_em: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          criado_em?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
         }
         Relationships: []
       }
@@ -4007,6 +4067,14 @@ export const Constants = {
 //   fechamentos_valor_realizado: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: funil_etapas
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   slug: text (not null)
+//   cor: text (nullable, default: '#3b82f6'::text)
+//   ordem: integer (nullable, default: 0)
+//   ativo: boolean (nullable, default: true)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: funil_leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -4025,6 +4093,14 @@ export const Constants = {
 //   ordem: integer (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: funil_temperaturas
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   slug: text (not null)
+//   cor: text (nullable, default: 'bg-slate-500/10 text-slate-500 border-slate-500/20'::text)
+//   ordem: integer (nullable, default: 0)
+//   ativo: boolean (nullable, default: true)
+//   criado_em: timestamp with time zone (nullable, default: now())
 // Table: gestao_fiscal_config
 //   id: uuid (not null, default: gen_random_uuid())
 //   faturamento_previsto: numeric (not null, default: 0)
@@ -4586,12 +4662,18 @@ export const Constants = {
 //   FOREIGN KEY funil_dados_mensais_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
 //   UNIQUE funil_dados_mensais_origem_id_mes_referencia_key: UNIQUE (origem_id, mes_referencia)
 //   PRIMARY KEY funil_dados_mensais_pkey: PRIMARY KEY (id)
+// Table: funil_etapas
+//   PRIMARY KEY funil_etapas_pkey: PRIMARY KEY (id)
+//   UNIQUE funil_etapas_slug_key: UNIQUE (slug)
 // Table: funil_leads
 //   FOREIGN KEY funil_leads_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
 //   PRIMARY KEY funil_leads_pkey: PRIMARY KEY (id)
 // Table: funil_origens
 //   UNIQUE funil_origens_nome_key: UNIQUE (nome)
 //   PRIMARY KEY funil_origens_pkey: PRIMARY KEY (id)
+// Table: funil_temperaturas
+//   PRIMARY KEY funil_temperaturas_pkey: PRIMARY KEY (id)
+//   UNIQUE funil_temperaturas_slug_key: UNIQUE (slug)
 // Table: gestao_fiscal_config
 //   PRIMARY KEY gestao_fiscal_config_pkey: PRIMARY KEY (id)
 // Table: historico_compras
@@ -4958,12 +5040,20 @@ export const Constants = {
 //   Policy "funil_dados_mensais_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: funil_etapas
+//   Policy "funil_etapas_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: funil_leads
 //   Policy "funil_leads_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: funil_origens
 //   Policy "funil_origens_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: funil_temperaturas
+//   Policy "funil_temperaturas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: gestao_fiscal_config
@@ -6041,8 +6131,12 @@ export const Constants = {
 //   CREATE UNIQUE INDEX fluxo_caixa_receitas_mes_referencia_ciclo_key ON public.fluxo_caixa_receitas USING btree (mes_referencia, ciclo)
 // Table: funil_dados_mensais
 //   CREATE UNIQUE INDEX funil_dados_mensais_origem_id_mes_referencia_key ON public.funil_dados_mensais USING btree (origem_id, mes_referencia)
+// Table: funil_etapas
+//   CREATE UNIQUE INDEX funil_etapas_slug_key ON public.funil_etapas USING btree (slug)
 // Table: funil_origens
 //   CREATE UNIQUE INDEX funil_origens_nome_key ON public.funil_origens USING btree (nome)
+// Table: funil_temperaturas
+//   CREATE UNIQUE INDEX funil_temperaturas_slug_key ON public.funil_temperaturas USING btree (slug)
 // Table: marcas_implante
 //   CREATE UNIQUE INDEX marcas_implante_nome_key ON public.marcas_implante USING btree (nome)
 // Table: normas_aceites
