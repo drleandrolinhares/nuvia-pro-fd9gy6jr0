@@ -289,6 +289,11 @@ export function AppSidebar() {
         { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
         fetchCounts,
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_participantes' },
+        fetchCounts,
+      )
       .subscribe()
 
     return () => {

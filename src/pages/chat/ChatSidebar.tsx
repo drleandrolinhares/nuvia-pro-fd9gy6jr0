@@ -121,7 +121,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   const renderBadge = (id: string) => {
     if (unreadMap[id] > 0 && id !== activeChat) {
       return (
-        <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+        <span className="bg-amber-500 text-slate-950 text-xs font-extrabold px-2 py-0.5 rounded-full shadow-sm">
           {unreadMap[id]}
         </span>
       )
@@ -185,20 +185,38 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
           <div className="space-y-1">
             {conversas
               .filter((c) => c.tipo === 'grupo')
+              .sort((a, b) => {
+                const unreadA = unreadMap[a.id] || 0
+                const unreadB = unreadMap[b.id] || 0
+                if (unreadA > 0 && unreadB === 0) return -1
+                if (unreadB > 0 && unreadA === 0) return 1
+                return (a.nome || '').localeCompare(b.nome || '')
+              })
               .map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setActiveChat(c.id)}
                   className={cn(
                     'w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left',
-                    activeChat === c.id ? 'bg-slate-800' : 'hover:bg-slate-800/50',
+                    activeChat === c.id
+                      ? 'bg-slate-800'
+                      : unreadMap[c.id] > 0
+                        ? 'bg-slate-800/60 border border-slate-700/50 shadow-sm'
+                        : 'hover:bg-slate-800/50',
                   )}
                 >
                   <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
                     <Users className="w-4 h-4 text-slate-400" />
                   </div>
                   <div className="flex-1 truncate">
-                    <p className="text-sm font-medium text-slate-200 truncate">{c.nome}</p>
+                    <p
+                      className={cn(
+                        'text-sm truncate',
+                        unreadMap[c.id] > 0 ? 'font-bold text-white' : 'font-medium text-slate-200',
+                      )}
+                    >
+                      {c.nome}
+                    </p>
                   </div>
                   {renderBadge(c.id)}
                 </button>
@@ -236,12 +254,31 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                   })
               : usuarios
                   .filter((u) => u.id !== user?.id)
+                  .sort((a, b) => {
+                    const convA = conversas.find(
+                      (c) =>
+                        c.tipo === 'individual' &&
+                        c.participantes?.some((p: any) => p.usuario_id === a.id),
+                    )
+                    const convB = conversas.find(
+                      (c) =>
+                        c.tipo === 'individual' &&
+                        c.participantes?.some((p: any) => p.usuario_id === b.id),
+                    )
+                    const unreadA = convA ? unreadMap[convA.id] || 0 : 0
+                    const unreadB = convB ? unreadMap[convB.id] || 0 : 0
+
+                    if (unreadA > 0 && unreadB === 0) return -1
+                    if (unreadB > 0 && unreadA === 0) return 1
+                    return a.nome.localeCompare(b.nome)
+                  })
                   .map((u) => {
                     const conv = conversas.find(
                       (c) =>
                         c.tipo === 'individual' &&
                         c.participantes?.some((p: any) => p.usuario_id === u.id),
                     )
+                    const hasUnread = conv && unreadMap[conv.id] > 0
                     return (
                       <button
                         key={u.id}
@@ -250,7 +287,9 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                           'w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left',
                           activeChat && conv?.id === activeChat
                             ? 'bg-slate-800'
-                            : 'hover:bg-slate-800/50',
+                            : hasUnread
+                              ? 'bg-slate-800/60 border border-slate-700/50 shadow-sm'
+                              : 'hover:bg-slate-800/50',
                         )}
                       >
                         <Avatar className="w-8 h-8 border border-slate-700">
@@ -260,7 +299,14 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 truncate">
-                          <p className="text-sm font-medium text-slate-200 truncate">{u.nome}</p>
+                          <p
+                            className={cn(
+                              'text-sm truncate',
+                              hasUnread ? 'font-bold text-white' : 'font-medium text-slate-200',
+                            )}
+                          >
+                            {u.nome}
+                          </p>
                         </div>
                         {conv && renderBadge(conv.id)}
                       </button>

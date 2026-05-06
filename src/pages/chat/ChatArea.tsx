@@ -84,17 +84,22 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
           setMessages((prev) => {
             if (prev.some((m) => m.id === payload.new.id)) return prev
 
-            const tempIndex = prev.findIndex(
-              (m) =>
-                m.id.toString().startsWith('temp-') &&
-                m.conteudo === payload.new.conteudo &&
-                m.remetente_id === payload.new.remetente_id,
-            )
+            const isMe = payload.new.remetente_id === user?.id
 
-            if (tempIndex >= 0) {
-              const next = [...prev]
-              next[tempIndex] = payload.new
-              return next
+            if (isMe) {
+              // Try to find a temp message with the same content
+              const tempIndex = prev.findIndex(
+                (m) =>
+                  m.id.toString().startsWith('temp-') &&
+                  m.conteudo === payload.new.conteudo &&
+                  m.remetente_id === payload.new.remetente_id,
+              )
+
+              if (tempIndex >= 0) {
+                const next = [...prev]
+                next[tempIndex] = payload.new
+                return next
+              }
             }
 
             return [...prev, payload.new]
@@ -138,9 +143,11 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
 
     setMessages((prev) => [...prev, tempMsg])
 
-    setTimeout(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }, 50)
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }, 50)
+    })
 
     const { error } = await supabase.from('chat_mensagens').insert({
       conversa_id: chatId,
@@ -260,7 +267,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
+              className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
             />
             <Button
               type="submit"

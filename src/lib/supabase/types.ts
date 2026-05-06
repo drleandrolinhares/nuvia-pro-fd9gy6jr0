@@ -5096,19 +5096,19 @@ export const Constants = {
 //   Policy "chat_conversas_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "chat_conversas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (is_admin() OR (criado_por = auth.uid()) OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_conversas.id) AND (cp.usuario_id = auth.uid())))))
+//     USING: true
 //   Policy "chat_conversas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR (criado_por = auth.uid()))
 // Table: chat_mensagens
 //   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (remetente_id = auth.uid())
 //   Policy "chat_mensagens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid())))))
+//     USING: (is_admin() OR (conversa_id IN ( SELECT chat_participantes.conversa_id    FROM chat_participantes   WHERE (chat_participantes.usuario_id = auth.uid()))))
 // Table: chat_participantes
 //   Policy "chat_participantes_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "chat_participantes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_participantes.conversa_id) AND (cp.usuario_id = auth.uid())))))
+//     USING: true
 //   Policy "chat_participantes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR is_admin())
 //     WITH CHECK: ((usuario_id = auth.uid()) OR is_admin())
