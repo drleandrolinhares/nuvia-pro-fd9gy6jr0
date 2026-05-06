@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -40,7 +39,9 @@ const initialForm = {
   valor_orcamento: '',
   valor_entrada: '',
   destino_fiscal: 'PESSOA FISICA',
-  tipo_tratamento: '',
+  forma_pagamento: 'Pix',
+  destino_pagamento: 'SICOOB PF 16004-0',
+  tipo_tratamento: 'outro',
   observacoes: '',
   status: 'avaliacao_realizada',
   temperatura_lead: 'morno',
@@ -65,7 +66,6 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         .then(({ data }) => {
           if (data) setPacientes(data)
         })
-
       supabase
         .from('dentistas_avaliadores')
         .select('id, nome, especialidade')
@@ -73,7 +73,6 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         .then(({ data }) => {
           if (data) setAvaliadores(data)
         })
-
       supabase
         .from('crc_comercial')
         .select('id, nome')
@@ -97,22 +96,18 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         if (!formData.novo_paciente_nome) throw new Error('Nome do paciente obrigatório')
         const { data, error } = await supabase
           .from('pacientes')
-          .insert({
-            nome: formData.novo_paciente_nome,
-            telefone: formData.telefone,
-          })
+          .insert({ nome: formData.novo_paciente_nome, telefone: formData.telefone })
           .select('id')
           .single()
         if (error) throw error
         currentPacienteId = data.id
       } else if (!currentPacienteId) throw new Error('Selecione um paciente')
 
-      if (!formData.data_avaliacao) throw new Error('Data de avaliação é obrigatória')
+      if (!formData.data_avaliacao) throw new Error('Data da venda é obrigatória')
       if (!formData.dentista_avaliador_id) throw new Error('Selecione o Dentista Avaliador')
       if (!formData.crc_comercial_id) throw new Error('Selecione o CRC Comercial')
       if (!formData.valor_orcamento) throw new Error('Informe o valor do tratamento')
       if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
-      if (!formData.tipo_tratamento) throw new Error('Selecione o tipo de tratamento')
 
       const payload: any = {
         paciente_id: currentPacienteId,
@@ -128,12 +123,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         temperatura_lead: formData.temperatura_lead,
       }
 
-      const { error, data: avaliacao } = await supabase
-        .from('avaliacoes')
-        .insert(payload)
-        .select('id')
-        .single()
-
+      const { error } = await supabase.from('avaliacoes').insert(payload)
       if (error) throw error
 
       const pNome = isCreating
@@ -147,9 +137,11 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         valor: Number(formData.valor_entrada),
         valor_tratamento: Number(formData.valor_orcamento),
         destino_fiscal: formData.destino_fiscal,
+        forma_pagamento: formData.forma_pagamento,
+        destino_pagamento: formData.destino_pagamento,
         paciente_nome: pNome || 'Paciente Cadastrado',
       })
-      toast({ title: 'Sucesso', description: 'Avaliação cadastrada!' })
+      toast({ title: 'Sucesso', description: 'Venda cadastrada com sucesso!' })
       setOpen(false)
       onSuccess()
     } catch (err: any) {
@@ -163,56 +155,60 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Nova Oportunidade
+          <Plus className="mr-2 h-4 w-4" /> Lançar Venda
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Nova Avaliação</DialogTitle>
-            <DialogDescription>Registre uma nova oportunidade.</DialogDescription>
+            <DialogTitle>Lançar Venda / Avaliação</DialogTitle>
+            <DialogDescription>Registre uma nova venda centralizada no sistema.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Paciente *</Label>
-              <div className="flex gap-2">
-                {!isCreating ? (
-                  <Select
-                    value={formData.paciente_id}
-                    onValueChange={(v) => {
-                      const p = pacientes.find((x) => x.id === v)
-                      setFormData({ ...formData, paciente_id: v, telefone: p?.telefone || '' })
-                    }}
-                    required
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pacientes.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    placeholder="Nome do paciente"
-                    value={formData.novo_paciente_nome}
-                    onChange={(e) =>
-                      setFormData({ ...formData, novo_paciente_nome: e.target.value })
-                    }
-                    required
-                    className="flex-1"
-                  />
-                )}
-                <Button type="button" variant="outline" onClick={() => setIsCreating(!isCreating)}>
-                  {isCreating ? 'Cancelar' : 'Novo'}
-                </Button>
-              </div>
-            </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Paciente *</Label>
+                <div className="flex gap-2">
+                  {!isCreating ? (
+                    <Select
+                      value={formData.paciente_id}
+                      onValueChange={(v) => {
+                        const p = pacientes.find((x) => x.id === v)
+                        setFormData({ ...formData, paciente_id: v, telefone: p?.telefone || '' })
+                      }}
+                      required
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pacientes.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      placeholder="Nome do paciente"
+                      value={formData.novo_paciente_nome}
+                      onChange={(e) =>
+                        setFormData({ ...formData, novo_paciente_nome: e.target.value })
+                      }
+                      required
+                      className="flex-1"
+                    />
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreating(!isCreating)}
+                  >
+                    {isCreating ? 'Cancelar' : 'Novo'}
+                  </Button>
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label>Telefone *</Label>
                 <Input
@@ -222,8 +218,11 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label>Data *</Label>
+                <Label>Data da Venda *</Label>
                 <Input
                   required
                   type="date"
@@ -231,10 +230,8 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                   onChange={(e) => setFormData({ ...formData, data_avaliacao: e.target.value })}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Dentista Avaliador *</Label>
+                <Label>Avaliador *</Label>
                 <Select
                   value={formData.dentista_avaliador_id}
                   onValueChange={(v) => setFormData({ ...formData, dentista_avaliador_id: v })}
@@ -246,7 +243,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                   <SelectContent>
                     {avaliadores.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
-                        {d.nome} {d.especialidade ? `(${d.especialidade})` : ''}
+                        {d.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -272,9 +269,10 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                 </Select>
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Valor Total do Tratamento *</Label>
+                <Label>Valor do Tratamento *</Label>
                 <Input
                   required
                   type="number"
@@ -296,7 +294,46 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label>Forma de Pgto *</Label>
+                <Select
+                  value={formData.forma_pagamento}
+                  onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pix">Pix</SelectItem>
+                    <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="Crédito">Crédito</SelectItem>
+                    <SelectItem value="Débito">Débito</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Transferência">Transferência</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Destino Pgto *</Label>
+                <Select
+                  value={formData.destino_pagamento}
+                  onValueChange={(v) => setFormData({ ...formData, destino_pagamento: v })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SICOOB PF 16004-0">SICOOB PF 16004-0</SelectItem>
+                    <SelectItem value="SANTANDER PJ VO">SANTANDER PJ VO</SelectItem>
+                    <SelectItem value="SICOOB PJ SFO">SICOOB PJ SFO</SelectItem>
+                    <SelectItem value="EM MÃOS">EM MÃOS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-2">
                 <Label>Destino Fiscal *</Label>
                 <Select
@@ -314,34 +351,26 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-2">
-                <Label>Tratamento *</Label>
-                <Select
-                  value={formData.tipo_tratamento}
-                  onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ortodontia">Ortodontia</SelectItem>
-                    <SelectItem value="implante">Implante</SelectItem>
-                    <SelectItem value="protese">Prótese</SelectItem>
-                    <SelectItem value="estetica">Estética</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
+
             <div className="grid gap-2">
-              <Label>Observações</Label>
-              <Textarea
+              <Label>Tratamento *</Label>
+              <Select
+                value={formData.tipo_tratamento}
+                onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
                 required
-                value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                rows={3}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ortodontia">Ortodontia</SelectItem>
+                  <SelectItem value="implante">Implante</SelectItem>
+                  <SelectItem value="protese">Prótese</SelectItem>
+                  <SelectItem value="estetica">Estética</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
