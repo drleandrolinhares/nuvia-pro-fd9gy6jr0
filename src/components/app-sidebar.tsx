@@ -234,42 +234,69 @@ export function AppSidebar() {
 
   useEffect(() => {
     const fetchCounts = async () => {
+      if (!user?.id) return
+
+      let newBadges = { pedidos: 0, comunicados: 0, sac: 0, chat: 0 }
+
       try {
-        const { count: sacCount } = await supabase
+        const { count } = await supabase
           .from('sac_demandas')
           .select('*', { count: 'exact', head: true })
           .neq('status', 'resolvido')
+        newBadges.sac = count || 0
+      } catch (e) {
+        console.error('Erro sac', e)
+      }
 
+      try {
         const lastVisitPedidos =
           localStorage.getItem('last_visit_pedidos') || '2000-01-01T00:00:00.000Z'
-        const { count: pedidosCount } = await supabase
+        const { count } = await supabase
           .from('pedidos_materiais')
           .select('*', { count: 'exact', head: true })
           .gt('data_criacao', lastVisitPedidos)
+        newBadges.pedidos = count || 0
+      } catch (e) {
+        console.error('Erro pedidos', e)
+      }
 
+      try {
         const lastVisitComunicados =
           localStorage.getItem('last_visit_comunicados') || '2000-01-01T00:00:00.000Z'
-        const { count: comunicadosCount } = await supabase
+        const { count } = await supabase
           .from('compromissos')
           .select('*', { count: 'exact', head: true })
           .gt('criado_em', lastVisitComunicados)
-
-        const { data: unreadChat } = await supabase.rpc('get_unread_chat_count', {
-          p_usuario_id: user?.id,
-        })
-
-        setBadges({
-          pedidos: pedidosCount || 0,
-          comunicados: comunicadosCount || 0,
-          sac: sacCount || 0,
-          chat: unreadChat || 0,
-        })
-      } catch (error) {
-        console.error('Erro ao buscar contadores do sidebar', error)
+        newBadges.comunicados = count || 0
+      } catch (e) {
+        console.error('Erro comunicados', e)
       }
+
+      try {
+        const { data } = await supabase.rpc('get_unread_chat_count', {
+          p_usuario_id: user.id,
+        })
+        newBadges.chat = data || 0
+      } catch (e) {
+        console.error('Erro chat', e)
+      }
+
+      setBadges(newBadges)
     }
 
     if (user?.id) fetchCounts()
+
+    const fetchChatCount = async () => {
+      if (!user?.id) return
+      try {
+        const { data } = await supabase.rpc('get_unread_chat_count', {
+          p_usuario_id: user.id,
+        })
+        setBadges((prev) => ({ ...prev, chat: data || 0 }))
+      } catch (e) {
+        console.error('Erro chat RT', e)
+      }
+    }
 
     const channel = supabase
       .channel(`sidebar_badges_${user?.id}`)
@@ -287,12 +314,12 @@ export function AppSidebar() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
-        fetchCounts,
+        fetchChatCount,
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'chat_participantes' },
-        fetchCounts,
+        fetchChatCount,
       )
       .subscribe()
 
@@ -371,7 +398,7 @@ export function AppSidebar() {
                       {group.title}
                     </div>
                     {getBadge(group.title) && (
-                      <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                      <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
                         {getBadge(group.title)}
                       </span>
                     )}
@@ -483,7 +510,7 @@ export function AppSidebar() {
                                   <span>{item.title}</span>
                                 </div>
                                 {getBadge(item.title) && (
-                                  <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                                  <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
                                     {getBadge(item.title)}
                                   </span>
                                 )}

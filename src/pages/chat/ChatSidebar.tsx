@@ -238,7 +238,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                   <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
                     <Users className="w-4 h-4 text-slate-400" />
                   </div>
-                  <div className="flex-1 min-w-0 truncate">
+                  <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={cn(
                         'text-sm truncate',
@@ -274,7 +274,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                           activeChat === c.id ? 'bg-slate-800' : 'hover:bg-slate-800/50',
                         )}
                       >
-                        <div className="flex-1 min-w-0 truncate">
+                        <div className="flex-1 min-w-0 pr-2">
                           <p className="text-sm font-medium text-slate-200 truncate">
                             {formatName(p1?.nome || '')} & {formatName(p2?.nome || '')}
                           </p>
@@ -328,7 +328,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                             {u.nome.substring(0, 2)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0 truncate">
+                        <div className="flex-1 min-w-0 pr-2">
                           <p
                             className={cn(
                               'text-sm truncate',
