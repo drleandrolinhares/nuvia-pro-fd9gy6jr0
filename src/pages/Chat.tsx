@@ -14,7 +14,7 @@ export default function Chat() {
 
   if (!acessoChat && !isAdmin) {
     return (
-      <div className="p-8 flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="p-8 flex items-center justify-center h-full w-full bg-slate-950">
         <div className="text-center text-slate-400">
           <MessageSquareOff className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <h2 className="text-lg font-medium text-white">Acesso Restrito</h2>
@@ -25,7 +25,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 border-t border-slate-800">
+    <div className="flex h-full w-full overflow-hidden bg-slate-950 border-t border-slate-800">
       <ChatSidebar
         activeChat={activeChat}
         setActiveChat={setActiveChat}

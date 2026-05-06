@@ -7,15 +7,25 @@ import { cn } from '@/lib/utils'
 export default function Layout() {
   const location = useLocation()
   const isFullWidth = location.pathname.includes('/precificacao')
+  const isChat = location.pathname.startsWith('/chat')
 
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background flex flex-col h-dvh w-full overflow-hidden">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+        <main
+          className={cn(
+            'flex-1 overflow-x-hidden',
+            isChat ? 'overflow-hidden' : 'overflow-y-auto p-4 md:p-8',
+          )}
+        >
           <div
-            className={cn('mx-auto w-full pb-16', isFullWidth ? 'max-w-[98%]' : 'max-w-[1600px]')}
+            className={cn(
+              'mx-auto w-full',
+              isChat ? 'h-full' : 'pb-16',
+              !isChat && (isFullWidth ? 'max-w-[98%]' : 'max-w-[1600px]'),
+            )}
           >
             <Outlet />
           </div>
