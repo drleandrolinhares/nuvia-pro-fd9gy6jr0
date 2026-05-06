@@ -5101,7 +5101,7 @@ export const Constants = {
 //     USING: (is_admin() OR (criado_por = auth.uid()))
 // Table: chat_mensagens
 //   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid()))))
+//     WITH CHECK: ((remetente_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid())))))
 //   Policy "chat_mensagens_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid())))))
 // Table: chat_participantes
@@ -5111,6 +5111,7 @@ export const Constants = {
 //     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_participantes.conversa_id) AND (cp.usuario_id = auth.uid())))))
 //   Policy "chat_participantes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR is_admin())
+//     WITH CHECK: ((usuario_id = auth.uid()) OR is_admin())
 // Table: colaboradores_detalhes
 //   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))

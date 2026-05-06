@@ -94,14 +94,14 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newMessage.trim() || isAudit) return
+    if (!newMessage.trim() || isAudit || !user) return
 
-    const msg = newMessage
+    const msg = newMessage.trim()
     setNewMessage('')
 
     const { error } = await supabase.from('chat_mensagens').insert({
       conversa_id: chatId,
-      remetente_id: user?.id,
+      remetente_id: user.id,
       conteudo: msg,
     })
 
@@ -113,6 +113,13 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         variant: 'destructive',
       })
       setNewMessage(msg)
+    } else {
+      supabase
+        .from('chat_participantes')
+        .update({ ultima_leitura: new Date().toISOString() })
+        .eq('conversa_id', chatId)
+        .eq('usuario_id', user.id)
+        .then()
     }
   }
 
@@ -137,7 +144,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   }
 
   return (
-    <div className="flex flex-col h-full w-full absolute inset-0">
+    <div className="flex flex-col h-full w-full">
       <div className="h-14 border-b border-slate-800 flex items-center px-6 bg-slate-900/80 shrink-0 z-10">
         <h3 className="text-lg font-medium text-white flex items-center gap-2">
           {getChatName()}
@@ -208,7 +215,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-950 border-slate-700 text-slate-50 placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10"
+              className="flex-1 bg-slate-950 border-slate-700 text-white placeholder:text-slate-300 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
             />
             <Button
               type="submit"
