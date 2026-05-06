@@ -108,6 +108,7 @@ export type Database = {
           data_avaliacao: string | null
           data_fechamento: string | null
           dentista_avaliador_id: string | null
+          destino_fiscal: string | null
           id: string
           observacoes: string | null
           observacoes_fechamento: string | null
@@ -126,6 +127,7 @@ export type Database = {
           data_avaliacao?: string | null
           data_fechamento?: string | null
           dentista_avaliador_id?: string | null
+          destino_fiscal?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           data_avaliacao?: string | null
           data_fechamento?: string | null
           dentista_avaliador_id?: string | null
+          destino_fiscal?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
@@ -3792,6 +3795,7 @@ export const Constants = {
 //   data_fechamento: date (nullable)
 //   valor_entrada: numeric (nullable)
 //   observacoes_fechamento: text (nullable)
+//   destino_fiscal: text (nullable)
 // Table: caixa_diario_fechamentos
 //   data_referencia: date (not null)
 //   conferido: boolean (not null, default: false)

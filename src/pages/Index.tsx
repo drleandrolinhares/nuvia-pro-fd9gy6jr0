@@ -57,7 +57,6 @@ import {
 } from '@/components/ui/accordion'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { GestaoReceitasModal } from '@/components/financeiro/gestao-receitas-modal'
 
 const MESES = [
   'Janeiro',
@@ -91,9 +90,6 @@ const Index = () => {
   const [metaFaturamento, setMetaFaturamento] = useState(0)
   const [vendasDiarias, setVendasDiarias] = useState<any[]>([]) // Used for goal calculation
 
-  // Modal States
-  const [modalVendasOpen, setModalVendasOpen] = useState(false)
-
   const { dataVersion, invalidateCache } = useCache()
 
   const loading = loadingMeta || loadingEstoque || loadingUsuarios || loadingSAC
@@ -107,10 +103,10 @@ const Index = () => {
     Promise.all([
       supabase.from('gestao_fiscal_config').select('faturamento_previsto').single(),
       supabase
-        .from('vendas_diarias')
-        .select('*')
-        .gte('data_venda', startOfMonthStr)
-        .lte('data_venda', endOfMonthStr),
+        .from('vendas_confirmadas')
+        .select('valor_tratamento')
+        .gte('data_fechamento', startOfMonthStr)
+        .lte('data_fechamento', endOfMonthStr),
     ]).then(([{ data: configFiscal }, { data: vendas }]) => {
       if (configFiscal) setMetaFaturamento(configFiscal.faturamento_previsto)
       if (vendas) setVendasDiarias(vendas)
@@ -203,7 +199,7 @@ const Index = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, () =>
         invalidateCache(),
       )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_diarias' }, () =>
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () =>
         invalidateCache(),
       )
       .subscribe()
@@ -213,7 +209,10 @@ const Index = () => {
     }
   }, [invalidateCache])
 
-  const totalVendasMes = vendasDiarias.reduce((acc, curr) => acc + Number(curr.valor), 0)
+  const totalVendasMes = vendasDiarias.reduce(
+    (acc, curr) => acc + Number(curr.valor_tratamento || 0),
+    0,
+  )
   const valorRestante = Math.max(0, metaFaturamento - totalVendasMes)
   const percentualAlcancado = metaFaturamento > 0 ? (totalVendasMes / metaFaturamento) * 100 : 0
   const percentualFaltante = Math.max(0, 100 - percentualAlcancado)
@@ -342,14 +341,6 @@ const Index = () => {
                 ? '...'
                 : `R$ ${totalVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </span>
-            <Button
-              onClick={() => setModalVendasOpen(true)}
-              size="icon"
-              className="absolute top-2 right-2 h-7 w-7 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 rounded-md transition-colors"
-              title="Gestão de Receitas"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
           </div>
 
           <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
@@ -685,8 +676,6 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
-
-      <GestaoReceitasModal open={modalVendasOpen} onOpenChange={setModalVendasOpen} />
     </div>
   )
 }
