@@ -25,7 +25,10 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-slate-950 border-t border-slate-800">
+    <div
+      className="flex w-full bg-slate-950 border-t border-slate-800 overflow-hidden"
+      style={{ height: 'calc(100vh - 64px)' }}
+    >
       <ChatSidebar
         activeChat={activeChat}
         setActiveChat={setActiveChat}

@@ -19,12 +19,17 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
 
   const loadChat = async () => {
     setIsLoading(true)
-    const { data: conv } = await supabase
+    const { data: conv, error: convError } = await supabase
       .from('chat_conversas')
       .select('*, participantes:chat_participantes(usuario_id)')
       .eq('id', chatId)
       .single()
-    setConversa(conv)
+
+    if (convError) {
+      console.error('Erro ao carregar conversa:', convError)
+    }
+
+    setConversa(conv || null)
 
     if (conv) {
       const pIds = conv.participantes.map((p: any) => p.usuario_id)
@@ -71,7 +76,11 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
           filter: `conversa_id=eq.${chatId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new])
+          setMessages((prev) => {
+            // Evita duplicatas caso a mensagem já tenha sido adicionada via UI otimista
+            if (prev.some((m) => m.id === payload.new.id)) return prev
+            return [...prev, payload.new]
+          })
           setTimeout(() => {
             if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
           }, 100)
@@ -99,14 +108,36 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
     const msg = newMessage.trim()
     setNewMessage('')
 
-    const { error } = await supabase.from('chat_mensagens').insert({
+    // Atualização Otimista
+    const tempId = 'temp-' + Date.now()
+    const tempMsg = {
+      id: tempId,
       conversa_id: chatId,
       remetente_id: user.id,
       conteudo: msg,
-    })
+      criado_em: new Date().toISOString(),
+    }
 
-    if (error) {
+    setMessages((prev) => [...prev, tempMsg])
+
+    setTimeout(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }, 50)
+
+    const { data: insertedMsg, error } = await supabase
+      .from('chat_mensagens')
+      .insert({
+        conversa_id: chatId,
+        remetente_id: user.id,
+        conteudo: msg,
+      })
+      .select()
+      .single()
+
+    if (error || !insertedMsg) {
       console.error('Erro ao enviar mensagem:', error)
+      // Reverter mensagem otimista
+      setMessages((prev) => prev.filter((m) => m.id !== tempId))
       toast({
         title: 'Erro ao enviar',
         description: 'Não foi possível enviar a mensagem. Verifique sua conexão e tente novamente.',
@@ -114,6 +145,9 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       })
       setNewMessage(msg)
     } else {
+      // Substitui a mensagem temporária pela real
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? insertedMsg : m)))
+
       supabase
         .from('chat_participantes')
         .update({ ultima_leitura: new Date().toISOString() })
@@ -124,7 +158,8 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   }
 
   const getChatName = () => {
-    if (!conversa) return 'Carregando...'
+    if (!conversa && isLoading) return 'Carregando...'
+    if (!conversa) return 'Chat não encontrado'
     if (conversa.tipo === 'grupo') return conversa.nome
     const otherId = conversa.participantes?.find((p: any) => p.usuario_id !== user?.id)?.usuario_id
     if (otherId && usuarios[otherId]) return usuarios[otherId].nome
