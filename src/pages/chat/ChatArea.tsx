@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Send, ShieldAlert } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useToast } from '@/hooks/use-toast'
 
 export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean }) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [messages, setMessages] = useState<any[]>([])
   const [conversa, setConversa] = useState<any>(null)
   const [usuarios, setUsuarios] = useState<Record<string, any>>({})
@@ -97,11 +99,21 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
     const msg = newMessage
     setNewMessage('')
 
-    await supabase.from('chat_mensagens').insert({
+    const { error } = await supabase.from('chat_mensagens').insert({
       conversa_id: chatId,
       remetente_id: user?.id,
       conteudo: msg,
     })
+
+    if (error) {
+      console.error('Erro ao enviar mensagem:', error)
+      toast({
+        title: 'Erro ao enviar',
+        description: 'Não foi possível enviar a mensagem. Verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      })
+      setNewMessage(msg)
+    }
   }
 
   const getChatName = () => {
@@ -125,7 +137,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden min-h-0">
+    <div className="flex flex-col h-full w-full absolute inset-0">
       <div className="h-14 border-b border-slate-800 flex items-center px-6 bg-slate-900/80 shrink-0 z-10">
         <h3 className="text-lg font-medium text-white flex items-center gap-2">
           {getChatName()}
@@ -137,7 +149,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         </h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 scroll-smooth" ref={scrollRef}>
         {isLoading && messages.length === 0 && (
           <div className="flex items-center justify-center h-full text-slate-500 text-sm">
             Carregando mensagens...
@@ -190,26 +202,26 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       </div>
 
       {!isAudit ? (
-        <div className="p-4 border-t border-slate-800 bg-slate-900/80 shrink-0 z-10 mt-auto">
+        <div className="p-4 border-t border-slate-800 bg-slate-900/80 shrink-0 z-10">
           <form onSubmit={handleSend} className="flex items-center gap-3">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-950 border-slate-800 rounded-full px-4 focus-visible:ring-amber-500"
+              className="flex-1 bg-slate-950 border-slate-700 text-slate-50 placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10"
             />
             <Button
               type="submit"
               size="icon"
-              className="rounded-full shrink-0 bg-amber-500 hover:bg-amber-600 text-slate-950"
+              className="rounded-full shrink-0 bg-amber-500 hover:bg-amber-600 text-slate-950 h-10 w-10"
               disabled={!newMessage.trim()}
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 ml-0.5" />
             </Button>
           </form>
         </div>
       ) : (
-        <div className="p-4 border-t border-slate-800 bg-amber-500/10 text-center">
+        <div className="p-4 border-t border-slate-800 bg-amber-500/10 text-center shrink-0 z-10">
           <p className="text-sm text-amber-500/70">
             Você está visualizando no modo auditoria. O envio de mensagens está desabilitado.
           </p>

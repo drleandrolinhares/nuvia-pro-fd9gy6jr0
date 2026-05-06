@@ -3702,6 +3702,10 @@ export type Database = {
         Returns: undefined
       }
       gerar_todos_adiantamentos_mensais: { Args: never; Returns: undefined }
+      get_or_create_direct_chat: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
       get_unread_chat_count: { Args: { p_usuario_id: string }; Returns: number }
       get_unread_counts_per_conversation: {
         Args: { p_usuario_id: string }
@@ -5094,7 +5098,7 @@ export const Constants = {
 //   Policy "chat_conversas_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR (criado_por = auth.uid()) OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_conversas.id) AND (cp.usuario_id = auth.uid())))))
 //   Policy "chat_conversas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: is_admin()
+//     USING: (is_admin() OR (criado_por = auth.uid()))
 // Table: chat_mensagens
 //   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid()))))
@@ -5104,7 +5108,7 @@ export const Constants = {
 //   Policy "chat_participantes_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "chat_participantes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid())))))
+//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_participantes.conversa_id) AND (cp.usuario_id = auth.uid())))))
 //   Policy "chat_participantes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((usuario_id = auth.uid()) OR is_admin())
 // Table: colaboradores_detalhes
@@ -5686,6 +5690,44 @@ export const Constants = {
 //         VALUES (v_user.id, v_mes_atual, '[]'::jsonb, 0, false);
 //       END IF;
 //     END LOOP;
+//   END;
+//   $function$
+//
+// FUNCTION get_or_create_direct_chat(uuid)
+//   CREATE OR REPLACE FUNCTION public.get_or_create_direct_chat(target_user_id uuid)
+//    RETURNS uuid
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_chat_id uuid;
+//     v_current_user uuid := auth.uid();
+//   BEGIN
+//     IF v_current_user IS NULL THEN
+//       RAISE EXCEPTION 'Not authenticated';
+//     END IF;
+//
+//     -- Tenta encontrar uma conversa individual existente entre os dois usuários
+//     SELECT c.id INTO v_chat_id
+//     FROM public.chat_conversas c
+//     JOIN public.chat_participantes p1 ON p1.conversa_id = c.id AND p1.usuario_id = v_current_user
+//     JOIN public.chat_participantes p2 ON p2.conversa_id = c.id AND p2.usuario_id = target_user_id
+//     WHERE c.tipo = 'individual'
+//     LIMIT 1;
+//
+//     -- Se não encontrou, cria uma nova
+//     IF v_chat_id IS NULL THEN
+//       INSERT INTO public.chat_conversas (tipo, criado_por)
+//       VALUES ('individual', v_current_user)
+//       RETURNING id INTO v_chat_id;
+//
+//       INSERT INTO public.chat_participantes (conversa_id, usuario_id)
+//       VALUES
+//         (v_chat_id, v_current_user),
+//         (v_chat_id, target_user_id);
+//     END IF;
+//
+//     RETURN v_chat_id;
 //   END;
 //   $function$
 //

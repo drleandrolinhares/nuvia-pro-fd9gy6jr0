@@ -119,8 +119,8 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   }
 
   return (
-    <div className="w-80 flex flex-col border-r border-slate-800 bg-slate-900/80">
-      <div className="p-4 border-b border-slate-800 space-y-4">
+    <div className="w-80 flex flex-col h-full border-r border-slate-800 bg-slate-900/80 shrink-0">
+      <div className="p-4 border-b border-slate-800 space-y-4 shrink-0">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <MessageSquare className="w-5 h-5" /> Chat Interno
         </h2>
