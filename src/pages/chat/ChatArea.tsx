@@ -18,49 +18,54 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const loadChat = async () => {
-    setIsLoading(true)
-    const { data: conv, error: convError } = await supabase
-      .from('chat_conversas')
-      .select('*, participantes:chat_participantes(usuario_id)')
-      .eq('id', chatId)
-      .single()
+    try {
+      setIsLoading(true)
+      const { data: conv, error: convError } = await supabase
+        .from('chat_conversas')
+        .select('*, participantes:chat_participantes(usuario_id)')
+        .eq('id', chatId)
+        .single()
 
-    if (convError) {
-      console.error('Erro ao carregar conversa:', convError)
-    }
+      if (convError) {
+        console.error('Erro ao carregar conversa:', convError)
+      }
 
-    setConversa(conv || null)
+      setConversa(conv || null)
 
-    if (conv) {
-      const pIds = conv.participantes.map((p: any) => p.usuario_id)
-      const { data: users } = await supabase
-        .from('usuarios')
-        .select('id, nome, avatar_url')
-        .in('id', pIds)
-      const uMap: any = {}
-      users?.forEach((u) => (uMap[u.id] = u))
-      setUsuarios(uMap)
-    }
+      if (conv) {
+        const pIds = conv.participantes.map((p: any) => p.usuario_id)
+        const { data: users } = await supabase
+          .from('usuarios')
+          .select('id, nome, avatar_url')
+          .in('id', pIds)
+        const uMap: any = {}
+        users?.forEach((u) => (uMap[u.id] = u))
+        setUsuarios(uMap)
+      }
 
-    const { data: msgs } = await supabase
-      .from('chat_mensagens')
-      .select('*')
-      .eq('conversa_id', chatId)
-      .order('criado_em', { ascending: true })
-    setMessages(msgs || [])
-
-    if (!isAudit) {
-      await supabase
-        .from('chat_participantes')
-        .update({ ultima_leitura: new Date().toISOString() })
+      const { data: msgs } = await supabase
+        .from('chat_mensagens')
+        .select('*')
         .eq('conversa_id', chatId)
-        .eq('usuario_id', user?.id)
-    }
+        .order('criado_em', { ascending: true })
+      setMessages(msgs || [])
 
-    setIsLoading(false)
-    setTimeout(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }, 100)
+      if (!isAudit) {
+        supabase
+          .from('chat_participantes')
+          .update({ ultima_leitura: new Date().toISOString() })
+          .eq('conversa_id', chatId)
+          .eq('usuario_id', user?.id)
+          .then()
+      }
+    } catch (e) {
+      console.error('Erro inesperado ao carregar chat:', e)
+    } finally {
+      setIsLoading(false)
+      setTimeout(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }, 100)
+    }
   }
 
   useEffect(() => {
@@ -77,14 +82,27 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         },
         (payload) => {
           setMessages((prev) => {
-            // Evita duplicatas caso a mensagem já tenha sido adicionada via UI otimista
             if (prev.some((m) => m.id === payload.new.id)) return prev
+
+            const tempIndex = prev.findIndex(
+              (m) =>
+                m.id.toString().startsWith('temp-') &&
+                m.conteudo === payload.new.conteudo &&
+                m.remetente_id === payload.new.remetente_id,
+            )
+
+            if (tempIndex >= 0) {
+              const next = [...prev]
+              next[tempIndex] = payload.new
+              return next
+            }
+
             return [...prev, payload.new]
           })
           setTimeout(() => {
             if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
           }, 100)
-          if (!isAudit) {
+          if (!isAudit && payload.new.remetente_id !== user?.id) {
             supabase
               .from('chat_participantes')
               .update({ ultima_leitura: new Date().toISOString() })
@@ -109,7 +127,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
     setNewMessage('')
 
     // Atualização Otimista
-    const tempId = 'temp-' + Date.now()
+    const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9)
     const tempMsg = {
       id: tempId,
       conversa_id: chatId,
@@ -124,19 +142,14 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }, 50)
 
-    const { data: insertedMsg, error } = await supabase
-      .from('chat_mensagens')
-      .insert({
-        conversa_id: chatId,
-        remetente_id: user.id,
-        conteudo: msg,
-      })
-      .select()
-      .single()
+    const { error } = await supabase.from('chat_mensagens').insert({
+      conversa_id: chatId,
+      remetente_id: user.id,
+      conteudo: msg,
+    })
 
-    if (error || !insertedMsg) {
+    if (error) {
       console.error('Erro ao enviar mensagem:', error)
-      // Reverter mensagem otimista
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       toast({
         title: 'Erro ao enviar',
@@ -145,9 +158,6 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       })
       setNewMessage(msg)
     } else {
-      // Substitui a mensagem temporária pela real
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? insertedMsg : m)))
-
       supabase
         .from('chat_participantes')
         .update({ ultima_leitura: new Date().toISOString() })
@@ -179,7 +189,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   }
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full !overflow-hidden">
       <div className="h-14 border-b border-slate-800 flex items-center px-6 bg-slate-900/80 shrink-0 z-10">
         <h3 className="text-lg font-medium text-white flex items-center gap-2">
           {getChatName()}
@@ -229,7 +239,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
                     </span>
                   )}
                   <div
-                    className={`px-4 py-2 rounded-2xl ${isMe && !isAudit ? 'bg-amber-500 text-slate-950 rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}
+                    className={`px-4 py-2 rounded-2xl ${isMe && !isAudit ? 'bg-amber-500 text-slate-950 rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'} ${msg.id.toString().startsWith('temp-') ? 'opacity-80 transition-opacity' : 'opacity-100 transition-opacity'}`}
                   >
                     <p className="text-sm whitespace-pre-wrap break-words">{msg.conteudo}</p>
                   </div>
@@ -250,7 +260,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-950 border-slate-700 text-white placeholder:text-slate-300 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
+              className="flex-1 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
             />
             <Button
               type="submit"

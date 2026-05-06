@@ -73,6 +73,17 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     }
   }, [viewMode, user?.id])
 
+  useEffect(() => {
+    if (activeChat) {
+      setUnreadMap((prev) => {
+        if (prev[activeChat] > 0) {
+          return { ...prev, [activeChat]: 0 }
+        }
+        return prev
+      })
+    }
+  }, [activeChat])
+
   const startIndividualChat = async (targetUserId: string) => {
     try {
       const existing = conversas.find(
@@ -108,7 +119,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   }
 
   const renderBadge = (id: string) => {
-    if (unreadMap[id] > 0) {
+    if (unreadMap[id] > 0 && id !== activeChat) {
       return (
         <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
           {unreadMap[id]}

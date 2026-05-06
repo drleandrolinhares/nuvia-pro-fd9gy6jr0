@@ -26,8 +26,8 @@ export default function Chat() {
 
   return (
     <div
-      className="flex w-full bg-slate-950 border-t border-slate-800 overflow-hidden"
-      style={{ height: 'calc(100vh - 64px)' }}
+      className="flex w-full bg-slate-950 border-t border-slate-800 !overflow-hidden !h-[calc(100vh-64px)]"
+      style={{ height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)' }}
     >
       <ChatSidebar
         activeChat={activeChat}
@@ -36,7 +36,7 @@ export default function Chat() {
         setViewMode={setViewMode}
         isAdmin={isAdmin}
       />
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-900/50 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-900/50 h-full !overflow-hidden">
         {activeChat ? (
           <ChatArea chatId={activeChat} isAudit={viewMode === 'audit'} />
         ) : (
