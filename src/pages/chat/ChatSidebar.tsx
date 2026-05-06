@@ -9,6 +9,13 @@ import { CreateGroupDialog } from './CreateGroupDialog'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
+const formatName = (fullName: string) => {
+  if (!fullName) return ''
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length <= 1) return parts[0]
+  return `${parts[0]} ${parts[1]}`
+}
+
 export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, isAdmin }: any) {
   const { toast } = useToast()
   const { user } = useAuth()
@@ -144,7 +151,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   const renderBadge = (id: string) => {
     if (unreadMap[id] > 0 && id !== activeChat) {
       return (
-        <span className="bg-amber-500 text-slate-950 text-xs font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+        <span className="bg-amber-500 text-slate-950 text-xs font-extrabold px-2 py-0.5 rounded-full shadow-sm shrink-0">
           {unreadMap[id]}
         </span>
       )
@@ -231,7 +238,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                   <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
                     <Users className="w-4 h-4 text-slate-400" />
                   </div>
-                  <div className="flex-1 truncate">
+                  <div className="flex-1 min-w-0 truncate">
                     <p
                       className={cn(
                         'text-sm truncate',
@@ -267,9 +274,9 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                           activeChat === c.id ? 'bg-slate-800' : 'hover:bg-slate-800/50',
                         )}
                       >
-                        <div className="flex-1 truncate">
+                        <div className="flex-1 min-w-0 truncate">
                           <p className="text-sm font-medium text-slate-200 truncate">
-                            {p1?.nome} & {p2?.nome}
+                            {formatName(p1?.nome || '')} & {formatName(p2?.nome || '')}
                           </p>
                         </div>
                       </button>
@@ -321,14 +328,14 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
                             {u.nome.substring(0, 2)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 truncate">
+                        <div className="flex-1 min-w-0 truncate">
                           <p
                             className={cn(
                               'text-sm truncate',
                               hasUnread ? 'font-bold text-white' : 'font-medium text-slate-200',
                             )}
                           >
-                            {u.nome}
+                            {formatName(u.nome)}
                           </p>
                         </div>
                         {conv && renderBadge(conv.id)}

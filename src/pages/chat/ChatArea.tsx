@@ -7,6 +7,13 @@ import { Send, ShieldAlert } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useToast } from '@/hooks/use-toast'
 
+const formatName = (fullName: string) => {
+  if (!fullName) return ''
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length <= 1) return parts[0]
+  return `${parts[0]} ${parts[1]}`
+}
+
 export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean }) {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -184,10 +191,10 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
     if (!conversa) return 'Chat não encontrado'
     if (conversa.tipo === 'grupo') return conversa.nome
     const otherId = conversa.participantes?.find((p: any) => p.usuario_id !== user?.id)?.usuario_id
-    if (otherId && usuarios[otherId]) return usuarios[otherId].nome
+    if (otherId && usuarios[otherId]) return formatName(usuarios[otherId].nome)
     if (isAudit && conversa.tipo === 'individual') {
       const names = conversa.participantes
-        ?.map((p: any) => usuarios[p.usuario_id]?.nome)
+        ?.map((p: any) => formatName(usuarios[p.usuario_id]?.nome || ''))
         .filter(Boolean)
         .join(' & ')
       return names || 'Chat Direto'
@@ -247,7 +254,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
                 <div className={`flex flex-col ${isMe && !isAudit ? 'items-end' : 'items-start'}`}>
                   {(!isMe || isAudit) && (
                     <span className="text-xs text-slate-500 mb-1 ml-1">
-                      {sender?.nome || 'Usuário'}
+                      {sender?.nome ? formatName(sender.nome) : 'Usuário'}
                     </span>
                   )}
                   <div
