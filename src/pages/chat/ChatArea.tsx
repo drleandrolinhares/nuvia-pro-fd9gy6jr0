@@ -272,7 +272,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
+              className="flex-1 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 rounded-full px-4 focus-visible:ring-amber-500 h-10 font-medium"
             />
             <Button
               type="submit"

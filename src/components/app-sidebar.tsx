@@ -272,7 +272,7 @@ export function AppSidebar() {
     if (user?.id) fetchCounts()
 
     const channel = supabase
-      .channel('sidebar_badges')
+      .channel(`sidebar_badges_${user?.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, fetchCounts)
       .on(
         'postgres_changes',
@@ -299,9 +299,14 @@ export function AppSidebar() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
+    const handleChatRead = (e: any) => {
+      setBadges((prev) => ({ ...prev, chat: Math.max(0, prev.chat - e.detail.count) }))
+    }
+    window.addEventListener('chat_read', handleChatRead)
+
     if (location.pathname === '/operacional/pedidos') {
       localStorage.setItem('last_visit_pedidos', new Date().toISOString())
       setBadges((prev) => ({ ...prev, pedidos: 0 }))
@@ -309,6 +314,10 @@ export function AppSidebar() {
     if (location.pathname === '/operacional/comunicados') {
       localStorage.setItem('last_visit_comunicados', new Date().toISOString())
       setBadges((prev) => ({ ...prev, comunicados: 0 }))
+    }
+
+    return () => {
+      window.removeEventListener('chat_read', handleChatRead)
     }
   }, [location.pathname])
 

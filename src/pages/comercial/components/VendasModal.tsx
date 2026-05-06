@@ -89,26 +89,24 @@ export function VendasModal({
 
   useEffect(() => {
     if (open) {
-      if (!dentistas || dentistas.length === 0) {
-        supabase
-          .from('dentistas_avaliadores')
-          .select('id, nome, especialidade')
-          .eq('status', 'ativo')
-          .order('nome')
-          .then(({ data }) => {
-            if (data) setAvaliadoresList(data)
-          })
-      }
-      if (!crcs || crcs.length === 0) {
-        supabase
-          .from('crc_comercial')
-          .select('id, nome')
-          .eq('status', 'ativo')
-          .order('nome')
-          .then(({ data }) => {
-            if (data) setCrcsList(data)
-          })
-      }
+      // Sempre buscar para garantir dados atualizados e contornar filtros incorretos do componente pai
+      supabase
+        .from('dentistas_avaliadores')
+        .select('id, nome, especialidade')
+        .or('status.eq.ativo,status.eq.Ativo,status.is.null')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setAvaliadoresList(data)
+        })
+
+      supabase
+        .from('crc_comercial')
+        .select('id, nome')
+        .or('status.eq.ativo,status.eq.Ativo,status.is.null')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setCrcsList(data)
+        })
       supabase
         .from('funil_origens')
         .select('id, nome')

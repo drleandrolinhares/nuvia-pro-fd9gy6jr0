@@ -88,12 +88,24 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     if (activeChat) {
       setUnreadMap((prev) => {
         if (prev[activeChat] > 0) {
+          window.dispatchEvent(
+            new CustomEvent('chat_read', { detail: { count: prev[activeChat] } }),
+          )
           return { ...prev, [activeChat]: 0 }
         }
         return prev
       })
+
+      if (user?.id) {
+        supabase
+          .from('chat_participantes')
+          .update({ ultima_leitura: new Date().toISOString() })
+          .eq('conversa_id', activeChat)
+          .eq('usuario_id', user.id)
+          .then()
+      }
     }
-  }, [activeChat])
+  }, [activeChat, user?.id])
 
   const startIndividualChat = async (targetUserId: string) => {
     try {
