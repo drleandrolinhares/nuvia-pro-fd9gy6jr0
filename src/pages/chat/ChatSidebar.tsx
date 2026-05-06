@@ -63,12 +63,17 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
       })
       setUnreadMap((prev) => {
         const uMap: Record<string, number> = {}
+        let updated = false
         unreadData?.forEach((r: any) => {
           uMap[r.conversa_id] = Number(r.unread_count)
         })
         const currentActive = activeChatRef.current
         if (currentActive && uMap[currentActive] > 0) {
           uMap[currentActive] = 0
+          updated = true
+        }
+        if (updated) {
+          setTimeout(() => window.dispatchEvent(new CustomEvent('chat_read')), 0)
         }
         return uMap
       })
@@ -95,9 +100,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     if (activeChat) {
       setUnreadMap((prev) => {
         if (prev[activeChat] > 0) {
-          window.dispatchEvent(
-            new CustomEvent('chat_read', { detail: { count: prev[activeChat] } }),
-          )
+          window.dispatchEvent(new CustomEvent('chat_read'))
           return { ...prev, [activeChat]: 0 }
         }
         return prev
@@ -109,7 +112,9 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
           .update({ ultima_leitura: new Date().toISOString() })
           .eq('conversa_id', activeChat)
           .eq('usuario_id', user.id)
-          .then()
+          .then(() => {
+            window.dispatchEvent(new CustomEvent('chat_read'))
+          })
       }
     }
   }, [activeChat, user?.id])

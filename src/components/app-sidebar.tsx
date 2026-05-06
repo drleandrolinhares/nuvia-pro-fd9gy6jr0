@@ -232,6 +232,18 @@ export function AppSidebar() {
     chat: 0,
   })
 
+  const fetchChatCountStandalone = async () => {
+    if (!user?.id) return
+    try {
+      const { data } = await supabase.rpc('get_unread_chat_count', {
+        p_usuario_id: user.id,
+      })
+      setBadges((prev) => ({ ...prev, chat: data || 0 }))
+    } catch (e) {
+      console.error('Erro chat RT', e)
+    }
+  }
+
   useEffect(() => {
     const fetchCounts = async () => {
       if (!user?.id) return
@@ -286,18 +298,6 @@ export function AppSidebar() {
 
     if (user?.id) fetchCounts()
 
-    const fetchChatCount = async () => {
-      if (!user?.id) return
-      try {
-        const { data } = await supabase.rpc('get_unread_chat_count', {
-          p_usuario_id: user.id,
-        })
-        setBadges((prev) => ({ ...prev, chat: data || 0 }))
-      } catch (e) {
-        console.error('Erro chat RT', e)
-      }
-    }
-
     const channel = supabase
       .channel(`sidebar_badges_${user?.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sac_demandas' }, fetchCounts)
@@ -311,15 +311,13 @@ export function AppSidebar() {
         { event: 'INSERT', schema: 'public', table: 'compromissos' },
         fetchCounts,
       )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
-        fetchChatCount,
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_mensagens' }, () =>
+        fetchChatCountStandalone(),
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'chat_participantes' },
-        fetchChatCount,
+        () => fetchChatCountStandalone(),
       )
       .subscribe()
 
@@ -329,10 +327,11 @@ export function AppSidebar() {
   }, [user?.id])
 
   useEffect(() => {
-    const handleChatRead = (e: any) => {
-      setBadges((prev) => ({ ...prev, chat: Math.max(0, prev.chat - e.detail.count) }))
+    const handleChatRead = () => {
+      fetchChatCountStandalone()
     }
     window.addEventListener('chat_read', handleChatRead)
+    window.addEventListener('chat_updated', handleChatRead)
 
     if (location.pathname === '/operacional/pedidos') {
       localStorage.setItem('last_visit_pedidos', new Date().toISOString())
@@ -343,10 +342,20 @@ export function AppSidebar() {
       setBadges((prev) => ({ ...prev, comunicados: 0 }))
     }
 
+    fetchChatCountStandalone()
+
     return () => {
       window.removeEventListener('chat_read', handleChatRead)
+      window.removeEventListener('chat_updated', handleChatRead)
     }
-  }, [location.pathname])
+  }, [location.pathname, user?.id])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchChatCountStandalone()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   const getBadge = (title: string) => {
     if (title === 'PEDIDOS' && badges.pedidos > 0) return badges.pedidos

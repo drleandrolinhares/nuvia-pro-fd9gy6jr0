@@ -67,7 +67,9 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
           .update({ ultima_leitura: new Date(maxTime).toISOString() })
           .eq('conversa_id', chatId)
           .eq('usuario_id', user.id)
-          .then()
+          .then(() => {
+            window.dispatchEvent(new CustomEvent('chat_read'))
+          })
       }
     } catch (e) {
       console.error('Erro inesperado ao carregar chat:', e)
@@ -125,7 +127,9 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
               .update({ ultima_leitura: new Date(maxTime).toISOString() })
               .eq('conversa_id', chatId)
               .eq('usuario_id', user.id)
-              .then()
+              .then(() => {
+                window.dispatchEvent(new CustomEvent('chat_read'))
+              })
           }
         },
       )
@@ -182,7 +186,9 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         .update({ ultima_leitura: new Date().toISOString() })
         .eq('conversa_id', chatId)
         .eq('usuario_id', user.id)
-        .then()
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('chat_read'))
+        })
     }
   }
 
