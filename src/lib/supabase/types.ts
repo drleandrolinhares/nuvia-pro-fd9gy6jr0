@@ -112,6 +112,7 @@ export type Database = {
           id: string
           observacoes: string | null
           observacoes_fechamento: string | null
+          origem_id: string | null
           paciente_id: string
           proxima_data_contato: string | null
           status: string | null
@@ -131,6 +132,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
+          origem_id?: string | null
           paciente_id: string
           proxima_data_contato?: string | null
           status?: string | null
@@ -150,6 +152,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
+          origem_id?: string | null
           paciente_id?: string
           proxima_data_contato?: string | null
           status?: string | null
@@ -171,6 +174,13 @@ export type Database = {
             columns: ['dentista_avaliador_id']
             isOneToOne: false
             referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'avaliacoes_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'funil_origens'
             referencedColumns: ['id']
           },
           {
@@ -3805,6 +3815,7 @@ export const Constants = {
 //   valor_entrada: numeric (nullable)
 //   observacoes_fechamento: text (nullable)
 //   destino_fiscal: text (nullable)
+//   origem_id: uuid (nullable)
 // Table: caixa_diario_fechamentos
 //   data_referencia: date (not null)
 //   conferido: boolean (not null, default: false)
@@ -4589,6 +4600,7 @@ export const Constants = {
 // Table: avaliacoes
 //   FOREIGN KEY avaliacoes_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY avaliacoes_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   FOREIGN KEY avaliacoes_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE SET NULL
 //   FOREIGN KEY avaliacoes_paciente_id_fkey: FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
 // Table: caixa_diario_fechamentos

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -50,6 +51,7 @@ interface UsuarioRH {
   nome: string
   data_admissao: string | null
   avatar_url: string | null
+  salario?: number | null
 }
 
 interface PeriodoFerias {
@@ -91,6 +93,9 @@ const getTempoDeCasa = (dataAdmissao: string) => {
 }
 
 export function GestaoRH() {
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
+
   const [usuarios, setUsuarios] = useState<UsuarioRH[]>([])
   const [periodos, setPeriodos] = useState<PeriodoFerias[]>([])
   const [loading, setLoading] = useState(true)
@@ -118,7 +123,7 @@ export function GestaoRH() {
     try {
       const { data: usersData, error: usersError } = await supabase
         .from('usuarios')
-        .select('id, nome, data_admissao, avatar_url')
+        .select('id, nome, data_admissao, avatar_url, salario')
         .eq('status', 'ativo')
         .eq('elegivel_ferias', true)
         .not('data_admissao', 'is', null)
@@ -379,6 +384,13 @@ export function GestaoRH() {
     }
   })
 
+  const totalSalarios = useMemo(() => {
+    return usuarios.reduce((acc, curr) => acc + (Number(curr.salario) || 0), 0)
+  }, [usuarios])
+
+  const formatBrl = (v: number) =>
+    Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
   const displayData = [...baseData].sort((a, b) => {
     if (ordenacao === 'urgencia') {
       return a.diffDays - b.diffDays
@@ -394,21 +406,68 @@ export function GestaoRH() {
   return (
     <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-500/10 rounded-md">
-            <Users className="size-5 text-amber-500" />
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/10 rounded-md">
+              <Users className="size-5 text-amber-500" />
+            </div>
+            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+              Gestão de RH
+            </CardTitle>
           </div>
-          <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-            Gestão de RH (Férias)
-          </CardTitle>
+
+          <div className="hidden sm:flex items-center gap-3 ml-2 pl-4 border-l border-slate-800">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                Total CLT
+              </span>
+              <span className="text-sm font-bold text-slate-200">
+                {usuarios.length} <span className="text-xs font-normal text-slate-400">colab.</span>
+              </span>
+            </div>
+
+            {isAdmin && (
+              <>
+                <div className="h-8 w-px bg-slate-800 mx-1"></div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    Folha CLT
+                  </span>
+                  <span className="text-sm font-bold text-emerald-400">
+                    {formatBrl(totalSalarios)}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-4 h-4 text-slate-400" />
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex sm:hidden items-center gap-4 mr-auto">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                CLT
+              </span>
+              <span className="text-sm font-bold text-slate-200">{usuarios.length}</span>
+            </div>
+            {isAdmin && (
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                  Folha
+                </span>
+                <span className="text-sm font-bold text-emerald-400">
+                  {formatBrl(totalSalarios)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <ArrowUpDown className="w-4 h-4 text-slate-400 hidden sm:block" />
           <Select value={ordenacao} onValueChange={(val: any) => setOrdenacao(val)}>
-            <SelectTrigger className="w-[180px] h-8 bg-slate-950 border-slate-800 text-xs">
+            <SelectTrigger className="w-[180px] h-8 bg-slate-900 border-slate-700 text-xs text-slate-200 focus:ring-amber-500">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
               <SelectItem value="urgencia">Prioridade (Vencimento)</SelectItem>
               <SelectItem value="mais_antigos">Mais Antigos</SelectItem>
               <SelectItem value="mais_recentes">Mais Recentes</SelectItem>
