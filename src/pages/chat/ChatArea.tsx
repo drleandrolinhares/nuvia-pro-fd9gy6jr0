@@ -122,8 +122,8 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="h-14 border-b border-slate-800 flex items-center px-6 bg-slate-900/80 shrink-0">
+    <div className="flex-1 flex flex-col h-full overflow-hidden min-h-0">
+      <div className="h-14 border-b border-slate-800 flex items-center px-6 bg-slate-900/80 shrink-0 z-10">
         <h3 className="text-lg font-medium text-white flex items-center gap-2">
           {getChatName()}
           {isAudit && (
@@ -134,7 +134,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         </h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0" ref={scrollRef}>
         {messages.map((msg) => {
           const isMe = msg.remetente_id === user?.id
           const sender = usuarios[msg.remetente_id]
@@ -177,7 +177,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       </div>
 
       {!isAudit ? (
-        <div className="p-4 border-t border-slate-800 bg-slate-900/80">
+        <div className="p-4 border-t border-slate-800 bg-slate-900/80 shrink-0 z-10">
           <form onSubmit={handleSend} className="flex items-center gap-3">
             <Input
               value={newMessage}

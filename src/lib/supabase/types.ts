@@ -426,6 +426,113 @@ export type Database = {
           },
         ]
       }
+      chat_conversas: {
+        Row: {
+          criado_em: string
+          criado_por: string | null
+          id: string
+          nome: string | null
+          tipo: string
+        }
+        Insert: {
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string | null
+          tipo: string
+        }
+        Update: {
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_conversas_criado_por_fkey'
+            columns: ['criado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      chat_mensagens: {
+        Row: {
+          conteudo: string
+          conversa_id: string | null
+          criado_em: string
+          id: string
+          remetente_id: string | null
+        }
+        Insert: {
+          conteudo: string
+          conversa_id?: string | null
+          criado_em?: string
+          id?: string
+          remetente_id?: string | null
+        }
+        Update: {
+          conteudo?: string
+          conversa_id?: string | null
+          criado_em?: string
+          id?: string
+          remetente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_mensagens_conversa_id_fkey'
+            columns: ['conversa_id']
+            isOneToOne: false
+            referencedRelation: 'chat_conversas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chat_mensagens_remetente_id_fkey'
+            columns: ['remetente_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      chat_participantes: {
+        Row: {
+          conversa_id: string
+          criado_em: string
+          ultima_leitura: string
+          usuario_id: string
+        }
+        Insert: {
+          conversa_id: string
+          criado_em?: string
+          ultima_leitura?: string
+          usuario_id: string
+        }
+        Update: {
+          conversa_id?: string
+          criado_em?: string
+          ultima_leitura?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_participantes_conversa_id_fkey'
+            columns: ['conversa_id']
+            isOneToOne: false
+            referencedRelation: 'chat_conversas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chat_participantes_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       colaboradores_detalhes: {
         Row: {
           agencia: string | null
@@ -3246,6 +3353,7 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          acesso_chat: boolean
           avatar_url: string | null
           cargo_id: string | null
           cargo_secundario_id: string | null
@@ -3278,6 +3386,7 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          acesso_chat?: boolean
           avatar_url?: string | null
           cargo_id?: string | null
           cargo_secundario_id?: string | null
@@ -3310,6 +3419,7 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          acesso_chat?: boolean
           avatar_url?: string | null
           cargo_id?: string | null
           cargo_secundario_id?: string | null
@@ -3592,6 +3702,14 @@ export type Database = {
         Returns: undefined
       }
       gerar_todos_adiantamentos_mensais: { Args: never; Returns: undefined }
+      get_unread_chat_count: { Args: { p_usuario_id: string }; Returns: number }
+      get_unread_counts_per_conversation: {
+        Args: { p_usuario_id: string }
+        Returns: {
+          conversa_id: string
+          unread_count: number
+        }[]
+      }
       has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       processar_fechamento_mes_feijao: {
@@ -3860,6 +3978,23 @@ export const Constants = {
 //   origem_id: uuid (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   transacao_original_id: uuid (nullable)
+// Table: chat_conversas
+//   id: uuid (not null, default: gen_random_uuid())
+//   tipo: text (not null)
+//   nome: text (nullable)
+//   criado_por: uuid (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+// Table: chat_mensagens
+//   id: uuid (not null, default: gen_random_uuid())
+//   conversa_id: uuid (nullable)
+//   remetente_id: uuid (nullable)
+//   conteudo: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+// Table: chat_participantes
+//   conversa_id: uuid (not null)
+//   usuario_id: uuid (not null)
+//   ultima_leitura: timestamp with time zone (not null, default: now())
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: colaboradores_detalhes
 //   usuario_id: uuid (not null)
 //   banco: text (nullable)
@@ -4544,6 +4679,7 @@ export const Constants = {
 //   dias_trabalho: jsonb (nullable, default: '[1, 2, 3, 4, 5]'::jsonb)
 //   exigir_rotina: boolean (not null, default: true)
 //   elegivel_ferias: boolean (nullable, default: false)
+//   acesso_chat: boolean (not null, default: true)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
@@ -4630,6 +4766,18 @@ export const Constants = {
 //   CHECK carteira_transacoes_tipo_check: CHECK ((tipo = ANY (ARRAY['credito'::text, 'debito'::text, 'saque'::text])))
 //   FOREIGN KEY carteira_transacoes_transacao_original_id_fkey: FOREIGN KEY (transacao_original_id) REFERENCES carteira_transacoes(id) ON DELETE SET NULL
 //   FOREIGN KEY carteira_transacoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: chat_conversas
+//   FOREIGN KEY chat_conversas_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+//   PRIMARY KEY chat_conversas_pkey: PRIMARY KEY (id)
+//   CHECK chat_conversas_tipo_check: CHECK ((tipo = ANY (ARRAY['individual'::text, 'grupo'::text])))
+// Table: chat_mensagens
+//   FOREIGN KEY chat_mensagens_conversa_id_fkey: FOREIGN KEY (conversa_id) REFERENCES chat_conversas(id) ON DELETE CASCADE
+//   PRIMARY KEY chat_mensagens_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY chat_mensagens_remetente_id_fkey: FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: chat_participantes
+//   FOREIGN KEY chat_participantes_conversa_id_fkey: FOREIGN KEY (conversa_id) REFERENCES chat_conversas(id) ON DELETE CASCADE
+//   PRIMARY KEY chat_participantes_pkey: PRIMARY KEY (conversa_id, usuario_id)
+//   FOREIGN KEY chat_participantes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: colaboradores_detalhes
 //   PRIMARY KEY colaboradores_detalhes_pkey: PRIMARY KEY (usuario_id)
 //   FOREIGN KEY colaboradores_detalhes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -4940,6 +5088,25 @@ export const Constants = {
 //     USING: ((usuario_id = auth.uid()) OR is_admin() OR has_permission('operacional_performance'::text))
 //   Policy "carteira_transacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('operacional_performance'::text))
+// Table: chat_conversas
+//   Policy "chat_conversas_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "chat_conversas_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR (criado_por = auth.uid()) OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_conversas.id) AND (cp.usuario_id = auth.uid())))))
+//   Policy "chat_conversas_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: chat_mensagens
+//   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid()))))
+//   Policy "chat_mensagens_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid())))))
+// Table: chat_participantes
+//   Policy "chat_participantes_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "chat_participantes_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid())))))
+//   Policy "chat_participantes_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR is_admin())
 // Table: colaboradores_detalhes
 //   Policy "colaboradores_detalhes_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() OR has_permission('Gerenciar Colaboradores'::text))
@@ -5519,6 +5686,45 @@ export const Constants = {
 //         VALUES (v_user.id, v_mes_atual, '[]'::jsonb, 0, false);
 //       END IF;
 //     END LOOP;
+//   END;
+//   $function$
+//
+// FUNCTION get_unread_chat_count(uuid)
+//   CREATE OR REPLACE FUNCTION public.get_unread_chat_count(p_usuario_id uuid)
+//    RETURNS integer
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_count INTEGER;
+//   BEGIN
+//     SELECT COUNT(*)
+//     INTO v_count
+//     FROM public.chat_mensagens m
+//     JOIN public.chat_participantes p ON p.conversa_id = m.conversa_id
+//     WHERE p.usuario_id = p_usuario_id
+//       AND m.remetente_id != p_usuario_id
+//       AND m.criado_em > p.ultima_leitura;
+//
+//     RETURN v_count;
+//   END;
+//   $function$
+//
+// FUNCTION get_unread_counts_per_conversation(uuid)
+//   CREATE OR REPLACE FUNCTION public.get_unread_counts_per_conversation(p_usuario_id uuid)
+//    RETURNS TABLE(conversa_id uuid, unread_count bigint)
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN QUERY
+//     SELECT m.conversa_id, COUNT(m.id)
+//     FROM public.chat_mensagens m
+//     JOIN public.chat_participantes p ON p.conversa_id = m.conversa_id
+//     WHERE p.usuario_id = p_usuario_id
+//       AND m.remetente_id != p_usuario_id
+//       AND m.criado_em > p.ultima_leitura
+//     GROUP BY m.conversa_id;
 //   END;
 //   $function$
 //
