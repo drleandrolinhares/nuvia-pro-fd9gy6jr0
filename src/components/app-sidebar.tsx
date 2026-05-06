@@ -64,6 +64,12 @@ const navData = [
     isDirectLink: true,
   },
   {
+    title: 'CHAT',
+    url: '/chat',
+    icon: MessageSquare,
+    isDirectLink: true,
+  },
+  {
     title: 'OPERACIONAL',
     icon: Activity,
     items: [
@@ -223,6 +229,7 @@ export function AppSidebar() {
     pedidos: 0,
     comunicados: 0,
     sac: 0,
+    chat: 0,
   })
 
   useEffect(() => {
@@ -247,17 +254,22 @@ export function AppSidebar() {
           .select('*', { count: 'exact', head: true })
           .gt('criado_em', lastVisitComunicados)
 
+        const { data: unreadChat } = await supabase.rpc('get_unread_chat_count', {
+          p_usuario_id: user?.id,
+        })
+
         setBadges({
           pedidos: pedidosCount || 0,
           comunicados: comunicadosCount || 0,
           sac: sacCount || 0,
+          chat: unreadChat || 0,
         })
       } catch (error) {
         console.error('Erro ao buscar contadores do sidebar', error)
       }
     }
 
-    fetchCounts()
+    if (user?.id) fetchCounts()
 
     const channel = supabase
       .channel('sidebar_badges')
@@ -270,6 +282,11 @@ export function AppSidebar() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'compromissos' },
+        fetchCounts,
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
         fetchCounts,
       )
       .subscribe()
@@ -294,6 +311,7 @@ export function AppSidebar() {
     if (title === 'PEDIDOS' && badges.pedidos > 0) return badges.pedidos
     if (title === 'COMUNICADOS' && badges.comunicados > 0) return badges.comunicados
     if (title === 'SAC' && badges.sac > 0) return badges.sac
+    if (title === 'CHAT' && badges.chat > 0) return badges.chat
     return null
   }
 
@@ -338,6 +356,11 @@ export function AppSidebar() {
                       {group.icon && <group.icon className="size-4 text-amber-500" />}
                       {group.title}
                     </div>
+                    {getBadge(group.title) && (
+                      <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                        {getBadge(group.title)}
+                      </span>
+                    )}
                   </Link>
                 </SidebarGroupLabel>
               </SidebarGroup>

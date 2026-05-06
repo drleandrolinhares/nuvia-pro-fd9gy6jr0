@@ -42,6 +42,7 @@ export const colaboradorSchema = z
     possui_carteira: z.boolean().optional().default(true),
     exigir_rotina: z.boolean().optional().default(true),
     elegivel_ferias: z.boolean().optional().default(false),
+    acesso_chat: z.boolean().optional().default(true),
     dias_trabalho: z.array(z.number()).optional().default([1, 2, 3, 4, 5]),
   })
   .refine((data) => !!data.id || (data.password && data.password.length >= 6), {

@@ -37,6 +37,7 @@ import Precificacao from './pages/administrativo/Precificacao'
 import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
+import Chat from './pages/Chat'
 import { Loader2, Lock } from 'lucide-react'
 import SmartLock from './pages/configuracoes/SmartLock'
 import ControleAcesso from './pages/configuracoes/ControleAcesso'
@@ -276,6 +277,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/chat" element={<Chat />} />
 
         {/* Admin only routes */}
         <Route

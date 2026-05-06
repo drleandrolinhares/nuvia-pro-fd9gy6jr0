@@ -84,6 +84,7 @@ export default function ColaboradorFormSheet({
             possui_carteira: usuario.possui_carteira ?? true,
             exigir_rotina: usuario.exigir_rotina ?? true,
             elegivel_ferias: (usuario as any).elegivel_ferias ?? false,
+            acesso_chat: (usuario as any).acesso_chat ?? true,
             dias_trabalho: (usuario as any).dias_trabalho ?? [1, 2, 3, 4, 5],
             emergencia_nome: em.nome,
             emergencia_telefone: em.telefone,
@@ -105,6 +106,7 @@ export default function ColaboradorFormSheet({
         possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
         exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
         elegivel_ferias: data.elegivel_ferias !== undefined ? data.elegivel_ferias : false,
+        acesso_chat: data.acesso_chat !== undefined ? data.acesso_chat : true,
         horario_entrada: data.horario_entrada || null,
         inicio_lanche_manha: data.inicio_lanche_manha || null,
         fim_lanche_manha: data.fim_lanche_manha || null,
@@ -381,6 +383,20 @@ export default function ColaboradorFormSheet({
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                           <span className="text-sm text-muted-foreground">
                             {field.value ? 'Sim (Monitorar Férias)' : 'Não'}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Field>
+                  <Field label="Acesso ao Chat Interno?" error={errors.acesso_chat}>
+                    <Controller
+                      name="acesso_chat"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Permitido)' : 'Não (Bloqueado)'}
                           </span>
                         </div>
                       )}
