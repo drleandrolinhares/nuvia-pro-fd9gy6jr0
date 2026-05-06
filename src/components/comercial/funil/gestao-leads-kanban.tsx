@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, Phone, Tag, Trash2, Edit2 } from 'lucide-react'
+import { Loader2, Plus, Phone, Tag, Trash2, Edit2, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { VendasModal } from '@/pages/comercial/components/VendasModal'
 
 const TemperaturaBadge = ({
   tempSlug,
@@ -43,6 +44,9 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
   const [editName, setEditName] = useState('')
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [vendasModalOpen, setVendasModalOpen] = useState(false)
+  const [selectedLeadForVenda, setSelectedLeadForVenda] = useState<any>(null)
+
   const [formData, setFormData] = useState({
     id: '',
     nome: '',
@@ -237,6 +241,16 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                         >
                           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 rounded-md p-0.5 border border-slate-100 shadow-sm z-10 backdrop-blur-sm">
                             <button
+                              onClick={() => {
+                                setSelectedLeadForVenda(lead)
+                                setVendasModalOpen(true)
+                              }}
+                              className="p-1 hover:text-emerald-500 text-slate-400 transition-colors"
+                              title="Gerar Venda/Avaliação"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" />
+                            </button>
+                            <button
                               onClick={() => openEdit(lead)}
                               className="p-1 hover:text-amber-500 text-slate-400 transition-colors"
                             >
@@ -427,6 +441,27 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
           </form>
         </DialogContent>
       </Dialog>
+      <VendasModal
+        open={vendasModalOpen}
+        onOpenChange={(open) => {
+          setVendasModalOpen(open)
+          if (!open) setSelectedLeadForVenda(null)
+        }}
+        prefilledData={
+          selectedLeadForVenda
+            ? {
+                telefone: selectedLeadForVenda.telefone,
+                nome: selectedLeadForVenda.nome,
+                origem_id: selectedLeadForVenda.origem_id,
+                lead_id: selectedLeadForVenda.id,
+              }
+            : undefined
+        }
+        onSuccess={() => {
+          fetchLeads()
+          onUpdate()
+        }}
+      />
     </div>
   )
 }

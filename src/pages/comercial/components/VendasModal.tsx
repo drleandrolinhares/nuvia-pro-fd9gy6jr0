@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, CheckCircle2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,17 @@ import { useToast } from '@/components/ui/use-toast'
 import { supabase } from '@/lib/supabase/client'
 
 interface Props {
-  dentistas: any[]
-  crcs: any[]
+  dentistas?: any[]
+  crcs?: any[]
   onSuccess: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  prefilledData?: {
+    telefone?: string
+    nome?: string
+    origem_id?: string
+    lead_id?: string
+  }
 }
 
 const initialForm = {
@@ -42,50 +50,135 @@ const initialForm = {
   destino_fiscal: 'PESSOA FISICA',
   forma_pagamento: 'Pix',
   destino_pagamento: 'SICOOB PF 16004-0',
-  tipo_tratamento: 'outro',
+  origem_id: '',
   observacoes: '',
   status: 'avaliacao_realizada',
   temperatura_lead: 'morno',
 }
 
-export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
+export function VendasModal({
+  dentistas,
+  crcs,
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  prefilledData,
+}: Props) {
   const { toast } = useToast()
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+  const setOpen = isControlled ? setControlledOpen : setUncontrolledOpen
+
   const [saving, setSaving] = useState(false)
-  const [pacientes, setPacientes] = useState<any[]>([])
-  const [avaliadores, setAvaliadores] = useState<any[]>([])
-  const [crcsList, setCrcsList] = useState<any[]>([])
-  const [isCreating, setIsCreating] = useState(false)
+  const [searchingPhone, setSearchingPhone] = useState(false)
+
+  const [avaliadoresList, setAvaliadoresList] = useState<any[]>(dentistas || [])
+  const [crcsList, setCrcsList] = useState<any[]>(crcs || [])
+  const [origensList, setOrigensList] = useState<any[]>([])
+
   const [formData, setFormData] = useState(initialForm)
 
   useEffect(() => {
     if (open) {
+      if (!dentistas || dentistas.length === 0) {
+        supabase
+          .from('dentistas_avaliadores')
+          .select('id, nome, especialidade')
+          .order('nome')
+          .then(({ data }) => {
+            if (data) setAvaliadoresList(data)
+          })
+      }
+      if (!crcs || crcs.length === 0) {
+        supabase
+          .from('crc_comercial')
+          .select('id, nome')
+          .order('nome')
+          .then(({ data }) => {
+            if (data) setCrcsList(data)
+          })
+      }
       supabase
-        .from('pacientes')
-        .select('id, nome, telefone')
-        .order('nome')
-        .then(({ data }) => {
-          if (data) setPacientes(data)
-        })
-      supabase
-        .from('dentistas_avaliadores')
-        .select('id, nome, especialidade')
-        .order('nome')
-        .then(({ data }) => {
-          if (data) setAvaliadores(data)
-        })
-      supabase
-        .from('crc_comercial')
+        .from('funil_origens')
         .select('id, nome')
-        .order('nome')
+        .eq('ativo', true)
+        .order('ordem')
         .then(({ data }) => {
-          if (data) setCrcsList(data)
+          if (data) setOrigensList(data)
         })
+
+      if (prefilledData) {
+        setFormData((prev) => ({
+          ...prev,
+          telefone: prefilledData.telefone || prev.telefone,
+          novo_paciente_nome: prefilledData.nome || prev.novo_paciente_nome,
+          origem_id: prefilledData.origem_id || prev.origem_id,
+        }))
+        if (prefilledData.telefone) {
+          supabase
+            .from('pacientes')
+            .select('id, nome')
+            .eq('telefone', prefilledData.telefone)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data)
+                setFormData((prev) => ({
+                  ...prev,
+                  paciente_id: data.id,
+                  novo_paciente_nome: data.nome,
+                }))
+            })
+        }
+      }
     } else {
-      setFormData(initialForm)
-      setIsCreating(false)
+      if (!isControlled) setFormData(initialForm)
     }
-  }, [open])
+  }, [open, prefilledData])
+
+  const handlePhoneSearch = async () => {
+    if (!formData.telefone || formData.telefone.length < 8) return
+    setSearchingPhone(true)
+    try {
+      let pId = ''
+      let pNome = formData.novo_paciente_nome
+      let oId = formData.origem_id
+
+      const { data: pac } = await supabase
+        .from('pacientes')
+        .select('id, nome')
+        .eq('telefone', formData.telefone)
+        .maybeSingle()
+      if (pac) {
+        pId = pac.id
+        pNome = pac.nome
+        toast({ title: 'Paciente vinculado automaticamente!' })
+      }
+
+      const { data: lead } = await supabase
+        .from('funil_leads')
+        .select('origem_id, nome')
+        .eq('telefone', formData.telefone)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (lead) {
+        if (!pId && !pNome) pNome = lead.nome
+        if (lead.origem_id && !oId) oId = lead.origem_id
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        paciente_id: pId,
+        novo_paciente_nome: pNome,
+        origem_id: oId,
+      }))
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSearchingPhone(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,7 +186,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
     try {
       let currentPacienteId = formData.paciente_id
 
-      if (isCreating) {
+      if (!currentPacienteId) {
         if (!formData.novo_paciente_nome) throw new Error('Nome do paciente obrigatório')
         const { data, error } = await supabase
           .from('pacientes')
@@ -102,13 +195,14 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
           .single()
         if (error) throw error
         currentPacienteId = data.id
-      } else if (!currentPacienteId) throw new Error('Selecione um paciente')
+      }
 
       if (!formData.data_avaliacao) throw new Error('Data da venda é obrigatória')
       if (!formData.dentista_avaliador_id) throw new Error('Selecione o Dentista Avaliador')
       if (!formData.crc_comercial_id) throw new Error('Selecione o CRC Comercial')
       if (!formData.valor_orcamento) throw new Error('Informe o valor do tratamento')
       if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
+      if (!formData.origem_id) throw new Error('Selecione a Origem do Paciente')
 
       const payload: any = {
         paciente_id: currentPacienteId,
@@ -118,7 +212,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         valor_orcamento: Number(formData.valor_orcamento),
         valor_entrada: Number(formData.valor_entrada),
         destino_fiscal: formData.destino_fiscal,
-        tipo_tratamento: formData.tipo_tratamento,
+        origem_id: formData.origem_id,
         observacoes: formData.observacoes,
         status:
           formData.tipo_lancamento === 'venda_concretizada'
@@ -130,10 +224,6 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
       const { error } = await supabase.from('avaliacoes').insert(payload)
       if (error) throw error
 
-      const pNome = isCreating
-        ? formData.novo_paciente_nome
-        : pacientes.find((x) => x.id === currentPacienteId)?.nome
-
       if (formData.tipo_lancamento === 'venda_concretizada') {
         await supabase.from('vendas_diarias').insert({
           crc_comercial_id: formData.crc_comercial_id,
@@ -144,7 +234,37 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
           destino_fiscal: formData.destino_fiscal,
           forma_pagamento: formData.forma_pagamento,
           destino_pagamento: formData.destino_pagamento,
-          paciente_nome: pNome || 'Paciente Cadastrado',
+          paciente_nome: formData.novo_paciente_nome || 'Paciente Cadastrado',
+        })
+      }
+
+      const { data: existingLead } = await supabase
+        .from('funil_leads')
+        .select('id')
+        .eq('telefone', formData.telefone)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      const leadStatus = formData.tipo_lancamento === 'venda_concretizada' ? 'fechado' : 'atendido'
+
+      if (existingLead) {
+        await supabase
+          .from('funil_leads')
+          .update({
+            status: leadStatus,
+            origem_id: formData.origem_id,
+            nome: formData.novo_paciente_nome,
+          })
+          .eq('id', existingLead.id)
+      } else {
+        await supabase.from('funil_leads').insert({
+          nome: formData.novo_paciente_nome,
+          telefone: formData.telefone,
+          origem_id: formData.origem_id,
+          mes_referencia: format(new Date(), 'yyyy-MM'),
+          status: leadStatus,
+          temperatura: formData.temperatura_lead,
         })
       }
 
@@ -155,6 +275,10 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
             ? 'Venda cadastrada com sucesso!'
             : 'Oportunidade cadastrada com sucesso!',
       })
+
+      if (!isControlled) {
+        setFormData(initialForm)
+      }
       setOpen(false)
       onSuccess()
     } catch (err: any) {
@@ -166,16 +290,20 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Lançar Venda
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Lançar Venda
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Lançar Venda / Avaliação</DialogTitle>
-            <DialogDescription>Registre uma nova venda centralizada no sistema.</DialogDescription>
+            <DialogDescription>
+              Registre uma nova venda centralizada no sistema e no funil.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 mb-2">
@@ -209,56 +337,42 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Paciente *</Label>
-                <div className="flex gap-2">
-                  {!isCreating ? (
-                    <Select
-                      value={formData.paciente_id}
-                      onValueChange={(v) => {
-                        const p = pacientes.find((x) => x.id === v)
-                        setFormData({ ...formData, paciente_id: v, telefone: p?.telefone || '' })
-                      }}
-                      required
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {pacientes.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      placeholder="Nome do paciente"
-                      value={formData.novo_paciente_nome}
-                      onChange={(e) =>
-                        setFormData({ ...formData, novo_paciente_nome: e.target.value })
-                      }
-                      required
-                      className="flex-1"
-                    />
+                <Label>Telefone *</Label>
+                <div className="relative">
+                  <Input
+                    required
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                    onBlur={handlePhoneSearch}
+                    disabled={saving || searchingPhone}
+                  />
+                  {searchingPhone && (
+                    <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-slate-400" />
                   )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsCreating(!isCreating)}
-                  >
-                    {isCreating ? 'Cancelar' : 'Novo'}
-                  </Button>
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>Telefone *</Label>
+                <Label>Paciente *</Label>
                 <Input
+                  placeholder="Nome do paciente"
+                  value={formData.novo_paciente_nome}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      novo_paciente_nome: e.target.value,
+                      paciente_id: '',
+                    })
+                  }
                   required
-                  type="tel"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  disabled={saving}
                 />
+                {formData.paciente_id && (
+                  <span className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
+                    <CheckCircle2 className="w-3 h-3" /> Paciente vinculado
+                  </span>
+                )}
               </div>
             </div>
 
@@ -283,7 +397,7 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {avaliadores.map((d) => (
+                    {avaliadoresList.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.nome}
                       </SelectItem>
@@ -396,21 +510,21 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
             </div>
 
             <div className="grid gap-2">
-              <Label>Tratamento *</Label>
+              <Label>Origem do Paciente *</Label>
               <Select
-                value={formData.tipo_tratamento}
-                onValueChange={(v) => setFormData({ ...formData, tipo_tratamento: v })}
+                value={formData.origem_id}
+                onValueChange={(v) => setFormData({ ...formData, origem_id: v })}
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue placeholder="Selecione a origem..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ortodontia">Ortodontia</SelectItem>
-                  <SelectItem value="implante">Implante</SelectItem>
-                  <SelectItem value="protese">Prótese</SelectItem>
-                  <SelectItem value="estetica">Estética</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
+                  {origensList.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

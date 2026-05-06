@@ -387,7 +387,7 @@ export function SorrisoDosSonhosTab() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Usuários Elegíveis para a Campanha</Label>
+                  <Label>Usuários Elegíveis para o Programa</Label>
                   <div className="border rounded-md p-3 max-h-48 overflow-y-auto space-y-3 bg-slate-50/50">
                     {usuarios.map((u) => (
                       <div key={u.id} className="flex items-center space-x-2">
