@@ -30,6 +30,7 @@ interface Props {
 }
 
 const initialForm = {
+  tipo_lancamento: 'oportunidade',
   paciente_id: '',
   novo_paciente_nome: '',
   telefone: '',
@@ -119,7 +120,10 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         destino_fiscal: formData.destino_fiscal,
         tipo_tratamento: formData.tipo_tratamento,
         observacoes: formData.observacoes,
-        status: formData.status,
+        status:
+          formData.tipo_lancamento === 'venda_concretizada'
+            ? 'venda_concretizada'
+            : formData.status,
         temperatura_lead: formData.temperatura_lead,
       }
 
@@ -130,18 +134,27 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
         ? formData.novo_paciente_nome
         : pacientes.find((x) => x.id === currentPacienteId)?.nome
 
-      await supabase.from('vendas_diarias').insert({
-        crc_comercial_id: formData.crc_comercial_id,
-        dentista_avaliador_id: formData.dentista_avaliador_id,
-        data_venda: formData.data_avaliacao,
-        valor: Number(formData.valor_entrada),
-        valor_tratamento: Number(formData.valor_orcamento),
-        destino_fiscal: formData.destino_fiscal,
-        forma_pagamento: formData.forma_pagamento,
-        destino_pagamento: formData.destino_pagamento,
-        paciente_nome: pNome || 'Paciente Cadastrado',
+      if (formData.tipo_lancamento === 'venda_concretizada') {
+        await supabase.from('vendas_diarias').insert({
+          crc_comercial_id: formData.crc_comercial_id,
+          dentista_avaliador_id: formData.dentista_avaliador_id,
+          data_venda: formData.data_avaliacao,
+          valor: Number(formData.valor_entrada),
+          valor_tratamento: Number(formData.valor_orcamento),
+          destino_fiscal: formData.destino_fiscal,
+          forma_pagamento: formData.forma_pagamento,
+          destino_pagamento: formData.destino_pagamento,
+          paciente_nome: pNome || 'Paciente Cadastrado',
+        })
+      }
+
+      toast({
+        title: 'Sucesso',
+        description:
+          formData.tipo_lancamento === 'venda_concretizada'
+            ? 'Venda cadastrada com sucesso!'
+            : 'Oportunidade cadastrada com sucesso!',
       })
-      toast({ title: 'Sucesso', description: 'Venda cadastrada com sucesso!' })
       setOpen(false)
       onSuccess()
     } catch (err: any) {
@@ -165,6 +178,35 @@ export function VendasModal({ dentistas, crcs, onSuccess }: Props) {
             <DialogDescription>Registre uma nova venda centralizada no sistema.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid gap-2 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 mb-2">
+              <Label className="text-base font-semibold text-slate-800 dark:text-slate-200">
+                Tipo de Lançamento *
+              </Label>
+              <Select
+                value={formData.tipo_lancamento}
+                onValueChange={(v) => setFormData({ ...formData, tipo_lancamento: v })}
+                required
+              >
+                <SelectTrigger className="bg-white dark:bg-slate-900 border-amber-500/50 focus:ring-amber-500">
+                  <SelectValue placeholder="Selecione o tipo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="oportunidade"
+                    className="font-medium text-blue-600 dark:text-blue-400"
+                  >
+                    🎯 Oportunidade (Follow-up)
+                  </SelectItem>
+                  <SelectItem
+                    value="venda_concretizada"
+                    className="font-medium text-emerald-600 dark:text-emerald-400"
+                  >
+                    💰 Venda Concretizada
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Paciente *</Label>

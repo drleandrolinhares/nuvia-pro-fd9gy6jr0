@@ -185,10 +185,10 @@ export function VendasTabela({
                               setAvaliacaoSelecionada(av)
                               setPagamentoModalOpen(true)
                             }}
-                            title="Finalizar Venda"
+                            title="Efetivar Venda"
                           >
                             <Check className="h-4 w-4 mr-1" />
-                            <span className="hidden sm:inline">Finalizar Venda</span>
+                            <span className="hidden sm:inline">Efetivar Venda</span>
                           </Button>
                         )}
                       <DropdownMenu>

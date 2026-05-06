@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { startOfMonth, endOfMonth, format } from 'date-fns'
 import { useCache } from '@/hooks/use-cache'
-import { GestaoReceitasModal } from './gestao-receitas-modal'
 import { HistoricoVendasModal } from './historico-vendas-modal'
 
 export function VendasAtuaisWidget() {
-  const [modalOpen, setModalOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [totalVendasMes, setTotalVendasMes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -60,17 +58,8 @@ export function VendasAtuaisWidget() {
           >
             <History className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            onClick={() => setModalOpen(true)}
-            size="icon"
-            className="h-6 w-6 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 rounded-md transition-colors"
-            title="Gestão de Receitas"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
         </div>
       </div>
-      <GestaoReceitasModal open={modalOpen} onOpenChange={setModalOpen} />
       <HistoricoVendasModal open={historyOpen} onOpenChange={setHistoryOpen} />
     </>
   )

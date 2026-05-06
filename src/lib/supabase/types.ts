@@ -3405,7 +3405,10 @@ export type Database = {
           data_fechamento: string
           data_original: string | null
           dentista_avaliador: string | null
+          destino_fiscal: string | null
+          destino_pagamento: string | null
           fatura_comissao_id: string | null
+          forma_pagamento: string | null
           id: string
           observacoes: string | null
           observacoes_fechamento: string | null
@@ -3427,7 +3430,10 @@ export type Database = {
           data_fechamento: string
           data_original?: string | null
           dentista_avaliador?: string | null
+          destino_fiscal?: string | null
+          destino_pagamento?: string | null
           fatura_comissao_id?: string | null
+          forma_pagamento?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
@@ -3449,7 +3455,10 @@ export type Database = {
           data_fechamento?: string
           data_original?: string | null
           dentista_avaliador?: string | null
+          destino_fiscal?: string | null
+          destino_pagamento?: string | null
           fatura_comissao_id?: string | null
+          forma_pagamento?: string | null
           id?: string
           observacoes?: string | null
           observacoes_fechamento?: string | null
@@ -4552,6 +4561,9 @@ export const Constants = {
 //   status_comissao: text (nullable, default: 'em_aberto'::text)
 //   percentual_comissao: numeric (nullable)
 //   valor_comissao: numeric (nullable)
+//   forma_pagamento: text (nullable)
+//   destino_pagamento: text (nullable)
+//   destino_fiscal: text (nullable)
 // Table: vendas_diarias
 //   id: uuid (not null, default: gen_random_uuid())
 //   data_venda: date (not null)
@@ -6021,12 +6033,46 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_sync_confirmadas_to_vendas_diarias()
+//   CREATE OR REPLACE FUNCTION public.trg_sync_confirmadas_to_vendas_diarias()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//       IF pg_trigger_depth() > 1 THEN
+//           RETURN NEW;
+//       END IF;
+//
+//       IF TG_OP = 'UPDATE' THEN
+//           UPDATE public.vendas_diarias SET
+//               paciente_nome = NEW.paciente_nome,
+//               data_venda = NEW.data_fechamento,
+//               valor_tratamento = NEW.valor_tratamento,
+//               valor = NEW.valor_entrada,
+//               dentista_avaliador_id = NEW.dentista_avaliador,
+//               crc_comercial_id = NEW.crc,
+//               forma_pagamento = NEW.forma_pagamento,
+//               destino_pagamento = NEW.destino_pagamento,
+//               destino_fiscal = NEW.destino_fiscal
+//           WHERE id = NEW.id;
+//       ELSIF TG_OP = 'DELETE' THEN
+//           DELETE FROM public.vendas_diarias WHERE id = OLD.id;
+//           RETURN OLD;
+//       END IF;
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_diarias_to_confirmadas()
 //    RETURNS trigger
 //    LANGUAGE plpgsql
 //   AS $function$
 //   BEGIN
+//       IF pg_trigger_depth() > 1 THEN
+//           RETURN NEW;
+//       END IF;
+//
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.vendas_confirmadas (
 //               id,
@@ -6037,7 +6083,10 @@ export const Constants = {
 //               percentual_entrada,
 //               dentista_avaliador,
 //               crc,
-//               tratamento
+//               tratamento,
+//               forma_pagamento,
+//               destino_pagamento,
+//               destino_fiscal
 //           ) VALUES (
 //               NEW.id,
 //               COALESCE(NEW.paciente_nome, 'Venda Avulsa'),
@@ -6047,7 +6096,10 @@ export const Constants = {
 //               100,
 //               NEW.dentista_avaliador_id,
 //               NEW.crc_comercial_id,
-//               'Venda Avulsa'
+//               'Venda Avulsa',
+//               NEW.forma_pagamento,
+//               NEW.destino_pagamento,
+//               NEW.destino_fiscal
 //           );
 //       ELSIF TG_OP = 'UPDATE' THEN
 //           UPDATE public.vendas_confirmadas SET
@@ -6056,7 +6108,10 @@ export const Constants = {
 //               valor_tratamento = COALESCE(NEW.valor_tratamento, NEW.valor),
 //               valor_entrada = NEW.valor,
 //               dentista_avaliador = NEW.dentista_avaliador_id,
-//               crc = NEW.crc_comercial_id
+//               crc = NEW.crc_comercial_id,
+//               forma_pagamento = NEW.forma_pagamento,
+//               destino_pagamento = NEW.destino_pagamento,
+//               destino_fiscal = NEW.destino_fiscal
 //           WHERE id = NEW.id;
 //       ELSIF TG_OP = 'DELETE' THEN
 //           DELETE FROM public.vendas_confirmadas WHERE id = OLD.id;
@@ -6161,6 +6216,8 @@ export const Constants = {
 // Table: usuarios
 //   trg_ativar_cascata_dentista_avaliador_insert: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_insert AFTER INSERT ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 //   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, cargo_secundario_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
+// Table: vendas_confirmadas
+//   sync_confirmadas_to_vendas_diarias_trigger: CREATE TRIGGER sync_confirmadas_to_vendas_diarias_trigger AFTER DELETE OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_confirmadas_to_vendas_diarias()
 // Table: vendas_diarias
 //   sync_vendas_diarias: CREATE TRIGGER sync_vendas_diarias AFTER INSERT OR DELETE OR UPDATE ON public.vendas_diarias FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 
