@@ -50,12 +50,16 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         .order('criado_em', { ascending: true })
       setMessages(msgs || [])
 
-      if (!isAudit) {
+      if (!isAudit && user?.id) {
+        let maxTime = Date.now()
+        if (msgs && msgs.length > 0) {
+          maxTime = Math.max(maxTime, new Date(msgs[msgs.length - 1].criado_em).getTime() + 1000)
+        }
         supabase
           .from('chat_participantes')
-          .update({ ultima_leitura: new Date().toISOString() })
+          .update({ ultima_leitura: new Date(maxTime).toISOString() })
           .eq('conversa_id', chatId)
-          .eq('usuario_id', user?.id)
+          .eq('usuario_id', user.id)
           .then()
       }
     } catch (e) {
@@ -107,12 +111,13 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
           setTimeout(() => {
             if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
           }, 100)
-          if (!isAudit && payload.new.remetente_id !== user?.id) {
+          if (!isAudit && payload.new.remetente_id !== user?.id && user?.id) {
+            const maxTime = Math.max(Date.now(), new Date(payload.new.criado_em).getTime() + 1000)
             supabase
               .from('chat_participantes')
-              .update({ ultima_leitura: new Date().toISOString() })
+              .update({ ultima_leitura: new Date(maxTime).toISOString() })
               .eq('conversa_id', chatId)
-              .eq('usuario_id', user?.id)
+              .eq('usuario_id', user.id)
               .then()
           }
         },

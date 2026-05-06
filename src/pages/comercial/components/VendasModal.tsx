@@ -80,11 +80,20 @@ export function VendasModal({
   const [formData, setFormData] = useState(initialForm)
 
   useEffect(() => {
+    if (dentistas && dentistas.length > 0) setAvaliadoresList(dentistas)
+  }, [dentistas])
+
+  useEffect(() => {
+    if (crcs && crcs.length > 0) setCrcsList(crcs)
+  }, [crcs])
+
+  useEffect(() => {
     if (open) {
       if (!dentistas || dentistas.length === 0) {
         supabase
           .from('dentistas_avaliadores')
           .select('id, nome, especialidade')
+          .eq('status', 'ativo')
           .order('nome')
           .then(({ data }) => {
             if (data) setAvaliadoresList(data)
@@ -94,6 +103,7 @@ export function VendasModal({
         supabase
           .from('crc_comercial')
           .select('id, nome')
+          .eq('status', 'ativo')
           .order('nome')
           .then(({ data }) => {
             if (data) setCrcsList(data)

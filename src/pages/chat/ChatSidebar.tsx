@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,11 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   const [usuarios, setUsuarios] = useState<any[]>([])
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({})
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
+  const activeChatRef = useRef(activeChat)
+
+  useEffect(() => {
+    activeChatRef.current = activeChat
+  }, [activeChat])
 
   const loadData = async () => {
     const { data: users } = await supabase
@@ -49,11 +54,17 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
       const { data: unreadData } = await supabase.rpc('get_unread_counts_per_conversation', {
         p_usuario_id: user?.id,
       })
-      const uMap: Record<string, number> = {}
-      unreadData?.forEach((r: any) => {
-        uMap[r.conversa_id] = Number(r.unread_count)
+      setUnreadMap((prev) => {
+        const uMap: Record<string, number> = {}
+        unreadData?.forEach((r: any) => {
+          uMap[r.conversa_id] = Number(r.unread_count)
+        })
+        const currentActive = activeChatRef.current
+        if (currentActive && uMap[currentActive] > 0) {
+          uMap[currentActive] = 0
+        }
+        return uMap
       })
-      setUnreadMap(uMap)
     }
   }
 
