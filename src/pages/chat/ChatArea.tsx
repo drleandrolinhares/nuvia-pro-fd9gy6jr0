@@ -12,9 +12,11 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
   const [conversa, setConversa] = useState<any>(null)
   const [usuarios, setUsuarios] = useState<Record<string, any>>({})
   const [newMessage, setNewMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const loadChat = async () => {
+    setIsLoading(true)
     const { data: conv } = await supabase
       .from('chat_conversas')
       .select('*, participantes:chat_participantes(usuario_id)')
@@ -48,6 +50,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
         .eq('usuario_id', user?.id)
     }
 
+    setIsLoading(false)
     setTimeout(() => {
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }, 100)
@@ -135,6 +138,16 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0" ref={scrollRef}>
+        {isLoading && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+            Carregando mensagens...
+          </div>
+        )}
+        {!isLoading && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+            Nenhuma mensagem ainda. Envie a primeira mensagem!
+          </div>
+        )}
         {messages.map((msg) => {
           const isMe = msg.remetente_id === user?.id
           const sender = usuarios[msg.remetente_id]
@@ -177,18 +190,18 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       </div>
 
       {!isAudit ? (
-        <div className="p-4 border-t border-slate-800 bg-slate-900/80 shrink-0 z-10">
+        <div className="p-4 border-t border-slate-800 bg-slate-900/80 shrink-0 z-10 mt-auto">
           <form onSubmit={handleSend} className="flex items-center gap-3">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-950 border-slate-800 rounded-full px-4"
+              className="flex-1 bg-slate-950 border-slate-800 rounded-full px-4 focus-visible:ring-amber-500"
             />
             <Button
               type="submit"
               size="icon"
-              className="rounded-full shrink-0"
+              className="rounded-full shrink-0 bg-amber-500 hover:bg-amber-600 text-slate-950"
               disabled={!newMessage.trim()}
             >
               <Send className="w-4 h-4" />

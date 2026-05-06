@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Users, Shield, Plus, MessageSquare } from 'lucide-react'
 import { CreateGroupDialog } from './CreateGroupDialog'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 
 export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, isAdmin }: any) {
+  const { toast } = useToast()
   const { user } = useAuth()
   const [conversas, setConversas] = useState<any[]>([])
   const [usuarios, setUsuarios] = useState<any[]>([])
@@ -72,26 +74,36 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
   }, [viewMode, user?.id])
 
   const startIndividualChat = async (targetUserId: string) => {
-    const existing = conversas.find(
-      (c) =>
-        c.tipo === 'individual' && c.participantes?.some((p: any) => p.usuario_id === targetUserId),
-    )
-    if (existing) {
-      setActiveChat(existing.id)
-      return
-    }
-    const { data: newConv, error } = await supabase
-      .from('chat_conversas')
-      .insert({ tipo: 'individual', criado_por: user?.id })
-      .select()
-      .single()
-    if (!error && newConv) {
-      await supabase.from('chat_participantes').insert([
-        { conversa_id: newConv.id, usuario_id: user?.id },
-        { conversa_id: newConv.id, usuario_id: targetUserId },
-      ])
-      loadData()
-      setActiveChat(newConv.id)
+    try {
+      const existing = conversas.find(
+        (c) =>
+          c.tipo === 'individual' &&
+          c.participantes?.some((p: any) => p.usuario_id === targetUserId),
+      )
+      if (existing) {
+        setActiveChat(existing.id)
+        return
+      }
+
+      const { data: chatId, error } = await supabase.rpc('get_or_create_direct_chat', {
+        target_user_id: targetUserId,
+      })
+
+      if (error) throw error
+
+      if (chatId) {
+        setActiveChat(chatId)
+        loadData()
+      } else {
+        throw new Error('ID da conversa não retornado')
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar chat:', error)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível abrir a conversa. Tente novamente.',
+        variant: 'destructive',
+      })
     }
   }
 

@@ -5097,9 +5097,9 @@ export const Constants = {
 //     USING: is_admin()
 // Table: chat_mensagens
 //   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid()))))
 //   Policy "chat_mensagens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = cp.conversa_id) AND (cp.usuario_id = auth.uid())))))
+//     USING: (is_admin() OR (EXISTS ( SELECT 1    FROM chat_participantes cp   WHERE ((cp.conversa_id = chat_mensagens.conversa_id) AND (cp.usuario_id = auth.uid())))))
 // Table: chat_participantes
 //   Policy "chat_participantes_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
