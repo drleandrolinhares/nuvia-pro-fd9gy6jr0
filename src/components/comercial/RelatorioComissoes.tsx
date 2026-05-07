@@ -107,6 +107,12 @@ export function RelatorioComissoes({
       )
 
       const formatado: any[] = []
+      const isConversaoDireta = (nome?: string) => {
+        if (!nome) return false
+        const upper = nome.toUpperCase()
+        return upper.includes('CONVERSÃO DIRETA') || upper.includes('CONVERSAO DIRETA')
+      }
+
       const getPercentual = (faixas: any[], perc: number) => {
         const f = faixas.find(
           (x) => perc >= (x.faixa_entrada_minima || 0) && perc <= (x.faixa_entrada_maxima || 100),
@@ -125,9 +131,12 @@ export function RelatorioComissoes({
           v.valor_tratamento > 0 ? (v.valor_entrada / v.valor_tratamento) * 100 : 0
 
         if (v.dentista_avaliador) {
-          if (canViewAll || dentistaId === v.dentista_avaliador) {
+          const dentista = resDentistas.data?.find((d) => d.id === v.dentista_avaliador)
+          if (
+            (canViewAll || dentistaId === v.dentista_avaliador) &&
+            !isConversaoDireta(dentista?.nome)
+          ) {
             const perc = getPercentual(resFaixasDentista.data || [], calcPercentualEntrada)
-            const dentista = resDentistas.data?.find((d) => d.id === v.dentista_avaliador)
             formatado.push({
               id: `dentista-${v.id}`,
               vendaId: v.id,
@@ -147,9 +156,9 @@ export function RelatorioComissoes({
           }
         }
         if (v.crc) {
-          if (canViewAll || crcId === v.crc) {
+          const crc = resCrcs.data?.find((c) => c.id === v.crc)
+          if ((canViewAll || crcId === v.crc) && !isConversaoDireta(crc?.nome)) {
             const perc = getPercentual(resFaixasCrc.data || [], calcPercentualEntrada)
-            const crc = resCrcs.data?.find((c) => c.id === v.crc)
             formatado.push({
               id: `crc-${v.id}`,
               vendaId: v.id,
