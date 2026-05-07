@@ -16,7 +16,7 @@ export interface RankingDentista {
   metaMensalCriativos: number
 }
 
-export function useRankingDentistas(periodo: string) {
+export function useRankingDentistas(periodo: string, dataInicio: string, dataFim: string) {
   const [ranking, setRanking] = useState<RankingDentista[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
@@ -78,6 +78,10 @@ export function useRankingDentistas(periodo: string) {
             sd = startOfMonth(today)
             ed = endOfMonth(today)
             break
+          case 'personalizado':
+            if (dataInicio) sd = startOfDay(parseISO(dataInicio))
+            if (dataFim) ed = endOfDay(parseISO(dataFim))
+            break
           default:
             if (periodo.match(/^\d{4}-\d{2}$/)) {
               const parsedDate = parseISO(`${periodo}-01`)
@@ -86,9 +90,6 @@ export function useRankingDentistas(periodo: string) {
             }
             break
         }
-
-        const dateFilterStr =
-          sd && ed ? { start: format(sd, 'yyyy-MM-dd'), end: format(ed, 'yyyy-MM-dd') } : null
 
         const { data: dentistas } = await supabase
           .from('dentistas_avaliadores')
@@ -99,31 +100,22 @@ export function useRankingDentistas(periodo: string) {
         let avaliacoesQuery = supabase
           .from('avaliacoes')
           .select('id, dentista_avaliador_id, valor_orcamento, data_avaliacao')
-        if (dateFilterStr) {
-          avaliacoesQuery = avaliacoesQuery
-            .gte('data_avaliacao', dateFilterStr.start)
-            .lte('data_avaliacao', dateFilterStr.end)
-        }
+        if (sd) avaliacoesQuery = avaliacoesQuery.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
+        if (ed) avaliacoesQuery = avaliacoesQuery.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
         const { data: avaliacoes } = await avaliacoesQuery
 
         let vendasQuery = supabase
           .from('vendas_confirmadas')
           .select('id, dentista_avaliador, valor_tratamento, data_fechamento')
-        if (dateFilterStr) {
-          vendasQuery = vendasQuery
-            .gte('data_fechamento', dateFilterStr.start)
-            .lte('data_fechamento', dateFilterStr.end)
-        }
+        if (sd) vendasQuery = vendasQuery.gte('data_fechamento', format(sd, 'yyyy-MM-dd'))
+        if (ed) vendasQuery = vendasQuery.lte('data_fechamento', format(ed, 'yyyy-MM-dd'))
         const { data: vendas } = await vendasQuery
 
         let criativosQuery = supabase
           .from('criativos_gerados')
           .select('id, dentista_avaliador_id, data_criacao')
-        if (dateFilterStr) {
-          criativosQuery = criativosQuery
-            .gte('data_criacao', dateFilterStr.start)
-            .lte('data_criacao', dateFilterStr.end)
-        }
+        if (sd) criativosQuery = criativosQuery.gte('data_criacao', format(sd, 'yyyy-MM-dd'))
+        if (ed) criativosQuery = criativosQuery.lte('data_criacao', format(ed, 'yyyy-MM-dd'))
         const { data: criativos } = await criativosQuery
 
         const dados: RankingDentista[] = dentistas.map((d) => {
@@ -178,7 +170,7 @@ export function useRankingDentistas(periodo: string) {
     return () => {
       isMounted = false
     }
-  }, [periodo, refreshTrigger])
+  }, [periodo, dataInicio, dataFim, refreshTrigger])
 
   return { ranking, loading, refetch }
 }

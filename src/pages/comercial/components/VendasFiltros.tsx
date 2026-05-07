@@ -9,9 +9,6 @@ import {
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { VendasFiltersState } from '../types'
-import { format, subMonths } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { useMemo } from 'react'
 
 interface Props {
   filters: VendasFiltersState
@@ -25,19 +22,6 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
-  const monthOptions = useMemo(() => {
-    const options = []
-    const now = new Date()
-    for (let i = 0; i < 12; i++) {
-      const date = subMonths(now, i)
-      options.push({
-        value: format(date, 'yyyy-MM'),
-        label: format(date, 'MMMM/yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
-      })
-    }
-    return options
-  }, [])
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-muted/20 p-4 rounded-lg border">
       <div>
@@ -47,42 +31,6 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
           value={filters.search}
           onChange={(e) => updateFilter('search', e.target.value)}
         />
-      </div>
-      <div>
-        <Label className="mb-2 block">Período</Label>
-        <Select value={filters.periodo} onValueChange={(v) => updateFilter('periodo', v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os tempos</SelectItem>
-            <SelectItem value="hoje">Hoje</SelectItem>
-            <SelectItem value="ontem">Ontem</SelectItem>
-            <SelectItem value="ultimos_7">Últimos 7 dias</SelectItem>
-            <SelectItem value="ultimos_15">Últimos 15 dias</SelectItem>
-            <SelectItem value="mes_atual">Mês Atual</SelectItem>
-            <SelectItem value="personalizado">Personalizado</SelectItem>
-            {monthOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {filters.periodo === 'personalizado' && (
-          <div className="flex gap-2 mt-2">
-            <Input
-              type="date"
-              value={filters.dataInicio}
-              onChange={(e) => updateFilter('dataInicio', e.target.value)}
-            />
-            <Input
-              type="date"
-              value={filters.dataFim}
-              onChange={(e) => updateFilter('dataFim', e.target.value)}
-            />
-          </div>
-        )}
       </div>
 
       <div>

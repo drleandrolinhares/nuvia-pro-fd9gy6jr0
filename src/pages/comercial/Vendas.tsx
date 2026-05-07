@@ -1,5 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
-import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, parseISO, format } from 'date-fns'
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  parseISO,
+  format,
+  subMonths,
+} from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase/client'
@@ -165,6 +175,29 @@ export default function Vendas() {
     }
   }
 
+  const monthOptions = useMemo(() => {
+    const options = []
+    const now = new Date()
+    for (let i = 0; i < 12; i++) {
+      const date = subMonths(now, i)
+      options.push({
+        value: format(date, 'yyyy-MM'),
+        label: format(date, 'MMMM/yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+      })
+    }
+    return options
+  }, [])
+
+  const updateGlobalFilter = (key: keyof VendasFiltersState, value: any) => {
+    setFilters((prev) => {
+      const updated = { ...prev, [key]: value }
+      if (key === 'dataInicio' && value && !prev.dataFim) {
+        updated.dataFim = value
+      }
+      return updated
+    })
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
@@ -198,6 +231,55 @@ export default function Vendas() {
           <VendasAtuaisWidget />
           {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4 mb-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border">
+        <div className="flex items-center gap-3">
+          <label className="font-semibold text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">
+            Período Geral:
+          </label>
+          <div className="w-[180px]">
+            <Select value={filters.periodo} onValueChange={(v) => updateGlobalFilter('periodo', v)}>
+              <SelectTrigger className="bg-white dark:bg-slate-950">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tempos</SelectItem>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="ultimos_7">Últimos 7 dias</SelectItem>
+                <SelectItem value="ultimos_15">Últimos 15 dias</SelectItem>
+                <SelectItem value="mes_atual">Mês Atual</SelectItem>
+                <SelectItem value="personalizado">Personalizado</SelectItem>
+                {monthOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {filters.periodo === 'personalizado' && (
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-950 p-1.5 rounded-md border shadow-sm">
+            <input
+              type="date"
+              value={filters.dataInicio}
+              onChange={(e) => updateGlobalFilter('dataInicio', e.target.value)}
+              className="border-0 bg-transparent text-sm focus:ring-0 px-2 outline-none"
+              title="Data Inicial (opcional)"
+            />
+            <span className="text-muted-foreground text-sm font-medium px-2">até</span>
+            <input
+              type="date"
+              value={filters.dataFim}
+              onChange={(e) => updateGlobalFilter('dataFim', e.target.value)}
+              className="border-0 bg-transparent text-sm focus:ring-0 px-2 outline-none"
+              title="Data Final"
+            />
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="oportunidades" className="space-y-4">
@@ -253,11 +335,20 @@ export default function Vendas() {
         </TabsContent>
 
         <TabsContent value="concretizadas" className="space-y-4 outline-none">
-          <VendasConcretizadasLista onRevertSuccess={fetchAvaliacoes} />
+          <VendasConcretizadasLista
+            onRevertSuccess={fetchAvaliacoes}
+            periodo={filters.periodo}
+            dataInicio={filters.dataInicio}
+            dataFim={filters.dataFim}
+          />
         </TabsContent>
 
         <TabsContent value="ranking" className="space-y-4 outline-none">
-          <VendasRankingDentistas />
+          <VendasRankingDentistas
+            periodo={filters.periodo}
+            dataInicio={filters.dataInicio}
+            dataFim={filters.dataFim}
+          />
         </TabsContent>
       </Tabs>
     </div>

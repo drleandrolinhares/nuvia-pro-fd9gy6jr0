@@ -35,22 +35,16 @@ import { VendasDetalhamentoDentistaModal } from './VendasDetalhamentoDentistaMod
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-export function VendasRankingDentistas() {
-  const [periodo, setPeriodo] = useState('mes_atual')
-  const { ranking, loading, refetch } = useRankingDentistas(periodo)
-
-  const monthOptions = useMemo(() => {
-    const options = []
-    const now = new Date()
-    for (let i = 0; i < 12; i++) {
-      const date = subMonths(now, i)
-      options.push({
-        value: format(date, 'yyyy-MM'),
-        label: format(date, 'MMMM/yyyy', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
-      })
-    }
-    return options
-  }, [])
+export function VendasRankingDentistas({
+  periodo,
+  dataInicio,
+  dataFim,
+}: {
+  periodo: string
+  dataInicio: string
+  dataFim: string
+}) {
+  const { ranking, loading, refetch } = useRankingDentistas(periodo, dataInicio, dataFim)
 
   const [modalCriativos, setModalCriativos] = useState<{
     isOpen: boolean
@@ -132,29 +126,11 @@ export function VendasRankingDentistas() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
-        <div className="space-y-1">
-          <CardTitle>Ranking de Dentistas Avaliadores</CardTitle>
-          <CardDescription>Performance de vendas e conversão da equipe clínica.</CardDescription>
-        </div>
-        <Select value={periodo} onValueChange={setPeriodo}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="hoje">Hoje</SelectItem>
-            <SelectItem value="ontem">Ontem</SelectItem>
-            <SelectItem value="ultimos_7">Últimos 7 dias</SelectItem>
-            <SelectItem value="ultimos_15">Últimos 15 dias</SelectItem>
-            <SelectItem value="mes_atual">Mês Atual</SelectItem>
-            <SelectItem value="todos">Todos</SelectItem>
-            {monthOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <CardHeader className="pb-4">
+        <CardTitle>Ranking de Dentistas Avaliadores</CardTitle>
+        <CardDescription>
+          Performance de vendas e conversão da equipe clínica no período selecionado.
+        </CardDescription>
       </CardHeader>
 
       {!loading && ranking.length > 0 && (

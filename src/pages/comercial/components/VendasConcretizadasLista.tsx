@@ -28,7 +28,19 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 
-export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess: () => void }) {
+import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, parseISO, format } from 'date-fns'
+
+export function VendasConcretizadasLista({
+  onRevertSuccess,
+  periodo,
+  dataInicio,
+  dataFim,
+}: {
+  onRevertSuccess: () => void
+  periodo: string
+  dataInicio: string
+  dataFim: string
+}) {
   const { toast } = useToast()
   const [vendas, setVendas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,16 +52,58 @@ export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess:
 
   const fetchVendas = async () => {
     setLoading(true)
-    const { data } = await supabase
+    let query = supabase
       .from('vendas_confirmadas')
       .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
-      .order('data_fechamento', { ascending: false })
+
+    let sd, ed
+    const today = new Date()
+    switch (periodo) {
+      case 'hoje':
+        sd = startOfDay(today)
+        ed = endOfDay(today)
+        break
+      case 'ontem':
+        sd = startOfDay(subDays(today, 1))
+        ed = endOfDay(subDays(today, 1))
+        break
+      case 'ultimos_7':
+        sd = startOfDay(subDays(today, 7))
+        ed = endOfDay(today)
+        break
+      case 'ultimos_15':
+        sd = startOfDay(subDays(today, 15))
+        ed = endOfDay(today)
+        break
+      case 'mes_atual':
+        sd = startOfMonth(today)
+        ed = endOfMonth(today)
+        break
+      case 'personalizado':
+        if (dataInicio) sd = startOfDay(parseISO(dataInicio))
+        if (dataFim) ed = endOfDay(parseISO(dataFim))
+        break
+      default:
+        if (periodo && periodo.match(/^\d{4}-\d{2}$/)) {
+          const parsedDate = parseISO(`${periodo}-01`)
+          sd = startOfMonth(parsedDate)
+          ed = endOfMonth(parsedDate)
+        }
+        break
+    }
+    if (sd) query = query.gte('data_fechamento', format(sd, 'yyyy-MM-dd'))
+    if (ed) query = query.lte('data_fechamento', format(ed, 'yyyy-MM-dd'))
+
+    const { data } = await query.order('data_fechamento', { ascending: false })
     if (data) setVendas(data)
     setLoading(false)
   }
 
   useEffect(() => {
     fetchVendas()
+  }, [periodo, dataInicio, dataFim])
+
+  useEffect(() => {
     supabase
       .from('dentistas_avaliadores')
       .select('id, nome')
