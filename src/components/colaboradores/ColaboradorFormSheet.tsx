@@ -81,6 +81,7 @@ export default function ColaboradorFormSheet({
             ...usuario,
             password: '',
             ...det,
+            pode_realizar_lancamento: (usuario as any).pode_realizar_lancamento ?? false,
             possui_carteira: usuario.possui_carteira ?? true,
             exigir_rotina: usuario.exigir_rotina ?? true,
             elegivel_ferias: (usuario as any).elegivel_ferias ?? false,
@@ -93,7 +94,12 @@ export default function ColaboradorFormSheet({
         })
         .finally(() => setLoading(false))
     } else {
-      reset({ status: 'ativo', possui_carteira: true, exigir_rotina: true })
+      reset({
+        status: 'ativo',
+        possui_carteira: true,
+        exigir_rotina: true,
+        pode_realizar_lancamento: false,
+      })
     }
   }, [isOpen, isEdit, usuario, reset])
 
@@ -103,6 +109,8 @@ export default function ColaboradorFormSheet({
       const payload = {
         id: usuario?.id,
         ...data,
+        pode_realizar_lancamento:
+          data.pode_realizar_lancamento !== undefined ? data.pode_realizar_lancamento : false,
         possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
         exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
         elegivel_ferias: data.elegivel_ferias !== undefined ? data.elegivel_ferias : false,
@@ -397,6 +405,23 @@ export default function ColaboradorFormSheet({
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                           <span className="text-sm text-muted-foreground">
                             {field.value ? 'Sim (Permitido)' : 'Não (Bloqueado)'}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Pode lançar metas Google?" error={errors.pode_realizar_lancamento}>
+                    <Controller
+                      name="pode_realizar_lancamento"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Permitido)' : 'Não'}
                           </span>
                         </div>
                       )}

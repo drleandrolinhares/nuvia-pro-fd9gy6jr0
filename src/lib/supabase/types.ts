@@ -3389,6 +3389,7 @@ export type Database = {
           obrigatorio_bonificacao: boolean
           obrigatorio_pp_pdm: boolean
           ordem: number | null
+          pode_realizar_lancamento: boolean
           possui_carteira: boolean
           retorno_almoco: string | null
           role: string | null
@@ -3422,6 +3423,7 @@ export type Database = {
           obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
+          pode_realizar_lancamento?: boolean
           possui_carteira?: boolean
           retorno_almoco?: string | null
           role?: string | null
@@ -3455,6 +3457,7 @@ export type Database = {
           obrigatorio_bonificacao?: boolean
           obrigatorio_pp_pdm?: boolean
           ordem?: number | null
+          pode_realizar_lancamento?: boolean
           possui_carteira?: boolean
           retorno_almoco?: string | null
           role?: string | null

@@ -39,6 +39,7 @@ export const colaboradorSchema = z
     inicio_lanche_tarde: z.string().optional().nullable(),
     fim_lanche_tarde: z.string().optional().nullable(),
     horario_saida: z.string().optional().nullable(),
+    pode_realizar_lancamento: z.boolean().optional().default(false),
     possui_carteira: z.boolean().optional().default(true),
     exigir_rotina: z.boolean().optional().default(true),
     elegivel_ferias: z.boolean().optional().default(false),

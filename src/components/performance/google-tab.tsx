@@ -242,7 +242,7 @@ export function GoogleTab() {
             <CardTitle>Lançamentos do Mês</CardTitle>
             <CardDescription>Avaliações positivas no Google</CardDescription>
           </div>
-          {(!isManager || profile?.nome?.toLowerCase().includes('heloisa')) && (
+          {profile?.pode_realizar_lancamento && (
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-amber-500 hover:bg-amber-600 text-white">
