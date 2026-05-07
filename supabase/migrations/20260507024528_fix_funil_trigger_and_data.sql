@@ -90,7 +90,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$;
+$$;
 
 DO $$
 DECLARE
