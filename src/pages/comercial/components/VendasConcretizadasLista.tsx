@@ -109,6 +109,10 @@ export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess:
           data_fechamento: selectedVenda.data_fechamento,
           valor_tratamento: Number(selectedVenda.valor_tratamento),
           valor_entrada: Number(selectedVenda.valor_entrada),
+          percentual_entrada:
+            Number(selectedVenda.valor_tratamento) > 0
+              ? (Number(selectedVenda.valor_entrada) / Number(selectedVenda.valor_tratamento)) * 100
+              : 0,
           dentista_avaliador: dentista,
           crc: crc,
           forma_pagamento: selectedVenda.forma_pagamento,
@@ -147,6 +151,7 @@ export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess:
               <TableHead>Data</TableHead>
               <TableHead>Valor Total</TableHead>
               <TableHead>Entrada</TableHead>
+              <TableHead>% Ent.</TableHead>
               <TableHead>Avaliador</TableHead>
               <TableHead>CRC</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -155,13 +160,13 @@ export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess:
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : vendas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhuma venda encontrada.
                 </TableCell>
               </TableRow>
@@ -172,6 +177,12 @@ export function VendasConcretizadasLista({ onRevertSuccess }: { onRevertSuccess:
                   <TableCell>{formatDate(v.data_fechamento)}</TableCell>
                   <TableCell>{formatCurrency(v.valor_tratamento)}</TableCell>
                   <TableCell>{formatCurrency(v.valor_entrada)}</TableCell>
+                  <TableCell>
+                    {v.valor_tratamento > 0
+                      ? ((v.valor_entrada / v.valor_tratamento) * 100).toFixed(2)
+                      : '0.00'}
+                    %
+                  </TableCell>
                   <TableCell>{v.dentistas_avaliadores?.nome || '-'}</TableCell>
                   <TableCell>{v.crc_comercial?.nome || '-'}</TableCell>
                   <TableCell className="text-right space-x-2">

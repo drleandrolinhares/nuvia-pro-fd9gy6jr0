@@ -121,9 +121,12 @@ export function RelatorioComissoes({
           statusStr = statusFatura === 'pago' ? 'pago' : 'aguardando_pagamento'
         }
 
+        const calcPercentualEntrada =
+          v.valor_tratamento > 0 ? (v.valor_entrada / v.valor_tratamento) * 100 : 0
+
         if (v.dentista_avaliador) {
           if (canViewAll || dentistaId === v.dentista_avaliador) {
-            const perc = getPercentual(resFaixasDentista.data || [], v.percentual_entrada)
+            const perc = getPercentual(resFaixasDentista.data || [], calcPercentualEntrada)
             const dentista = resDentistas.data?.find((d) => d.id === v.dentista_avaliador)
             formatado.push({
               id: `dentista-${v.id}`,
@@ -136,7 +139,7 @@ export function RelatorioComissoes({
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
               valor_entrada: v.valor_entrada || 0,
-              percentual_entrada: v.percentual_entrada || 0,
+              percentual_entrada: calcPercentualEntrada,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
               status: statusStr,
@@ -145,7 +148,7 @@ export function RelatorioComissoes({
         }
         if (v.crc) {
           if (canViewAll || crcId === v.crc) {
-            const perc = getPercentual(resFaixasCrc.data || [], v.percentual_entrada)
+            const perc = getPercentual(resFaixasCrc.data || [], calcPercentualEntrada)
             const crc = resCrcs.data?.find((c) => c.id === v.crc)
             formatado.push({
               id: `crc-${v.id}`,
@@ -158,7 +161,7 @@ export function RelatorioComissoes({
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
               valor_entrada: v.valor_entrada || 0,
-              percentual_entrada: v.percentual_entrada || 0,
+              percentual_entrada: calcPercentualEntrada,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
               status: statusStr,
@@ -541,7 +544,9 @@ export function RelatorioComissoes({
                       <TableCell className="text-right">
                         {formatCurrency(row.valor_entrada || 0)}
                       </TableCell>
-                      <TableCell className="text-right">{row.percentual_entrada || 0}%</TableCell>
+                      <TableCell className="text-right">
+                        {row.percentual_entrada ? row.percentual_entrada.toFixed(2) : '0.00'}%
+                      </TableCell>
                       <TableCell className="text-right">{row.percentual}%</TableCell>
                       <TableCell className="text-right font-medium text-green-600">
                         {formatCurrency(row.valor_comissao)}
