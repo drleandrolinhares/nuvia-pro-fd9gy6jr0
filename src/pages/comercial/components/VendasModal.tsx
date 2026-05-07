@@ -81,11 +81,19 @@ export function VendasModal({
   const [formData, setFormData] = useState(initialForm)
 
   useEffect(() => {
-    if (dentistas && dentistas.length > 0) setAvaliadoresList(dentistas)
+    if (dentistas && dentistas.length > 0) {
+      const direta = dentistas.find((d) => d.nome === 'CONVERSÃO DIRETA')
+      const others = dentistas.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
+      setAvaliadoresList(direta ? [direta, ...others] : dentistas)
+    }
   }, [dentistas])
 
   useEffect(() => {
-    if (crcs && crcs.length > 0) setCrcsList(crcs)
+    if (crcs && crcs.length > 0) {
+      const direta = crcs.find((c) => c.nome === 'CONVERSÃO DIRETA')
+      const others = crcs.filter((c) => c.nome !== 'CONVERSÃO DIRETA')
+      setCrcsList(direta ? [direta, ...others] : crcs)
+    }
   }, [crcs])
 
   useEffect(() => {
@@ -97,7 +105,11 @@ export function VendasModal({
         .or('status.eq.ativo,status.eq.Ativo,status.is.null')
         .order('nome')
         .then(({ data }) => {
-          if (data) setAvaliadoresList(data)
+          if (data) {
+            const direta = data.find((d) => d.nome === 'CONVERSÃO DIRETA')
+            const others = data.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
+            setAvaliadoresList(direta ? [direta, ...others] : data)
+          }
         })
 
       supabase
@@ -106,7 +118,11 @@ export function VendasModal({
         .or('status.eq.ativo,status.eq.Ativo,status.is.null')
         .order('nome')
         .then(({ data }) => {
-          if (data) setCrcsList(data)
+          if (data) {
+            const direta = data.find((d) => d.nome === 'CONVERSÃO DIRETA')
+            const others = data.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
+            setCrcsList(direta ? [direta, ...others] : data)
+          }
         })
       supabase
         .from('funil_origens')

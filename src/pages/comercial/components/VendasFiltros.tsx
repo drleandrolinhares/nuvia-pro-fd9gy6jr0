@@ -74,11 +74,15 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            {dentistas.map((d) => (
-              <SelectItem key={d.id} value={d.id}>
-                {d.nome}
-              </SelectItem>
-            ))}
+            {[...dentistas]
+              .sort((a, b) =>
+                a.nome === 'CONVERSÃO DIRETA' ? -1 : b.nome === 'CONVERSÃO DIRETA' ? 1 : 0,
+              )
+              .map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.nome}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -91,11 +95,15 @@ export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            {crcs.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.nome}
-              </SelectItem>
-            ))}
+            {[...crcs]
+              .sort((a, b) =>
+                a.nome === 'CONVERSÃO DIRETA' ? -1 : b.nome === 'CONVERSÃO DIRETA' ? 1 : 0,
+              )
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
