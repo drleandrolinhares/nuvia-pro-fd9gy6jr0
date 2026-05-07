@@ -1554,6 +1554,7 @@ export type Database = {
           atualizado_em: string
           comparecimentos_realizado: number
           criado_em: string
+          faltas_realizado: number | null
           fechamentos_qtde_realizado: number
           fechamentos_valor_realizado: number
           id: string
@@ -1574,6 +1575,7 @@ export type Database = {
           atualizado_em?: string
           comparecimentos_realizado?: number
           criado_em?: string
+          faltas_realizado?: number | null
           fechamentos_qtde_realizado?: number
           fechamentos_valor_realizado?: number
           id?: string
@@ -1594,6 +1596,7 @@ export type Database = {
           atualizado_em?: string
           comparecimentos_realizado?: number
           criado_em?: string
+          faltas_realizado?: number | null
           fechamentos_qtde_realizado?: number
           fechamentos_valor_realizado?: number
           id?: string
@@ -1658,6 +1661,8 @@ export type Database = {
           mes_referencia: string
           nome: string
           origem_id: string
+          qtd_agendamentos: number | null
+          qtd_faltas: number | null
           status: string | null
           telefone: string | null
           temperatura: string | null
@@ -1670,6 +1675,8 @@ export type Database = {
           mes_referencia: string
           nome: string
           origem_id: string
+          qtd_agendamentos?: number | null
+          qtd_faltas?: number | null
           status?: string | null
           telefone?: string | null
           temperatura?: string | null
@@ -1682,6 +1689,8 @@ export type Database = {
           mes_referencia?: string
           nome?: string
           origem_id?: string
+          qtd_agendamentos?: number | null
+          qtd_faltas?: number | null
           status?: string | null
           telefone?: string | null
           temperatura?: string | null
@@ -4271,6 +4280,7 @@ export const Constants = {
 //   fechamentos_valor_realizado: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   faltas_realizado: integer (nullable, default: 0)
 // Table: funil_etapas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -4290,6 +4300,8 @@ export const Constants = {
 //   mes_referencia: text (not null)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   qtd_agendamentos: integer (nullable, default: 1)
+//   qtd_faltas: integer (nullable, default: 0)
 // Table: funil_origens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -6199,6 +6211,32 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_incrementa_status_funil()
+//   CREATE OR REPLACE FUNCTION public.trg_incrementa_status_funil()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF TG_OP = 'UPDATE' THEN
+//       IF OLD.status = 'faltou' AND NEW.status IN ('agendado', 'reagendado') THEN
+//         NEW.qtd_agendamentos := COALESCE(OLD.qtd_agendamentos, 1) + 1;
+//       END IF;
+//
+//       IF OLD.status != 'faltou' AND NEW.status = 'faltou' THEN
+//         NEW.qtd_faltas := COALESCE(OLD.qtd_faltas, 0) + 1;
+//       END IF;
+//     END IF;
+//
+//     IF TG_OP = 'INSERT' THEN
+//       IF NEW.status = 'faltou' THEN
+//         NEW.qtd_faltas := COALESCE(NEW.qtd_faltas, 0) + 1;
+//       END IF;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_sorriso_fechamento()
 //   CREATE OR REPLACE FUNCTION public.trg_sorriso_fechamento()
 //    RETURNS trigger
@@ -6421,6 +6459,8 @@ export const Constants = {
 //     v_total_leads INT;
 //     v_agendamentos INT;
 //     v_comparecimentos INT;
+//     v_fechamentos INT;
+//     v_faltas INT;
 //   BEGIN
 //     IF TG_OP = 'DELETE' THEN
 //       v_origem_id := OLD.origem_id;
@@ -6430,19 +6470,30 @@ export const Constants = {
 //       v_mes_referencia := NEW.mes_referencia;
 //     END IF;
 //
+//     -- Total de Leads
 //     SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
-//     -- Consideramos como Agendado qualquer status que represente um agendamento ou etapa posterior
-//     SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads
+//     -- Agendamentos (Soma da coluna qtd_agendamentos para contabilizar reagendamentos como novos eventos)
+//     SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
-//     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
+//     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento');
 //
-//     -- Consideramos como Comparecimento qualquer status que represente atendimento ou etapa posterior
+//     -- Comparecimentos (Todos que chegaram na clínica)
 //     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
-//     AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
+//     AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento');
+//
+//     -- Fechamentos
+//     SELECT COUNT(*) INTO v_fechamentos FROM public.funil_leads
+//     WHERE origem_id = v_origem_id
+//     AND mes_referencia = v_mes_referencia
+//     AND status IN ('fechamento', 'venda-fechada');
+//
+//     -- Faltas (Soma do histórico de faltas para separar o cálculo)
+//     SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
+//     WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
 //     INSERT INTO public.funil_dados_mensais (
 //       origem_id,
@@ -6450,6 +6501,8 @@ export const Constants = {
 //       leads_realizado,
 //       agendamentos_realizado,
 //       comparecimentos_realizado,
+//       fechamentos_qtde_realizado,
+//       faltas_realizado,
 //       investimento,
 //       meta_leads,
 //       meta_agendamentos_qtde,
@@ -6458,7 +6511,6 @@ export const Constants = {
 //       meta_comparecimentos_perc,
 //       meta_fechamento_valor,
 //       ticket_medio_esperado,
-//       fechamentos_qtde_realizado,
 //       fechamentos_valor_realizado
 //     )
 //     VALUES (
@@ -6467,34 +6519,18 @@ export const Constants = {
 //       v_total_leads,
 //       v_agendamentos,
 //       v_comparecimentos,
-//       0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+//       v_fechamentos,
+//       v_faltas,
+//       0, 0, 0, 0, 0, 0, 0, 0, 0
 //     )
 //     ON CONFLICT (origem_id, mes_referencia)
 //     DO UPDATE SET
 //       leads_realizado = EXCLUDED.leads_realizado,
 //       agendamentos_realizado = EXCLUDED.agendamentos_realizado,
 //       comparecimentos_realizado = EXCLUDED.comparecimentos_realizado,
+//       fechamentos_qtde_realizado = EXCLUDED.fechamentos_qtde_realizado,
+//       faltas_realizado = EXCLUDED.faltas_realizado,
 //       atualizado_em = NOW();
-//
-//     IF TG_OP = 'UPDATE' AND (NEW.origem_id != OLD.origem_id OR NEW.mes_referencia != OLD.mes_referencia) THEN
-//       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia;
-//
-//       SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads
-//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia
-//       AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
-//
-//       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
-//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia
-//       AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
-//
-//       UPDATE public.funil_dados_mensais
-//       SET
-//         leads_realizado = v_total_leads,
-//         agendamentos_realizado = v_agendamentos,
-//         comparecimentos_realizado = v_comparecimentos,
-//         atualizado_em = NOW()
-//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia;
-//     END IF;
 //
 //     RETURN NULL;
 //   END;
@@ -6510,6 +6546,7 @@ export const Constants = {
 // Table: entrada_produtos
 //   after_entrada_produto: CREATE TRIGGER after_entrada_produto AFTER INSERT ON public.entrada_produtos FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_entrada()
 // Table: funil_leads
+//   trg_incrementa_status_funil_tg: CREATE TRIGGER trg_incrementa_status_funil_tg BEFORE INSERT OR UPDATE ON public.funil_leads FOR EACH ROW EXECUTE FUNCTION trg_incrementa_status_funil()
 //   trg_update_funil_dados_mensais_leads: CREATE TRIGGER trg_update_funil_dados_mensais_leads AFTER INSERT OR DELETE OR UPDATE ON public.funil_leads FOR EACH ROW EXECUTE FUNCTION trg_update_funil_dados_mensais_from_leads()
 // Table: performance_bonificacao
 //   sync_carteira_bonificacao_trigger: CREATE TRIGGER sync_carteira_bonificacao_trigger AFTER INSERT OR UPDATE ON public.performance_bonificacao FOR EACH ROW EXECUTE FUNCTION trg_sync_carteira_bonificacao()
