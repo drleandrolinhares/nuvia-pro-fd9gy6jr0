@@ -6473,13 +6473,13 @@ export const Constants = {
 //     -- Total de Leads
 //     SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
-//     -- Agendamentos (Soma da coluna qtd_agendamentos para contabilizar reagendamentos como novos eventos)
+//     -- Agendamentos
 //     SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
 //     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento');
 //
-//     -- Comparecimentos (Todos que chegaram na clínica)
+//     -- Comparecimentos
 //     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
@@ -6491,7 +6491,7 @@ export const Constants = {
 //     AND mes_referencia = v_mes_referencia
 //     AND status IN ('fechamento', 'venda-fechada');
 //
-//     -- Faltas (Soma do histórico de faltas para separar o cálculo)
+//     -- Faltas
 //     SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
 //     WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
@@ -6536,6 +6536,44 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_vendas_confirmadas_to_funil()
+//   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_to_funil()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_lead_id uuid;
+//     v_mes_referencia text;
+//   BEGIN
+//     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+//       -- Apenas se tiver origem informada
+//       IF NEW.origem_id IS NOT NULL THEN
+//         v_mes_referencia := to_char(NEW.data_fechamento::date, 'YYYY-MM');
+//
+//         -- Tenta achar um lead existente com o mesmo nome
+//         SELECT id INTO v_lead_id FROM public.funil_leads
+//         WHERE nome ILIKE NEW.paciente_nome
+//         ORDER BY criado_em DESC LIMIT 1;
+//
+//         IF v_lead_id IS NOT NULL THEN
+//           -- Atualiza o lead para status fechamento se ele nao estiver em fechamento
+//           UPDATE public.funil_leads
+//           SET status = 'fechamento'
+//           WHERE id = v_lead_id AND status NOT IN ('fechamento', 'venda-fechada');
+//         ELSE
+//           -- Cria lead fantasma
+//           INSERT INTO public.funil_leads (
+//             nome, telefone, origem_id, mes_referencia, status, temperatura, qtd_agendamentos, qtd_faltas
+//           ) VALUES (
+//             NEW.paciente_nome, NEW.telefone, NEW.origem_id, v_mes_referencia, 'fechamento', 'quente', 1, 0
+//           );
+//         END IF;
+//       END IF;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: compra_itens
@@ -6559,6 +6597,7 @@ export const Constants = {
 //   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, cargo_secundario_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 // Table: vendas_confirmadas
 //   sync_confirmadas_to_vendas_diarias_trigger: CREATE TRIGGER sync_confirmadas_to_vendas_diarias_trigger AFTER DELETE OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_confirmadas_to_vendas_diarias()
+//   trg_vendas_confirmadas_to_funil_tg: CREATE TRIGGER trg_vendas_confirmadas_to_funil_tg AFTER INSERT OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_vendas_confirmadas_to_funil()
 // Table: vendas_diarias
 //   sync_vendas_diarias: CREATE TRIGGER sync_vendas_diarias AFTER INSERT OR DELETE OR UPDATE ON public.vendas_diarias FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 

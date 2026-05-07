@@ -16,6 +16,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
     faltas_realizado: 0,
     meta_fechamento_valor: 0,
     ticket_medio_esperado: 0,
+    meta_fechamentos_perc: 0,
     fechamentos_qtde_realizado: 0,
     fechamentos_valor_realizado: 0,
   }
@@ -68,7 +69,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
           {/* Connector lines for desktop */}
           <div className="hidden md:block absolute top-1/2 left-[12.5%] right-[12.5%] h-[2px] bg-slate-800 -z-10 -translate-y-4"></div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors">
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-between">
             <div className="flex items-center justify-center mb-2">
               <Users className="w-4 h-4 text-slate-400" />
             </div>
@@ -76,14 +77,15 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               Leads
             </p>
             <p className="text-3xl font-bold text-white my-1">{d.leads_realizado}</p>
-            <div className="flex items-center justify-center gap-1 mt-2">
-              <span className="text-[11px] font-medium text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-                Meta: {d.meta_leads}
-              </span>
+            <div className="w-full space-y-1 mt-2">
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">Meta Qtde:</span>
+                <span className="text-white font-medium">{d.meta_leads}</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors">
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-between">
             <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-4 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
               <ArrowRight className="w-3 h-3 text-slate-500" />
             </div>
@@ -94,14 +96,23 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               Agend.
             </p>
             <p className="text-3xl font-bold text-white my-1">{d.agendamentos_realizado}</p>
-            <div className="flex items-center justify-center gap-1 mt-2">
-              <span className="text-[11px] font-medium text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                {taxaAgendamento.toFixed(1)}% conv.
-              </span>
+            <div className="w-full space-y-1 mt-2">
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">Meta Qtde:</span>
+                <span className="text-white font-medium">{d.meta_agendamentos_qtde}</span>
+              </div>
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">META (% AGEND.):</span>
+                <span className="text-white font-medium">{d.meta_agendamentos_perc}%</span>
+              </div>
+              <div className="flex justify-between items-center bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 text-[10px]">
+                <span className="text-blue-300 font-medium">% AGENDADOS:</span>
+                <span className="text-blue-300 font-bold">{taxaAgendamento.toFixed(1)}%</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors">
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-between">
             <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-4 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
               <ArrowRight className="w-3 h-3 text-slate-500" />
             </div>
@@ -112,17 +123,28 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               Comp.
             </p>
             <p className="text-3xl font-bold text-white my-1">{d.comparecimentos_realizado}</p>
-            <div className="flex flex-col items-center justify-center gap-1 mt-2">
-              <span className="text-[11px] font-medium text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                {taxaComparecimento.toFixed(1)}% compareceram
-              </span>
-              <span className="text-[10px] font-medium text-red-400">
-                {d.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
-              </span>
+            <div className="w-full space-y-1 mt-2">
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">Meta Qtde:</span>
+                <span className="text-white font-medium">{d.meta_comparecimentos_qtde}</span>
+              </div>
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">META (% COMP.):</span>
+                <span className="text-white font-medium">{d.meta_comparecimentos_perc}%</span>
+              </div>
+              <div className="flex justify-between items-center bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20 text-[10px]">
+                <span className="text-purple-300 font-medium">% COMPARECIDOS:</span>
+                <span className="text-purple-300 font-bold">{taxaComparecimento.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-center items-center mt-1 text-[10px]">
+                <span className="text-red-400 font-medium">
+                  {d.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-emerald-900/50 transition-colors">
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-emerald-900/50 transition-colors flex flex-col items-center justify-between">
             <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-4 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
               <ArrowRight className="w-3 h-3 text-slate-500" />
             </div>
@@ -135,10 +157,23 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
             <p className="text-3xl font-bold text-emerald-400 my-1">
               {d.fechamentos_qtde_realizado}
             </p>
-            <div className="flex items-center justify-center gap-1 mt-2">
-              <span className="text-[11px] font-medium text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                {taxaFechamento.toFixed(1)}% conv.
-              </span>
+            <div className="w-full space-y-1 mt-2">
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">Meta Qtde:</span>
+                <span className="text-white font-medium">
+                  {d.ticket_medio_esperado
+                    ? Math.round(d.meta_fechamento_valor / d.ticket_medio_esperado)
+                    : 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[10px]">
+                <span className="text-slate-400">META (% CONV.):</span>
+                <span className="text-white font-medium">{d.meta_fechamentos_perc || 0}%</span>
+              </div>
+              <div className="flex justify-between items-center bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 text-[10px]">
+                <span className="text-emerald-300 font-medium">% CONVERSÃO:</span>
+                <span className="text-emerald-300 font-bold">{taxaFechamento.toFixed(1)}%</span>
+              </div>
             </div>
           </div>
         </div>
