@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   startOfDay,
   endOfDay,
@@ -12,6 +12,13 @@ import {
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { VendasFiltros } from './components/VendasFiltros'
