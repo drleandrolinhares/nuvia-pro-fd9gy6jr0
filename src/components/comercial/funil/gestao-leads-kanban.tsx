@@ -128,11 +128,12 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
     setPacienteInfo('')
     try {
       const searchSuffix = cleanPhone.slice(-8)
+      const wildcardSearch = '%' + searchSuffix.split('').join('%') + '%'
 
       const { data: pacs } = await supabase
         .from('pacientes')
         .select('nome, telefone')
-        .ilike('telefone', `%${searchSuffix}%`)
+        .ilike('telefone', wildcardSearch)
 
       const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
 
@@ -143,7 +144,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
         const { data: leads } = await supabase
           .from('funil_leads')
           .select('nome, telefone')
-          .ilike('telefone', `%${searchSuffix}%`)
+          .ilike('telefone', wildcardSearch)
           .order('criado_em', { ascending: false })
 
         const lead = leads?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
@@ -236,20 +237,22 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-6 mb-2">
-        <div className="p-2.5 bg-amber-500/10 rounded-lg hidden sm:block">
-          <Users className="w-5 h-5 text-amber-500" />
-        </div>
-        <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-          Gestão de Leads
-        </h3>
+      <div className="flex items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm gap-6 mb-2">
         <Button
           onClick={openNew}
-          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 shadow-md"
+          className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6 shadow-md"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Lead
         </Button>
+        <div className="hidden sm:flex items-center gap-3 ml-auto">
+          <div className="p-2.5 bg-amber-100 dark:bg-amber-500/10 rounded-lg">
+            <Users className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+            Gestão de Leads
+          </h3>
+        </div>
       </div>
 
       {loading ? (
@@ -381,7 +384,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[425px]">
+        <DialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{formData.id ? 'Editar Lead' : 'Novo Lead'}</DialogTitle>
           </DialogHeader>
@@ -393,7 +396,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                   onBlur={handlePhoneSearch}
-                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-amber-500 text-slate-900 dark:text-white"
                   placeholder="(00) 00000-0000"
                   required
                   autoFocus
@@ -406,7 +409,9 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                 <span
                   className={cn(
                     'text-xs font-medium',
-                    pacienteInfo === 'Novo paciente' ? 'text-amber-500' : 'text-emerald-500',
+                    pacienteInfo === 'Novo paciente'
+                      ? 'text-amber-600 dark:text-amber-500'
+                      : 'text-emerald-600 dark:text-emerald-500',
                   )}
                 >
                   {pacienteInfo}
@@ -418,7 +423,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
               <Input
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 font-medium"
+                className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-amber-500 font-medium text-slate-900 dark:text-white"
                 placeholder="Ex: João Silva"
               />
             </div>
@@ -429,10 +434,10 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                   value={formData.origem_id}
                   onValueChange={(v) => setFormData({ ...formData, origem_id: v })}
                 >
-                  <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500">
+                  <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:ring-amber-500 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {origens
                       .filter((o: any) => o.ativo)
                       .map((o: any) => (
@@ -449,10 +454,10 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                   value={formData.temperatura}
                   onValueChange={(v) => setFormData({ ...formData, temperatura: v })}
                 >
-                  <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500">
+                  <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:ring-amber-500 text-slate-900 dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {temperaturas
                       .filter((t: any) => t.ativo)
                       .map((t: any) => (
@@ -470,10 +475,10 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                 value={formData.status}
                 onValueChange={(v) => setFormData({ ...formData, status: v })}
               >
-                <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500">
+                <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:ring-amber-500 text-slate-900 dark:text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                   {etapas
                     .filter((e: any) => e.ativo)
                     .map((col: any) => (
@@ -489,23 +494,23 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
               <Textarea
                 value={formData.descricao}
                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className="bg-slate-950 border-slate-800 min-h-[80px] focus-visible:ring-amber-500"
+                className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 min-h-[80px] focus-visible:ring-amber-500 text-slate-900 dark:text-white"
                 placeholder="Detalhes sobre o interesse, tratamentos..."
               />
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setDialogOpen(false)}
-                className="hover:bg-slate-800 hover:text-white"
+                className="hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={saving || !formData.nome || !formData.origem_id}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6"
+                className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Salvar

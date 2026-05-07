@@ -126,19 +126,24 @@ export function VendasModal({
           tipo_lancamento: prefilledData.tipo_lancamento || prev.tipo_lancamento,
         }))
         if (prefilledData.telefone) {
-          supabase
-            .from('pacientes')
-            .select('id, nome')
-            .eq('telefone', prefilledData.telefone)
-            .maybeSingle()
-            .then(({ data }) => {
-              if (data)
-                setFormData((prev) => ({
-                  ...prev,
-                  paciente_id: data.id,
-                  novo_paciente_nome: data.nome,
-                }))
-            })
+          const searchSuffix = prefilledData.telefone.replace(/\D/g, '').slice(-8)
+          if (searchSuffix.length >= 8) {
+            const wildcardSearch = '%' + searchSuffix.split('').join('%') + '%'
+            supabase
+              .from('pacientes')
+              .select('id, nome, telefone')
+              .ilike('telefone', wildcardSearch)
+              .then(({ data }) => {
+                const pac = data?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
+                if (pac) {
+                  setFormData((prev) => ({
+                    ...prev,
+                    paciente_id: pac.id,
+                    novo_paciente_nome: pac.nome,
+                  }))
+                }
+              })
+          }
         }
       }
     } else {
@@ -158,11 +163,12 @@ export function VendasModal({
       let oId = formData.origem_id
 
       const searchSuffix = cleanPhone.slice(-8)
+      const wildcardSearch = '%' + searchSuffix.split('').join('%') + '%'
 
       const { data: pacs } = await supabase
         .from('pacientes')
         .select('id, nome, telefone')
-        .ilike('telefone', `%${searchSuffix}%`)
+        .ilike('telefone', wildcardSearch)
 
       const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
 
@@ -175,7 +181,7 @@ export function VendasModal({
       const { data: leadsData } = await supabase
         .from('funil_leads')
         .select('origem_id, nome, telefone')
-        .ilike('telefone', `%${searchSuffix}%`)
+        .ilike('telefone', wildcardSearch)
         .order('criado_em', { ascending: false })
 
       const lead = leadsData?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
