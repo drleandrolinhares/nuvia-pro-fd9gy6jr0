@@ -17,7 +17,7 @@ import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kan
 import { cn } from '@/lib/utils'
 
 export default function FunilVendas() {
-  const [view, setView] = useState<'kanban' | 'dashboard' | 'configuracoes'>('kanban')
+  const [view, setView] = useState<'kanban' | 'dashboard' | 'configuracoes'>('dashboard')
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
   const [origens, setOrigens] = useState<any[]>([])
@@ -94,42 +94,39 @@ export default function FunilVendas() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 border-b border-slate-800">
-        <button
-          onClick={() => setView('kanban')}
-          className={cn(
-            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
-            view === 'kanban' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
-          )}
-        >
-          Gestão de Leads
-          {view === 'kanban' && (
-            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
-          )}
-        </button>
+      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-lg">
         <button
           onClick={() => setView('dashboard')}
           className={cn(
-            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
-            view === 'dashboard' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
+            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            view === 'dashboard'
+              ? 'bg-amber-500 text-slate-950 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800',
           )}
         >
           Dashboard
-          {view === 'dashboard' && (
-            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
+        </button>
+        <button
+          onClick={() => setView('kanban')}
+          className={cn(
+            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            view === 'kanban'
+              ? 'bg-amber-500 text-slate-950 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800',
           )}
+        >
+          Gestão de Leads
         </button>
         <button
           onClick={() => setView('configuracoes')}
           className={cn(
-            'pb-3 text-sm font-semibold transition-all relative uppercase tracking-wider',
-            view === 'configuracoes' ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200',
+            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            view === 'configuracoes'
+              ? 'bg-amber-500 text-slate-950 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800',
           )}
         >
           Configurações
-          {view === 'configuracoes' && (
-            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500" />
-          )}
         </button>
       </div>
 

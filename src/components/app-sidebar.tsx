@@ -117,28 +117,28 @@ const navData = [
     icon: Briefcase,
     items: [
       {
-        title: 'FUNIL DE VENDAS',
-        url: '/comercial/funil',
-        icon: Filter,
-        permission: ['comercial_funil', 'Acessar Funil de Vendas'],
-      },
-      {
-        title: 'NEGOCIAÇÃO',
-        url: '/comercial/negociacao',
-        icon: Handshake,
-        permission: ['comercial_negociacao', 'Acessar Negociações'],
-      },
-      {
         title: 'GESTÃO DE VENDAS',
         url: '/comercial/vendas',
         icon: FileBarChart,
         permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
       },
       {
+        title: 'FUNIL DE VENDAS',
+        url: '/comercial/funil',
+        icon: Filter,
+        permission: ['comercial_funil', 'Acessar Funil de Vendas'],
+      },
+      {
         title: 'COMISSÕES',
         url: '/comercial/comissoes',
         icon: Landmark,
         permission: ['comercial_comissoes', 'Acessar Controle de Comissões'],
+      },
+      {
+        title: 'NEGOCIAÇÃO',
+        url: '/comercial/negociacao',
+        icon: Handshake,
+        permission: ['comercial_negociacao', 'Acessar Negociações'],
       },
       {
         title: 'PACIENTES',
