@@ -3542,6 +3542,7 @@ export type Database = {
           valor_comissao: number | null
           valor_entrada: number
           valor_tratamento: number
+          origem_id: string | null
         }
         Insert: {
           atualizado_em?: string
@@ -3567,6 +3568,7 @@ export type Database = {
           valor_comissao?: number | null
           valor_entrada: number
           valor_tratamento: number
+          origem_id?: string | null
         }
         Update: {
           atualizado_em?: string
@@ -3592,6 +3594,7 @@ export type Database = {
           valor_comissao?: number | null
           valor_entrada?: number
           valor_tratamento?: number
+          origem_id?: string | null
         }
         Relationships: [
           {
@@ -3622,6 +3625,13 @@ export type Database = {
             referencedRelation: 'avaliacoes'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'vendas_confirmadas_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
+          },
         ]
       }
       vendas_diarias: {
@@ -3638,6 +3648,7 @@ export type Database = {
           usuario_id: string | null
           valor: number
           valor_tratamento: number | null
+          origem_id: string | null
         }
         Insert: {
           crc_comercial_id?: string | null
@@ -3652,6 +3663,7 @@ export type Database = {
           usuario_id?: string | null
           valor?: number
           valor_tratamento?: number | null
+          origem_id?: string | null
         }
         Update: {
           crc_comercial_id?: string | null
@@ -3666,6 +3678,7 @@ export type Database = {
           usuario_id?: string | null
           valor?: number
           valor_tratamento?: number | null
+          origem_id?: string | null
         }
         Relationships: [
           {
@@ -3680,6 +3693,13 @@ export type Database = {
             columns: ['dentista_avaliador_id']
             isOneToOne: false
             referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_diarias_origem_id_fkey'
+            columns: ['origem_id']
+            isOneToOne: false
+            referencedRelation: 'funil_origens'
             referencedColumns: ['id']
           },
         ]
@@ -6403,8 +6423,18 @@ export const Constants = {
 //     END IF;
 //
 //     SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
-//     SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia AND status IN ('agendado', 'atendido', 'faltou');
-//     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia AND status = 'atendido';
+//
+//     -- Consideramos como Agendado qualquer status que represente um agendamento ou etapa posterior
+//     SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads
+//     WHERE origem_id = v_origem_id
+//     AND mes_referencia = v_mes_referencia
+//     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
+//
+//     -- Consideramos como Comparecimento qualquer status que represente atendimento ou etapa posterior
+//     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
+//     WHERE origem_id = v_origem_id
+//     AND mes_referencia = v_mes_referencia
+//     AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
 //
 //     INSERT INTO public.funil_dados_mensais (
 //       origem_id,
@@ -6438,11 +6468,16 @@ export const Constants = {
 //       comparecimentos_realizado = EXCLUDED.comparecimentos_realizado,
 //       atualizado_em = NOW();
 //
-//     -- Se alterou a origem ou o mês, atualiza também a contagem da origem/mês antigo
 //     IF TG_OP = 'UPDATE' AND (NEW.origem_id != OLD.origem_id OR NEW.mes_referencia != OLD.mes_referencia) THEN
 //       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia;
-//       SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia AND status IN ('agendado', 'atendido', 'faltou');
-//       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia AND status = 'atendido';
+//
+//       SELECT COUNT(*) INTO v_agendamentos FROM public.funil_leads
+//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia
+//       AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
+//
+//       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
+//       WHERE origem_id = OLD.origem_id AND mes_referencia = OLD.mes_referencia
+//       AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao');
 //
 //       UPDATE public.funil_dados_mensais
 //       SET

@@ -243,6 +243,7 @@ export function VendasModal({
           forma_pagamento: formData.forma_pagamento,
           destino_pagamento: formData.destino_pagamento,
           paciente_nome: formData.novo_paciente_nome || 'Paciente Cadastrado',
+          origem_id: formData.origem_id,
         })
       }
 
