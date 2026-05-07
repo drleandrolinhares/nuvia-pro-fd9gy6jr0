@@ -58,13 +58,15 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       setMessages(msgs || [])
 
       if (!isAudit && user?.id) {
-        let maxTime = Date.now()
+        let maxTimeStr = new Date(Date.now() + 1000).toISOString()
         if (msgs && msgs.length > 0) {
-          maxTime = Math.max(maxTime, new Date(msgs[msgs.length - 1].criado_em).getTime() + 1000)
+          maxTimeStr = new Date(
+            new Date(msgs[msgs.length - 1].criado_em).getTime() + 1000,
+          ).toISOString()
         }
         supabase
           .from('chat_participantes')
-          .update({ ultima_leitura: new Date(maxTime).toISOString() })
+          .update({ ultima_leitura: maxTimeStr })
           .eq('conversa_id', chatId)
           .eq('usuario_id', user.id)
           .then(() => {
@@ -83,6 +85,8 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
 
   useEffect(() => {
     loadChat()
+
+    // Realtime subscription
     const channel = supabase
       .channel(`chat_${chatId}`)
       .on(
@@ -91,9 +95,10 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
           event: 'INSERT',
           schema: 'public',
           table: 'chat_mensagens',
-          filter: `conversa_id=eq.${chatId}`,
         },
         (payload) => {
+          if (payload.new.conversa_id !== chatId) return
+
           setMessages((prev) => {
             if (prev.some((m) => m.id === payload.new.id)) return prev
 
@@ -121,10 +126,12 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
             if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
           }, 100)
           if (!isAudit && payload.new.remetente_id !== user?.id && user?.id) {
-            const maxTime = Math.max(Date.now(), new Date(payload.new.criado_em).getTime() + 1000)
+            const maxTimeStr = new Date(
+              new Date(payload.new.criado_em).getTime() + 1000,
+            ).toISOString()
             supabase
               .from('chat_participantes')
-              .update({ ultima_leitura: new Date(maxTime).toISOString() })
+              .update({ ultima_leitura: maxTimeStr })
               .eq('conversa_id', chatId)
               .eq('usuario_id', user.id)
               .then(() => {
@@ -135,10 +142,56 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
       )
       .subscribe()
 
+    // Fallback polling for high resilience
+    const interval = setInterval(async () => {
+      const { data: msgs } = await supabase
+        .from('chat_mensagens')
+        .select('*')
+        .eq('conversa_id', chatId)
+        .order('criado_em', { ascending: true })
+
+      if (msgs) {
+        setMessages((prev) => {
+          const realPrev = prev.filter((m) => !m.id.toString().startsWith('temp-'))
+          if (msgs.length > realPrev.length) {
+            setTimeout(() => {
+              if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+            }, 100)
+
+            const tempMsgs = prev.filter(
+              (m) =>
+                m.id.toString().startsWith('temp-') &&
+                !msgs.some(
+                  (rm) => rm.conteudo === m.conteudo && rm.remetente_id === m.remetente_id,
+                ),
+            )
+            return [...msgs, ...tempMsgs]
+          }
+          return prev
+        })
+
+        if (!isAudit && user?.id) {
+          const lastMsg = msgs[msgs.length - 1]
+          if (lastMsg && lastMsg.remetente_id !== user.id) {
+            const maxTimeStr = new Date(new Date(lastMsg.criado_em).getTime() + 1000).toISOString()
+            supabase
+              .from('chat_participantes')
+              .update({ ultima_leitura: maxTimeStr })
+              .eq('conversa_id', chatId)
+              .eq('usuario_id', user.id)
+              .then(() => {
+                window.dispatchEvent(new CustomEvent('chat_read'))
+              })
+          }
+        }
+      }
+    }, 5000)
+
     return () => {
       supabase.removeChannel(channel)
+      clearInterval(interval)
     }
-  }, [chatId, isAudit])
+  }, [chatId, isAudit, user?.id])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,7 +236,7 @@ export function ChatArea({ chatId, isAudit }: { chatId: string; isAudit: boolean
     } else {
       supabase
         .from('chat_participantes')
-        .update({ ultima_leitura: new Date().toISOString() })
+        .update({ ultima_leitura: new Date(Date.now() + 1000).toISOString() })
         .eq('conversa_id', chatId)
         .eq('usuario_id', user.id)
         .then(() => {

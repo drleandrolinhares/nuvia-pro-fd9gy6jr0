@@ -238,7 +238,12 @@ export function AppSidebar() {
       const { data } = await supabase.rpc('get_unread_chat_count', {
         p_usuario_id: user.id,
       })
-      setBadges((prev) => ({ ...prev, chat: data || 0 }))
+      setBadges((prev) => {
+        if (prev.chat !== (data || 0)) {
+          return { ...prev, chat: data || 0 }
+        }
+        return prev
+      })
     } catch (e) {
       console.error('Erro chat RT', e)
     }
@@ -353,7 +358,7 @@ export function AppSidebar() {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchChatCountStandalone()
-    }, 15000)
+    }, 5000) // Diminuido para 5s para sincronizar agressivamente
     return () => clearInterval(interval)
   }, [user?.id])
 

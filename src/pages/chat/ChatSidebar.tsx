@@ -29,6 +29,40 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     activeChatRef.current = activeChat
   }, [activeChat])
 
+  const fetchUnreadMap = async () => {
+    if (!user?.id || viewMode === 'audit') return
+    const { data: unreadData } = await supabase.rpc('get_unread_counts_per_conversation', {
+      p_usuario_id: user.id,
+    })
+
+    setUnreadMap((prev) => {
+      const uMap: Record<string, number> = {}
+      unreadData?.forEach((r: any) => {
+        uMap[r.conversa_id] = Number(r.unread_count)
+      })
+
+      const currentActive = activeChatRef.current
+      if (currentActive && uMap[currentActive] > 0) {
+        uMap[currentActive] = 0
+      }
+
+      let hasChanges = false
+      const allKeys = new Set([...Object.keys(prev), ...Object.keys(uMap)])
+      for (const key of allKeys) {
+        if ((prev[key] || 0) !== (uMap[key] || 0)) {
+          hasChanges = true
+          break
+        }
+      }
+
+      if (hasChanges) {
+        setTimeout(() => window.dispatchEvent(new CustomEvent('chat_read')), 0)
+        return uMap
+      }
+      return prev
+    })
+  }
+
   const loadData = async () => {
     const { data: users } = await supabase
       .from('usuarios')
@@ -50,7 +84,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
       const { data: myConvs } = await supabase
         .from('chat_participantes')
         .select(`
-        conversa_id, ultima_leitura,
+        conversa_id,
         conversa:chat_conversas(id, tipo, nome, participantes:chat_participantes(usuario_id))
       `)
         .eq('usuario_id', user?.id)
@@ -58,25 +92,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
       const formatted = myConvs?.map((c: any) => c.conversa).filter(Boolean) || []
       setConversas(formatted)
 
-      const { data: unreadData } = await supabase.rpc('get_unread_counts_per_conversation', {
-        p_usuario_id: user?.id,
-      })
-      setUnreadMap((prev) => {
-        const uMap: Record<string, number> = {}
-        let updated = false
-        unreadData?.forEach((r: any) => {
-          uMap[r.conversa_id] = Number(r.unread_count)
-        })
-        const currentActive = activeChatRef.current
-        if (currentActive && uMap[currentActive] > 0) {
-          uMap[currentActive] = 0
-          updated = true
-        }
-        if (updated) {
-          setTimeout(() => window.dispatchEvent(new CustomEvent('chat_read')), 0)
-        }
-        return uMap
-      })
+      await fetchUnreadMap()
     }
   }
 
@@ -84,15 +100,26 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     if (user?.id) loadData()
     const channel = supabase
       .channel('chat_sidebar_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_mensagens' }, loadData)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_mensagens' },
+        fetchUnreadMap,
+      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'chat_participantes' },
-        loadData,
+        fetchUnreadMap,
       )
       .subscribe()
+
+    // Polling de fallback para garantir que mensagens cheguem
+    const interval = setInterval(() => {
+      fetchUnreadMap()
+    }, 5000)
+
     return () => {
       supabase.removeChannel(channel)
+      clearInterval(interval)
     }
   }, [viewMode, user?.id])
 
@@ -100,7 +127,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
     if (activeChat) {
       setUnreadMap((prev) => {
         if (prev[activeChat] > 0) {
-          window.dispatchEvent(new CustomEvent('chat_read'))
+          setTimeout(() => window.dispatchEvent(new CustomEvent('chat_read')), 0)
           return { ...prev, [activeChat]: 0 }
         }
         return prev
@@ -109,7 +136,7 @@ export function ChatSidebar({ activeChat, setActiveChat, viewMode, setViewMode, 
       if (user?.id) {
         supabase
           .from('chat_participantes')
-          .update({ ultima_leitura: new Date().toISOString() })
+          .update({ ultima_leitura: new Date(Date.now() + 1000).toISOString() })
           .eq('conversa_id', activeChat)
           .eq('usuario_id', user.id)
           .then(() => {
