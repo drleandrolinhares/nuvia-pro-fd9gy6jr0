@@ -237,24 +237,34 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Qtd Realizado</Label>
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      Qtd Realizado
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Automático
+                      </span>
+                    </Label>
                     <Input
                       type="number"
                       name="fechamentos_qtde_realizado"
                       value={formData.fechamentos_qtde_realizado}
-                      onChange={handleChange}
-                      className="bg-slate-950 border-slate-700 font-medium"
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-slate-500 font-medium cursor-not-allowed opacity-70"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Receita Realizada (R$)</Label>
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      Receita Realizada (R$)
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Automático
+                      </span>
+                    </Label>
                     <Input
                       type="number"
                       step="0.01"
                       name="fechamentos_valor_realizado"
                       value={formData.fechamentos_valor_realizado}
-                      onChange={handleChange}
-                      className="bg-slate-950 border-slate-700 font-medium text-emerald-400"
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-emerald-700 font-medium cursor-not-allowed opacity-70"
                     />
                   </div>
                   <div className="space-y-2">

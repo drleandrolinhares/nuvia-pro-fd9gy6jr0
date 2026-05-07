@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Settings, Filter, BarChart3, KanbanSquare } from 'lucide-react'
+import { Loader2, Filter, BarChart3 } from 'lucide-react'
 import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kanban'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +24,7 @@ export default function FunilVendas() {
   const [etapas, setEtapas] = useState<any[]>([])
   const [temperaturas, setTemperaturas] = useState<any[]>([])
   const [dadosMensais, setDadosMensais] = useState<any[]>([])
+  const [avaliacoesMes, setAvaliacoesMes] = useState<any[]>([])
 
   const fetchData = async () => {
     setLoading(true)
@@ -40,7 +41,70 @@ export default function FunilVendas() {
       .from('funil_dados_mensais')
       .select('*')
       .eq('mes_referencia', mesReferencia)
-    setDadosMensais(dadosData || [])
+
+    const [ano, mes] = mesReferencia.split('-')
+    const dataInicio = `${mesReferencia}-01`
+    const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+    const dataFim = `${mesReferencia}-${ultimoDia}`
+
+    const { data: vendasData } = await supabase
+      .from('vendas_confirmadas')
+      .select('id, valor_tratamento, oportunidade_id, avaliacoes!inner(origem_id)')
+      .gte('data_fechamento', dataInicio)
+      .lte('data_fechamento', dataFim)
+
+    const { data: avaliacoesData } = await supabase
+      .from('avaliacoes')
+      .select('id, origem_id')
+      .gte('data_avaliacao', dataInicio)
+      .lte('data_avaliacao', dataFim)
+
+    const allOrigensIds = [
+      ...new Set([
+        ...(dadosData || []).map((d: any) => d.origem_id),
+        ...(vendasData || []).map((v: any) => v.avaliacoes?.origem_id).filter(Boolean),
+      ]),
+    ]
+
+    const finalDados = allOrigensIds.map((oId: any) => {
+      const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
+
+      const vendasOrigem = (vendasData || []).filter((v: any) => v.avaliacoes?.origem_id === oId)
+      const qtdeVendas = vendasOrigem.length
+      const valorVendas = vendasOrigem.reduce(
+        (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
+        0,
+      )
+
+      if (existing) {
+        return {
+          ...existing,
+          fechamentos_qtde_realizado: qtdeVendas,
+          fechamentos_valor_realizado: valorVendas,
+        }
+      }
+
+      return {
+        origem_id: oId,
+        mes_referencia: mesReferencia,
+        investimento: 0,
+        meta_leads: 0,
+        leads_realizado: 0,
+        meta_agendamentos_qtde: 0,
+        meta_agendamentos_perc: 0,
+        agendamentos_realizado: 0,
+        meta_comparecimentos_qtde: 0,
+        meta_comparecimentos_perc: 0,
+        comparecimentos_realizado: 0,
+        meta_fechamento_valor: 0,
+        ticket_medio_esperado: 0,
+        fechamentos_qtde_realizado: qtdeVendas,
+        fechamentos_valor_realizado: valorVendas,
+      }
+    })
+
+    setDadosMensais(finalDados)
+    setAvaliacoesMes(avaliacoesData || [])
     setLoading(false)
   }
 
@@ -94,7 +158,7 @@ export default function FunilVendas() {
         </div>
       </div>
 
-      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-lg">
+      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-lg shadow-sm">
         <button
           onClick={() => setView('dashboard')}
           className={cn(
@@ -139,6 +203,7 @@ export default function FunilVendas() {
           origens={origens}
           dados={dadosMensais}
           mesReferencia={mesReferencia}
+          avaliacoes={avaliacoesMes}
           onUpdate={fetchData}
         />
       ) : view === 'configuracoes' ? (

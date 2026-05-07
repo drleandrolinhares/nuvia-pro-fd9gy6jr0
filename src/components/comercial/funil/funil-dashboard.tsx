@@ -3,18 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { OrigemCard } from './origem-card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { Users, DollarSign, Target, TrendingUp, PieChart as PieChartIcon } from 'lucide-react'
+import {
+  Users,
+  DollarSign,
+  Target,
+  TrendingUp,
+  PieChart as PieChartIcon,
+  CheckSquare,
+} from 'lucide-react'
 
-export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any) {
+export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
   const totais = useMemo(() => {
     return dados.reduce(
       (acc: any, curr: any) => ({
-        investimento: acc.investimento + Number(curr.investimento),
-        leads: acc.leads + Number(curr.leads_realizado),
-        agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado),
-        comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado),
-        fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado),
-        valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado),
+        investimento: acc.investimento + Number(curr.investimento || 0),
+        leads: acc.leads + Number(curr.leads_realizado || 0),
+        agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
+        comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
+        fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado || 0),
+        valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado || 0),
       }),
       {
         investimento: 0,
@@ -26,6 +33,8 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
       },
     )
   }, [dados])
+
+  const totalAvaliacoes = avaliacoes ? avaliacoes.length : 0
 
   const pieData = useMemo(() => {
     return origens
@@ -76,7 +85,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
@@ -87,6 +96,19 @@ export function FunilDashboard({ origens, dados, mesReferencia, onUpdate }: any)
           <CardContent>
             <div className="text-3xl font-bold text-white">{totais.leads}</div>
             <p className="text-xs text-slate-400 mt-1">Captação do período</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+              Avaliações
+            </CardTitle>
+            <CheckSquare className="w-4 h-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{totalAvaliacoes}</div>
+            <p className="text-xs text-slate-400 mt-1">Realizadas no período</p>
           </CardContent>
         </Card>
 
