@@ -56,6 +56,7 @@ export function RelatorioComissoes({
   const [dados, setDados] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [filtroProfissional, setFiltroProfissional] = useState<string>('todos')
   const [fecharModalOpen, setFecharModalOpen] = useState(false)
   const [profToClose, setProfToClose] = useState<any>(null)
   const [fechando, setFechando] = useState(false)
@@ -66,6 +67,23 @@ export function RelatorioComissoes({
   useEffect(() => {
     fetchDados()
   }, [mesCompetencia, isAdmin, dentistaId, crcId, canViewAll])
+
+  const profissionaisUnicos = useMemo(() => {
+    const map = new Map<string, string>()
+    dados.forEach((d) => {
+      if (d.profissionalId && d.profissional) {
+        map.set(d.profissionalId, d.profissional)
+      }
+    })
+    return Array.from(map.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [dados])
+
+  const dadosFiltrados = useMemo(() => {
+    if (filtroProfissional === 'todos') return dados
+    return dados.filter((d) => d.profissionalId === filtroProfissional)
+  }, [dados, filtroProfissional])
 
   const fetchDados = async () => {
     setLoading(true)
@@ -117,6 +135,8 @@ export function RelatorioComissoes({
               data: v.data_fechamento,
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
+              valor_entrada: v.valor_entrada || 0,
+              percentual_entrada: v.percentual_entrada || 0,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
               status: statusStr,
@@ -137,6 +157,8 @@ export function RelatorioComissoes({
               data: v.data_fechamento,
               paciente: v.paciente_nome,
               valor_venda: v.valor_tratamento,
+              valor_entrada: v.valor_entrada || 0,
+              percentual_entrada: v.percentual_entrada || 0,
               percentual: perc,
               valor_comissao: (v.valor_tratamento * perc) / 100,
               status: statusStr,
@@ -154,7 +176,7 @@ export function RelatorioComissoes({
 
   const resumoAvaliadores = useMemo(() => {
     const res = new Map<string, any>()
-    dados
+    dadosFiltrados
       .filter((d) => d.tipo === 'Dentista Avaliador')
       .forEach((d) => {
         const c = res.get(d.profissionalId) || {
@@ -181,7 +203,7 @@ export function RelatorioComissoes({
 
   const resumoCrc = useMemo(() => {
     const res = new Map<string, any>()
-    dados
+    dadosFiltrados
       .filter((d) => d.tipo === 'CRC Comercial')
       .forEach((d) => {
         const c = res.get(d.profissionalId) || {
@@ -284,7 +306,7 @@ export function RelatorioComissoes({
     }
   }
 
-  const [tG, tP, tA] = dados.reduce(
+  const [tG, tP, tA] = dadosFiltrados.reduce(
     (acc, curr) => {
       acc[0] += curr.valor_comissao
       if (curr.status === 'pago') acc[1] += curr.valor_comissao
@@ -298,21 +320,34 @@ export function RelatorioComissoes({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-slate-100 rounded-lg">
             <CalendarIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-800">Competência</h2>
-            <p className="text-xs text-slate-500">
-              Selecione o mês para visualizar e fechar faturas
-            </p>
+            <h2 className="text-base font-bold text-slate-800">Filtros de Relatório</h2>
+            <p className="text-xs text-slate-500">Selecione o mês e o profissional para análise</p>
           </div>
         </div>
-        <div className="w-full sm:w-64">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {canViewAll && (
+            <Select value={filtroProfissional} onValueChange={setFiltroProfissional}>
+              <SelectTrigger className="bg-white font-medium w-full sm:w-56">
+                <SelectValue placeholder="Todos os Profissionais" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os Profissionais</SelectItem>
+                {profissionaisUnicos.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={mesCompetencia} onValueChange={setMesCompetencia}>
-            <SelectTrigger className="bg-white font-medium">
+            <SelectTrigger className="bg-white font-medium w-full sm:w-48">
               <SelectValue placeholder="Mês de Competência" />
             </SelectTrigger>
             <SelectContent>
@@ -480,13 +515,15 @@ export function RelatorioComissoes({
                     {canViewAll && <TableHead>Profissional</TableHead>}
                     <TableHead>Paciente</TableHead>
                     <TableHead className="text-right">Valor Venda</TableHead>
+                    <TableHead className="text-right">Valor Entrada</TableHead>
+                    <TableHead className="text-right">% Ent.</TableHead>
                     <TableHead className="text-right">% Comis.</TableHead>
                     <TableHead className="text-right">Comissão</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dados.map((row) => (
+                  {dadosFiltrados.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell>
                         {new Date(row.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
@@ -501,6 +538,10 @@ export function RelatorioComissoes({
                       <TableCell className="text-right">
                         {formatCurrency(row.valor_venda)}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(row.valor_entrada || 0)}
+                      </TableCell>
+                      <TableCell className="text-right">{row.percentual_entrada || 0}%</TableCell>
                       <TableCell className="text-right">{row.percentual}%</TableCell>
                       <TableCell className="text-right font-medium text-green-600">
                         {formatCurrency(row.valor_comissao)}
@@ -525,10 +566,10 @@ export function RelatorioComissoes({
                       </TableCell>
                     </TableRow>
                   ))}
-                  {dados.length === 0 && (
+                  {dadosFiltrados.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={canViewAll ? 7 : 6}
+                        colSpan={canViewAll ? 9 : 8}
                         className="text-center py-6 text-muted-foreground"
                       >
                         Nenhuma comissão encontrada para o período selecionado.

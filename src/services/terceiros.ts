@@ -28,6 +28,13 @@ export interface TerceiroColuna {
   ordem: number
 }
 
+export interface TerceiroCategoria {
+  id: string
+  nome: string
+  slug: string
+  ordem: number
+}
+
 export interface TerceiroHistorico {
   id: string
   tarefa_id: string
@@ -38,6 +45,33 @@ export interface TerceiroHistorico {
   usuario?: {
     nome: string
   }
+}
+
+export const getCategorias = async () => {
+  const { data, error } = await supabase
+    .from('terceiros_categorias' as any)
+    .select('*')
+    .order('ordem', { ascending: true })
+
+  if (error) throw error
+  return data as TerceiroCategoria[]
+}
+
+export const createCategoria = async (nome: string) => {
+  const slug = nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ /g, '-')
+    .replace(/[^\w-]/g, '')
+  const { data, error } = await supabase
+    .from('terceiros_categorias' as any)
+    .insert([{ nome, slug, ordem: 99 }])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as TerceiroCategoria
 }
 
 export const createColuna = async (coluna: Partial<TerceiroColuna>) => {

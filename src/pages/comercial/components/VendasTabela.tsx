@@ -105,23 +105,25 @@ export function VendasTabela({
               <TableHead className="text-white">Paciente</TableHead>
               <SortableHead column="data_avaliacao">Data</SortableHead>
               <SortableHead column="valor_orcamento">Valor</SortableHead>
+              <TableHead className="text-white text-right">Entrada</TableHead>
+              <TableHead className="text-white text-center">%</TableHead>
+              <TableHead className="text-white">Avaliador</TableHead>
               <SortableHead column="status">Status</SortableHead>
               <SortableHead column="temperatura_lead">Temperatura</SortableHead>
               <SortableHead column="proxima_data_contato">Próx. Contato</SortableHead>
-              <TableHead className="text-white">Responsável</TableHead>
               <TableHead className="w-[140px] text-white text-right pr-4">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={10} className="text-center py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : avaliacoes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   Nenhuma oportunidade encontrada.
                 </TableCell>
               </TableRow>
@@ -139,6 +141,18 @@ export function VendasTabela({
                   <TableCell className="font-medium">{av.pacientes?.nome || 'N/A'}</TableCell>
                   <TableCell>{formatarDataLocal(av.data_avaliacao)}</TableCell>
                   <TableCell>{formatCurrency(getMaiorValor(av))}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(av.valor_entrada || 0)}
+                  </TableCell>
+                  <TableCell className="text-center font-medium text-slate-700 dark:text-slate-300">
+                    {av.valor_entrada && getMaiorValor(av) > 0
+                      ? Math.round((av.valor_entrada / getMaiorValor(av)) * 100)
+                      : 0}
+                    %
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {av.dentistas_avaliadores?.nome || av.crc_comercial?.nome || '-'}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
@@ -165,9 +179,6 @@ export function VendasTabela({
                     </Badge>
                   </TableCell>
                   <TableCell>{formatarDataLocal(av.proxima_data_contato)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {av.crc_comercial?.nome || av.dentistas_avaliadores?.nome || '-'}
-                  </TableCell>
                   <TableCell
                     className="actions-cell text-right pr-4"
                     onClick={(e) => e.stopPropagation()}

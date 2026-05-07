@@ -122,6 +122,8 @@ export default function FechamentoComissoes() {
             vendas_concretizadas: {
               data_concretizacao: v.data_fechamento,
               valor_total_tratamento: v.valor_tratamento,
+              valor_entrada: v.valor_entrada || 0,
+              percentual_entrada: v.percentual_entrada || 0,
               avaliacoes: { pacientes: { nome: v.paciente_nome } },
             },
             percentual_faixa: v.percentual_comissao || 0,
@@ -402,6 +404,12 @@ export default function FechamentoComissoes() {
                           Valor Venda
                         </TableHead>
                         <TableHead className="text-right font-semibold text-slate-700">
+                          Valor Entrada
+                        </TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">
+                          % Ent.
+                        </TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">
                           % Comis.
                         </TableHead>
                         <TableHead className="text-right font-semibold text-slate-700">
@@ -420,6 +428,12 @@ export default function FechamentoComissoes() {
                           </TableCell>
                           <TableCell className="text-right text-slate-600">
                             {formatCurrency(d.vendas_concretizadas?.valor_total_tratamento)}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-600">
+                            {formatCurrency(d.vendas_concretizadas?.valor_entrada)}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-600">
+                            {d.vendas_concretizadas?.percentual_entrada}%
                           </TableCell>
                           <TableCell className="text-right text-slate-600">
                             {d.percentual_faixa}%

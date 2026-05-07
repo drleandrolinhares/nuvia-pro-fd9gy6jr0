@@ -16,6 +16,9 @@ import {
   getHistorico,
   createHistorico,
   TerceiroHistorico,
+  getCategorias,
+  createCategoria,
+  TerceiroCategoria,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
 import {
@@ -85,7 +88,8 @@ const getCardBg = (cor: string | null) => {
 
 export default function Parceiros() {
   const { user } = useAuth()
-  const [categoriaSlug, setCategoriaSlug] = useState('laboratorios')
+  const [categorias, setCategorias] = useState<TerceiroCategoria[]>([])
+  const [categoriaSlug, setCategoriaSlug] = useState('')
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
   const [colunas, setColunas] = useState<TerceiroColuna[]>([])
   const [historico, setHistorico] = useState<TerceiroHistorico[]>([])
@@ -97,6 +101,8 @@ export default function Parceiros() {
   const [editingColId, setEditingColId] = useState<string | null>(null)
   const [editColTitle, setEditColTitle] = useState('')
   const [newColTitle, setNewColTitle] = useState('')
+  const [isNewCategoriaModalOpen, setIsNewCategoriaModalOpen] = useState(false)
+  const [newCategoriaTitle, setNewCategoriaTitle] = useState('')
 
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('bg-slate-500')
@@ -111,6 +117,24 @@ export default function Parceiros() {
     cor: 'bg-slate-700',
     etiquetas: [] as { nome: string; cor: string }[],
   })
+
+  const loadCategorias = async () => {
+    try {
+      let data = await getCategorias()
+      if (data.length === 0) {
+        await createCategoria('Laboratórios')
+        await createCategoria('Radiologia')
+        await createCategoria('Outros')
+        data = await getCategorias()
+      }
+      setCategorias(data)
+      if (data.length > 0 && !categoriaSlug) {
+        setCategoriaSlug(data[0].slug)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const loadData = async () => {
     if (!categoriaSlug) return
@@ -127,7 +151,11 @@ export default function Parceiros() {
   }
 
   useEffect(() => {
-    loadData()
+    loadCategorias()
+  }, [])
+
+  useEffect(() => {
+    if (categoriaSlug) loadData()
   }, [categoriaSlug])
 
   const onDragStart = (e: React.DragEvent, id: string) => e.dataTransfer.setData('id', id)
@@ -312,6 +340,20 @@ export default function Parceiros() {
     }
   }
 
+  const handleCreateCategoria = async () => {
+    if (!newCategoriaTitle.trim()) return
+    try {
+      const nova = await createCategoria(newCategoriaTitle)
+      setIsNewCategoriaModalOpen(false)
+      setNewCategoriaTitle('')
+      setCategorias((prev) => [...prev, nova])
+      setCategoriaSlug(nova.slug)
+      toast({ title: 'Sucesso', description: 'Novo tipo de parceiro criado.' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: 'Falha ao criar tipo.', variant: 'destructive' })
+    }
+  }
+
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm mb-6">
@@ -339,25 +381,24 @@ export default function Parceiros() {
         onValueChange={setCategoriaSlug}
         className="flex flex-col flex-1 overflow-hidden"
       >
-        <TabsList className="flex w-full overflow-x-auto max-w-3xl mb-4 bg-slate-200/50 p-1 rounded-lg shrink-0">
-          <TabsTrigger
-            value="laboratorios"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
+        <TabsList className="flex w-full overflow-x-auto max-w-4xl mb-4 bg-slate-200/50 p-1 rounded-lg shrink-0 custom-scrollbar justify-start">
+          {categorias.map((c) => (
+            <TabsTrigger
+              key={c.slug}
+              value={c.slug}
+              className="flex-1 min-w-[120px] whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
+            >
+              {c.nome}
+            </TabsTrigger>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsNewCategoriaModalOpen(true)}
+            className="h-8 px-3 ml-2 text-slate-600 hover:text-amber-600 hover:bg-slate-200/80 font-bold text-xs uppercase"
           >
-            LABORATÓRIOS
-          </TabsTrigger>
-          <TabsTrigger
-            value="radiologia"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
-          >
-            RADIOLOGIA
-          </TabsTrigger>
-          <TabsTrigger
-            value="outros"
-            className="flex-1 whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
-          >
-            OUTROS
-          </TabsTrigger>
+            <Plus className="w-4 h-4 mr-1" /> Novo Tipo
+          </Button>
         </TabsList>
 
         <div className="flex-1 overflow-x-auto pb-4">
@@ -489,6 +530,40 @@ export default function Parceiros() {
           </div>
         </div>
       </Tabs>
+
+      <Dialog open={isNewCategoriaModalOpen} onOpenChange={setIsNewCategoriaModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Novo Tipo de Parceiro</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Label>Nome do Tipo</Label>
+            <Input
+              value={newCategoriaTitle}
+              onChange={(e) => setNewCategoriaTitle(e.target.value)}
+              placeholder="Ex: Ortodontia, Fornecedor..."
+              className="bg-slate-950 border-slate-800"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateCategoria()}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsNewCategoriaModalOpen(false)}
+              className="border-slate-700 hover:bg-slate-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateCategoria}
+              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+            >
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isNewColModalOpen} onOpenChange={setIsNewColModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
