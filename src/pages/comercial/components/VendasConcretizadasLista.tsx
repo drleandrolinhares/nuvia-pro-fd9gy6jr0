@@ -46,6 +46,7 @@ export function VendasConcretizadasLista({
   const [loading, setLoading] = useState(true)
   const [dentistas, setDentistas] = useState<any[]>([])
   const [crcs, setCrcs] = useState<any[]>([])
+  const [origens, setOrigens] = useState<any[]>([])
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedVenda, setSelectedVenda] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -114,6 +115,12 @@ export function VendasConcretizadasLista({
       .select('id, nome')
       .eq('status', 'ativo')
       .then(({ data }) => setCrcs(data || []))
+    supabase
+      .from('funil_origens')
+      .select('id, nome')
+      .eq('ativo', true)
+      .order('ordem')
+      .then(({ data }) => setOrigens(data || []))
   }, [])
 
   const handleEdit = (venda: any) => {
@@ -128,6 +135,7 @@ export function VendasConcretizadasLista({
       forma_pagamento: venda.forma_pagamento || 'Pix',
       destino_pagamento: venda.destino_pagamento || 'SICOOB PF 16004-0',
       destino_fiscal: venda.destino_fiscal || 'PESSOA FISICA',
+      origem_id: venda.origem_id || 'nenhum',
     })
     setEditModalOpen(true)
   }
@@ -156,6 +164,7 @@ export function VendasConcretizadasLista({
       const dentista =
         selectedVenda.dentista_avaliador !== 'nenhum' ? selectedVenda.dentista_avaliador : null
       const crc = selectedVenda.crc !== 'nenhum' ? selectedVenda.crc : null
+      const origem = selectedVenda.origem_id !== 'nenhum' ? selectedVenda.origem_id : null
       const { error } = await supabase
         .from('vendas_confirmadas')
         .update({
@@ -172,6 +181,7 @@ export function VendasConcretizadasLista({
           forma_pagamento: selectedVenda.forma_pagamento,
           destino_pagamento: selectedVenda.destino_pagamento,
           destino_fiscal: selectedVenda.destino_fiscal,
+          origem_id: origem,
         })
         .eq('id', selectedVenda.id)
 
@@ -412,6 +422,25 @@ export function VendasConcretizadasLista({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Origem da Indicação</Label>
+              <Select
+                value={selectedVenda?.origem_id}
+                onValueChange={(v) => setSelectedVenda({ ...selectedVenda, origem_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhum">Nenhum</SelectItem>
+                  {origens.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

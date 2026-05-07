@@ -3533,6 +3533,7 @@ export type Database = {
           observacoes: string | null
           observacoes_fechamento: string | null
           oportunidade_id: string | null
+          origem_id: string | null
           paciente_nome: string
           percentual_comissao: number | null
           percentual_entrada: number
@@ -3542,7 +3543,6 @@ export type Database = {
           valor_comissao: number | null
           valor_entrada: number
           valor_tratamento: number
-          origem_id: string | null
         }
         Insert: {
           atualizado_em?: string
@@ -3559,6 +3559,7 @@ export type Database = {
           observacoes?: string | null
           observacoes_fechamento?: string | null
           oportunidade_id?: string | null
+          origem_id?: string | null
           paciente_nome: string
           percentual_comissao?: number | null
           percentual_entrada: number
@@ -3568,7 +3569,6 @@ export type Database = {
           valor_comissao?: number | null
           valor_entrada: number
           valor_tratamento: number
-          origem_id?: string | null
         }
         Update: {
           atualizado_em?: string
@@ -3585,6 +3585,7 @@ export type Database = {
           observacoes?: string | null
           observacoes_fechamento?: string | null
           oportunidade_id?: string | null
+          origem_id?: string | null
           paciente_nome?: string
           percentual_comissao?: number | null
           percentual_entrada?: number
@@ -3594,7 +3595,6 @@ export type Database = {
           valor_comissao?: number | null
           valor_entrada?: number
           valor_tratamento?: number
-          origem_id?: string | null
         }
         Relationships: [
           {
@@ -3644,11 +3644,11 @@ export type Database = {
           destino_pagamento: string | null
           forma_pagamento: string | null
           id: string
+          origem_id: string | null
           paciente_nome: string | null
           usuario_id: string | null
           valor: number
           valor_tratamento: number | null
-          origem_id: string | null
         }
         Insert: {
           crc_comercial_id?: string | null
@@ -3659,11 +3659,11 @@ export type Database = {
           destino_pagamento?: string | null
           forma_pagamento?: string | null
           id?: string
+          origem_id?: string | null
           paciente_nome?: string | null
           usuario_id?: string | null
           valor?: number
           valor_tratamento?: number | null
-          origem_id?: string | null
         }
         Update: {
           crc_comercial_id?: string | null
@@ -3674,11 +3674,11 @@ export type Database = {
           destino_pagamento?: string | null
           forma_pagamento?: string | null
           id?: string
+          origem_id?: string | null
           paciente_nome?: string | null
           usuario_id?: string | null
           valor?: number
           valor_tratamento?: number | null
-          origem_id?: string | null
         }
         Relationships: [
           {
@@ -4735,6 +4735,7 @@ export const Constants = {
 //   forma_pagamento: text (nullable)
 //   destino_pagamento: text (nullable)
 //   destino_fiscal: text (nullable)
+//   origem_id: uuid (nullable)
 // Table: vendas_diarias
 //   id: uuid (not null, default: gen_random_uuid())
 //   data_venda: date (not null)
@@ -4748,6 +4749,7 @@ export const Constants = {
 //   destino_fiscal: text (nullable)
 //   dentista_avaliador_id: uuid (nullable)
 //   crc_comercial_id: uuid (nullable)
+//   origem_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
 // Table: auditoria_tarefas_rotina
@@ -5056,10 +5058,12 @@ export const Constants = {
 //   FOREIGN KEY vendas_confirmadas_dentista_avaliador_fkey: FOREIGN KEY (dentista_avaliador) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_fatura_comissao_id_fkey: FOREIGN KEY (fatura_comissao_id) REFERENCES faturas_comissoes(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_confirmadas_oportunidade_id_fkey: FOREIGN KEY (oportunidade_id) REFERENCES avaliacoes(id) ON DELETE CASCADE
+//   FOREIGN KEY vendas_confirmadas_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE SET NULL
 //   PRIMARY KEY vendas_confirmadas_pkey: PRIMARY KEY (id)
 // Table: vendas_diarias
 //   FOREIGN KEY vendas_diarias_crc_comercial_id_fkey: FOREIGN KEY (crc_comercial_id) REFERENCES crc_comercial(id) ON DELETE SET NULL
 //   FOREIGN KEY vendas_diarias_dentista_avaliador_id_fkey: FOREIGN KEY (dentista_avaliador_id) REFERENCES dentistas_avaliadores(id) ON DELETE SET NULL
+//   FOREIGN KEY vendas_diarias_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE SET NULL
 //   PRIMARY KEY vendas_diarias_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY vendas_diarias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 
@@ -6334,7 +6338,8 @@ export const Constants = {
 //               crc_comercial_id = NEW.crc,
 //               forma_pagamento = NEW.forma_pagamento,
 //               destino_pagamento = NEW.destino_pagamento,
-//               destino_fiscal = NEW.destino_fiscal
+//               destino_fiscal = NEW.destino_fiscal,
+//               origem_id = NEW.origem_id
 //           WHERE id = NEW.id;
 //       ELSIF TG_OP = 'DELETE' THEN
 //           DELETE FROM public.vendas_diarias WHERE id = OLD.id;
@@ -6367,7 +6372,8 @@ export const Constants = {
 //               tratamento,
 //               forma_pagamento,
 //               destino_pagamento,
-//               destino_fiscal
+//               destino_fiscal,
+//               origem_id
 //           ) VALUES (
 //               NEW.id,
 //               COALESCE(NEW.paciente_nome, 'Venda Avulsa'),
@@ -6380,7 +6386,8 @@ export const Constants = {
 //               'Venda Avulsa',
 //               NEW.forma_pagamento,
 //               NEW.destino_pagamento,
-//               NEW.destino_fiscal
+//               NEW.destino_fiscal,
+//               NEW.origem_id
 //           );
 //       ELSIF TG_OP = 'UPDATE' THEN
 //           UPDATE public.vendas_confirmadas SET
@@ -6392,7 +6399,8 @@ export const Constants = {
 //               crc = NEW.crc_comercial_id,
 //               forma_pagamento = NEW.forma_pagamento,
 //               destino_pagamento = NEW.destino_pagamento,
-//               destino_fiscal = NEW.destino_fiscal
+//               destino_fiscal = NEW.destino_fiscal,
+//               origem_id = NEW.origem_id
 //           WHERE id = NEW.id;
 //       ELSIF TG_OP = 'DELETE' THEN
 //           DELETE FROM public.vendas_confirmadas WHERE id = OLD.id;
