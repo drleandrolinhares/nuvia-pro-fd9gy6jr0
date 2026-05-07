@@ -1566,6 +1566,7 @@ export type Database = {
           meta_comparecimentos_perc: number
           meta_comparecimentos_qtde: number
           meta_fechamento_valor: number
+          meta_fechamentos_perc: number | null
           meta_leads: number
           origem_id: string
           ticket_medio_esperado: number
@@ -1587,6 +1588,7 @@ export type Database = {
           meta_comparecimentos_perc?: number
           meta_comparecimentos_qtde?: number
           meta_fechamento_valor?: number
+          meta_fechamentos_perc?: number | null
           meta_leads?: number
           origem_id: string
           ticket_medio_esperado?: number
@@ -1608,6 +1610,7 @@ export type Database = {
           meta_comparecimentos_perc?: number
           meta_comparecimentos_qtde?: number
           meta_fechamento_valor?: number
+          meta_fechamentos_perc?: number | null
           meta_leads?: number
           origem_id?: string
           ticket_medio_esperado?: number
@@ -4281,6 +4284,7 @@ export const Constants = {
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
 //   faltas_realizado: integer (nullable, default: 0)
+//   meta_fechamentos_perc: numeric (nullable, default: 0)
 // Table: funil_etapas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)

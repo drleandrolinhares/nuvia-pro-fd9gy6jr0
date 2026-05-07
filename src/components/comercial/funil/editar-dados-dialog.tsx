@@ -27,6 +27,7 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
     meta_comparecimentos_perc: dado?.meta_comparecimentos_perc || 0,
     comparecimentos_realizado: dado?.comparecimentos_realizado || 0,
     meta_fechamento_valor: dado?.meta_fechamento_valor || 0,
+    meta_fechamentos_perc: dado?.meta_fechamentos_perc || 0,
     ticket_medio_esperado: dado?.ticket_medio_esperado || 0,
     fechamentos_qtde_realizado: dado?.fechamentos_qtde_realizado || 0,
     fechamentos_valor_realizado: dado?.fechamentos_valor_realizado || 0,
@@ -69,6 +70,22 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
       setLoading(false)
     }
   }
+
+  const taxaAgendamento = formData.leads_realizado
+    ? (formData.agendamentos_realizado / formData.leads_realizado) * 100
+    : 0
+
+  const taxaComparecimento = formData.agendamentos_realizado
+    ? (formData.comparecimentos_realizado / formData.agendamentos_realizado) * 100
+    : 0
+
+  const taxaFechamento = formData.comparecimentos_realizado
+    ? (formData.fechamentos_qtde_realizado / formData.comparecimentos_realizado) * 100
+    : 0
+
+  const taxaFaltas = formData.agendamentos_realizado
+    ? ((dado?.faltas_realizado || 0) / formData.agendamentos_realizado) * 100
+    : 0
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -159,7 +176,7 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-400">Meta (Qtd)</Label>
+                    <Label className="text-slate-400">Meta Qtde</Label>
                     <Input
                       type="number"
                       name="meta_agendamentos_qtde"
@@ -168,8 +185,8 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       className="bg-slate-950 border-slate-800 text-slate-400"
                     />
                   </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label className="text-slate-400">Meta de Conversão (%)</Label>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta (% Agend.)</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -177,6 +194,20 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       value={formData.meta_agendamentos_perc}
                       onChange={handleChange}
                       className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      % Agendados
+                      <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto
+                      </span>
+                    </Label>
+                    <Input
+                      type="text"
+                      value={`${taxaAgendamento.toFixed(1)}%`}
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-blue-400 font-bold cursor-not-allowed opacity-80"
                     />
                   </div>
                 </div>
@@ -203,7 +234,7 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-400">Meta (Qtd)</Label>
+                    <Label className="text-slate-400">Meta Qtde</Label>
                     <Input
                       type="number"
                       name="meta_comparecimentos_qtde"
@@ -212,8 +243,8 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       className="bg-slate-950 border-slate-800 text-slate-400"
                     />
                   </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label className="text-slate-400">Meta de Conversão (%)</Label>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta (% Comp.)</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -222,6 +253,28 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       onChange={handleChange}
                       className="bg-slate-950 border-slate-800 text-slate-400"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      % Comparecidos
+                      <span className="text-[9px] text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto
+                      </span>
+                    </Label>
+                    <Input
+                      type="text"
+                      value={`${taxaComparecimento.toFixed(1)}%`}
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-purple-400 font-bold cursor-not-allowed opacity-80"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2 mt-2">
+                    <div className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded text-xs border border-slate-800">
+                      <span className="text-slate-400">Faltas (Automático):</span>
+                      <span className="text-red-400 font-medium">
+                        {dado?.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -240,7 +293,7 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                     <Label className="text-slate-300 flex items-center gap-2">
                       Qtd Realizado
                       <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                        Automático
+                        Auto
                       </span>
                     </Label>
                     <Input
@@ -248,23 +301,52 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       name="fechamentos_qtde_realizado"
                       value={formData.fechamentos_qtde_realizado}
                       disabled
-                      className="bg-slate-900 border-slate-800 text-slate-500 font-medium cursor-not-allowed opacity-70"
+                      className="bg-slate-900 border-slate-800 text-emerald-500 font-medium cursor-not-allowed opacity-80"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300 flex items-center gap-2">
-                      Receita Realizada (R$)
-                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                        Automático
+                    <Label className="text-slate-400 flex items-center gap-2">
+                      Meta Qtde
+                      <span className="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto
                       </span>
                     </Label>
                     <Input
                       type="number"
-                      step="0.01"
-                      name="fechamentos_valor_realizado"
-                      value={formData.fechamentos_valor_realizado}
+                      value={
+                        formData.ticket_medio_esperado
+                          ? Math.round(
+                              formData.meta_fechamento_valor / formData.ticket_medio_esperado,
+                            )
+                          : 0
+                      }
                       disabled
-                      className="bg-slate-900 border-slate-800 text-emerald-700 font-medium cursor-not-allowed opacity-70"
+                      className="bg-slate-900 border-slate-800 text-slate-400 font-medium cursor-not-allowed opacity-70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400">Meta (% Conv.)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      name="meta_fechamentos_perc"
+                      value={formData.meta_fechamentos_perc}
+                      onChange={handleChange}
+                      className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      % Conversão
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto
+                      </span>
+                    </Label>
+                    <Input
+                      type="text"
+                      value={`${taxaFechamento.toFixed(1)}%`}
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-emerald-400 font-bold cursor-not-allowed opacity-80"
                     />
                   </div>
                   <div className="space-y-2">
@@ -287,6 +369,22 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
                       value={formData.ticket_medio_esperado}
                       onChange={handleChange}
                       className="bg-slate-950 border-slate-800 text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2 pt-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      Receita Realizada (R$)
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto
+                      </span>
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      name="fechamentos_valor_realizado"
+                      value={formData.fechamentos_valor_realizado}
+                      disabled
+                      className="bg-slate-900 border-slate-800 text-emerald-500 font-bold cursor-not-allowed opacity-80"
                     />
                   </div>
                 </div>
