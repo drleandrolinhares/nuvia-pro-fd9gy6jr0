@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, Phone, Tag, Trash2, Edit2, DollarSign } from 'lucide-react'
+import { Loader2, Plus, Phone, Tag, Trash2, Edit2, DollarSign, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { VendasModal } from '@/pages/comercial/components/VendasModal'
@@ -120,27 +120,33 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
   }
 
   const handlePhoneSearch = async () => {
-    if (!formData.telefone || formData.telefone.length < 8) return
+    if (!formData.telefone) return
+    const cleanPhone = formData.telefone.replace(/\D/g, '')
+    if (cleanPhone.length < 8) return
+
     setSearchingPhone(true)
     setPacienteInfo('')
     try {
-      const { data: pac } = await supabase
+      const searchSuffix = cleanPhone.slice(-8)
+
+      const { data: pacs } = await supabase
         .from('pacientes')
-        .select('nome')
-        .eq('telefone', formData.telefone)
-        .maybeSingle()
+        .select('nome, telefone')
+        .ilike('telefone', `%${searchSuffix}%`)
+
+      const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
 
       if (pac) {
         setFormData((prev) => ({ ...prev, nome: pac.nome }))
         setPacienteInfo('Paciente encontrado')
       } else {
-        const { data: lead } = await supabase
+        const { data: leads } = await supabase
           .from('funil_leads')
-          .select('nome')
-          .eq('telefone', formData.telefone)
+          .select('nome, telefone')
+          .ilike('telefone', `%${searchSuffix}%`)
           .order('criado_em', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+
+        const lead = leads?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
         if (lead) {
           setFormData((prev) => ({ ...prev, nome: lead.nome }))
           setPacienteInfo('Lead encontrado')
@@ -230,13 +236,16 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center border-b border-slate-800 pb-4 gap-6">
+      <div className="flex items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-6 mb-2">
+        <div className="p-2.5 bg-amber-500/10 rounded-lg hidden sm:block">
+          <Users className="w-5 h-5 text-amber-500" />
+        </div>
         <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
           Gestão de Leads
         </h3>
         <Button
           onClick={openNew}
-          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6"
+          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 shadow-md"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Lead

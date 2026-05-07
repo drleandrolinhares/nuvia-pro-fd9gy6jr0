@@ -147,31 +147,39 @@ export function VendasModal({
   }, [open, prefilledData])
 
   const handlePhoneSearch = async () => {
-    if (!formData.telefone || formData.telefone.length < 8) return
+    if (!formData.telefone) return
+    const cleanPhone = formData.telefone.replace(/\D/g, '')
+    if (cleanPhone.length < 8) return
+
     setSearchingPhone(true)
     try {
       let pId = ''
       let pNome = formData.novo_paciente_nome
       let oId = formData.origem_id
 
-      const { data: pac } = await supabase
+      const searchSuffix = cleanPhone.slice(-8)
+
+      const { data: pacs } = await supabase
         .from('pacientes')
-        .select('id, nome')
-        .eq('telefone', formData.telefone)
-        .maybeSingle()
+        .select('id, nome, telefone')
+        .ilike('telefone', `%${searchSuffix}%`)
+
+      const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
+
       if (pac) {
         pId = pac.id
         pNome = pac.nome
         toast({ title: 'Paciente vinculado automaticamente!' })
       }
 
-      const { data: lead } = await supabase
+      const { data: leadsData } = await supabase
         .from('funil_leads')
-        .select('origem_id, nome')
-        .eq('telefone', formData.telefone)
+        .select('origem_id, nome, telefone')
+        .ilike('telefone', `%${searchSuffix}%`)
         .order('criado_em', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+
+      const lead = leadsData?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
+
       if (lead) {
         if (!pId && !pNome) pNome = lead.nome
         if (lead.origem_id && !oId) oId = lead.origem_id

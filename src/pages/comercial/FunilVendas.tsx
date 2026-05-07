@@ -162,14 +162,14 @@ export default function FunilVendas() {
         </div>
       </div>
 
-      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-lg shadow-sm">
+      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900/80 p-2 rounded-xl shadow-sm border border-slate-800">
         <button
           onClick={() => setView('dashboard')}
           className={cn(
-            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'dashboard'
-              ? 'bg-amber-500 text-slate-950 shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800',
+              ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-500/50'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Dashboard
@@ -177,10 +177,10 @@ export default function FunilVendas() {
         <button
           onClick={() => setView('kanban')}
           className={cn(
-            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'kanban'
-              ? 'bg-amber-500 text-slate-950 shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800',
+              ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-500/50'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Gestão de Leads
@@ -188,10 +188,10 @@ export default function FunilVendas() {
         <button
           onClick={() => setView('configuracoes')}
           className={cn(
-            'px-4 py-2 text-sm font-semibold transition-all rounded-md uppercase tracking-wider flex items-center gap-2',
+            'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'configuracoes'
-              ? 'bg-amber-500 text-slate-950 shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800',
+              ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-500/50'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Configurações
