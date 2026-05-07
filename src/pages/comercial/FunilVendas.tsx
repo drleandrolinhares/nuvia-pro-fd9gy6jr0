@@ -49,7 +49,7 @@ export default function FunilVendas() {
 
     const { data: vendasData } = await supabase
       .from('vendas_confirmadas')
-      .select('id, valor_tratamento, oportunidade_id, avaliacoes!inner(origem_id)')
+      .select('id, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id)')
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
 
@@ -62,14 +62,18 @@ export default function FunilVendas() {
     const allOrigensIds = [
       ...new Set([
         ...(dadosData || []).map((d: any) => d.origem_id),
-        ...(vendasData || []).map((v: any) => v.avaliacoes?.origem_id).filter(Boolean),
+        ...(vendasData || [])
+          .map((v: any) => v.origem_id || v.avaliacoes?.origem_id)
+          .filter(Boolean),
       ]),
     ]
 
     const finalDados = allOrigensIds.map((oId: any) => {
       const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
 
-      const vendasOrigem = (vendasData || []).filter((v: any) => v.avaliacoes?.origem_id === oId)
+      const vendasOrigem = (vendasData || []).filter(
+        (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === oId,
+      )
       const qtdeVendas = vendasOrigem.length
       const valorVendas = vendasOrigem.reduce(
         (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
