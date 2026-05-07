@@ -57,6 +57,8 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
     status: 'novo',
   })
   const [saving, setSaving] = useState(false)
+  const [searchingPhone, setSearchingPhone] = useState(false)
+  const [pacienteInfo, setPacienteInfo] = useState('')
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -97,6 +99,12 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.status === statusId) return
 
+    if (statusId === 'fechamento') {
+      setSelectedLeadForVenda(lead)
+      setVendasModalOpen(true)
+      return
+    }
+
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status: statusId } : l)))
 
     const { error } = await supabase
@@ -108,6 +116,42 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
       fetchLeads()
     } else {
       onUpdate()
+    }
+  }
+
+  const handlePhoneSearch = async () => {
+    if (!formData.telefone || formData.telefone.length < 8) return
+    setSearchingPhone(true)
+    setPacienteInfo('')
+    try {
+      const { data: pac } = await supabase
+        .from('pacientes')
+        .select('nome')
+        .eq('telefone', formData.telefone)
+        .maybeSingle()
+
+      if (pac) {
+        setFormData((prev) => ({ ...prev, nome: pac.nome }))
+        setPacienteInfo('Paciente encontrado')
+      } else {
+        const { data: lead } = await supabase
+          .from('funil_leads')
+          .select('nome')
+          .eq('telefone', formData.telefone)
+          .order('criado_em', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (lead) {
+          setFormData((prev) => ({ ...prev, nome: lead.nome }))
+          setPacienteInfo('Lead encontrado')
+        } else {
+          setPacienteInfo('Novo paciente')
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSearchingPhone(false)
     }
   }
 
@@ -166,6 +210,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
       temperatura: temperaturas.filter((t: any) => t.ativo)[0]?.slug || 'frio',
       status: etapas.filter((e: any) => e.ativo)[0]?.slug || 'novo',
     })
+    setPacienteInfo('')
     setDialogOpen(true)
   }
 
@@ -179,12 +224,13 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
       temperatura: lead.temperatura,
       status: lead.status,
     })
+    setPacienteInfo('')
     setDialogOpen(true)
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center border-b border-slate-800 pb-4 gap-6">
         <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
           Gestão de Leads
         </h3>
@@ -332,21 +378,39 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 pt-4">
             <div className="space-y-2">
+              <Label>Telefone *</Label>
+              <div className="relative">
+                <Input
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  onBlur={handlePhoneSearch}
+                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500"
+                  placeholder="(00) 00000-0000"
+                  required
+                  autoFocus
+                />
+                {searchingPhone && (
+                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-amber-500" />
+                )}
+              </div>
+              {pacienteInfo && (
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    pacienteInfo === 'Novo paciente' ? 'text-amber-500' : 'text-emerald-500',
+                  )}
+                >
+                  {pacienteInfo}
+                </span>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label>Nome do Lead *</Label>
               <Input
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 font-medium"
                 placeholder="Ex: João Silva"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input
-                value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500"
-                placeholder="(00) 00000-0000"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -454,6 +518,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                 nome: selectedLeadForVenda.nome,
                 origem_id: selectedLeadForVenda.origem_id,
                 lead_id: selectedLeadForVenda.id,
+                tipo_lancamento: 'venda_concretizada',
               }
             : undefined
         }

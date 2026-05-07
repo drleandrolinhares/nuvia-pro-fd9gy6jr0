@@ -34,6 +34,7 @@ interface Props {
     nome?: string
     origem_id?: string
     lead_id?: string
+    tipo_lancamento?: string
   }
 }
 
@@ -122,6 +123,7 @@ export function VendasModal({
           telefone: prefilledData.telefone || prev.telefone,
           novo_paciente_nome: prefilledData.nome || prev.novo_paciente_nome,
           origem_id: prefilledData.origem_id || prev.origem_id,
+          tipo_lancamento: prefilledData.tipo_lancamento || prev.tipo_lancamento,
         }))
         if (prefilledData.telefone) {
           supabase

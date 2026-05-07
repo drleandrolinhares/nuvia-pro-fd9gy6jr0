@@ -4723,6 +4723,7 @@ export const Constants = {
 //   exigir_rotina: boolean (not null, default: true)
 //   elegivel_ferias: boolean (nullable, default: false)
 //   acesso_chat: boolean (not null, default: true)
+//   pode_realizar_lancamento: boolean (not null, default: false)
 // Table: usuarios_compromissos
 //   id: uuid (not null, default: gen_random_uuid())
 //   compromisso_id: uuid (not null)
