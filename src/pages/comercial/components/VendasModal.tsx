@@ -255,7 +255,8 @@ export function VendasModal({
         .limit(1)
         .maybeSingle()
 
-      const leadStatus = formData.tipo_lancamento === 'venda_concretizada' ? 'fechado' : 'atendido'
+      const leadStatus =
+        formData.tipo_lancamento === 'venda_concretizada' ? 'fechamento' : 'atendido'
 
       if (existingLead) {
         await supabase

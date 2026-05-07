@@ -13,6 +13,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
     meta_comparecimentos_qtde: 0,
     meta_comparecimentos_perc: 0,
     comparecimentos_realizado: 0,
+    faltas_realizado: 0,
     meta_fechamento_valor: 0,
     ticket_medio_esperado: 0,
     fechamentos_qtde_realizado: 0,
@@ -25,6 +26,9 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
     : 0
   const taxaComparecimento = d.agendamentos_realizado
     ? (d.comparecimentos_realizado / d.agendamentos_realizado) * 100
+    : 0
+  const taxaFaltas = d.agendamentos_realizado
+    ? ((d.faltas_realizado || 0) / d.agendamentos_realizado) * 100
     : 0
   const taxaFechamento = d.comparecimentos_realizado
     ? (d.fechamentos_qtde_realizado / d.comparecimentos_realizado) * 100
@@ -108,9 +112,12 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               Comp.
             </p>
             <p className="text-3xl font-bold text-white my-1">{d.comparecimentos_realizado}</p>
-            <div className="flex items-center justify-center gap-1 mt-2">
+            <div className="flex flex-col items-center justify-center gap-1 mt-2">
               <span className="text-[11px] font-medium text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                {taxaComparecimento.toFixed(1)}% conv.
+                {taxaComparecimento.toFixed(1)}% compareceram
+              </span>
+              <span className="text-[10px] font-medium text-red-400">
+                {d.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
               </span>
             </div>
           </div>
