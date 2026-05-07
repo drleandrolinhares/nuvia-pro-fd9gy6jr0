@@ -126,17 +126,15 @@ export default function FunilVendas() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-100 dark:bg-amber-500/10 rounded-lg hidden sm:block">
-            <BarChart3 className="w-6 h-6 text-amber-600 dark:text-amber-500" />
+          <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
+            <BarChart3 className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Funil de Vendas
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <h2 className="text-2xl font-bold tracking-tight text-white">Funil de Vendas</h2>
+            <p className="text-sm text-slate-400 mt-1">
               Análise e controle de captação de leads e conversão
             </p>
           </div>
@@ -145,16 +143,12 @@ export default function FunilVendas() {
           <div className="flex items-center gap-2 flex-1 sm:flex-none">
             <Filter className="w-4 h-4 text-slate-400 hidden lg:block" />
             <Select value={mesReferencia} onValueChange={setMesReferencia}>
-              <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:ring-amber-500">
+              <SelectTrigger className="w-full sm:w-[200px] bg-slate-950 border-slate-800 text-white font-medium focus:ring-amber-500">
                 <SelectValue placeholder="Selecione o mês" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+              <SelectContent className="bg-slate-900 border-slate-800 text-white">
                 {mesesOptions.map((m) => (
-                  <SelectItem
-                    key={m.value}
-                    value={m.value}
-                    className="focus:bg-slate-100 dark:focus:bg-slate-800"
-                  >
+                  <SelectItem key={m.value} value={m.value} className="focus:bg-slate-800">
                     {m.label}
                   </SelectItem>
                 ))}
@@ -164,14 +158,14 @@ export default function FunilVendas() {
         </div>
       </div>
 
-      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-900/80 p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900/80 p-2 rounded-xl shadow-sm border border-slate-800">
         <button
           onClick={() => setView('dashboard')}
           className={cn(
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'dashboard'
               ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800',
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Dashboard
@@ -182,7 +176,7 @@ export default function FunilVendas() {
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'kanban'
               ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800',
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Gestão de Leads
@@ -193,7 +187,7 @@ export default function FunilVendas() {
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'configuracoes'
               ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800',
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
           Configurações
