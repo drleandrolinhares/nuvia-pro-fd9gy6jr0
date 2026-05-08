@@ -176,15 +176,15 @@ export default function FunilVendas() {
           Dashboard
         </button>
         <button
-          onClick={() => setView('bussola')}
+          onClick={() => setView('kanban')}
           className={cn(
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
-            view === 'bussola'
+            view === 'kanban'
               ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
               : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
-          Bússola Comercial
+          Gestão de Leads
         </button>
         <button
           onClick={() => setView('semaforo')}
@@ -196,17 +196,6 @@ export default function FunilVendas() {
           )}
         >
           Semáforo de Conversão
-        </button>
-        <button
-          onClick={() => setView('kanban')}
-          className={cn(
-            'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
-            view === 'kanban'
-              ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800',
-          )}
-        >
-          Gestão de Leads
         </button>
         <button
           onClick={() => setView('agenda')}
