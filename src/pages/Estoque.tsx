@@ -258,10 +258,15 @@ export default function Estoque() {
         diametro.toLowerCase().includes(searchLower)
 
       let isCritico = false
-      if (item.data_proxima_revisao) {
-        const alertDate = new Date(item.data_proxima_revisao)
-        if (item.alerta_prazo_dias) alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
-        isCritico = new Date() >= alertDate
+      if (item.data_proxima_revisao || item.consumo_estimado_frequencia) {
+        if (item.data_proxima_revisao) {
+          const alertDate = new Date(item.data_proxima_revisao)
+          if (item.alerta_prazo_dias)
+            alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+          isCritico = new Date() >= alertDate
+        } else {
+          isCritico = false
+        }
       } else {
         isCritico = item.quantidade_estoque <= item.quantidade_minima
       }
@@ -305,7 +310,8 @@ export default function Estoque() {
 
         const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
         const isCritico = items.some((item) => {
-          if (item.data_proxima_revisao) {
+          if (item.data_proxima_revisao || item.consumo_estimado_frequencia) {
+            if (!item.data_proxima_revisao) return false
             const alertDate = new Date(item.data_proxima_revisao)
             if (item.alerta_prazo_dias)
               alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
@@ -645,6 +651,9 @@ export default function Estoque() {
                           {isExpanded &&
                             group.items.map((item) => {
                               let isCriticoPorPrazo = false
+                              const hasPrazo = !!(
+                                item.data_proxima_revisao || item.consumo_estimado_frequencia
+                              )
                               if (item.data_proxima_revisao) {
                                 const alertDate = new Date(item.data_proxima_revisao)
                                 if (item.alerta_prazo_dias)
@@ -652,8 +661,7 @@ export default function Estoque() {
                                 isCriticoPorPrazo = new Date() >= alertDate
                               }
                               const isCriticoPorQtd =
-                                !item.data_proxima_revisao &&
-                                item.quantidade_estoque <= item.quantidade_minima
+                                !hasPrazo && item.quantidade_estoque <= item.quantidade_minima
                               const isCritico = isCriticoPorPrazo || isCriticoPorQtd
                               return (
                                 <TableRow

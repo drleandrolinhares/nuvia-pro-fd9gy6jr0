@@ -58,7 +58,12 @@ export default function ColaboradorFormSheet({
     formState: { errors },
   } = useForm<ColaboradorFormData>({
     resolver: zodResolver(colaboradorSchema),
-    defaultValues: { status: 'ativo', possui_carteira: true, exigir_rotina: true },
+    defaultValues: {
+      status: 'ativo',
+      possui_carteira: true,
+      exigir_rotina: true,
+      obrigatorio_pp_pdm: false,
+    },
   })
 
   const watchCargo = useWatch({ control, name: 'cargo_id' })
@@ -84,6 +89,7 @@ export default function ColaboradorFormSheet({
             pode_realizar_lancamento: (usuario as any).pode_realizar_lancamento ?? false,
             possui_carteira: usuario.possui_carteira ?? true,
             exigir_rotina: usuario.exigir_rotina ?? true,
+            obrigatorio_pp_pdm: usuario.obrigatorio_pp_pdm ?? false,
             elegivel_ferias: (usuario as any).elegivel_ferias ?? false,
             acesso_chat: (usuario as any).acesso_chat ?? true,
             dias_trabalho: (usuario as any).dias_trabalho ?? [1, 2, 3, 4, 5],
@@ -113,6 +119,7 @@ export default function ColaboradorFormSheet({
           data.pode_realizar_lancamento !== undefined ? data.pode_realizar_lancamento : false,
         possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
         exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
+        obrigatorio_pp_pdm: data.obrigatorio_pp_pdm !== undefined ? data.obrigatorio_pp_pdm : false,
         elegivel_ferias: data.elegivel_ferias !== undefined ? data.elegivel_ferias : false,
         acesso_chat: data.acesso_chat !== undefined ? data.acesso_chat : true,
         horario_entrada: data.horario_entrada || null,
@@ -382,6 +389,21 @@ export default function ColaboradorFormSheet({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Exigir PP e PDM?" error={errors.obrigatorio_pp_pdm}>
+                    <Controller
+                      name="obrigatorio_pp_pdm"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? 'Sim (Obrigatório)' : 'Não (Opcional)'}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  </Field>
+
                   <Field label="Elegível para Férias (CLT)?" error={errors.elegivel_ferias}>
                     <Controller
                       name="elegivel_ferias"

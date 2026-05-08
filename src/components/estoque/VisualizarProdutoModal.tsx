@@ -146,15 +146,31 @@ export function VisualizarProdutoModal({
             <div>
               <p className="text-sm font-medium text-slate-500">Estoque Atual</p>
               <p
-                className={`font-bold text-lg ${produto.quantidade_estoque <= produto.quantidade_minima ? 'text-red-600' : 'text-slate-900'}`}
+                className={`font-bold text-lg ${
+                  !(produto.data_proxima_revisao || produto.consumo_estimado_frequencia) &&
+                  produto.quantidade_estoque <= produto.quantidade_minima
+                    ? 'text-red-600'
+                    : 'text-slate-900'
+                }`}
               >
                 {produto.quantidade_estoque}
               </p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Estoque Mínimo</p>
-              <p className="font-semibold text-slate-900">{produto.quantidade_minima}</p>
-            </div>
+            {!(produto.data_proxima_revisao || produto.consumo_estimado_frequencia) ? (
+              <div>
+                <p className="text-sm font-medium text-slate-500">Estoque Mínimo</p>
+                <p className="font-semibold text-slate-900">{produto.quantidade_minima}</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm font-medium text-slate-500">Próxima Revisão</p>
+                <p className="font-semibold text-slate-900 text-amber-600">
+                  {produto.data_proxima_revisao
+                    ? format(parseISO(produto.data_proxima_revisao), 'dd/MM/yyyy')
+                    : 'Prazo não definido'}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-sm font-medium text-slate-500">Critério de Consumo</p>
               <Badge variant="outline" className="mt-1 font-medium bg-slate-100">

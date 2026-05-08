@@ -87,6 +87,7 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     status: data.status || 'ativo',
     possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
     exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
+    obrigatorio_pp_pdm: data.obrigatorio_pp_pdm !== undefined ? data.obrigatorio_pp_pdm : false,
     elegivel_ferias: data.elegivel_ferias !== undefined ? data.elegivel_ferias : false,
     horario_entrada: data.horario_entrada || null,
     inicio_lanche_manha: data.inicio_lanche_manha || null,
