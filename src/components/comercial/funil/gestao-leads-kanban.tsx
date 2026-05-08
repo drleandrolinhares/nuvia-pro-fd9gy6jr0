@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Loader2, Plus, Phone, Tag, Trash2, Edit2, DollarSign, Users } from 'lucide-react'
+  Loader2,
+  Plus,
+  Phone,
+  Tag,
+  Trash2,
+  Edit2,
+  DollarSign,
+  Users,
+  CalendarIcon,
+  Clock,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { VendasModal } from '@/pages/comercial/components/VendasModal'
+import { format } from 'date-fns'
+import { LeadDialog } from './lead-dialog'
 
 const TemperaturaBadge = ({
   tempSlug,
@@ -38,27 +41,23 @@ const TemperaturaBadge = ({
   )
 }
 
-export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas, onUpdate }: any) {
+export function GestaoLeadsKanban({
+  mesReferencia,
+  origens,
+  etapas,
+  temperaturas,
+  onUpdate,
+  onOpenAgenda,
+}: any) {
+  const { user } = useAuth()
   const [leads, setLeads] = useState<any[]>([])
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
+
+  const [leadDialogLead, setLeadDialogLead] = useState<any>(null)
   const [vendasModalOpen, setVendasModalOpen] = useState(false)
   const [selectedLeadForVenda, setSelectedLeadForVenda] = useState<any>(null)
-
-  const [formData, setFormData] = useState({
-    id: '',
-    nome: '',
-    telefone: '',
-    origem_id: '',
-    descricao: '',
-    temperatura: 'frio',
-    status: 'novo',
-  })
-  const [saving, setSaving] = useState(false)
-  const [searchingPhone, setSearchingPhone] = useState(false)
-  const [pacienteInfo, setPacienteInfo] = useState('')
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -87,6 +86,16 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
     if (editName.trim() && editName !== lead.nome) {
       setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: editName.trim() } : l)))
       await supabase.from('funil_leads').update({ nome: editName.trim() }).eq('id', lead.id)
+      if (user) {
+        await supabase.from('funil_leads_historico').insert([
+          {
+            lead_id: lead.id,
+            usuario_id: user.id,
+            acao: 'Atualização',
+            detalhes: `Nome alterado para ${editName.trim()}`,
+          },
+        ])
+      }
     }
     setEditingLeadId(null)
   }
@@ -115,87 +124,17 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
       toast.error('Erro ao atualizar status do lead')
       fetchLeads()
     } else {
+      if (user) {
+        await supabase.from('funil_leads_historico').insert([
+          {
+            lead_id: leadId,
+            usuario_id: user.id,
+            acao: 'Mudança de Etapa',
+            detalhes: `Movido de ${lead.status} para ${statusId}`,
+          },
+        ])
+      }
       onUpdate()
-    }
-  }
-
-  const handlePhoneSearch = async () => {
-    if (!formData.telefone) return
-    const cleanPhone = formData.telefone.replace(/\D/g, '')
-    if (cleanPhone.length < 8) return
-
-    setSearchingPhone(true)
-    setPacienteInfo('')
-    try {
-      const searchSuffix = cleanPhone.slice(-8)
-      const wildcardSearch = '%' + searchSuffix.split('').join('%') + '%'
-
-      const { data: pacs } = await supabase
-        .from('pacientes')
-        .select('nome, telefone')
-        .ilike('telefone', wildcardSearch)
-
-      const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
-
-      if (pac) {
-        setFormData((prev) => ({ ...prev, nome: pac.nome }))
-        setPacienteInfo('Paciente encontrado')
-      } else {
-        const { data: leads } = await supabase
-          .from('funil_leads')
-          .select('nome, telefone')
-          .ilike('telefone', wildcardSearch)
-          .order('criado_em', { ascending: false })
-
-        const lead = leads?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
-        if (lead) {
-          setFormData((prev) => ({ ...prev, nome: lead.nome }))
-          setPacienteInfo('Lead encontrado')
-        } else {
-          setPacienteInfo('Novo paciente')
-        }
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setSearchingPhone(false)
-    }
-  }
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.nome || !formData.origem_id) {
-      toast.error('Nome e Origem são obrigatórios')
-      return
-    }
-
-    setSaving(true)
-    try {
-      const payload = {
-        nome: formData.nome,
-        telefone: formData.telefone,
-        origem_id: formData.origem_id,
-        descricao: formData.descricao,
-        temperatura: formData.temperatura || temperaturas[0]?.slug || 'frio',
-        status: formData.status || etapas[0]?.slug || 'novo',
-        mes_referencia: mesReferencia,
-      }
-
-      if (formData.id) {
-        await supabase.from('funil_leads').update(payload).eq('id', formData.id)
-        toast.success('Lead atualizado')
-      } else {
-        await supabase.from('funil_leads').insert([payload])
-        toast.success('Lead criado')
-      }
-
-      setDialogOpen(false)
-      fetchLeads()
-      onUpdate()
-    } catch (err: any) {
-      toast.error('Erro: ' + err.message)
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -208,42 +147,26 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
   }
 
   const openNew = () => {
-    setFormData({
-      id: '',
-      nome: '',
-      telefone: '',
-      origem_id: origens.filter((o: any) => o.ativo)[0]?.id || '',
-      descricao: '',
-      temperatura: temperaturas.filter((t: any) => t.ativo)[0]?.slug || 'frio',
-      status: etapas.filter((e: any) => e.ativo)[0]?.slug || 'novo',
-    })
-    setPacienteInfo('')
-    setDialogOpen(true)
-  }
-
-  const openEdit = (lead: any) => {
-    setFormData({
-      id: lead.id,
-      nome: lead.nome,
-      telefone: lead.telefone || '',
-      origem_id: lead.origem_id,
-      descricao: lead.descricao || '',
-      temperatura: lead.temperatura,
-      status: lead.status,
-    })
-    setPacienteInfo('')
-    setDialogOpen(true)
+    setLeadDialogLead({ mes_referencia: mesReferencia })
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-6 mb-2">
+      <div className="flex items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-4 mb-2">
         <Button
           onClick={openNew}
           className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6 shadow-md"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Lead
+        </Button>
+        <Button
+          onClick={onOpenAgenda}
+          variant="outline"
+          className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 font-bold px-6 shadow-sm"
+        >
+          <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
+          Agenda
         </Button>
         <div className="hidden sm:flex items-center gap-3 ml-auto">
           <div className="p-2.5 bg-amber-500/10 rounded-lg">
@@ -307,7 +230,7 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                               <DollarSign className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => openEdit(lead)}
+                              onClick={() => setLeadDialogLead(lead)}
                               className="p-1 hover:text-amber-500 text-slate-400 transition-colors"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -361,10 +284,11 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
                             </div>
                           )}
 
-                          {lead.descricao && (
-                            <p className="text-xs text-slate-600 line-clamp-2 mt-2 pt-2 border-t border-slate-100 leading-relaxed">
-                              {lead.descricao}
-                            </p>
+                          {lead.data_proximo_contato && (
+                            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100 text-xs font-semibold text-amber-600">
+                              <Clock className="w-3.5 h-3.5" />
+                              {format(new Date(lead.data_proximo_contato), "dd/MM 'às' HH:mm")}
+                            </div>
                           )}
                         </div>
                       )
@@ -381,140 +305,23 @@ export function GestaoLeadsKanban({ mesReferencia, origens, etapas, temperaturas
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{formData.id ? 'Editar Lead' : 'Novo Lead'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label>Telefone *</Label>
-              <div className="relative">
-                <Input
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  onBlur={handlePhoneSearch}
-                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
-                  placeholder="(00) 00000-0000"
-                  required
-                  autoFocus
-                />
-                {searchingPhone && (
-                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-amber-500" />
-                )}
-              </div>
-              {pacienteInfo && (
-                <span
-                  className={cn(
-                    'text-xs font-medium',
-                    pacienteInfo === 'Novo paciente' ? 'text-amber-500' : 'text-emerald-500',
-                  )}
-                >
-                  {pacienteInfo}
-                </span>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Nome do Lead *</Label>
-              <Input
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 font-medium text-white"
-                placeholder="Ex: João Silva"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Origem *</Label>
-                <Select
-                  value={formData.origem_id}
-                  onValueChange={(v) => setFormData({ ...formData, origem_id: v })}
-                >
-                  <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500 text-white">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                    {origens
-                      .filter((o: any) => o.ativo)
-                      .map((o: any) => (
-                        <SelectItem key={o.id} value={o.id}>
-                          {o.nome}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Temperatura</Label>
-                <Select
-                  value={formData.temperatura}
-                  onValueChange={(v) => setFormData({ ...formData, temperatura: v })}
-                >
-                  <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                    {temperaturas
-                      .filter((t: any) => t.ativo)
-                      .map((t: any) => (
-                        <SelectItem key={t.slug} value={t.slug}>
-                          {t.nome}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(v) => setFormData({ ...formData, status: v })}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  {etapas
-                    .filter((e: any) => e.ativo)
-                    .map((col: any) => (
-                      <SelectItem key={col.slug} value={col.slug}>
-                        {col.nome}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição / Notas</Label>
-              <Textarea
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className="bg-slate-950 border-slate-800 min-h-[80px] focus-visible:ring-amber-500 text-white"
-                placeholder="Detalhes sobre o interesse, tratamentos..."
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setDialogOpen(false)}
-                className="hover:bg-slate-800 hover:text-white"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={saving || !formData.nome || !formData.origem_id}
-                className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6"
-              >
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Salvar
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {leadDialogLead && (
+        <LeadDialog
+          open={!!leadDialogLead}
+          onOpenChange={(op: boolean) => !op && setLeadDialogLead(null)}
+          leadData={leadDialogLead}
+          mesReferencia={mesReferencia}
+          origens={origens}
+          etapas={etapas}
+          temperaturas={temperaturas}
+          onSaved={() => {
+            fetchLeads()
+            onUpdate()
+            setLeadDialogLead(null)
+          }}
+        />
+      )}
+
       <VendasModal
         open={vendasModalOpen}
         onOpenChange={(open) => {

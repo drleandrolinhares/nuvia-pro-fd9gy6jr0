@@ -16,11 +16,12 @@ import { Loader2, Filter, BarChart3 } from 'lucide-react'
 import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kanban'
 import { BussolaComercial } from '@/components/comercial/funil/bussola-comercial'
 import { SemaforoConversao } from '@/components/comercial/funil/semaforo-conversao'
+import { AgendaComercial } from '@/components/comercial/funil/agenda-comercial'
 import { cn } from '@/lib/utils'
 
 export default function FunilVendas() {
   const [view, setView] = useState<
-    'kanban' | 'dashboard' | 'configuracoes' | 'bussola' | 'semaforo'
+    'kanban' | 'dashboard' | 'configuracoes' | 'bussola' | 'semaforo' | 'agenda'
   >('dashboard')
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
@@ -208,6 +209,17 @@ export default function FunilVendas() {
           Gestão de Leads
         </button>
         <button
+          onClick={() => setView('agenda')}
+          className={cn(
+            'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
+            view === 'agenda'
+              ? 'bg-amber-500 text-amber-950 shadow-md ring-1 ring-amber-500/50'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800',
+          )}
+        >
+          Agenda
+        </button>
+        <button
           onClick={() => setView('configuracoes')}
           className={cn(
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
@@ -236,6 +248,8 @@ export default function FunilVendas() {
         <BussolaComercial origens={origens} dados={dadosMensais} mesReferencia={mesReferencia} />
       ) : view === 'semaforo' ? (
         <SemaforoConversao mesReferencia={mesReferencia} />
+      ) : view === 'agenda' ? (
+        <AgendaComercial origens={origens} etapas={etapas} temperaturas={temperaturas} />
       ) : view === 'configuracoes' ? (
         <FunilConfiguracoes
           origens={origens}
@@ -250,6 +264,7 @@ export default function FunilVendas() {
           temperaturas={temperaturas}
           mesReferencia={mesReferencia}
           onUpdate={fetchData}
+          onOpenAgenda={() => setView('agenda')}
         />
       )}
     </div>
