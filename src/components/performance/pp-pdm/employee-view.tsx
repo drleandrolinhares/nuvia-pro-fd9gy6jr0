@@ -107,13 +107,9 @@ export function EmployeePPDMView() {
     try {
       await supabase
         .from('performance_pp_pdm' as any)
-        .update({
-          pontos_positivos: '',
-          pontos_melhoria: '',
-          pdm_itens: [],
-          nota_pdm: 0,
-        })
+        .delete()
         .eq('id', recordId)
+      setRecordId(null)
       setPp('')
       setPdmItems([{ id: '1', melhoria: '', sugestao: '' }])
       setPdmLegacy('')

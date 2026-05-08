@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { format, startOfWeek, addDays, isAfter } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,8 @@ import {
   CheckCircle2,
   XCircle,
   GraduationCap,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -46,25 +49,202 @@ function getPastSaturdays(count = 10) {
   return dates
 }
 
-function PendingUserCard({ u }: { u: any }) {
+function PendingUserCard({
+  u,
+  weekRef,
+  onReload,
+}: {
+  u: any
+  weekRef: string
+  onReload: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [pp, setPp] = useState('')
+  const [pdmItems, setPdmItems] = useState([{ id: '1', melhoria: '', sugestao: '' }])
+  const [saving, setSaving] = useState(false)
+
+  const handleChangeItem = (id: string, field: 'melhoria' | 'sugestao', value: string) => {
+    setPdmItems(pdmItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
+  const handleSave = async () => {
+    const filledItems = pdmItems.filter((item) => item.melhoria.trim() || item.sugestao.trim())
+
+    if (!pp.trim() && filledItems.length === 0) {
+      toast.warning('Preencha ao menos um dos campos antes de salvar.')
+      return
+    }
+
+    for (const item of filledItems) {
+      if (item.melhoria.trim() && !item.sugestao.trim()) {
+        toast.warning('Atenção: Sugestão Obrigatória!')
+        return
+      }
+      if (!item.melhoria.trim() && item.sugestao.trim()) {
+        toast.warning('Atenção: Crítica Obrigatória!')
+        return
+      }
+    }
+
+    setSaving(true)
+    try {
+      const nota = Math.min(filledItems.length * 2, 10)
+      const pdmText =
+        filledItems.map((i) => `Melhoria: ${i.melhoria}\nSugestão: ${i.sugestao}`).join('\n\n') ||
+        'Nenhum ponto de melhoria registrado.'
+
+      const payload = {
+        usuario_id: u.id,
+        data_registro: weekRef,
+        pontos_positivos: pp || 'Nenhum ponto positivo registrado.',
+        pontos_melhoria: pdmText,
+        pdm_itens: filledItems,
+        nota_pdm: nota,
+        atualizado_em: new Date().toISOString(),
+      }
+
+      await supabase.from('performance_pp_pdm' as any).insert(payload)
+
+      toast.success('Registros salvos com sucesso!')
+      setOpen(false)
+      onReload()
+    } catch (e: any) {
+      toast.error('Erro ao salvar.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-rose-100 bg-rose-50/30">
-      <div className="w-8 h-8 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
-        {u.avatar_url ? (
-          <img src={u.avatar_url} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-rose-500 font-medium text-xs">
-            {u.nome.substring(0, 2).toUpperCase()}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border border-rose-100 bg-rose-50/30 hover:border-rose-200 transition-colors">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-rose-100 overflow-hidden border border-rose-200 shrink-0">
+          {u.avatar_url ? (
+            <img src={u.avatar_url} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-rose-500 font-medium text-xs">
+              {u.nome.substring(0, 2).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="font-medium text-sm text-slate-800">{u.nome}</p>
+          <div className="flex items-center gap-1 mt-0.5">
+            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            <span className="text-xs text-rose-600 font-medium">Aguardando Envio</span>
           </div>
-        )}
-      </div>
-      <div>
-        <p className="font-medium text-sm text-slate-800">{u.nome}</p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <XCircle className="w-3.5 h-3.5 text-rose-500" />
-          <span className="text-xs text-rose-600 font-medium">Aguardando Envio</span>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs bg-white text-slate-700 hover:text-slate-900 border-slate-200 shadow-sm gap-1.5 w-full sm:w-auto"
+          >
+            <Plus className="w-3.5 h-3.5" /> Registrar Manualmente
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Registrar PP e PDM - {u.nome}</DialogTitle>
+            <CardDescription>
+              Preencha os pontos positivos e de melhoria em nome do colaborador.
+            </CardDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-3">
+              <Label className="text-emerald-700 font-semibold">Pontos Positivos (PP)</Label>
+              <Textarea
+                placeholder="O que deu certo nesta semana?"
+                className="min-h-[100px] resize-none text-sm"
+                value={pp}
+                onChange={(e) => setPp(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-rose-700 font-semibold">PDM e Soluções</Label>
+              <div className="space-y-3">
+                {pdmItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="p-3 border border-slate-200 rounded-lg bg-slate-50 space-y-3 relative"
+                  >
+                    <div className="absolute top-2 right-2 text-xs font-medium text-slate-400">
+                      #{index + 1}
+                    </div>
+                    <div className="space-y-2 pr-8">
+                      <Label className="text-xs text-slate-600">Ponto de Melhoria</Label>
+                      <Textarea
+                        placeholder="Qual foi a crítica?"
+                        className="min-h-[60px] resize-none text-sm bg-white"
+                        value={item.melhoria}
+                        onChange={(e) => handleChangeItem(item.id, 'melhoria', e.target.value)}
+                      />
+                      <Label className="text-xs text-slate-600 mt-2 block">
+                        Sugestão de Solução
+                      </Label>
+                      <Textarea
+                        placeholder="Como melhorar?"
+                        className="min-h-[60px] resize-none text-sm bg-white"
+                        value={item.sugestao}
+                        onChange={(e) => handleChangeItem(item.id, 'sugestao', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-7 text-xs"
+                        onClick={() =>
+                          setPdmItems(
+                            pdmItems.length === 1
+                              ? [{ id: '1', melhoria: '', sugestao: '' }]
+                              : pdmItems.filter((i) => i.id !== item.id),
+                          )
+                        }
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {pdmItems.length < 5 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed text-slate-600 gap-2"
+                  onClick={() =>
+                    setPdmItems([
+                      ...pdmItems,
+                      { id: Math.random().toString(), melhoria: '', sugestao: '' },
+                    ])
+                  }
+                >
+                  <Plus className="w-4 h-4" /> Adicionar Ponto
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Salvar Registros
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -566,8 +746,24 @@ export function ManagerPPDMView() {
     setLoading(false)
   }
 
-  const filledUsers = users.filter((u) => submissions.find((s) => s.usuario_id === u.id))
-  const pendingUsers = users.filter((u) => !submissions.find((s) => s.usuario_id === u.id))
+  const isValidSubmission = (s: any) => {
+    const hasPp =
+      s.pontos_positivos &&
+      s.pontos_positivos.trim() !== '' &&
+      s.pontos_positivos !== 'Nenhum ponto positivo registrado.'
+    const hasLegacyPdm =
+      s.pontos_melhoria &&
+      s.pontos_melhoria.trim() !== '' &&
+      s.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
+    const hasPdmItems = s.pdm_itens && Array.isArray(s.pdm_itens) && s.pdm_itens.length > 0
+    return hasPp || hasLegacyPdm || hasPdmItems
+  }
+
+  const filledUsers = users.filter((u) => {
+    const s = submissions.find((sub) => sub.usuario_id === u.id)
+    return s && isValidSubmission(s)
+  })
+  const pendingUsers = users.filter((u) => !filledUsers.some((fu) => fu.id === u.id))
 
   return (
     <div className="space-y-6 mt-6">
@@ -750,7 +946,14 @@ export function ManagerPPDMView() {
                       Todos os colaboradores preencheram! 🎉
                     </div>
                   ) : (
-                    pendingUsers.map((u) => <PendingUserCard key={u.id} u={u} />)
+                    pendingUsers.map((u) => (
+                      <PendingUserCard
+                        key={u.id}
+                        u={u}
+                        weekRef={selectedWeek}
+                        onReload={loadData}
+                      />
+                    ))
                   )}
                 </div>
               </CardContent>
