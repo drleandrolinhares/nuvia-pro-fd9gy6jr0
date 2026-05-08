@@ -10,6 +10,7 @@ import {
   TrendingUp,
   PieChart as PieChartIcon,
   CheckSquare,
+  Percent,
 } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
@@ -45,6 +46,11 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
       0,
     )
   }, [avaliacoes])
+
+  const conversaoTotal = useMemo(() => {
+    if (valorOportunidades === 0) return 0
+    return (totais.valor_fechado / valorOportunidades) * 100
+  }, [totais.valor_fechado, valorOportunidades])
 
   const pieData = useMemo(() => {
     return origens
@@ -95,34 +101,34 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-10 gap-4">
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 col-span-1 md:col-span-1 xl:col-span-1">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              Total Leads
+            <CardTitle className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Leads
             </CardTitle>
             <Users className="w-4 h-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{totais.leads}</div>
-            <p className="text-xs text-slate-400 mt-1">Captação do período</p>
+            <div className="text-2xl font-bold text-white">{totais.leads}</div>
+            <p className="text-[10px] text-slate-400 mt-1">Captação</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 col-span-1 md:col-span-1 xl:col-span-1">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+            <CardTitle className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
               Avaliações
             </CardTitle>
             <CheckSquare className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{totalAvaliacoes}</div>
-            <p className="text-xs text-slate-400 mt-1">Realizadas no período</p>
+            <div className="text-2xl font-bold text-white">{totalAvaliacoes}</div>
+            <p className="text-[10px] text-slate-400 mt-1">Realizadas</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 col-span-2 md:col-span-2 xl:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Oportunidades Totais
@@ -130,12 +136,14 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
             <Target className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-400">{formatBrl(valorOportunidades)}</div>
+            <div className="text-2xl lg:text-3xl font-bold text-blue-400">
+              {formatBrl(valorOportunidades)}
+            </div>
             <p className="text-xs text-slate-400 mt-1">Total avaliado no período</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 relative overflow-hidden shadow-sm transition-all hover:border-slate-700">
+        <Card className="bg-slate-900 border-slate-800 relative overflow-hidden shadow-sm transition-all hover:border-slate-700 col-span-2 md:col-span-2 xl:col-span-2">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
           <CardHeader className="pb-2 flex flex-row items-center justify-between pl-5">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
@@ -144,14 +152,29 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
             <DollarSign className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent className="pl-5">
-            <div className="text-3xl font-bold text-emerald-400">
+            <div className="text-2xl lg:text-3xl font-bold text-emerald-400">
               {formatBrl(totais.valor_fechado)}
             </div>
             <p className="text-xs text-slate-400 mt-1">Receita gerada</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 col-span-2 md:col-span-2 xl:col-span-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+              Conversão Total
+            </CardTitle>
+            <Percent className="w-4 h-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl lg:text-3xl font-bold text-cyan-400">
+              {conversaoTotal.toFixed(1)}%
+            </div>
+            <p className="text-xs text-slate-400 mt-1">Vendas / Oportunidades</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 col-span-2 md:col-span-2 xl:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Ticket Médio
@@ -159,7 +182,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
             <TrendingUp className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">
+            <div className="text-2xl lg:text-3xl font-bold text-white">
               {totais.fechamentos
                 ? formatBrl(totais.valor_fechado / totais.fechamentos)
                 : 'R$ 0,00'}
