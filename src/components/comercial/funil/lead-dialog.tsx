@@ -34,6 +34,7 @@ export function LeadDialog({
   const [searchingPhone, setSearchingPhone] = useState(false)
   const [pacienteInfo, setPacienteInfo] = useState('')
 
+  const [initialData, setInitialData] = useState<any>(null)
   const [formData, setFormData] = useState({
     id: '',
     nome: '',
@@ -50,7 +51,7 @@ export function LeadDialog({
 
   useEffect(() => {
     if (open && leadData) {
-      setFormData({
+      const data = {
         id: leadData.id || '',
         nome: leadData.nome || '',
         telefone: leadData.telefone || '',
@@ -61,7 +62,9 @@ export function LeadDialog({
         data_proximo_contato: leadData.data_proximo_contato
           ? leadData.data_proximo_contato.substring(0, 16)
           : '',
-      })
+      }
+      setFormData(data)
+      setInitialData(data)
       setTab('dados')
       setPacienteInfo('')
       if (leadData.id) {
@@ -177,20 +180,54 @@ export function LeadDialog({
       } else {
         const { error } = await supabase.from('funil_leads').update(payload).eq('id', newId)
         if (error) throw error
+
         if (user) {
-          await supabase.from('funil_leads_historico').insert([
-            {
-              lead_id: newId,
-              usuario_id: user.id,
-              acao: 'Atualização',
-              detalhes: 'Dados do lead atualizados',
-            },
-          ])
+          const mudancas: string[] = []
+
+          if (initialData.nome !== formData.nome)
+            mudancas.push(`Nome: de "${initialData.nome}" para "${formData.nome}"`)
+          if (initialData.telefone !== formData.telefone) mudancas.push(`Telefone atualizado`)
+
+          if (initialData.origem_id !== formData.origem_id) {
+            const oldOrigem = origens?.find((o: any) => o.id === initialData.origem_id)?.nome
+            const newOrigem = origens?.find((o: any) => o.id === formData.origem_id)?.nome
+            mudancas.push(`Origem: de "${oldOrigem}" para "${newOrigem}"`)
+          }
+
+          if (initialData.temperatura !== formData.temperatura) {
+            const oldTemp = temperaturas?.find((t: any) => t.slug === initialData.temperatura)?.nome
+            const newTemp = temperaturas?.find((t: any) => t.slug === formData.temperatura)?.nome
+            mudancas.push(`Temperatura: de "${oldTemp}" para "${newTemp}"`)
+          }
+
+          if (initialData.status !== formData.status) {
+            const oldStatus = etapas?.find((e: any) => e.slug === initialData.status)?.nome
+            const newStatus = etapas?.find((e: any) => e.slug === formData.status)?.nome
+            mudancas.push(`Status: de "${oldStatus}" para "${newStatus}"`)
+          }
+
+          if (initialData.data_proximo_contato !== formData.data_proximo_contato) {
+            const dateStr = formData.data_proximo_contato
+              ? format(new Date(formData.data_proximo_contato), 'dd/MM/yyyy HH:mm')
+              : 'Removido'
+            mudancas.push(`Próximo Contato: ${dateStr}`)
+          }
+
+          if (mudancas.length > 0) {
+            await supabase.from('funil_leads_historico').insert([
+              {
+                lead_id: newId,
+                usuario_id: user.id,
+                acao: 'Atualização de Dados',
+                detalhes: mudancas.join(' | '),
+              },
+            ])
+          }
         }
         toast.success('Lead atualizado com sucesso')
       }
 
-      onSaved()
+      onSaved({ id: newId, ...payload })
     } catch (err: any) {
       toast.error('Erro: ' + err.message)
     } finally {
@@ -209,6 +246,16 @@ export function LeadDialog({
           nota: novaNota.trim(),
         },
       ])
+
+      await supabase.from('funil_leads_historico').insert([
+        {
+          lead_id: formData.id,
+          usuario_id: user.id,
+          acao: 'Nova Nota Adicionada',
+          detalhes: novaNota.trim(),
+        },
+      ])
+
       setNovaNota('')
       fetchNotasAndHistorico(formData.id)
       toast.success('Nota registrada')

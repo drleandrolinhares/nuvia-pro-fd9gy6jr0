@@ -83,19 +83,25 @@ export function GestaoLeadsKanban({
   }
 
   const saveEditing = async (lead: any) => {
-    if (editName.trim() && editName !== lead.nome) {
-      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: editName.trim() } : l)))
-      await supabase.from('funil_leads').update({ nome: editName.trim() }).eq('id', lead.id)
-      if (user) {
-        await supabase.from('funil_leads_historico').insert([
-          {
-            lead_id: lead.id,
-            usuario_id: user.id,
-            acao: 'Atualização',
-            detalhes: `Nome alterado para ${editName.trim()}`,
-          },
-        ])
-      }
+    const novoNome = editName.trim()
+    if (novoNome && novoNome !== lead.nome) {
+      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: novoNome } : l)))
+      supabase
+        .from('funil_leads')
+        .update({ nome: novoNome })
+        .eq('id', lead.id)
+        .then(async ({ error }) => {
+          if (!error && user) {
+            await supabase.from('funil_leads_historico').insert([
+              {
+                lead_id: lead.id,
+                usuario_id: user.id,
+                acao: 'Atualização de Nome',
+                detalhes: `Nome alterado de "${lead.nome}" para "${novoNome}"`,
+              },
+            ])
+          }
+        })
     }
     setEditingLeadId(null)
   }
@@ -125,26 +131,36 @@ export function GestaoLeadsKanban({
       fetchLeads(false)
     } else {
       if (user) {
+        const oldStatusName = etapas.find((et: any) => et.slug === lead.status)?.nome || lead.status
+        const newStatusName = etapas.find((et: any) => et.slug === statusId)?.nome || statusId
         await supabase.from('funil_leads_historico').insert([
           {
             lead_id: leadId,
             usuario_id: user.id,
             acao: 'Mudança de Etapa',
-            detalhes: `Movido de ${lead.status} para ${statusId}`,
+            detalhes: `Movido de "${oldStatusName}" para "${newStatusName}"`,
           },
         ])
       }
-      onUpdate(false)
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir este lead?')) return
     setLeads((prev) => prev.filter((l) => l.id !== id))
-    await supabase.from('funil_leads').delete().eq('id', id)
-    fetchLeads(false)
-    onUpdate(false)
-    toast.success('Lead excluído')
+
+    supabase
+      .from('funil_leads')
+      .delete()
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) {
+          toast.error('Erro ao excluir')
+          fetchLeads(false)
+        } else {
+          toast.success('Lead excluído')
+        }
+      })
   }
 
   const openNew = () => {
@@ -315,9 +331,13 @@ export function GestaoLeadsKanban({
           origens={origens}
           etapas={etapas}
           temperaturas={temperaturas}
-          onSaved={() => {
-            fetchLeads(false)
-            onUpdate(false)
+          onSaved={(newLead?: any) => {
+            if (newLead?.id && leadDialogLead?.id) {
+              setLeads((prev) => prev.map((l) => (l.id === newLead.id ? { ...l, ...newLead } : l)))
+            } else {
+              fetchLeads(false)
+              onUpdate(false)
+            }
             setLeadDialogLead(null)
           }}
         />
