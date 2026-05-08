@@ -8,6 +8,7 @@ export interface PedidoItem {
   quantidade: number
   preco_unitario: number
   valor_total: number
+  status?: string
   produto?: { nome: string; marca: string; variacao: string; quantidade_estoque?: number }
 }
 
@@ -132,7 +133,11 @@ export const retomarRascunho = async (pedidoId: string) => {
   if (error) throw error
 }
 
-export const entregarPedido = async (pedidoId: string, entregue_por: string) => {
+export const entregarPedido = async (
+  pedidoId: string,
+  entregue_por: string,
+  itensEntreguesIds?: string[],
+) => {
   const { data: pedido, error: pedError } = await supabase
     .from('pedidos_materiais')
     .select('*, itens:pedido_itens(*)')
@@ -140,14 +145,21 @@ export const entregarPedido = async (pedidoId: string, entregue_por: string) => 
     .single()
   if (pedError || !pedido) throw pedError || new Error('Pedido não encontrado')
 
+  const deliveredIds = itensEntreguesIds || pedido.itens.map((i: any) => i.id)
+
   const { error: updError } = await supabase
     .from('pedidos_materiais')
     .update({ status: 'entregue', data_entrega: new Date().toISOString(), entregue_por })
     .eq('id', pedidoId)
   if (updError) throw updError
 
+  for (const item of pedido.itens) {
+    const statusItem = deliveredIds.includes(item.id) ? 'entregue' : 'em_falta'
+    await supabase.from('pedido_itens').update({ status: statusItem }).eq('id', item.id)
+  }
+
   const saidas = pedido.itens
-    .filter((i: any) => i.produto_id)
+    .filter((i: any) => i.produto_id && deliveredIds.includes(i.id))
     .map((i: any) => ({
       produto_id: i.produto_id,
       quantidade: i.quantidade,
@@ -157,6 +169,27 @@ export const entregarPedido = async (pedidoId: string, entregue_por: string) => 
     }))
 
   if (saidas.length > 0) await supabase.from('saida_produtos').insert(saidas)
+}
+
+export const getItensEmFalta = async () => {
+  const { data, error } = await supabase
+    .from('pedido_itens')
+    .select(
+      '*, pedido:pedidos_materiais(usuario:usuarios(nome), data_criacao), produto:produtos(nome, marca, variacao)',
+    )
+    .eq('status', 'em_falta')
+    .order('pedido_id', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
+export const resolverItemFalta = async (itemId: string) => {
+  const { error } = await supabase
+    .from('pedido_itens')
+    .update({ status: 'comprado' })
+    .eq('id', itemId)
+  if (error) throw error
 }
 
 export const getRelatorioPedidos = async (startDate: string, endDate: string) => {

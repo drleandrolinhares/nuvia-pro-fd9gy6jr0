@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth'
 import NovosPedidos from './NovosPedidos'
 import PedidosRecebidos from './PedidosRecebidos'
 import RelatoriosPedidos from './RelatoriosPedidos'
+import ItensEmFalta from './ItensEmFalta'
 
 export default function Pedidos() {
   const { permissions, profile } = useAuth()
@@ -64,6 +65,14 @@ export default function Pedidos() {
           )}
           {canManage && (
             <TabsTrigger
+              value="falta"
+              className="data-[state=active]:bg-amber-500 data-[state=active]:text-white font-bold uppercase tracking-wider text-xs py-2"
+            >
+              Itens em Falta
+            </TabsTrigger>
+          )}
+          {canManage && (
+            <TabsTrigger
               value="relatorios"
               className="data-[state=active]:bg-amber-500 data-[state=active]:text-white font-bold uppercase tracking-wider text-xs py-2"
             >
@@ -79,6 +88,11 @@ export default function Pedidos() {
           {canManage && (
             <TabsContent value="recebidos" className="m-0 h-full">
               <PedidosRecebidos />
+            </TabsContent>
+          )}
+          {canManage && (
+            <TabsContent value="falta" className="m-0 h-full">
+              <ItensEmFalta />
             </TabsContent>
           )}
           {canManage && (

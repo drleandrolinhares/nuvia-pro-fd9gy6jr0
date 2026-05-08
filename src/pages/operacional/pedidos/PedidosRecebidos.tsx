@@ -10,14 +10,16 @@ import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { PackageOpen, CheckCircle2, ChevronDown, Clock } from 'lucide-react'
+import { PackageOpen, CheckCircle2, ChevronDown, Clock, XCircle } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function PedidosRecebidos() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [cicloAtual] = useState(getCycleString())
   const [pedidos, setPedidos] = useState<PedidoMaterial[]>([])
+  const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({})
 
   const load = async () => {
     try {
@@ -32,13 +34,41 @@ export default function PedidosRecebidos() {
     load()
   }, [])
 
+  useEffect(() => {
+    if (pedidos.length > 0) {
+      const initial: Record<string, string[]> = {}
+      pedidos.forEach((p) => {
+        if (p.status === 'enviado') {
+          initial[p.id] = p.itens?.map((it) => it.id!) || []
+        }
+      })
+      setSelectedItems((prev) => ({ ...initial, ...prev }))
+    }
+  }, [pedidos])
+
+  const handleToggleItem = (pedidoId: string, itemId: string) => {
+    setSelectedItems((prev) => {
+      const current = prev[pedidoId] || []
+      if (current.includes(itemId)) {
+        return { ...prev, [pedidoId]: current.filter((id) => id !== itemId) }
+      } else {
+        return { ...prev, [pedidoId]: [...current, itemId] }
+      }
+    })
+  }
+
   const handleEntregar = async (id: string) => {
     if (!user) return
-    if (!confirm('Confirmar entrega dos materiais ao colaborador? O estoque será atualizado.'))
+    if (
+      !confirm(
+        'Confirmar entrega dos materiais selecionados? Os itens não marcados irão para a aba "Itens em Falta".',
+      )
+    )
       return
     try {
-      await entregarPedido(id, user.id)
-      toast({ title: 'Sucesso', description: 'Pedido marcado como entregue.' })
+      const deliveredIds = selectedItems[id] || []
+      await entregarPedido(id, user.id, deliveredIds)
+      toast({ title: 'Sucesso', description: 'Pedido processado com sucesso.' })
       load()
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' })
@@ -105,19 +135,48 @@ export default function PedidosRecebidos() {
                   Itens Solicitados ({p.itens?.length})
                 </div>
                 <ul className="space-y-2">
-                  {p.itens?.map((it) => (
-                    <li
-                      key={it.id}
-                      className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800"
-                    >
-                      <span className="text-sm text-slate-300">
-                        {it.descricao_item || it.produto?.nome || 'Item não especificado'}
-                      </span>
-                      <span className="text-xs font-bold bg-slate-800 px-2 py-1 rounded text-amber-500">
-                        {it.quantidade} UN
-                      </span>
-                    </li>
-                  ))}
+                  {p.itens?.map((it) => {
+                    const isDelivered =
+                      p.status === 'entregue'
+                        ? it.status === 'entregue'
+                        : selectedItems[p.id]?.includes(it.id!)
+                    const isFalta = p.status === 'entregue' && it.status === 'em_falta'
+
+                    return (
+                      <li
+                        key={it.id}
+                        className={`flex justify-between items-center bg-slate-900 p-2 rounded border ${isFalta ? 'border-red-500/30' : 'border-slate-800'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {p.status === 'enviado' && (
+                            <Checkbox
+                              checked={isDelivered}
+                              onCheckedChange={() => handleToggleItem(p.id, it.id!)}
+                            />
+                          )}
+                          {p.status === 'entregue' && (
+                            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                              {isDelivered ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500" />
+                              )}
+                            </div>
+                          )}
+                          <span
+                            className={`text-sm ${isFalta ? 'text-red-400 line-through opacity-70' : 'text-slate-300'}`}
+                          >
+                            {it.descricao_item || it.produto?.nome || 'Item não especificado'}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs font-bold bg-slate-800 px-2 py-1 rounded ${isFalta ? 'text-red-500' : 'text-amber-500'}`}
+                        >
+                          {it.quantidade} UN
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
                 {p.observacoes && (
                   <div className="text-sm text-slate-400 bg-slate-900 p-3 rounded border border-slate-800 italic">
