@@ -1744,6 +1744,13 @@ export type Database = {
             referencedRelation: 'funil_leads'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'funil_leads_historico_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
         ]
       }
       funil_leads_notas: {
@@ -1774,6 +1781,13 @@ export type Database = {
             columns: ['lead_id']
             isOneToOne: false
             referencedRelation: 'funil_leads'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funil_leads_notas_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
             referencedColumns: ['id']
           },
         ]
@@ -5000,11 +5014,11 @@ export const Constants = {
 // Table: funil_leads_historico
 //   FOREIGN KEY funil_leads_historico_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES funil_leads(id) ON DELETE CASCADE
 //   PRIMARY KEY funil_leads_historico_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY funil_leads_historico_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
+//   FOREIGN KEY funil_leads_historico_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 // Table: funil_leads_notas
 //   FOREIGN KEY funil_leads_notas_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES funil_leads(id) ON DELETE CASCADE
 //   PRIMARY KEY funil_leads_notas_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY funil_leads_notas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
+//   FOREIGN KEY funil_leads_notas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 // Table: funil_origens
 //   UNIQUE funil_origens_nome_key: UNIQUE (nome)
 //   PRIMARY KEY funil_origens_pkey: PRIMARY KEY (id)
