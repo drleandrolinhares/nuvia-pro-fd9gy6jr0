@@ -48,9 +48,12 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
       leads?.forEach((lead) => {
         const nome = lead.nome.toLowerCase().trim()
         const status = lead.status
+
+        // Vamos desconsiderar COMPLETAMENTE qualquer lead cujo nome esteja em vendas diretas
+        // Isso garante que o paciente não será contabilizado no Semáforo, independentemente do status atual
         const isVendaDireta = vendasDiretasNomes.has(nome)
 
-        if (isVendaDireta && ['fechamento', 'venda-fechada'].includes(status || '')) {
+        if (isVendaDireta) {
           return
         }
 
@@ -97,17 +100,12 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
     )
   }
 
+  const percAgendamento =
+    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
   const percComparecimento =
     metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
   const percFechamento =
     metrics.compareceram > 0 ? Math.round((metrics.fechados / metrics.compareceram) * 100) : 0
-
-  const percGlobalAgendamento =
-    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
-  const percGlobalComparecimento =
-    metrics.total > 0 ? Math.round((metrics.compareceram / metrics.total) * 100) : 0
-  const percGlobalFechamento =
-    metrics.total > 0 ? Math.round((metrics.fechados / metrics.total) * 100) : 0
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -121,7 +119,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
               Semáforo de Conversão de Novos Pacientes
             </h3>
             <p className="text-sm text-slate-400">
-              Análise de eficiência do funil excluindo vendas diretas (pacientes recorrentes)
+              Análise de eficiência do funil (Cálculo em cascata etapa a etapa)
             </p>
           </div>
         </div>
@@ -141,26 +139,26 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           <SemaforoCard
             title="Agendamentos"
             value={metrics.agendados}
-            percentage={percGlobalAgendamento}
+            percentage={percAgendamento}
             type="agendamento"
             icon={CalendarCheck}
-            subtitle={`Conversão Global: ${percGlobalAgendamento}%`}
+            subtitle={`% sobre Total de Leads`}
           />
           <SemaforoCard
             title="Comparecimentos"
             value={metrics.compareceram}
-            percentage={percGlobalComparecimento}
+            percentage={percComparecimento}
             type="comparecimento"
             icon={CheckSquare}
-            subtitle={`Conversão da Etapa: ${percComparecimento}%`}
+            subtitle={`% sobre Agendados`}
           />
           <SemaforoCard
             title="Fechamentos"
             value={metrics.fechados}
-            percentage={percGlobalFechamento}
+            percentage={percFechamento}
             type="fechamento"
             icon={DollarSign}
-            subtitle={`Conversão da Etapa: ${percFechamento}%`}
+            subtitle={`% sobre Comparecimentos`}
           />
         </div>
       </div>
@@ -188,11 +186,11 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle }: 
       iconColor = 'text-rose-500'
     }
   } else if (type === 'comparecimento') {
-    if (percentage >= 20) {
+    if (percentage >= 50) {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
-    } else if (percentage >= 10) {
+    } else if (percentage >= 30) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
@@ -202,11 +200,11 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle }: 
       iconColor = 'text-rose-500'
     }
   } else if (type === 'fechamento') {
-    if (percentage >= 10) {
+    if (percentage >= 30) {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
-    } else if (percentage >= 5) {
+    } else if (percentage >= 15) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
