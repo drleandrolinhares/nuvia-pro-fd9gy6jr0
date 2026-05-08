@@ -147,8 +147,8 @@ export function VisualizarProdutoModal({
               <p className="text-sm font-medium text-slate-500">Estoque Atual</p>
               <p
                 className={`font-bold text-lg ${
-                  !(produto.data_proxima_revisao || produto.consumo_estimado_frequencia) &&
-                  produto.quantidade_estoque <= produto.quantidade_minima
+                  !produto.alerta_prazo_dias &&
+                  produto.quantidade_estoque <= (produto.quantidade_minima || 0)
                     ? 'text-red-600'
                     : 'text-slate-900'
                 }`}
@@ -156,10 +156,10 @@ export function VisualizarProdutoModal({
                 {produto.quantidade_estoque}
               </p>
             </div>
-            {!(produto.data_proxima_revisao || produto.consumo_estimado_frequencia) ? (
+            {!produto.alerta_prazo_dias ? (
               <div>
                 <p className="text-sm font-medium text-slate-500">Estoque Mínimo</p>
-                <p className="font-semibold text-slate-900">{produto.quantidade_minima}</p>
+                <p className="font-semibold text-slate-900">{produto.quantidade_minima || 0}</p>
               </div>
             ) : (
               <div>

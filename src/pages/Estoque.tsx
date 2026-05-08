@@ -258,11 +258,10 @@ export default function Estoque() {
         diametro.toLowerCase().includes(searchLower)
 
       let isCritico = false
-      if (item.data_proxima_revisao || item.consumo_estimado_frequencia) {
+      if (item.alerta_prazo_dias) {
         if (item.data_proxima_revisao) {
           const alertDate = new Date(item.data_proxima_revisao)
-          if (item.alerta_prazo_dias)
-            alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+          alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
           isCritico = new Date() >= alertDate
         } else {
           isCritico = false
@@ -310,11 +309,10 @@ export default function Estoque() {
 
         const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
         const isCritico = items.some((item) => {
-          if (item.data_proxima_revisao || item.consumo_estimado_frequencia) {
+          if (item.alerta_prazo_dias) {
             if (!item.data_proxima_revisao) return false
             const alertDate = new Date(item.data_proxima_revisao)
-            if (item.alerta_prazo_dias)
-              alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+            alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
             return new Date() >= alertDate
           }
           return item.quantidade_estoque <= item.quantidade_minima
@@ -651,13 +649,10 @@ export default function Estoque() {
                           {isExpanded &&
                             group.items.map((item) => {
                               let isCriticoPorPrazo = false
-                              const hasPrazo = !!(
-                                item.data_proxima_revisao || item.consumo_estimado_frequencia
-                              )
-                              if (item.data_proxima_revisao) {
+                              const hasPrazo = !!item.alerta_prazo_dias
+                              if (item.data_proxima_revisao && item.alerta_prazo_dias) {
                                 const alertDate = new Date(item.data_proxima_revisao)
-                                if (item.alerta_prazo_dias)
-                                  alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+                                alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
                                 isCriticoPorPrazo = new Date() >= alertDate
                               }
                               const isCriticoPorQtd =

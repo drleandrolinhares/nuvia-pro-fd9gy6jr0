@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Loader2, Save } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 import {
   Dialog,
@@ -180,7 +181,7 @@ export function EditarProdutoModal({
       marca: marca.trim().toUpperCase() || null,
       especialidade_id: especialidadeId === 'none' ? null : especialidadeId,
       codigo_barras: codigoBarras.trim() || null,
-      quantidade_minima: parseInt(quantidadeMinima) || 0,
+      quantidade_minima: controlePorPrazo ? 0 : parseInt(quantidadeMinima) || 0,
       sala_id: salaId === 'none' ? null : salaId,
       sala: salaNome,
       numero_armario: numeroArmario.trim() || null,
@@ -283,17 +284,19 @@ export function EditarProdutoModal({
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="qtd_min">Estq. Mínimo</Label>
-              <Input
-                id="qtd_min"
-                type="number"
-                min="0"
-                value={quantidadeMinima}
-                onChange={(e) => setQuantidadeMinima(e.target.value)}
-              />
-            </div>
+          <div className={cn('grid gap-4', controlePorPrazo ? 'grid-cols-3' : 'grid-cols-4')}>
+            {!controlePorPrazo && (
+              <div className="space-y-2">
+                <Label htmlFor="qtd_min">Estq. Mínimo</Label>
+                <Input
+                  id="qtd_min"
+                  type="number"
+                  min="0"
+                  value={quantidadeMinima}
+                  onChange={(e) => setQuantidadeMinima(e.target.value)}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="sala">Sala</Label>
               <Select value={salaId} onValueChange={setSalaId}>

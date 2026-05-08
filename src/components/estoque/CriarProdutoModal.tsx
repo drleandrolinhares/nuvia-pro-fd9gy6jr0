@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, PackagePlus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -42,6 +43,7 @@ const formSchema = z.object({
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
   embalagem: z.string().optional(),
+  quantidade_minima: z.coerce.number().min(0, 'Valor inválido').optional(),
   custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
   sala_id: z.string().optional(),
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
@@ -85,6 +87,7 @@ export function CriarProdutoModal({
       marca: '',
       especialidade_id: 'none',
       embalagem: '',
+      quantidade_minima: 0,
       custo_unitario: 0,
       referencia_consumo: 'qtd_comprada',
       controle_prazo: false,
@@ -103,6 +106,7 @@ export function CriarProdutoModal({
         marca: '',
         especialidade_id: 'none',
         embalagem: '',
+        quantidade_minima: 0,
         custo_unitario: 0,
         sala_id: 'none',
         referencia_consumo: 'qtd_comprada',
@@ -165,7 +169,7 @@ export function CriarProdutoModal({
       sala_id: values.sala_id === 'none' ? null : values.sala_id,
       sala: salaNome,
       quantidade_estoque: 0,
-      quantidade_minima: 0,
+      quantidade_minima: values.controle_prazo ? 0 : values.quantidade_minima || 0,
       custo_unitario: values.custo_unitario || 0,
       referencia_consumo: values.referencia_consumo,
       alerta_prazo_dias: values.controle_prazo ? diasAlerta : null,
@@ -280,7 +284,12 @@ export function CriarProdutoModal({
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div
+              className={cn(
+                'grid gap-4',
+                form.watch('controle_prazo') ? 'grid-cols-3' : 'grid-cols-4',
+              )}
+            >
               <FormField
                 control={form.control}
                 name="embalagem"
@@ -306,6 +315,22 @@ export function CriarProdutoModal({
                   </FormItem>
                 )}
               />
+
+              {!form.watch('controle_prazo') && (
+                <FormField
+                  control={form.control}
+                  name="quantidade_minima"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estq. Mínimo</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" placeholder="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
