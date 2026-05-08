@@ -257,7 +257,14 @@ export default function Estoque() {
         tamanho.toLowerCase().includes(searchLower) ||
         diametro.toLowerCase().includes(searchLower)
 
-      const isCritico = item.quantidade_estoque <= item.quantidade_minima
+      let isCritico = false
+      if (item.data_proxima_revisao) {
+        const alertDate = new Date(item.data_proxima_revisao)
+        if (item.alerta_prazo_dias) alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+        isCritico = new Date() >= alertDate
+      } else {
+        isCritico = item.quantidade_estoque <= item.quantidade_minima
+      }
       const matchesStatus = showCriticalOnly && searchTerm === '' ? isCritico : true
 
       return matchesSearch && matchesStatus
@@ -297,7 +304,15 @@ export default function Estoque() {
         })
 
         const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
-        const isCritico = items.some((item) => item.quantidade_estoque <= item.quantidade_minima)
+        const isCritico = items.some((item) => {
+          if (item.data_proxima_revisao) {
+            const alertDate = new Date(item.data_proxima_revisao)
+            if (item.alerta_prazo_dias)
+              alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+            return new Date() >= alertDate
+          }
+          return item.quantidade_estoque <= item.quantidade_minima
+        })
         return {
           nome,
           items: sortedItems,
@@ -617,7 +632,7 @@ export default function Estoque() {
                                 </span>
                                 {group.isCritico && (
                                   <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider bg-red-100 px-1 rounded mt-1">
-                                    Baixo
+                                    Alerta
                                   </span>
                                 )}
                               </div>
@@ -629,7 +644,17 @@ export default function Estoque() {
                           </TableRow>
                           {isExpanded &&
                             group.items.map((item) => {
-                              const isCritico = item.quantidade_estoque <= item.quantidade_minima
+                              let isCriticoPorPrazo = false
+                              if (item.data_proxima_revisao) {
+                                const alertDate = new Date(item.data_proxima_revisao)
+                                if (item.alerta_prazo_dias)
+                                  alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
+                                isCriticoPorPrazo = new Date() >= alertDate
+                              }
+                              const isCriticoPorQtd =
+                                !item.data_proxima_revisao &&
+                                item.quantidade_estoque <= item.quantidade_minima
+                              const isCritico = isCriticoPorPrazo || isCriticoPorQtd
                               return (
                                 <TableRow
                                   key={item.id}
@@ -660,6 +685,11 @@ export default function Estoque() {
                                       >
                                         {item.quantidade_estoque}
                                       </span>
+                                      {isCritico && (
+                                        <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider bg-red-100 px-1 rounded mt-1">
+                                          {isCriticoPorPrazo ? 'Prazo' : 'Mínimo'}
+                                        </span>
+                                      )}
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right font-medium text-slate-900">
