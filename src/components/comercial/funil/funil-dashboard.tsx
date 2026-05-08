@@ -38,6 +38,18 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
   const totalAvaliacoes = avaliacoes ? avaliacoes.length : 0
 
+  const valorOportunidades = useMemo(() => {
+    if (!avaliacoes) return 0
+    return avaliacoes
+      .filter(
+        (a: any) =>
+          a.status !== 'Fechada em Comercial' &&
+          a.status !== 'Fechada em Avaliação' &&
+          a.status !== 'venda_concretizada',
+      )
+      .reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
+  }, [avaliacoes])
+
   const pieData = useMemo(() => {
     return origens
       .filter((o: any) => o.ativo)
@@ -117,15 +129,13 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
         <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              CPL Médio
+              Oportunidades
             </CardTitle>
             <Target className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">
-              {totais.leads ? formatBrl(totais.investimento / totais.leads) : 'R$ 0,00'}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Custo por Lead</p>
+            <div className="text-3xl font-bold text-blue-400">{formatBrl(valorOportunidades)}</div>
+            <p className="text-xs text-slate-400 mt-1">Orçamentos em aberto</p>
           </CardContent>
         </Card>
 

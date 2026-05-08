@@ -6592,28 +6592,23 @@ export const Constants = {
 //       v_mes_referencia := NEW.mes_referencia;
 //     END IF;
 //
-//     -- Total de Leads
 //     SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
-//     -- Agendamentos
 //     SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
-//     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento');
+//     AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
-//     -- Comparecimentos
 //     SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
-//     AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento');
+//     AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
-//     -- Fechamentos
 //     SELECT COUNT(*) INTO v_fechamentos FROM public.funil_leads
 //     WHERE origem_id = v_origem_id
 //     AND mes_referencia = v_mes_referencia
 //     AND status IN ('fechamento', 'venda-fechada');
 //
-//     -- Faltas
 //     SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
 //     WHERE origem_id = v_origem_id AND mes_referencia = v_mes_referencia;
 //
