@@ -1659,6 +1659,7 @@ export type Database = {
         Row: {
           atualizado_em: string
           criado_em: string
+          data_proximo_contato: string | null
           descricao: string | null
           id: string
           mes_referencia: string
@@ -1673,6 +1674,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           criado_em?: string
+          data_proximo_contato?: string | null
           descricao?: string | null
           id?: string
           mes_referencia: string
@@ -1687,6 +1689,7 @@ export type Database = {
         Update: {
           atualizado_em?: string
           criado_em?: string
+          data_proximo_contato?: string | null
           descricao?: string | null
           id?: string
           mes_referencia?: string
@@ -1704,6 +1707,73 @@ export type Database = {
             columns: ['origem_id']
             isOneToOne: false
             referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funil_leads_historico: {
+        Row: {
+          acao: string
+          criado_em: string
+          detalhes: string | null
+          id: string
+          lead_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          criado_em?: string
+          detalhes?: string | null
+          id?: string
+          lead_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          criado_em?: string
+          detalhes?: string | null
+          id?: string
+          lead_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funil_leads_historico_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'funil_leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funil_leads_notas: {
+        Row: {
+          criado_em: string
+          id: string
+          lead_id: string
+          nota: string
+          usuario_id: string | null
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          lead_id: string
+          nota: string
+          usuario_id?: string | null
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          lead_id?: string
+          nota?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funil_leads_notas_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'funil_leads'
             referencedColumns: ['id']
           },
         ]
@@ -4309,6 +4379,20 @@ export const Constants = {
 //   atualizado_em: timestamp with time zone (not null, default: now())
 //   qtd_agendamentos: integer (nullable, default: 1)
 //   qtd_faltas: integer (nullable, default: 0)
+//   data_proximo_contato: timestamp with time zone (nullable)
+// Table: funil_leads_historico
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (not null)
+//   usuario_id: uuid (nullable)
+//   acao: text (not null)
+//   detalhes: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
+// Table: funil_leads_notas
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (not null)
+//   usuario_id: uuid (nullable)
+//   nota: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: funil_origens
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -4913,6 +4997,14 @@ export const Constants = {
 // Table: funil_leads
 //   FOREIGN KEY funil_leads_origem_id_fkey: FOREIGN KEY (origem_id) REFERENCES funil_origens(id) ON DELETE CASCADE
 //   PRIMARY KEY funil_leads_pkey: PRIMARY KEY (id)
+// Table: funil_leads_historico
+//   FOREIGN KEY funil_leads_historico_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES funil_leads(id) ON DELETE CASCADE
+//   PRIMARY KEY funil_leads_historico_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY funil_leads_historico_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
+// Table: funil_leads_notas
+//   FOREIGN KEY funil_leads_notas_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES funil_leads(id) ON DELETE CASCADE
+//   PRIMARY KEY funil_leads_notas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY funil_leads_notas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: funil_origens
 //   UNIQUE funil_origens_nome_key: UNIQUE (nome)
 //   PRIMARY KEY funil_origens_pkey: PRIMARY KEY (id)
@@ -5315,6 +5407,14 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: funil_leads
 //   Policy "funil_leads_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: funil_leads_historico
+//   Policy "funil_leads_historico_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: funil_leads_notas
+//   Policy "funil_leads_notas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: funil_origens

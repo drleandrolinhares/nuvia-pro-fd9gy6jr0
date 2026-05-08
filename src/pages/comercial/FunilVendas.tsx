@@ -31,8 +31,8 @@ export default function FunilVendas() {
   const [dadosMensais, setDadosMensais] = useState<any[]>([])
   const [avaliacoesMes, setAvaliacoesMes] = useState<any[]>([])
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData = async (showLoader = true) => {
+    if (showLoader) setLoading(true)
     const { data: origensData } = await supabase.from('funil_origens').select('*').order('ordem')
     setOrigens(origensData || [])
 
@@ -114,11 +114,11 @@ export default function FunilVendas() {
 
     setDadosMensais(finalDados)
     setAvaliacoesMes(avaliacoesData || [])
-    setLoading(false)
+    if (showLoader) setLoading(false)
   }
 
   useEffect(() => {
-    fetchData()
+    fetchData(true)
   }, [mesReferencia])
 
   const mesesOptions = Array.from({ length: 12 }).map((_, i) => {
@@ -242,7 +242,7 @@ export default function FunilVendas() {
           dados={dadosMensais}
           mesReferencia={mesReferencia}
           avaliacoes={avaliacoesMes}
-          onUpdate={fetchData}
+          onUpdate={() => fetchData(false)}
         />
       ) : view === 'bussola' ? (
         <BussolaComercial origens={origens} dados={dadosMensais} mesReferencia={mesReferencia} />
@@ -255,7 +255,7 @@ export default function FunilVendas() {
           origens={origens}
           etapas={etapas}
           temperaturas={temperaturas}
-          onUpdate={fetchData}
+          onUpdate={() => fetchData(true)}
         />
       ) : (
         <GestaoLeadsKanban
@@ -263,7 +263,7 @@ export default function FunilVendas() {
           etapas={etapas}
           temperaturas={temperaturas}
           mesReferencia={mesReferencia}
-          onUpdate={fetchData}
+          onUpdate={(showLoader = true) => fetchData(showLoader)}
           onOpenAgenda={() => setView('agenda')}
         />
       )}

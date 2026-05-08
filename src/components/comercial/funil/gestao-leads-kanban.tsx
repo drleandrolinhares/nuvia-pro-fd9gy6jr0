@@ -59,19 +59,19 @@ export function GestaoLeadsKanban({
   const [vendasModalOpen, setVendasModalOpen] = useState(false)
   const [selectedLeadForVenda, setSelectedLeadForVenda] = useState<any>(null)
 
-  const fetchLeads = async () => {
-    setLoading(true)
+  const fetchLeads = async (showLoader = true) => {
+    if (showLoader) setLoading(true)
     const { data } = await supabase
       .from('funil_leads')
       .select('*')
       .eq('mes_referencia', mesReferencia)
       .order('criado_em', { ascending: false })
     setLeads(data || [])
-    setLoading(false)
+    if (showLoader) setLoading(false)
   }
 
   useEffect(() => {
-    fetchLeads()
+    fetchLeads(true)
   }, [mesReferencia])
 
   const handleDragStart = (e: React.DragEvent, leadId: string) => {
@@ -122,7 +122,7 @@ export function GestaoLeadsKanban({
       .eq('id', leadId)
     if (error) {
       toast.error('Erro ao atualizar status do lead')
-      fetchLeads()
+      fetchLeads(false)
     } else {
       if (user) {
         await supabase.from('funil_leads_historico').insert([
@@ -134,15 +134,16 @@ export function GestaoLeadsKanban({
           },
         ])
       }
-      onUpdate()
+      onUpdate(false)
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir este lead?')) return
+    setLeads((prev) => prev.filter((l) => l.id !== id))
     await supabase.from('funil_leads').delete().eq('id', id)
-    fetchLeads()
-    onUpdate()
+    fetchLeads(false)
+    onUpdate(false)
     toast.success('Lead excluído')
   }
 
@@ -315,8 +316,8 @@ export function GestaoLeadsKanban({
           etapas={etapas}
           temperaturas={temperaturas}
           onSaved={() => {
-            fetchLeads()
-            onUpdate()
+            fetchLeads(false)
+            onUpdate(false)
             setLeadDialogLead(null)
           }}
         />
@@ -340,8 +341,8 @@ export function GestaoLeadsKanban({
             : undefined
         }
         onSuccess={() => {
-          fetchLeads()
-          onUpdate()
+          fetchLeads(false)
+          onUpdate(false)
         }}
       />
     </div>
