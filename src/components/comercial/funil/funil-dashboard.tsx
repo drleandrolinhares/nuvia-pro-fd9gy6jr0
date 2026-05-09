@@ -4,6 +4,14 @@ import { OrigemCard } from './origem-card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   Users,
   DollarSign,
   Target,
@@ -11,6 +19,7 @@ import {
   PieChart as PieChartIcon,
   CheckSquare,
   Percent,
+  TableProperties,
 } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
@@ -96,11 +105,135 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
     receita: { label: 'Receita', color: '#10b981' },
   }
 
+  const matrizData = useMemo(() => {
+    return origens
+      .filter((o: any) => o.ativo)
+      .map((o: any) => {
+        const d = dados.find((x: any) => x.origem_id === o.id) || {}
+        const leads = Number(d.leads_realizado || 0)
+        const vendas = Number(d.fechamentos_qtde_realizado || 0)
+        const valor = Number(d.fechamentos_valor_realizado || 0)
+        const ticketMedio = vendas > 0 ? valor / vendas : 0
+        const conversao = leads > 0 ? (vendas / leads) * 100 : 0
+
+        return {
+          id: o.id,
+          origem: o.nome,
+          leads,
+          vendas,
+          valor,
+          ticketMedio,
+          conversao,
+        }
+      })
+      .sort((a: any, b: any) => b.valor - a.valor)
+  }, [origens, dados])
+
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
   return (
     <div className="space-y-6">
+      <Card className="bg-slate-900 border-slate-800 shadow-sm overflow-hidden">
+        <CardHeader className="border-b border-slate-800/50 pb-4 bg-slate-900/50">
+          <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+            <TableProperties className="w-5 h-5 text-amber-500" />
+            Matriz de Vendas por Origem
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-950/50">
+                <TableRow className="border-slate-800 hover:bg-transparent">
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs">
+                    Origem
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs text-right">
+                    Leads
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs text-right">
+                    Vendas (Qtde)
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs text-right">
+                    Valor Total
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs text-right">
+                    Ticket Médio
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-semibold uppercase tracking-wider text-xs text-right">
+                    Conversão
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matrizData.length > 0 ? (
+                  matrizData.map((row: any) => (
+                    <TableRow
+                      key={row.id}
+                      className="border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                    >
+                      <TableCell className="font-medium text-slate-300">{row.origem}</TableCell>
+                      <TableCell className="text-right text-slate-300">{row.leads}</TableCell>
+                      <TableCell className="text-right text-slate-300">{row.vendas}</TableCell>
+                      <TableCell className="text-right text-emerald-400 font-medium">
+                        {formatBrl(row.valor)}
+                      </TableCell>
+                      <TableCell className="text-right text-slate-300">
+                        {formatBrl(row.ticketMedio)}
+                      </TableCell>
+                      <TableCell className="text-right text-amber-400">
+                        {row.conversao.toFixed(1)}%
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-6 text-slate-500">
+                      Nenhum dado encontrado para o período.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {matrizData.length > 0 && (
+                  <TableRow className="border-t-2 border-slate-800 bg-slate-950/30 hover:bg-slate-950/30">
+                    <TableCell className="font-bold text-white uppercase text-xs tracking-wider">
+                      Total
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-white">
+                      {matrizData.reduce((acc: number, r: any) => acc + r.leads, 0)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-white">
+                      {matrizData.reduce((acc: number, r: any) => acc + r.vendas, 0)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-emerald-400">
+                      {formatBrl(matrizData.reduce((acc: number, r: any) => acc + r.valor, 0))}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-white">
+                      {matrizData.reduce((acc: number, r: any) => acc + r.vendas, 0) > 0
+                        ? formatBrl(
+                            matrizData.reduce((acc: number, r: any) => acc + r.valor, 0) /
+                              matrizData.reduce((acc: number, r: any) => acc + r.vendas, 0),
+                          )
+                        : formatBrl(0)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-amber-400">
+                      {matrizData.reduce((acc: number, r: any) => acc + r.leads, 0) > 0
+                        ? (
+                            (matrizData.reduce((acc: number, r: any) => acc + r.vendas, 0) /
+                              matrizData.reduce((acc: number, r: any) => acc + r.leads, 0)) *
+                            100
+                          ).toFixed(1)
+                        : '0.0'}
+                      %
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-2 gap-4">
         <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
