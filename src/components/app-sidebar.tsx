@@ -370,6 +370,23 @@ export function AppSidebar() {
     return null
   }
 
+  const getGroupBadge = (items: any[]) => {
+    if (!items) return null
+    let total = 0
+    items.forEach((item) => {
+      const b = getBadge(item.title)
+      if (b && typeof b === 'number') total += b
+
+      if (item.subItems) {
+        item.subItems.forEach((subItem: any) => {
+          const subB = getBadge(subItem.title)
+          if (subB && typeof subB === 'number') total += subB
+        })
+      }
+    })
+    return total > 0 ? total : null
+  }
+
   const handleLogout = async () => {
     await signOut()
     navigate('/')
@@ -464,8 +481,15 @@ export function AppSidebar() {
                       {group.icon && <group.icon className="size-4 text-amber-500" />}
                       {group.title}
                     </div>
-                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-amber-500/50" />
-                  </CollapsibleTrigger>
+                    <div className="flex items-center gap-2">
+                      {getGroupBadge(filteredItems) && (
+                        <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
+                          {getGroupBadge(filteredItems)}
+                        </span>
+                      )}
+                      <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-amber-500/50" />
+                    </div>
+                  </CollapsibleTrigger>{' '}
                 </SidebarGroupLabel>
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">

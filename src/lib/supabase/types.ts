@@ -2098,6 +2098,7 @@ export type Database = {
           preco_unitario: number
           produto_id: string | null
           quantidade: number
+          status: string | null
           valor_total: number
         }
         Insert: {
@@ -2107,6 +2108,7 @@ export type Database = {
           preco_unitario?: number
           produto_id?: string | null
           quantidade: number
+          status?: string | null
           valor_total?: number
         }
         Update: {
@@ -2116,6 +2118,7 @@ export type Database = {
           preco_unitario?: number
           produto_id?: string | null
           quantidade?: number
+          status?: string | null
           valor_total?: number
         }
         Relationships: [
@@ -4486,6 +4489,7 @@ export const Constants = {
 //   preco_unitario: numeric (not null, default: 0)
 //   valor_total: numeric (not null, default: 0)
 //   descricao_item: text (nullable)
+//   status: text (nullable, default: 'pendente'::text)
 // Table: pedidos_materiais
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
