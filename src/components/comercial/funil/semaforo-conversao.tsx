@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Percent,
   Activity,
+  UserMinus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +26,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
     agendados: 0,
     compareceram: 0,
     fechados: 0,
+    faltantes: 0,
     valorOportunidades: 0,
     valorVendas: 0,
     qtdeVendas: 0,
@@ -64,6 +66,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
       let agendados = 0
       let compareceram = 0
       let fechados = 0
+      let faltantes = 0
 
       leads?.forEach((lead) => {
         const nome = lead.nome.toLowerCase().trim()
@@ -97,10 +100,12 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           'fechamento',
         ].includes(status || '')
         const isFechado = ['fechamento', 'venda-fechada'].includes(status || '')
+        const isFaltante = status === 'faltou'
 
         if (isAgendado) agendados++
         if (isCompareceu) compareceram++
         if (isFechado) fechados++
+        if (isFaltante) faltantes++
       })
 
       const valorOportunidades =
@@ -115,6 +120,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
         agendados,
         compareceram,
         fechados,
+        faltantes,
         valorOportunidades,
         valorVendas,
         qtdeVendas,
@@ -138,6 +144,8 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
     metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
   const percComparecimento =
     metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
+  const percFaltantes =
+    metrics.agendados > 0 ? Math.round((metrics.faltantes / metrics.agendados) * 100) : 0
   const percFechamento =
     metrics.compareceram > 0 ? Math.round((metrics.fechados / metrics.compareceram) * 100) : 0
 
@@ -250,7 +258,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
               <Users className="w-8 h-8 text-blue-500" />
@@ -276,6 +284,14 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
             percentage={percComparecimento}
             type="comparecimento"
             icon={CheckSquare}
+            subtitle={`% sobre Agendados`}
+          />
+          <SemaforoCard
+            title="Faltantes"
+            value={metrics.faltantes}
+            percentage={percFaltantes}
+            type="faltante"
+            icon={UserMinus}
             subtitle={`% sobre Agendados`}
           />
           <SemaforoCard
@@ -379,6 +395,20 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle }: 
       colorClass = 'bg-rose-500/5 border-rose-500/20'
       indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
       iconColor = 'text-rose-500'
+    }
+  } else if (type === 'faltante') {
+    if (percentage >= 30) {
+      colorClass = 'bg-rose-500/5 border-rose-500/20'
+      indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
+      iconColor = 'text-rose-500'
+    } else if (percentage >= 15) {
+      colorClass = 'bg-yellow-500/5 border-yellow-500/20'
+      indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
+      iconColor = 'text-yellow-500'
+    } else {
+      colorClass = 'bg-emerald-500/5 border-emerald-500/20'
+      indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
+      iconColor = 'text-emerald-500'
     }
   } else if (type === 'fechamento') {
     if (percentage >= 30) {
