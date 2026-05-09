@@ -489,7 +489,7 @@ export function AppSidebar() {
                       )}
                       <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-amber-500/50" />
                     </div>
-                  </CollapsibleTrigger>{' '}
+                  </CollapsibleTrigger>
                 </SidebarGroupLabel>
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">
