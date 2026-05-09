@@ -168,7 +168,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
               <Target className="w-8 h-8 text-blue-500" />
@@ -207,6 +207,18 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
               {conversaoFinanceira.toFixed(1)}%
             </div>
             <p className="text-xs text-slate-400 font-medium">Vendas / Oportunidades</p>
+          </div>
+
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-violet-500/20">
+              <CheckSquare className="w-8 h-8 text-violet-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Fechamentos
+            </h3>
+            <div className="text-3xl font-bold mb-2 text-violet-400">{metrics.qtdeVendas}</div>
+            <p className="text-xs text-slate-400 font-medium">Quantidade de vendas</p>
           </div>
 
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">

@@ -1,6 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EditarDadosDialog } from './editar-dados-dialog'
-import { ArrowRight, Users, Calendar, CheckSquare, DollarSign, Target } from 'lucide-react'
+import {
+  ArrowRight,
+  Users,
+  Calendar,
+  CheckSquare,
+  DollarSign,
+  Target,
+  UserMinus,
+} from 'lucide-react'
 
 export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
   const d = dado || {
@@ -53,9 +61,9 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
       </CardHeader>
 
       <CardContent className="pt-6 space-y-8 pl-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center relative">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center relative">
           {/* Connector lines for desktop */}
-          <div className="hidden md:block absolute top-1/2 left-[12.5%] right-[12.5%] h-[2px] bg-slate-800 -z-10 -translate-y-1/2"></div>
+          <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-slate-800 -z-10 -translate-y-1/2"></div>
 
           <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-center">
             <div className="flex items-center justify-center mb-3">
@@ -91,6 +99,19 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               Comp.
             </p>
             <p className="text-4xl font-bold text-white mt-1">{d.comparecimentos_realizado}</p>
+          </div>
+
+          <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-rose-900/50 transition-colors flex flex-col items-center justify-center">
+            <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
+              <ArrowRight className="w-3 h-3 text-slate-500" />
+            </div>
+            <div className="flex items-center justify-center mb-3">
+              <UserMinus className="w-5 h-5 text-rose-500" />
+            </div>
+            <p className="text-sm font-semibold text-rose-400 mb-1 uppercase tracking-wider">
+              Falt.
+            </p>
+            <p className="text-4xl font-bold text-white mt-1">{d.faltas_realizado}</p>
           </div>
 
           <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-emerald-900/50 transition-colors flex flex-col items-center justify-center">
