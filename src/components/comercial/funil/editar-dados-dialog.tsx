@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,57 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Edit2, Loader2, Save } from 'lucide-react'
+import { Edit2, Loader2, Save, BarChart3, Zap, CalendarDays, History } from 'lucide-react'
+
+const AnaliseCard = ({ title, desc, qtd, valor, color, Icon }: any) => {
+  const colorMap: Record<string, string> = {
+    emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-500',
+    purple: 'bg-purple-500/10 border-purple-500/20 text-purple-500',
+  }
+  const iconColorMap: Record<string, string> = {
+    emerald: 'text-emerald-400',
+    blue: 'text-blue-400',
+    purple: 'text-purple-400',
+  }
+  return (
+    <div
+      className={`p-5 rounded-xl border ${colorMap[color]} flex flex-col relative overflow-hidden group hover:bg-opacity-20 transition-all shadow-inner`}
+    >
+      <div className="flex items-center gap-2 mb-1 z-10">
+        <Icon className={`w-4 h-4 ${iconColorMap[color]}`} />
+        <h4 className="font-bold text-sm uppercase tracking-wider">{title}</h4>
+      </div>
+      <p className="text-xs opacity-70 mb-4 z-10">{desc}</p>
+      <div className="mt-auto flex justify-between items-end z-10">
+        <div>
+          <p className="text-3xl font-bold">{qtd}</p>
+          <p className="text-[10px] uppercase tracking-wider opacity-70 mt-1">Vendas</p>
+        </div>
+        <div className="text-right">
+          <p className="text-lg font-bold">
+            {Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </p>
+          <p className="text-[10px] uppercase tracking-wider opacity-70 mt-1">Receita</p>
+        </div>
+      </div>
+      <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <Icon className="w-24 h-24" />
+      </div>
+    </div>
+  )
+}
 
 export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [analiseData, setAnaliseData] = useState({
+    fechamentoNoAto: { qtd: 0, valor: 0 },
+    followMes: { qtd: 0, valor: 0 },
+    followResgate: { qtd: 0, valor: 0 },
+    loading: true,
+  })
+
   const [formData, setFormData] = useState({
     investimento: dado?.investimento || 0,
     meta_leads: dado?.meta_leads || 0,
@@ -32,6 +78,87 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
     fechamentos_qtde_realizado: dado?.fechamentos_qtde_realizado || 0,
     fechamentos_valor_realizado: dado?.fechamentos_valor_realizado || 0,
   })
+
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        investimento: dado?.investimento || 0,
+        meta_leads: dado?.meta_leads || 0,
+        leads_realizado: dado?.leads_realizado || 0,
+        meta_agendamentos_qtde: dado?.meta_agendamentos_qtde || 0,
+        meta_agendamentos_perc: dado?.meta_agendamentos_perc || 0,
+        agendamentos_realizado: dado?.agendamentos_realizado || 0,
+        meta_comparecimentos_qtde: dado?.meta_comparecimentos_qtde || 0,
+        meta_comparecimentos_perc: dado?.meta_comparecimentos_perc || 0,
+        comparecimentos_realizado: dado?.comparecimentos_realizado || 0,
+        meta_fechamento_valor: dado?.meta_fechamento_valor || 0,
+        meta_fechamentos_perc: dado?.meta_fechamentos_perc || 0,
+        ticket_medio_esperado: dado?.ticket_medio_esperado || 0,
+        fechamentos_qtde_realizado: dado?.fechamentos_qtde_realizado || 0,
+        fechamentos_valor_realizado: dado?.fechamentos_valor_realizado || 0,
+      })
+      fetchAnalise()
+    }
+  }, [open, dado, mesReferencia, origem.id])
+
+  const fetchAnalise = async () => {
+    try {
+      setAnaliseData((prev) => ({ ...prev, loading: true }))
+      const [ano, mes] = mesReferencia.split('-')
+      const dataInicio = `${mesReferencia}-01`
+      const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+      const dataFim = `${mesReferencia}-${ultimoDia}`
+
+      const { data: vendasData, error } = await supabase
+        .from('vendas_confirmadas')
+        .select(
+          'id, data_fechamento, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id, data_avaliacao)',
+        )
+        .gte('data_fechamento', dataInicio)
+        .lte('data_fechamento', dataFim)
+
+      if (error) throw error
+
+      const vendasOrigem = (vendasData || []).filter(
+        (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === origem.id,
+      )
+
+      const noAto = { qtd: 0, valor: 0 }
+      const fMes = { qtd: 0, valor: 0 }
+      const fResgate = { qtd: 0, valor: 0 }
+
+      vendasOrigem.forEach((v: any) => {
+        const dtFechamento = v.data_fechamento
+        const dtAvaliacao = v.avaliacoes?.data_avaliacao
+        const valor = Number(v.valor_tratamento || 0)
+
+        if (!dtAvaliacao || dtAvaliacao === dtFechamento) {
+          noAto.qtd++
+          noAto.valor += valor
+        } else {
+          const mesAvaliacao = dtAvaliacao.substring(0, 7)
+          const mesFechamento = dtFechamento.substring(0, 7)
+          if (mesAvaliacao === mesFechamento) {
+            fMes.qtd++
+            fMes.valor += valor
+          } else {
+            fResgate.qtd++
+            fResgate.valor += valor
+          }
+        }
+      })
+
+      setAnaliseData({
+        fechamentoNoAto: noAto,
+        followMes: fMes,
+        followResgate: fResgate,
+        loading: false,
+      })
+    } catch (e: any) {
+      console.error('Erro ao buscar dados de análise:', e)
+      setAnaliseData((prev) => ({ ...prev, loading: false }))
+    }
+  }
 
   const handleChange = (e: any) => {
     const { name, value } = e.target
@@ -93,21 +220,72 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
         <Button
           variant="outline"
           size="sm"
-          className="h-9 px-3 bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white transition-colors"
+          className="h-9 px-4 bg-slate-800 border-slate-700 text-white hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/50 transition-all shadow-sm"
         >
-          <Edit2 className="w-3.5 h-3.5 mr-2 text-slate-400" />
-          Editar Valores
+          <BarChart3 className="w-3.5 h-3.5 mr-2" />
+          ANÁLISE
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 border-b border-slate-800 bg-slate-900/80 sticky top-0 z-10 backdrop-blur-sm">
-          <DialogTitle className="text-xl">
-            Lançamento de Dados: <span className="text-amber-500">{origem.nome}</span> (
+        <DialogHeader className="p-6 border-b border-slate-800 bg-slate-900/80 sticky top-0 z-20 backdrop-blur-sm shadow-sm">
+          <DialogTitle className="text-xl flex items-center gap-2">
+            Análise e Lançamentos: <span className="text-amber-500">{origem.nome}</span> (
             {mesReferencia})
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Dashboard Section */}
+        <div className="p-6 pb-0 space-y-4">
+          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-amber-500" />
+            Análise de Conversão (Automático)
+          </h3>
+
+          {analiseData.loading ? (
+            <div className="flex items-center justify-center py-12 bg-slate-950/50 rounded-xl border border-slate-800">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <AnaliseCard
+                title="Fechamento no Ato"
+                desc="Mesmo dia da avaliação"
+                qtd={analiseData.fechamentoNoAto.qtd}
+                valor={analiseData.fechamentoNoAto.valor}
+                color="emerald"
+                Icon={Zap}
+              />
+              <AnaliseCard
+                title="Follow do Mês"
+                desc="Mesmo mês da avaliação"
+                qtd={analiseData.followMes.qtd}
+                valor={analiseData.followMes.valor}
+                color="blue"
+                Icon={CalendarDays}
+              />
+              <AnaliseCard
+                title="Follow Resgate"
+                desc="Meses após a avaliação"
+                qtd={analiseData.followResgate.qtd}
+                valor={analiseData.followResgate.valor}
+                color="purple"
+                Icon={History}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="h-px w-full bg-slate-800/60"></div>
+        </div>
+
+        {/* Form Section */}
+        <form onSubmit={handleSubmit} className="p-6 pt-0 space-y-6">
+          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Edit2 className="w-4 h-4 text-blue-500" />
+            Lançamento de Dados do Funil
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Investimento & Leads */}
             <div className="space-y-4">
