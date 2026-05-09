@@ -152,62 +152,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-8">
-      {/* BLOCO 1: FUNIL CLÁSSICO */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-amber-500/10 rounded-lg">
-            <TrafficCone className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-white uppercase tracking-wide">
-              Funil Clássico - Agendamento, Comparecimento e Fechamento
-            </h3>
-            <p className="text-sm text-slate-400">
-              Análise de eficiência do funil (Cálculo em cascata etapa a etapa)
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
-            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
-              <Users className="w-8 h-8 text-blue-500" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
-              Total de Leads
-            </h3>
-            <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
-            <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
-          </div>
-
-          <SemaforoCard
-            title="Agendamentos"
-            value={metrics.agendados}
-            percentage={percAgendamento}
-            type="agendamento"
-            icon={CalendarCheck}
-            subtitle={`% sobre Total de Leads`}
-          />
-          <SemaforoCard
-            title="Comparecimentos"
-            value={metrics.compareceram}
-            percentage={percComparecimento}
-            type="comparecimento"
-            icon={CheckSquare}
-            subtitle={`% sobre Agendados`}
-          />
-          <SemaforoCard
-            title="Fechamentos"
-            value={metrics.fechados}
-            percentage={percFechamento}
-            type="fechamento"
-            icon={DollarSign}
-            subtitle={`% sobre Comparecimentos`}
-          />
-        </div>
-      </div>
-
-      {/* BLOCO 2: FUNIL POR OPORTUNIDADES GERADAS EM R$ */}
+      {/* BLOCO 1: FUNIL POR OPORTUNIDADES GERADAS EM R$ */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -274,6 +219,61 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
             <div className="text-2xl font-bold mb-2 text-white">{formatBrl(ticketMedio)}</div>
             <p className="text-xs text-slate-400 font-medium">Por fechamento</p>
           </div>
+        </div>
+      </div>
+
+      {/* BLOCO 2: FUNIL CLÁSSICO */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-amber-500/10 rounded-lg">
+            <TrafficCone className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white uppercase tracking-wide">
+              Funil Clássico - Agendamento, Comparecimento e Fechamento
+            </h3>
+            <p className="text-sm text-slate-400">
+              Análise de eficiência do funil (Cálculo em cascata etapa a etapa)
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
+              <Users className="w-8 h-8 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Total de Leads
+            </h3>
+            <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
+            <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
+          </div>
+
+          <SemaforoCard
+            title="Agendamentos"
+            value={metrics.agendados}
+            percentage={percAgendamento}
+            type="agendamento"
+            icon={CalendarCheck}
+            subtitle={`% sobre Total de Leads`}
+          />
+          <SemaforoCard
+            title="Comparecimentos"
+            value={metrics.compareceram}
+            percentage={percComparecimento}
+            type="comparecimento"
+            icon={CheckSquare}
+            subtitle={`% sobre Agendados`}
+          />
+          <SemaforoCard
+            title="Fechamentos"
+            value={metrics.fechados}
+            percentage={percFechamento}
+            type="fechamento"
+            icon={DollarSign}
+            subtitle={`% sobre Comparecimentos`}
+          />
         </div>
       </div>
 
