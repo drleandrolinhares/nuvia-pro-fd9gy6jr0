@@ -20,6 +20,9 @@ import {
   CheckSquare,
   Percent,
   TableProperties,
+  Calendar,
+  UserMinus,
+  ArrowRight,
 } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
@@ -260,6 +263,108 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
             <p className="text-xs text-slate-400 mt-1">Total realizadas no período</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Central de Conversão */}
+      <div className="space-y-6 pt-2">
+        <div className="flex items-center gap-4 py-2">
+          <div className="h-px bg-slate-800 flex-1"></div>
+          <div className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-md border border-slate-700 shadow-sm">
+            <TrendingUp className="w-5 h-5 text-blue-500" />
+            <h3 className="text-sm font-bold text-white tracking-widest uppercase">
+              Central de Conversão
+            </h3>
+          </div>
+          <div className="h-px bg-slate-800 flex-1"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+            <CardHeader className="border-b border-slate-800/50 pb-4">
+              <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-500" />
+                Funil Clássico
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+                  <Calendar className="w-5 h-5 text-blue-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Agendamento
+                  </span>
+                  <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+                  <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Comparecimento
+                  </span>
+                  <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+                  <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Falt
+                  </span>
+                  <span className="text-2xl font-bold text-white">{totais.faltas}</span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+                  <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Fechamento
+                  </span>
+                  <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+            <CardHeader className="border-b border-slate-800/50 pb-4">
+              <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+                <Target className="w-5 h-5 text-amber-500" />
+                Funil Por Oportunidade Geradas em R$
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+                  <Percent className="w-5 h-5 text-blue-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Conversão Total
+                  </span>
+                  <span className="text-2xl font-bold text-white">
+                    {conversaoTotal.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+                  <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Fechamentos
+                  </span>
+                  <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+                  <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Ticket Médio
+                  </span>
+                  <span className="text-xl font-bold text-emerald-400">
+                    {formatBrl(
+                      totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0,
+                    )}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
