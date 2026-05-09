@@ -127,6 +127,7 @@ export function VendasConcretizadasLista({
     setSelectedVenda({
       id: venda.id,
       paciente_nome: venda.paciente_nome || '',
+      data_original: venda.data_original ? venda.data_original.substring(0, 10) : '',
       data_fechamento: venda.data_fechamento ? venda.data_fechamento.substring(0, 10) : '',
       valor_tratamento: venda.valor_tratamento || 0,
       valor_entrada: venda.valor_entrada || 0,
@@ -169,6 +170,7 @@ export function VendasConcretizadasLista({
         .from('vendas_confirmadas')
         .update({
           paciente_nome: selectedVenda.paciente_nome,
+          data_original: selectedVenda.data_original || null,
           data_fechamento: selectedVenda.data_fechamento,
           valor_tratamento: Number(selectedVenda.valor_tratamento),
           valor_entrada: Number(selectedVenda.valor_entrada),
@@ -212,7 +214,8 @@ export function VendasConcretizadasLista({
           <TableHeader className="bg-slate-100 dark:bg-slate-800">
             <TableRow>
               <TableHead>Paciente</TableHead>
-              <TableHead>Data</TableHead>
+              <TableHead>Avaliação</TableHead>
+              <TableHead>Fechamento</TableHead>
               <TableHead>Valor Total</TableHead>
               <TableHead>Entrada</TableHead>
               <TableHead>% Ent.</TableHead>
@@ -224,13 +227,13 @@ export function VendasConcretizadasLista({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={9} className="text-center py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : vendas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Nenhuma venda encontrada.
                 </TableCell>
               </TableRow>
@@ -238,6 +241,7 @@ export function VendasConcretizadasLista({
               vendas.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">{v.paciente_nome}</TableCell>
+                  <TableCell>{formatDate(v.data_original)}</TableCell>
                   <TableCell>{formatDate(v.data_fechamento)}</TableCell>
                   <TableCell>{formatCurrency(v.valor_tratamento)}</TableCell>
                   <TableCell>{formatCurrency(v.valor_entrada)}</TableCell>
@@ -280,7 +284,7 @@ export function VendasConcretizadasLista({
             <DialogTitle>Editar Venda Concretizada</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label>Paciente</Label>
                 <Input
@@ -291,7 +295,17 @@ export function VendasConcretizadasLista({
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Data</Label>
+                <Label>Data Avaliação</Label>
+                <Input
+                  type="date"
+                  value={selectedVenda?.data_original || ''}
+                  onChange={(e) =>
+                    setSelectedVenda({ ...selectedVenda, data_original: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Data Fechamento</Label>
                 <Input
                   type="date"
                   value={selectedVenda?.data_fechamento || ''}

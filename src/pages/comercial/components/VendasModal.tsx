@@ -44,6 +44,7 @@ const initialForm = {
   novo_paciente_nome: '',
   telefone: '',
   data_avaliacao: format(new Date(), 'yyyy-MM-dd'),
+  data_fechamento: format(new Date(), 'yyyy-MM-dd'),
   dentista_avaliador_id: '',
   crc_comercial_id: '',
   valor_orcamento: '',
@@ -244,11 +245,16 @@ export function VendasModal({
       if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
       if (!formData.origem_id) throw new Error('Selecione a Origem do Paciente')
 
+      if (formData.tipo_lancamento === 'venda_concretizada' && !formData.data_fechamento) {
+        throw new Error('Data de Fechamento é obrigatória para vendas concretizadas')
+      }
+
       const payload: any = {
         paciente_id: currentPacienteId,
         dentista_avaliador_id: formData.dentista_avaliador_id,
         crc_comercial_id: formData.crc_comercial_id,
         data_avaliacao: formData.data_avaliacao,
+        data_fechamento: formData.data_fechamento || null,
         valor_orcamento: Number(formData.valor_orcamento),
         valor_entrada: Number(formData.valor_entrada),
         destino_fiscal: formData.destino_fiscal,
@@ -265,18 +271,31 @@ export function VendasModal({
       if (error) throw error
 
       if (formData.tipo_lancamento === 'venda_concretizada') {
-        await supabase.from('vendas_diarias').insert({
-          crc_comercial_id: formData.crc_comercial_id,
-          dentista_avaliador_id: formData.dentista_avaliador_id,
-          data_venda: formData.data_avaliacao,
-          valor: Number(formData.valor_entrada),
-          valor_tratamento: Number(formData.valor_orcamento),
-          destino_fiscal: formData.destino_fiscal,
-          forma_pagamento: formData.forma_pagamento,
-          destino_pagamento: formData.destino_pagamento,
-          paciente_nome: formData.novo_paciente_nome || 'Paciente Cadastrado',
-          origem_id: formData.origem_id,
-        })
+        const { data: vd, error: vdError } = await supabase
+          .from('vendas_diarias')
+          .insert({
+            crc_comercial_id: formData.crc_comercial_id,
+            dentista_avaliador_id: formData.dentista_avaliador_id,
+            data_venda: formData.data_fechamento,
+            valor: Number(formData.valor_entrada),
+            valor_tratamento: Number(formData.valor_orcamento),
+            destino_fiscal: formData.destino_fiscal,
+            forma_pagamento: formData.forma_pagamento,
+            destino_pagamento: formData.destino_pagamento,
+            paciente_nome: formData.novo_paciente_nome || 'Paciente Cadastrado',
+            origem_id: formData.origem_id,
+          })
+          .select('id')
+          .single()
+
+        if (!vdError && vd) {
+          await supabase
+            .from('vendas_confirmadas')
+            .update({
+              data_original: formData.data_avaliacao,
+            })
+            .eq('id', vd.id)
+        }
       }
 
       const { data: existingLead } = await supabase
@@ -418,14 +437,25 @@ export function VendasModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="grid gap-2">
-                <Label>Data da Venda *</Label>
+                <Label>Data Avaliação *</Label>
                 <Input
                   required
                   type="date"
                   value={formData.data_avaliacao}
                   onChange={(e) => setFormData({ ...formData, data_avaliacao: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>
+                  Data Fechamento {formData.tipo_lancamento === 'venda_concretizada' ? '*' : ''}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.data_fechamento}
+                  required={formData.tipo_lancamento === 'venda_concretizada'}
+                  onChange={(e) => setFormData({ ...formData, data_fechamento: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
