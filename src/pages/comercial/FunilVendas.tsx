@@ -195,7 +195,7 @@ export default function FunilVendas() {
               : 'text-slate-300 hover:text-white hover:bg-slate-800',
           )}
         >
-          Semáforo de Conversão
+          Central de Conversão
         </button>
         <button
           onClick={() => setView('agenda')}
