@@ -48,6 +48,11 @@ export function VendasAtuaisWidget() {
             ? '...'
             : `R$ ${totalVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
         </span>
+        <span className="text-[9px] text-slate-500 mt-1 leading-tight">
+          Vendas finalizadas no período
+          <br />
+          (independente da data da avaliação)
+        </span>
         <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
           <Button
             onClick={() => setHistoryOpen(true)}

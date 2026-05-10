@@ -41,16 +41,21 @@ export function OportunidadesWidget() {
   }, [])
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col justify-center min-w-[160px] shadow-sm">
-      <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
+    <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col justify-center min-w-[160px] shadow-sm relative group">
+      <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
         <Target className="w-3.5 h-3.5 text-blue-400" />
-        Oportunidades
+        Oportunidades (Abertas)
       </div>
-      <div className="text-lg font-bold text-blue-400">
+      <div className="text-lg font-bold text-blue-400 leading-tight">
         {loading
           ? '...'
           : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
       </div>
+      <span className="text-[9px] text-slate-500 mt-1 leading-tight">
+        Soma de avaliações (em aberto)
+        <br />
+        realizadas no período
+      </span>
     </div>
   )
 }

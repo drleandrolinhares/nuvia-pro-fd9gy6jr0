@@ -325,14 +325,29 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
           <Card className="bg-slate-900 border-slate-800 shadow-sm">
             <CardHeader className="border-b border-slate-800/50 pb-4">
-              <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
-                <Target className="w-5 h-5 text-amber-500" />
-                Funil Por Oportunidades Geradas em R$
-              </CardTitle>
+              <div className="flex flex-col">
+                <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Target className="w-5 h-5 text-amber-500" />
+                  Funil Por Oportunidades Geradas em R$
+                </CardTitle>
+                <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
+                  Soma de avaliações realizadas no período
+                </p>
+              </div>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-4 gap-3 text-center">
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+                  <Target className="w-5 h-5 text-purple-500 mb-2" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Oport. Geradas
+                  </span>
+                  <span className="text-lg font-bold text-white">
+                    {formatBrl(valorOportunidades)}
+                  </span>
+                </div>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
                   <Percent className="w-5 h-5 text-blue-500 mb-2" />
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     Conversão Total
@@ -355,7 +370,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     Ticket Médio
                   </span>
-                  <span className="text-xl font-bold text-emerald-400">
+                  <span className="text-lg font-bold text-emerald-400">
                     {formatBrl(
                       totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0,
                     )}
