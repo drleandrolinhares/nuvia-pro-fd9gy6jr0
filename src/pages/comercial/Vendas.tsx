@@ -140,9 +140,11 @@ export default function Vendas() {
       if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
       if (ed) query = query.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
 
-      query = query
-        .gte('valor_orcamento', debouncedValorRange[0])
-        .lte('valor_orcamento', debouncedValorRange[1])
+      if (debouncedValorRange[0] > 0 || debouncedValorRange[1] < 100000) {
+        query = query
+          .gte('valor_orcamento', debouncedValorRange[0])
+          .lte('valor_orcamento', debouncedValorRange[1])
+      }
 
       const from = (page - 1) * itemsPerPage
       const to = from + itemsPerPage - 1
