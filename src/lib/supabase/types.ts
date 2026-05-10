@@ -5486,9 +5486,15 @@ export const Constants = {
 //     USING: true
 //     WITH CHECK: true
 // Table: pacientes
-//   Policy "pacientes_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
+//   Policy "pacientes_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "pacientes_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
+//   Policy "pacientes_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "pacientes_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
 // Table: pedido_itens
 //   Policy "pedido_itens_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pedidos_materiais p   WHERE ((p.id = pedido_itens.pedido_id) AND ((p.usuario_id = auth.uid()) OR has_permission('operacional_pedidos_gerenciar'::text) OR is_admin()))))

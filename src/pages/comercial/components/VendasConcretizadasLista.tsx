@@ -134,6 +134,7 @@ export function VendasConcretizadasLista({
     setSelectedVenda({
       id: venda.id,
       paciente_nome: venda.paciente_nome || '',
+      original_nome: venda.paciente_nome || '',
       data_original: venda.data_original ? venda.data_original.substring(0, 10) : '',
       data_fechamento: venda.data_fechamento ? venda.data_fechamento.substring(0, 10) : '',
       valor_tratamento: venda.valor_tratamento || 0,
@@ -173,10 +174,14 @@ export function VendasConcretizadasLista({
         selectedVenda.dentista_avaliador !== 'nenhum' ? selectedVenda.dentista_avaliador : null
       const crc = selectedVenda.crc !== 'nenhum' ? selectedVenda.crc : null
       const origem = selectedVenda.origem_id !== 'nenhum' ? selectedVenda.origem_id : null
+
+      const oldName = selectedVenda.original_nome
+      const newName = selectedVenda.paciente_nome
+
       const { error } = await supabase
         .from('vendas_confirmadas')
         .update({
-          paciente_nome: selectedVenda.paciente_nome,
+          paciente_nome: newName,
           data_original: selectedVenda.data_original || null,
           data_fechamento: selectedVenda.data_fechamento,
           valor_tratamento: Number(selectedVenda.valor_tratamento),
@@ -195,6 +200,18 @@ export function VendasConcretizadasLista({
         .eq('id', selectedVenda.id)
 
       if (error) throw error
+
+      if (oldName && oldName !== newName) {
+        await Promise.all([
+          supabase.from('pacientes').update({ nome: newName }).eq('nome', oldName),
+          supabase
+            .from('vendas_diarias')
+            .update({ paciente_nome: newName })
+            .eq('paciente_nome', oldName),
+          supabase.from('funil_leads').update({ nome: newName }).eq('nome', oldName),
+        ])
+      }
+
       toast({ title: 'Sucesso', description: 'Venda atualizada com sucesso!' })
       setEditModalOpen(false)
       fetchVendas()

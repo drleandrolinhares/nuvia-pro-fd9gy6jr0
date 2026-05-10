@@ -155,14 +155,32 @@ function PacientesList() {
   const handleSaveEdit = async () => {
     if (!editingPatient) return
     setSaving(true)
+
+    const oldName = editingPatient.nome
+    const newName = editForm.nome
+
     const { error } = await supabase
       .from('pacientes')
       .update({
-        nome: editForm.nome,
+        nome: newName,
         telefone: editForm.telefone,
         email: editForm.email,
       })
       .eq('id', editingPatient.id)
+
+    if (!error && oldName !== newName) {
+      await Promise.all([
+        supabase
+          .from('vendas_confirmadas')
+          .update({ paciente_nome: newName })
+          .eq('paciente_nome', oldName),
+        supabase
+          .from('vendas_diarias')
+          .update({ paciente_nome: newName })
+          .eq('paciente_nome', oldName),
+        supabase.from('funil_leads').update({ nome: newName }).eq('nome', oldName),
+      ])
+    }
 
     setSaving(false)
     if (error) {

@@ -85,21 +85,35 @@ export function GestaoLeadsKanban({
   const saveEditing = async (lead: any) => {
     const novoNome = editName.trim()
     if (novoNome && novoNome !== lead.nome) {
+      const oldName = lead.nome
       setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: novoNome } : l)))
       supabase
         .from('funil_leads')
         .update({ nome: novoNome })
         .eq('id', lead.id)
         .then(async ({ error }) => {
-          if (!error && user) {
-            await supabase.from('funil_leads_historico').insert([
-              {
-                lead_id: lead.id,
-                usuario_id: user.id,
-                acao: 'Atualização de Nome',
-                detalhes: `Nome alterado de "${lead.nome}" para "${novoNome}"`,
-              },
+          if (!error) {
+            await Promise.all([
+              supabase.from('pacientes').update({ nome: novoNome }).eq('nome', oldName),
+              supabase
+                .from('vendas_confirmadas')
+                .update({ paciente_nome: novoNome })
+                .eq('paciente_nome', oldName),
+              supabase
+                .from('vendas_diarias')
+                .update({ paciente_nome: novoNome })
+                .eq('paciente_nome', oldName),
             ])
+            if (user) {
+              await supabase.from('funil_leads_historico').insert([
+                {
+                  lead_id: lead.id,
+                  usuario_id: user.id,
+                  acao: 'Atualização de Nome',
+                  detalhes: `Nome alterado de "${lead.nome}" para "${novoNome}"`,
+                },
+              ])
+            }
           }
         })
     }
