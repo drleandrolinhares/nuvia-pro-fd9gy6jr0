@@ -13,13 +13,15 @@ import { VendasFiltersState } from '../types'
 interface Props {
   filters: VendasFiltersState
   setFilters: React.Dispatch<React.SetStateAction<VendasFiltersState>>
+  setPage: React.Dispatch<React.SetStateAction<number>>
   dentistas: any[]
   crcs: any[]
 }
 
-export function VendasFiltros({ filters, setFilters, dentistas, crcs }: Props) {
+export function VendasFiltros({ filters, setFilters, setPage, dentistas, crcs }: Props) {
   const updateFilter = (key: keyof VendasFiltersState, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
+    setPage(1)
   }
 
   return (

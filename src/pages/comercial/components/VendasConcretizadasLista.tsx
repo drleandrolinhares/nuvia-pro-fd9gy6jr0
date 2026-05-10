@@ -81,12 +81,19 @@ export function VendasConcretizadasLista({
         ed = endOfMonth(today)
         break
       case 'personalizado':
-        if (dataInicio) sd = startOfDay(parseISO(dataInicio))
-        if (dataFim) ed = endOfDay(parseISO(dataFim))
+        if (dataInicio) {
+          const [y, m, d] = dataInicio.split('-').map(Number)
+          sd = startOfDay(new Date(y, m - 1, d))
+        }
+        if (dataFim) {
+          const [y, m, d] = dataFim.split('-').map(Number)
+          ed = endOfDay(new Date(y, m - 1, d))
+        }
         break
       default:
         if (periodo && periodo.match(/^\d{4}-\d{2}$/)) {
-          const parsedDate = parseISO(`${periodo}-01`)
+          const [y, m] = periodo.split('-').map(Number)
+          const parsedDate = new Date(y, m - 1, 1)
           sd = startOfMonth(parsedDate)
           ed = endOfMonth(parsedDate)
         }

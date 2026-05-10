@@ -209,6 +209,7 @@ export default function Vendas() {
       }
       return updated
     })
+    setPage(1)
   }
 
   return (
@@ -296,7 +297,7 @@ export default function Vendas() {
         )}
       </div>
 
-      <Tabs defaultValue="oportunidades" className="space-y-4">
+      <Tabs defaultValue="oportunidades" className="space-y-4" onValueChange={() => setPage(1)}>
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto gap-2 bg-slate-200/50 p-1 rounded-lg max-w-[800px]">
           <TabsTrigger
             value="oportunidades"
@@ -330,6 +331,7 @@ export default function Vendas() {
               <VendasFiltros
                 filters={filters}
                 setFilters={setFilters}
+                setPage={setPage}
                 dentistas={dentistas}
                 crcs={crcs}
               />
