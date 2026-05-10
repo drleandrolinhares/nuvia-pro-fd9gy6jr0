@@ -95,10 +95,15 @@ export function EditarOportunidadeModal({
           data_fechamento: formData.data_fechamento || null,
           valor_orcamento: formData.valor_orcamento ? Number(formData.valor_orcamento) : null,
           valor_entrada: formData.valor_entrada ? Number(formData.valor_entrada) : null,
-          dentista_avaliador_id: formData.dentista_avaliador_id || null,
-          crc_comercial_id: formData.crc_comercial_id || null,
-          origem_id: formData.origem_id || null,
-          destino_fiscal: formData.destino_fiscal || null,
+          dentista_avaliador_id:
+            formData.dentista_avaliador_id === 'nenhum'
+              ? null
+              : formData.dentista_avaliador_id || null,
+          crc_comercial_id:
+            formData.crc_comercial_id === 'nenhum' ? null : formData.crc_comercial_id || null,
+          origem_id: formData.origem_id === 'nenhum' ? null : formData.origem_id || null,
+          destino_fiscal:
+            formData.destino_fiscal === 'nenhum' ? null : formData.destino_fiscal || null,
           status: formData.status || null,
           temperatura_lead: formData.temperatura_lead || null,
         })
