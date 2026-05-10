@@ -47,7 +47,7 @@ export function SemaforoConversao({
 
     const isIgnorado = (origemId: string) => {
       const origem = origens?.find((o: any) => o.id === origemId)
-      if (!origem) return true
+      if (!origem) return false
       const nome = origem.nome?.toLowerCase() || ''
       return nome.includes('recorrente')
     }
@@ -79,16 +79,17 @@ export function SemaforoConversao({
         )
     }
 
-    const globalMetrics = calcGroup((oId) => !isIgnorado(oId))
+    const globalMetrics = calcGroup(() => true)
     const classicoMetrics = calcGroup(isClassico)
     const secundarioMetrics = calcGroup(isSecundario)
 
-    const avaliacoesFiltered = avaliacoes.filter((a: any) => !isIgnorado(a.origem_id))
-    const valorOportunidades = avaliacoesFiltered.reduce(
+    const valorOportunidades = avaliacoes.reduce(
       (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
       0,
     )
-    const pacientesAtendidos = avaliacoesFiltered.length
+
+    const pacientesAtendidosConsolidado = classicoMetrics.total + secundarioMetrics.total
+    const qtdeVendasConsolidado = classicoMetrics.qtdeVendas + secundarioMetrics.qtdeVendas
 
     return {
       global: globalMetrics,
@@ -97,7 +98,8 @@ export function SemaforoConversao({
       valorOportunidades,
       valorVendas: globalMetrics.valorVendas,
       qtdeVendas: globalMetrics.qtdeVendas,
-      pacientesAtendidos,
+      pacientesAtendidosConsolidado,
+      qtdeVendasConsolidado,
     }
   }, [dados, origens, avaliacoes])
 
@@ -105,7 +107,9 @@ export function SemaforoConversao({
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0
   const ticketMedio = metrics.qtdeVendas > 0 ? metrics.valorVendas / metrics.qtdeVendas : 0
   const conversaoQuantitativa =
-    metrics.pacientesAtendidos > 0 ? (metrics.qtdeVendas / metrics.pacientesAtendidos) * 100 : 0
+    metrics.pacientesAtendidosConsolidado > 0
+      ? (metrics.qtdeVendasConsolidado / metrics.pacientesAtendidosConsolidado) * 100
+      : 0
 
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -256,10 +260,12 @@ export function SemaforoConversao({
               <Users className="w-8 h-8 text-blue-500" />
             </div>
             <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
-              Pacientes Atendidos
+              Leads Atendidos
             </h3>
-            <div className="text-4xl font-bold mb-2 text-white">{metrics.pacientesAtendidos}</div>
-            <p className="text-xs text-slate-400 font-medium">Total de avaliações no período</p>
+            <div className="text-4xl font-bold mb-2 text-white">
+              {metrics.pacientesAtendidosConsolidado}
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Soma de leads dos funis</p>
           </div>
 
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
@@ -270,8 +276,10 @@ export function SemaforoConversao({
             <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
               Total de Fechamentos
             </h3>
-            <div className="text-4xl font-bold mb-2 text-emerald-400">{metrics.qtdeVendas}</div>
-            <p className="text-xs text-slate-400 font-medium">Vendas concretizadas</p>
+            <div className="text-4xl font-bold mb-2 text-emerald-400">
+              {metrics.qtdeVendasConsolidado}
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Soma de vendas dos funis</p>
           </div>
 
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
@@ -284,7 +292,7 @@ export function SemaforoConversao({
             <div className="text-4xl font-bold mb-2 text-cyan-400">
               {conversaoQuantitativa.toFixed(1)}%
             </div>
-            <p className="text-xs text-slate-400 font-medium">Fechamentos / Atendidos</p>
+            <p className="text-xs text-slate-400 font-medium">Fechamentos / Leads</p>
           </div>
         </div>
       </div>

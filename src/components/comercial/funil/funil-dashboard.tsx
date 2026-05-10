@@ -48,15 +48,14 @@ export function FunilDashboard({
     return nome.includes('recorrente')
   }
 
-  const isSecundario = (origemId: string) => !isClassico(origemId)
+  const isSecundario = (origemId: string) => !isClassico(origemId) && !isRecorrente(origemId)
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
       (acc: any, curr: any) => {
-        const isRec = isRecorrente(curr.origem_id)
         return {
           investimento: acc.investimento + Number(curr.investimento || 0),
-          leads: acc.leads + (isRec ? 0 : Number(curr.leads_realizado || 0)),
+          leads: acc.leads + Number(curr.leads_realizado || 0),
           agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
           comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
           faltas: acc.faltas + Number(curr.faltas_realizado || 0),
@@ -77,6 +76,14 @@ export function FunilDashboard({
   }
 
   const totaisGerais = useMemo(() => calcTotais(dados), [dados, origens])
+
+  const leadsQualificados = useMemo(
+    () =>
+      dados
+        .filter((d: any) => !isRecorrente(d.origem_id))
+        .reduce((acc, curr) => acc + Number(curr.leads_realizado || 0), 0),
+    [dados, origens],
+  )
   const totaisClassico = useMemo(
     () => calcTotais(dados.filter((d: any) => isClassico(d.origem_id))),
     [dados, origens],
@@ -371,7 +378,7 @@ export function FunilDashboard({
             <Users className="w-5 h-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{totaisGerais.leads}</div>
+            <div className="text-3xl font-bold text-white">{leadsQualificados}</div>
             <p className="text-xs text-slate-400 mt-1">Excluindo pacientes recorrentes</p>
           </CardContent>
         </Card>
