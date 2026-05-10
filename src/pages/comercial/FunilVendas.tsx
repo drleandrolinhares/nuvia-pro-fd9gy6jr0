@@ -188,24 +188,12 @@ export default function FunilVendas() {
       if (existing) {
         return {
           ...existing,
-          leads_realizado: Math.max(Number(existing.leads_realizado || 0), aggLeads.leads),
-          agendamentos_realizado: Math.max(
-            Number(existing.agendamentos_realizado || 0),
-            aggLeads.agendamentos,
-          ),
-          comparecimentos_realizado: Math.max(
-            Number(existing.comparecimentos_realizado || 0),
-            aggLeads.comparecimentos,
-          ),
-          faltas_realizado: Math.max(Number(existing.faltas_realizado || 0), aggLeads.faltas),
-          fechamentos_qtde_realizado: Math.max(
-            Number(existing.fechamentos_qtde_realizado || 0),
-            qtdeVendas,
-          ),
-          fechamentos_valor_realizado: Math.max(
-            Number(existing.fechamentos_valor_realizado || 0),
-            valorVendas,
-          ),
+          leads_realizado: aggLeads.leads,
+          agendamentos_realizado: aggLeads.agendamentos,
+          comparecimentos_realizado: aggLeads.comparecimentos,
+          faltas_realizado: aggLeads.faltas,
+          fechamentos_qtde_realizado: qtdeVendas,
+          fechamentos_valor_realizado: valorVendas,
         }
       }
 
