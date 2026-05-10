@@ -391,7 +391,7 @@ export function EditarDadosDialog({
                   }
                 />
                 <AnaliseCard
-                  title="Follow do Mês"
+                  title="Fechamento por Follow do Mês"
                   desc="Mesmo mês da avaliação"
                   qtd={analiseData.followMes.qtd}
                   valor={analiseData.followMes.valor}
@@ -403,7 +403,7 @@ export function EditarDadosDialog({
                   }
                 />
                 <AnaliseCard
-                  title="Follow Resgate"
+                  title="Fechamento por Follow Resgate"
                   desc="Meses após a avaliação"
                   qtd={analiseData.followResgate.qtd}
                   valor={analiseData.followResgate.valor}
