@@ -37,21 +37,21 @@ export function FunilDashboard({
   const isClassico = (origemId: string) => {
     const origem = origens.find((o: any) => o.id === origemId)
     if (!origem) return false
-    const nome = origem.nome.toLowerCase()
+    const nome = origem.nome?.toLowerCase() || ''
     return nome.includes('facebook') || nome.includes('instagram')
   }
 
-  const isIgnorado = (origemId: string) => {
+  const isRecorrente = (origemId: string) => {
     const origem = origens.find((o: any) => o.id === origemId)
-    if (!origem) return true
-    const nome = origem.nome.toLowerCase()
+    if (!origem) return false
+    const nome = origem.nome?.toLowerCase() || ''
     return nome.includes('recorrente')
   }
 
-  const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
+  const isSecundario = (origemId: string) => !isClassico(origemId) && !isRecorrente(origemId)
 
   const dadosFiltrados = useMemo(
-    () => dados.filter((d: any) => !isIgnorado(d.origem_id)),
+    () => dados.filter((d: any) => !isRecorrente(d.origem_id)),
     [dados, origens],
   )
 
@@ -89,7 +89,7 @@ export function FunilDashboard({
   )
 
   const avaliacoesFiltradas = useMemo(
-    () => (avaliacoes ? avaliacoes.filter((a: any) => !isIgnorado(a.origem_id)) : []),
+    () => (avaliacoes ? avaliacoes.filter((a: any) => !isRecorrente(a.origem_id)) : []),
     [avaliacoes, origens],
   )
   const totalAvaliacoes = avaliacoesFiltradas.length
@@ -117,7 +117,7 @@ export function FunilDashboard({
 
   const pieData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isIgnorado(o.id))
+      .filter((o: any) => o.ativo && !isRecorrente(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id)
         return { name: o.nome, value: d ? Number(d.leads_realizado) : 0 }
@@ -142,7 +142,7 @@ export function FunilDashboard({
 
   const barData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isIgnorado(o.id))
+      .filter((o: any) => o.ativo && !isRecorrente(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id)
         return {
@@ -161,7 +161,7 @@ export function FunilDashboard({
 
   const matrizData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isIgnorado(o.id))
+      .filter((o: any) => o.ativo && !isRecorrente(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id) || {}
         const leads = Number(d.leads_realizado || 0)
@@ -582,7 +582,7 @@ export function FunilDashboard({
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {origens
-            .filter((o: any) => o.ativo && !isIgnorado(o.id))
+            .filter((o: any) => o.ativo)
             .map((origem: any) => (
               <OrigemCard
                 key={origem.id}
@@ -594,7 +594,7 @@ export function FunilDashboard({
                 onUpdate={onUpdate}
               />
             ))}
-          {origens.filter((o: any) => o.ativo && !isIgnorado(o.id)).length === 0 && (
+          {origens.filter((o: any) => o.ativo).length === 0 && (
             <div className="col-span-full p-12 text-center text-slate-400 bg-slate-900/50 rounded-lg border border-slate-800 flex flex-col items-center gap-3">
               <Target className="w-12 h-12 text-slate-700" />
               <p className="text-lg">Nenhuma origem ativa encontrada.</p>
