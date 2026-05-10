@@ -55,8 +55,8 @@ const AnaliseCard = ({ title, desc, qtd, valor, color, Icon, isActive, onClick }
       )}
     >
       <div className="flex items-center gap-2 mb-1 z-10">
-        <Icon className={`w-4 h-4 ${iconColorMap[color]}`} />
-        <h4 className="font-bold text-sm uppercase tracking-wider">{title}</h4>
+        <Icon className={`w-4 h-4 ${iconColorMap[color]} shrink-0`} />
+        <h4 className="font-bold text-sm uppercase tracking-wider whitespace-nowrap">{title}</h4>
       </div>
       <p className="text-xs opacity-70 mb-4 z-10">{desc}</p>
       <div className="mt-auto flex justify-between items-end z-10">
@@ -357,7 +357,7 @@ export function EditarDadosDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-6xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="p-6 border-b border-slate-800 bg-slate-900/80 sticky top-0 z-20 backdrop-blur-sm shadow-sm">
             <DialogTitle className="text-xl flex items-center gap-2">
               Análise e Lançamentos: <span className="text-amber-500">{origem.nome}</span> (
