@@ -52,9 +52,16 @@ export default function FunilVendas() {
     const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
     const dataFim = `${mesReferencia}-${ultimoDia}`
 
+    const { data: leadsData } = await supabase
+      .from('funil_leads')
+      .select('*')
+      .eq('mes_referencia', mesReferencia)
+
     const { data: vendasData } = await supabase
       .from('vendas_confirmadas')
-      .select('id, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id)')
+      .select(
+        'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id)',
+      )
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
 
@@ -64,9 +71,63 @@ export default function FunilVendas() {
       .gte('data_avaliacao', dataInicio)
       .lte('data_avaliacao', dataFim)
 
+    const vendasDiretasNomes = new Set(
+      (vendasData || [])
+        .filter((v: any) => !v.oportunidade_id)
+        .map((v: any) => v.paciente_nome.toLowerCase().trim()),
+    )
+
+    const aggregatedLeads: Record<string, any> = {}
+
+    ;(leadsData || []).forEach((lead: any) => {
+      const nome = lead.nome.toLowerCase().trim()
+      if (vendasDiretasNomes.has(nome)) return
+
+      const oId = lead.origem_id
+      if (!oId) return
+
+      if (!aggregatedLeads[oId]) {
+        aggregatedLeads[oId] = {
+          leads: 0,
+          agendamentos: 0,
+          comparecimentos: 0,
+          faltas: 0,
+        }
+      }
+
+      aggregatedLeads[oId].leads++
+
+      const status = lead.status || ''
+      const isAgendado = [
+        'agendado',
+        'reagendado',
+        'atendido',
+        'faltou',
+        'negociacao',
+        'venda-fechada',
+        'venda-perdida',
+        'avaliacao',
+        'fechamento',
+      ].includes(status)
+      const isCompareceu = [
+        'atendido',
+        'negociacao',
+        'venda-fechada',
+        'venda-perdida',
+        'avaliacao',
+        'fechamento',
+      ].includes(status)
+      const isFaltante = status === 'faltou'
+
+      if (isAgendado) aggregatedLeads[oId].agendamentos++
+      if (isCompareceu) aggregatedLeads[oId].comparecimentos++
+      if (isFaltante) aggregatedLeads[oId].faltas++
+    })
+
     const allOrigensIds = [
       ...new Set([
         ...(dadosData || []).map((d: any) => d.origem_id),
+        ...(leadsData || []).map((l: any) => l.origem_id),
         ...(vendasData || [])
           .map((v: any) => v.origem_id || v.avaliacoes?.origem_id)
           .filter(Boolean),
@@ -85,9 +146,20 @@ export default function FunilVendas() {
         0,
       )
 
+      const aggLeads = aggregatedLeads[oId] || {
+        leads: 0,
+        agendamentos: 0,
+        comparecimentos: 0,
+        faltas: 0,
+      }
+
       if (existing) {
         return {
           ...existing,
+          leads_realizado: aggLeads.leads,
+          agendamentos_realizado: aggLeads.agendamentos,
+          comparecimentos_realizado: aggLeads.comparecimentos,
+          faltas_realizado: aggLeads.faltas,
           fechamentos_qtde_realizado: qtdeVendas,
           fechamentos_valor_realizado: valorVendas,
         }
@@ -98,13 +170,14 @@ export default function FunilVendas() {
         mes_referencia: mesReferencia,
         investimento: 0,
         meta_leads: 0,
-        leads_realizado: 0,
+        leads_realizado: aggLeads.leads,
         meta_agendamentos_qtde: 0,
         meta_agendamentos_perc: 0,
-        agendamentos_realizado: 0,
+        agendamentos_realizado: aggLeads.agendamentos,
         meta_comparecimentos_qtde: 0,
         meta_comparecimentos_perc: 0,
-        comparecimentos_realizado: 0,
+        comparecimentos_realizado: aggLeads.comparecimentos,
+        faltas_realizado: aggLeads.faltas,
         meta_fechamento_valor: 0,
         ticket_medio_esperado: 0,
         fechamentos_qtde_realizado: qtdeVendas,

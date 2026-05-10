@@ -147,7 +147,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
   const percFaltantes =
     metrics.agendados > 0 ? Math.round((metrics.faltantes / metrics.agendados) * 100) : 0
   const percFechamento =
-    metrics.compareceram > 0 ? Math.round((metrics.fechados / metrics.compareceram) * 100) : 0
+    metrics.compareceram > 0 ? Math.round((metrics.qtdeVendas / metrics.compareceram) * 100) : 0
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0
@@ -296,7 +296,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           />
           <SemaforoCard
             title="Fechamentos"
-            value={metrics.fechados}
+            value={metrics.qtdeVendas}
             percentage={percFechamento}
             type="fechamento"
             icon={DollarSign}
