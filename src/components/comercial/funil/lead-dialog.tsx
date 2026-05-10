@@ -386,10 +386,10 @@ export function LeadDialog({
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-white">
                       {origens
-                        ?.filter((o: any) => o.ativo)
+                        ?.filter((o: any) => o.ativo || o.id === formData.origem_id)
                         .map((o: any) => (
                           <SelectItem key={o.id} value={o.id}>
-                            {o.nome}
+                            {o.nome} {!o.ativo && '(Inativa)'}
                           </SelectItem>
                         ))}
                     </SelectContent>

@@ -64,7 +64,6 @@ export function EditarLeadModal({
       supabase
         .from('funil_origens')
         .select('*')
-        .eq('ativo', true)
         .order('ordem')
         .then(({ data }) => {
           if (data) setLocalOrigens(data)
@@ -133,11 +132,13 @@ export function EditarLeadModal({
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  {localOrigens?.map((o: any) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.nome}
-                    </SelectItem>
-                  ))}
+                  {localOrigens
+                    ?.filter((o: any) => o.ativo || o.id === formData.origem_id)
+                    .map((o: any) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.nome} {!o.ativo && '(Inativa)'}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

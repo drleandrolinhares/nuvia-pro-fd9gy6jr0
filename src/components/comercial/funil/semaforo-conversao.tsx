@@ -12,21 +12,51 @@ import {
   Percent,
   Activity,
   UserMinus,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SemaforoConversaoProps {
   mesReferencia: string
+  origens?: any[]
 }
 
-export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
+interface FunilMetrics {
+  total: number
+  agendados: number
+  compareceram: number
+  fechados: number
+  faltantes: number
+  qtdeVendas: number
+}
+
+export function SemaforoConversao({ mesReferencia, origens = [] }: SemaforoConversaoProps) {
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState({
-    total: 0,
-    agendados: 0,
-    compareceram: 0,
-    fechados: 0,
-    faltantes: 0,
+    global: {
+      total: 0,
+      agendados: 0,
+      compareceram: 0,
+      fechados: 0,
+      faltantes: 0,
+      qtdeVendas: 0,
+    },
+    classico: {
+      total: 0,
+      agendados: 0,
+      compareceram: 0,
+      fechados: 0,
+      faltantes: 0,
+      qtdeVendas: 0,
+    },
+    secundario: {
+      total: 0,
+      agendados: 0,
+      compareceram: 0,
+      fechados: 0,
+      faltantes: 0,
+      qtdeVendas: 0,
+    },
     valorOportunidades: 0,
     valorVendas: 0,
     qtdeVendas: 0,
@@ -37,6 +67,22 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
     const fetchMetrics = async () => {
       setLoading(true)
 
+      const isClassico = (origemId: string) => {
+        const origem = origens?.find((o: any) => o.id === origemId)
+        if (!origem) return false
+        const nome = origem.nome.toLowerCase()
+        return nome.includes('facebook') || nome.includes('instagram')
+      }
+
+      const isIgnorado = (origemId: string) => {
+        const origem = origens?.find((o: any) => o.id === origemId)
+        if (!origem) return true
+        const nome = origem.nome.toLowerCase()
+        return nome.includes('recorrente')
+      }
+
+      const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
+
       const [ano, mes] = mesReferencia.split('-')
       const dataInicio = `${mesReferencia}-01`
       const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
@@ -46,12 +92,14 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
         supabase.from('funil_leads').select('*').eq('mes_referencia', mesReferencia),
         supabase
           .from('vendas_confirmadas')
-          .select('paciente_nome, oportunidade_id, valor_tratamento')
+          .select(
+            'paciente_nome, oportunidade_id, valor_tratamento, origem_id, avaliacoes(origem_id)',
+          )
           .gte('data_fechamento', dataInicio)
           .lte('data_fechamento', dataFim),
         supabase
           .from('avaliacoes')
-          .select('id, valor_orcamento')
+          .select('id, valor_orcamento, origem_id')
           .gte('data_avaliacao', dataInicio)
           .lte('data_avaliacao', dataFim),
       ])
@@ -62,23 +110,32 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           .map((v) => v.paciente_nome.toLowerCase().trim()) || [],
       )
 
-      let total = 0
-      let agendados = 0
-      let compareceram = 0
-      let fechados = 0
-      let faltantes = 0
+      let classTotal = 0,
+        classAgendados = 0,
+        classCompareceram = 0,
+        classFechados = 0,
+        classFaltantes = 0
+      let secTotal = 0,
+        secAgendados = 0,
+        secCompareceram = 0,
+        secFechados = 0,
+        secFaltantes = 0
+      let globalTotal = 0,
+        globalAgendados = 0,
+        globalCompareceram = 0,
+        globalFechados = 0,
+        globalFaltantes = 0
 
       leads?.forEach((lead) => {
         const nome = lead.nome.toLowerCase().trim()
         const status = lead.status
+        const origemId = lead.origem_id
+
+        if (isIgnorado(origemId)) return
 
         // Desconsiderar leads que já estão em vendas diretas
         const isVendaDireta = vendasDiretasNomes.has(nome)
-        if (isVendaDireta) {
-          return
-        }
-
-        total++
+        if (isVendaDireta) return
 
         const isAgendado = [
           'agendado',
@@ -90,6 +147,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           'venda-perdida',
           'avaliacao',
           'fechamento',
+          'em_follow_up',
         ].includes(status || '')
         const isCompareceu = [
           'atendido',
@@ -98,29 +156,83 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           'venda-perdida',
           'avaliacao',
           'fechamento',
+          'em_follow_up',
         ].includes(status || '')
         const isFechado = ['fechamento', 'venda-fechada'].includes(status || '')
         const isFaltante = status === 'faltou'
 
-        if (isAgendado) agendados++
-        if (isCompareceu) compareceram++
-        if (isFechado) fechados++
-        if (isFaltante) faltantes++
+        globalTotal++
+        if (isAgendado) globalAgendados++
+        if (isCompareceu) globalCompareceram++
+        if (isFechado) globalFechados++
+        if (isFaltante) globalFaltantes++
+
+        if (isClassico(origemId)) {
+          classTotal++
+          if (isAgendado) classAgendados++
+          if (isCompareceu) classCompareceram++
+          if (isFechado) classFechados++
+          if (isFaltante) classFaltantes++
+        } else if (isSecundario(origemId)) {
+          secTotal++
+          if (isAgendado) secAgendados++
+          if (isCompareceu) secCompareceram++
+          if (isFechado) secFechados++
+          if (isFaltante) secFaltantes++
+        }
       })
 
-      const valorOportunidades =
-        avaliacoes?.reduce((acc, curr) => acc + (Number(curr.valor_orcamento) || 0), 0) || 0
-      const valorVendas =
-        vendas?.reduce((acc, curr) => acc + (Number(curr.valor_tratamento) || 0), 0) || 0
-      const qtdeVendas = vendas?.length || 0
-      const pacientesAtendidos = avaliacoes?.length || 0
+      const vendasFiltered =
+        vendas?.filter((v) => {
+          const oId = v.origem_id || (v.avaliacoes as any)?.origem_id
+          return !isIgnorado(oId)
+        }) || []
+
+      const classVendas = vendasFiltered.filter((v) =>
+        isClassico(v.origem_id || (v.avaliacoes as any)?.origem_id),
+      )
+      const secVendas = vendasFiltered.filter((v) =>
+        isSecundario(v.origem_id || (v.avaliacoes as any)?.origem_id),
+      )
+
+      const avaliacoesFiltered = avaliacoes?.filter((a) => !isIgnorado(a.origem_id)) || []
+
+      const valorOportunidades = avaliacoesFiltered.reduce(
+        (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
+        0,
+      )
+      const valorVendas = vendasFiltered.reduce(
+        (acc, curr) => acc + (Number(curr.valor_tratamento) || 0),
+        0,
+      )
+      const qtdeVendas = vendasFiltered.length
+      const pacientesAtendidos = avaliacoesFiltered.length
 
       setMetrics({
-        total,
-        agendados,
-        compareceram,
-        fechados,
-        faltantes,
+        global: {
+          total: globalTotal,
+          agendados: globalAgendados,
+          compareceram: globalCompareceram,
+          fechados: globalFechados,
+          faltantes: globalFaltantes,
+          qtdeVendas,
+        },
+        classico: {
+          total: classTotal,
+          agendados: classAgendados,
+          compareceram: classCompareceram,
+          fechados: classFechados,
+          faltantes: classFaltantes,
+          qtdeVendas: classVendas.length,
+        },
+        secundario: {
+          total: secTotal,
+          agendados: secAgendados,
+          compareceram: secCompareceram,
+          fechados: secFechados,
+          faltantes: secFaltantes,
+          qtdeVendas: secVendas.length,
+        },
         valorOportunidades,
         valorVendas,
         qtdeVendas,
@@ -130,7 +242,7 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
     }
 
     fetchMetrics()
-  }, [mesReferencia])
+  }, [mesReferencia, origens])
 
   if (loading) {
     return (
@@ -139,15 +251,6 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
       </div>
     )
   }
-
-  const percAgendamento =
-    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
-  const percComparecimento =
-    metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
-  const percFaltantes =
-    metrics.agendados > 0 ? Math.round((metrics.faltantes / metrics.agendados) * 100) : 0
-  const percFechamento =
-    metrics.compareceram > 0 ? Math.round((metrics.qtdeVendas / metrics.compareceram) * 100) : 0
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0
@@ -254,62 +357,35 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           </div>
           <div>
             <h3 className="text-xl font-bold text-white uppercase tracking-wide">
-              Funil Clássico - Agendamento, Comparecimento e Fechamento
+              Funil Clássico (Tráfego Pago)
+            </h3>
+            <p className="text-sm text-slate-400">Facebook e Instagram</p>
+          </div>
+        </div>
+
+        <FunilMetricsBlock metrics={metrics.classico} />
+      </div>
+
+      {/* BLOCO 3: FUNIL SECUNDÁRIO */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-emerald-500/10 rounded-lg">
+            <Megaphone className="w-6 h-6 text-emerald-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white uppercase tracking-wide">
+              Funil Secundário (Orgânico e Outros)
             </h3>
             <p className="text-sm text-slate-400">
-              Análise de eficiência do funil (Cálculo em cascata etapa a etapa)
+              Indicações, Google, Sorriso dos Sonhos e Campanhas
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
-            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
-              <Users className="w-8 h-8 text-blue-500" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
-              Total de Leads
-            </h3>
-            <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
-            <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
-          </div>
-
-          <SemaforoCard
-            title="Agendamentos"
-            value={metrics.agendados}
-            percentage={percAgendamento}
-            type="agendamento"
-            icon={CalendarCheck}
-            subtitle={`% sobre Total de Leads`}
-          />
-          <SemaforoCard
-            title="Comparecimentos"
-            value={metrics.compareceram}
-            percentage={percComparecimento}
-            type="comparecimento"
-            icon={CheckSquare}
-            subtitle={`% sobre Agendados`}
-          />
-          <SemaforoCard
-            title="Faltantes"
-            value={metrics.faltantes}
-            percentage={percFaltantes}
-            type="faltante"
-            icon={UserMinus}
-            subtitle={`% sobre Agendados`}
-          />
-          <SemaforoCard
-            title="Fechamentos"
-            value={metrics.qtdeVendas}
-            percentage={percFechamento}
-            type="fechamento"
-            icon={DollarSign}
-            subtitle={`% sobre Comparecimentos`}
-          />
-        </div>
+        <FunilMetricsBlock metrics={metrics.secundario} />
       </div>
 
-      {/* BLOCO 3: CONVERSÃO DE OPORTUNIDADES QUANTITATIVAS */}
+      {/* BLOCO 4: CONVERSÃO DE OPORTUNIDADES QUANTITATIVAS */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-emerald-500/10 rounded-lg">
@@ -363,6 +439,65 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
+  const percAgendamento =
+    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
+  const percComparecimento =
+    metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
+  const percFaltantes =
+    metrics.agendados > 0 ? Math.round((metrics.faltantes / metrics.agendados) * 100) : 0
+  const percFechamento =
+    metrics.compareceram > 0 ? Math.round((metrics.qtdeVendas / metrics.compareceram) * 100) : 0
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+        <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
+          <Users className="w-8 h-8 text-blue-500" />
+        </div>
+        <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
+          Total de Leads
+        </h3>
+        <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
+        <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
+      </div>
+
+      <SemaforoCard
+        title="Agendamentos"
+        value={metrics.agendados}
+        percentage={percAgendamento}
+        type="agendamento"
+        icon={CalendarCheck}
+        subtitle={`% sobre Total de Leads`}
+      />
+      <SemaforoCard
+        title="Comparecimentos"
+        value={metrics.compareceram}
+        percentage={percComparecimento}
+        type="comparecimento"
+        icon={CheckSquare}
+        subtitle={`% sobre Agendados`}
+      />
+      <SemaforoCard
+        title="Faltantes"
+        value={metrics.faltantes}
+        percentage={percFaltantes}
+        type="faltante"
+        icon={UserMinus}
+        subtitle={`% sobre Agendados`}
+      />
+      <SemaforoCard
+        title="Fechamentos"
+        value={metrics.qtdeVendas}
+        percentage={percFechamento}
+        type="fechamento"
+        icon={DollarSign}
+        subtitle={`% sobre Comparecimentos`}
+      />
     </div>
   )
 }

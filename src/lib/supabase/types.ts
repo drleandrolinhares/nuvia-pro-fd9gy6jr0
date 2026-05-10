@@ -4390,7 +4390,6 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   telefone: text (nullable)
-//   email: text (nullable)
 //   origem_id: uuid (not null)
 //   descricao: text (nullable)
 //   temperatura: text (nullable, default: 'frio'::text)
@@ -4401,6 +4400,7 @@ export const Constants = {
 //   qtd_agendamentos: integer (nullable, default: 1)
 //   qtd_faltas: integer (nullable, default: 0)
 //   data_proximo_contato: timestamp with time zone (nullable)
+//   email: text (nullable)
 // Table: funil_leads_historico
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
