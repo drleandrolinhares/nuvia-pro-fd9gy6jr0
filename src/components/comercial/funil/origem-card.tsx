@@ -13,7 +13,9 @@ import {
   FileDown,
   FileText,
   Loader2,
+  Edit,
 } from 'lucide-react'
+import { EditarVendaModal } from './editar-venda-modal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +35,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
   const [vendas, setVendas] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null)
+  const [vendaEditando, setVendaEditando] = useState<any>(null)
 
   const d = dado || {
     investimento: 0,
@@ -73,8 +76,12 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
         id,
         paciente_nome,
         data_fechamento,
+        data_original,
         valor_tratamento,
         origem_id,
+        dentista_avaliador,
+        crc,
+        forma_pagamento,
         avaliacoes (
           origem_id,
           data_avaliacao
@@ -89,7 +96,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
         return vOrigem === origem.id
       })
       .map((v: any) => {
-        const dataAvaliacao = v.avaliacoes?.data_avaliacao || v.data_fechamento
+        const dataAvaliacao = v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
         let tipo = 'FECHAMENTO NO ATO'
 
         if (dataAvaliacao && v.data_fechamento) {
@@ -447,12 +454,13 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
                       <TableHead className="text-slate-400 text-center">Data Fechamento</TableHead>
                       <TableHead className="text-slate-400 text-right">Valor</TableHead>
                       <TableHead className="text-slate-400 text-center">Classificação</TableHead>
+                      <TableHead className="text-slate-400 w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {vendasFiltradas.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                           Nenhuma venda encontrada para o filtro selecionado.
                         </TableCell>
                       </TableRow>
@@ -489,6 +497,16 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
                               {v.tipo}
                             </span>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setVendaEditando(v)}
+                              className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -499,6 +517,18 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
           )}
         </DialogContent>
       </Dialog>
+
+      {vendaEditando && (
+        <EditarVendaModal
+          open={!!vendaEditando}
+          onOpenChange={(isOpen: boolean) => !isOpen && setVendaEditando(null)}
+          venda={vendaEditando}
+          onSaved={() => {
+            fetchVendas()
+            onUpdate()
+          }}
+        />
+      )}
     </>
   )
 }

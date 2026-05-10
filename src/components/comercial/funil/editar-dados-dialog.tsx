@@ -112,7 +112,7 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
       const { data: vendasData, error } = await supabase
         .from('vendas_confirmadas')
         .select(
-          'id, data_fechamento, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id, data_avaliacao)',
+          'id, data_fechamento, data_original, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id, data_avaliacao)',
         )
         .gte('data_fechamento', dataInicio)
         .lte('data_fechamento', dataFim)
@@ -129,10 +129,10 @@ export function EditarDadosDialog({ origem, dado, mesReferencia, onUpdate }: any
 
       vendasOrigem.forEach((v: any) => {
         const dtFechamento = v.data_fechamento
-        const dtAvaliacao = v.avaliacoes?.data_avaliacao
+        const dtAvaliacao = v.data_original || v.avaliacoes?.data_avaliacao || dtFechamento
         const valor = Number(v.valor_tratamento || 0)
 
-        if (!dtAvaliacao || dtAvaliacao === dtFechamento) {
+        if (dtAvaliacao === dtFechamento) {
           noAto.qtd++
           noAto.valor += valor
         } else {
