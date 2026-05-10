@@ -328,10 +328,64 @@ export function RelatorioComissoes({
     [0, 0, 0],
   )
 
+  const totalVendasAvaliadores = useMemo(() => {
+    return dadosFiltrados
+      .filter((d) => d.tipo === 'Dentista Avaliador')
+      .reduce((acc, curr) => acc + curr.valor_venda, 0)
+  }, [dadosFiltrados])
+
+  const totalVendasCrc = useMemo(() => {
+    return dadosFiltrados
+      .filter((d) => d.tipo === 'CRC Comercial')
+      .reduce((acc, curr) => acc + curr.valor_venda, 0)
+  }, [dadosFiltrados])
+
   const competenciaLabel = mesesOptions.find((m) => m.value === mesCompetencia)?.label
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
+      {canViewAll && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-slate-900 border-slate-800 shadow-xl overflow-hidden relative">
+            <div className="absolute -top-4 -right-4 p-4 opacity-5">
+              <DollarSign className="w-32 h-32 text-white" />
+            </div>
+            <CardHeader className="pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                Vendas Diretas - Dentistas Avaliadores
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="text-3xl font-bold text-emerald-400 mb-1">
+                {formatCurrency(totalVendasAvaliadores)}
+              </div>
+              <p className="text-xs text-slate-500">
+                Somatório de vendas vinculadas no período ({competenciaLabel})
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-800 shadow-xl overflow-hidden relative">
+            <div className="absolute -top-4 -right-4 p-4 opacity-5">
+              <DollarSign className="w-32 h-32 text-white" />
+            </div>
+            <CardHeader className="pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                Vendas Diretas - CRC Comercial
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="text-3xl font-bold text-amber-400 mb-1">
+                {formatCurrency(totalVendasCrc)}
+              </div>
+              <p className="text-xs text-slate-500">
+                Somatório de vendas vinculadas no período ({competenciaLabel})
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-slate-100 rounded-lg">
