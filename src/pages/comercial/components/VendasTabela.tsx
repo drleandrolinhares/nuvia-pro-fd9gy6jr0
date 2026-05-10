@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
-import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, FileText, Check } from 'lucide-react'
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  MoreHorizontal,
+  FileText,
+  Check,
+  Edit2,
+} from 'lucide-react'
 import { ConfirmacaoVendaModal } from './ConfirmacaoVendaModal'
+import { EditarOportunidadeModal } from './EditarOportunidadeModal'
 import {
   Table,
   TableBody,
@@ -39,6 +48,9 @@ interface Props {
   totalCount: number
   itemsPerPage: number
   setPage: React.Dispatch<React.SetStateAction<number>>
+  dentistas?: any[]
+  crcs?: any[]
+  onSuccess?: () => void
 }
 
 export function VendasTabela({
@@ -51,10 +63,15 @@ export function VendasTabela({
   totalCount,
   itemsPerPage,
   setPage,
+  dentistas = [],
+  crcs = [],
+  onSuccess = () => {},
 }: Props) {
   const navigate = useNavigate()
   const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<Avaliacao | null>(null)
+  const [avaliacaoParaEditar, setAvaliacaoParaEditar] = useState<Avaliacao | null>(null)
 
   const getMaiorValor = (av: Avaliacao) => {
     const maxOrcamentos = av.orcamentos?.length
@@ -67,7 +84,7 @@ export function VendasTabela({
     const isActive = sortColumn === column
     return (
       <TableHead
-        className="cursor-pointer hover:bg-white/10 text-white"
+        className="cursor-pointer hover:bg-white/10 text-white whitespace-nowrap"
         onClick={() => onSort(column)}
       >
         <div className="flex items-center gap-1">
@@ -89,7 +106,7 @@ export function VendasTabela({
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
-  const formatarDataLocal = (dataStr: string | null) => {
+  const formatarDataLocal = (dataStr: string | null | undefined) => {
     if (!dataStr) return '-'
     const [year, month, day] = dataStr.substring(0, 10).split('-')
     if (year && month && day) return `${day}/${month}/${year}`
@@ -98,19 +115,19 @@ export function VendasTabela({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader className="bg-[#1e3a5f]">
             <TableRow className="hover:bg-[#1e3a5f]">
-              <TableHead className="text-white">Paciente</TableHead>
-              <SortableHead column="data_avaliacao">Data</SortableHead>
+              <TableHead className="text-white min-w-[150px]">Paciente</TableHead>
+              <SortableHead column="data_avaliacao">Data Avaliação</SortableHead>
+              <SortableHead column="data_fechamento">Data Venda</SortableHead>
               <SortableHead column="valor_orcamento">Valor</SortableHead>
               <TableHead className="text-white text-right">Entrada</TableHead>
               <TableHead className="text-white text-center">%</TableHead>
               <TableHead className="text-white">Avaliador</TableHead>
               <SortableHead column="status">Status</SortableHead>
               <SortableHead column="temperatura_lead">Temperatura</SortableHead>
-              <SortableHead column="proxima_data_contato">Próx. Contato</SortableHead>
               <TableHead className="w-[140px] text-white text-right pr-4">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -140,6 +157,7 @@ export function VendasTabela({
                 >
                   <TableCell className="font-medium">{av.pacientes?.nome || 'N/A'}</TableCell>
                   <TableCell>{formatarDataLocal(av.data_avaliacao)}</TableCell>
+                  <TableCell>{formatarDataLocal(av.data_fechamento)}</TableCell>
                   <TableCell>{formatCurrency(getMaiorValor(av))}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(av.valor_entrada || 0)}
@@ -157,7 +175,7 @@ export function VendasTabela({
                     <Badge
                       variant="outline"
                       className={cn(
-                        'capitalize',
+                        'capitalize whitespace-nowrap',
                         av.status === 'venda_concretizada' && 'bg-green-500/10 text-green-500',
                       )}
                     >
@@ -178,7 +196,6 @@ export function VendasTabela({
                       {av.temperatura_lead}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatarDataLocal(av.proxima_data_contato)}</TableCell>
                   <TableCell
                     className="actions-cell text-right pr-4"
                     onClick={(e) => e.stopPropagation()}
@@ -210,6 +227,14 @@ export function VendasTabela({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setAvaliacaoParaEditar(av)
+                              setEditModalOpen(true)
+                            }}
+                          >
+                            <Edit2 className="mr-2 h-4 w-4" /> Editar Oportunidade
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => navigate(`/comercial/pacientes?id=${av.paciente_id}`)}
                           >
@@ -259,6 +284,20 @@ export function VendasTabela({
             setAvaliacaoSelecionada(null)
           }}
           avaliacao={avaliacaoSelecionada}
+        />
+      )}
+
+      {avaliacaoParaEditar && (
+        <EditarOportunidadeModal
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setAvaliacaoParaEditar(null)
+          }}
+          avaliacao={avaliacaoParaEditar}
+          dentistas={dentistas}
+          crcs={crcs}
+          onSuccess={onSuccess}
         />
       )}
     </div>

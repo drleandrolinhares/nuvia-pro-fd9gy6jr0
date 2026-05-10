@@ -83,8 +83,9 @@ export default function Vendas() {
     try {
       let query = supabase.from('avaliacoes').select(
         `
-        id, paciente_id, data_avaliacao, valor_orcamento, status, temperatura_lead, 
-        proxima_data_contato, tipo_tratamento, valor_entrada,
+        id, paciente_id, data_avaliacao, data_fechamento, valor_orcamento, status, temperatura_lead, 
+        proxima_data_contato, tipo_tratamento, valor_entrada, dentista_avaliador_id, crc_comercial_id, 
+        origem_id, destino_fiscal,
         pacientes!inner (id, nome), dentistas_avaliadores (id, nome), crc_comercial (id, nome),
         orcamentos (valor)
       `,
@@ -342,6 +343,9 @@ export default function Vendas() {
                 totalCount={totalCount}
                 itemsPerPage={itemsPerPage}
                 setPage={setPage}
+                dentistas={dentistas}
+                crcs={crcs}
+                onSuccess={fetchAvaliacoes}
               />
             </CardContent>
           </Card>
