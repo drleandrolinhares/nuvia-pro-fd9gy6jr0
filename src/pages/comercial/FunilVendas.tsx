@@ -366,7 +366,12 @@ export default function FunilVendas() {
       ) : view === 'bussola' ? (
         <BussolaComercial origens={origens} dados={dadosMensais} mesReferencia={mesReferencia} />
       ) : view === 'semaforo' ? (
-        <SemaforoConversao mesReferencia={mesReferencia} origens={origens} />
+        <SemaforoConversao
+          mesReferencia={mesReferencia}
+          origens={origens}
+          dados={dadosMensais}
+          avaliacoes={avaliacoesMes}
+        />
       ) : view === 'vendas_concretizadas' ? (
         <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 shadow-sm overflow-hidden">
           <VendasConcretizadasLista

@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { useMemo } from 'react'
 import {
-  Loader2,
   Users,
   CalendarCheck,
   CheckSquare,
@@ -19,6 +17,8 @@ import { cn } from '@/lib/utils'
 interface SemaforoConversaoProps {
   mesReferencia: string
   origens?: any[]
+  dados?: any[]
+  avaliacoes?: any[]
 }
 
 interface FunilMetrics {
@@ -28,229 +28,78 @@ interface FunilMetrics {
   fechados: number
   faltantes: number
   qtdeVendas: number
+  valorVendas: number
 }
 
-export function SemaforoConversao({ mesReferencia, origens = [] }: SemaforoConversaoProps) {
-  const [loading, setLoading] = useState(true)
-  const [metrics, setMetrics] = useState({
-    global: {
-      total: 0,
-      agendados: 0,
-      compareceram: 0,
-      fechados: 0,
-      faltantes: 0,
-      qtdeVendas: 0,
-    },
-    classico: {
-      total: 0,
-      agendados: 0,
-      compareceram: 0,
-      fechados: 0,
-      faltantes: 0,
-      qtdeVendas: 0,
-    },
-    secundario: {
-      total: 0,
-      agendados: 0,
-      compareceram: 0,
-      fechados: 0,
-      faltantes: 0,
-      qtdeVendas: 0,
-    },
-    valorOportunidades: 0,
-    valorVendas: 0,
-    qtdeVendas: 0,
-    pacientesAtendidos: 0,
-  })
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      setLoading(true)
-
-      const isClassico = (origemId: string) => {
-        const origem = origens?.find((o: any) => o.id === origemId)
-        if (!origem) return false
-        const nome = origem.nome.toLowerCase()
-        return nome.includes('facebook') || nome.includes('instagram')
-      }
-
-      const isIgnorado = (origemId: string) => {
-        const origem = origens?.find((o: any) => o.id === origemId)
-        if (!origem) return true
-        const nome = origem.nome.toLowerCase()
-        return nome.includes('recorrente')
-      }
-
-      const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
-
-      const [ano, mes] = mesReferencia.split('-')
-      const dataInicio = `${mesReferencia}-01`
-      const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-      const dataFim = `${mesReferencia}-${ultimoDia}`
-
-      const [{ data: leads }, { data: vendas }, { data: avaliacoes }] = await Promise.all([
-        supabase.from('funil_leads').select('*').eq('mes_referencia', mesReferencia),
-        supabase
-          .from('vendas_confirmadas')
-          .select(
-            'paciente_nome, oportunidade_id, valor_tratamento, origem_id, avaliacoes(origem_id)',
-          )
-          .gte('data_fechamento', dataInicio)
-          .lte('data_fechamento', dataFim),
-        supabase
-          .from('avaliacoes')
-          .select('id, valor_orcamento, origem_id')
-          .gte('data_avaliacao', dataInicio)
-          .lte('data_avaliacao', dataFim),
-      ])
-
-      const vendasDiretasNomes = new Set(
-        vendas
-          ?.filter((v) => !v.oportunidade_id)
-          .map((v) => v.paciente_nome.toLowerCase().trim()) || [],
-      )
-
-      let classTotal = 0,
-        classAgendados = 0,
-        classCompareceram = 0,
-        classFechados = 0,
-        classFaltantes = 0
-      let secTotal = 0,
-        secAgendados = 0,
-        secCompareceram = 0,
-        secFechados = 0,
-        secFaltantes = 0
-      let globalTotal = 0,
-        globalAgendados = 0,
-        globalCompareceram = 0,
-        globalFechados = 0,
-        globalFaltantes = 0
-
-      leads?.forEach((lead) => {
-        const nome = lead.nome.toLowerCase().trim()
-        const status = lead.status
-        const origemId = lead.origem_id
-
-        if (isIgnorado(origemId)) return
-
-        // Desconsiderar leads que já estão em vendas diretas
-        const isVendaDireta = vendasDiretasNomes.has(nome)
-        if (isVendaDireta) return
-
-        const isAgendado = [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'negociacao',
-          'venda-fechada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status || '')
-        const isCompareceu = [
-          'atendido',
-          'negociacao',
-          'venda-fechada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status || '')
-        const isFechado = ['fechamento', 'venda-fechada'].includes(status || '')
-        const isFaltante = status === 'faltou'
-
-        globalTotal++
-        if (isAgendado) globalAgendados++
-        if (isCompareceu) globalCompareceram++
-        if (isFechado) globalFechados++
-        if (isFaltante) globalFaltantes++
-
-        if (isClassico(origemId)) {
-          classTotal++
-          if (isAgendado) classAgendados++
-          if (isCompareceu) classCompareceram++
-          if (isFechado) classFechados++
-          if (isFaltante) classFaltantes++
-        } else if (isSecundario(origemId)) {
-          secTotal++
-          if (isAgendado) secAgendados++
-          if (isCompareceu) secCompareceram++
-          if (isFechado) secFechados++
-          if (isFaltante) secFaltantes++
-        }
-      })
-
-      const vendasFiltered =
-        vendas?.filter((v) => {
-          const oId = v.origem_id || (v.avaliacoes as any)?.origem_id
-          return !isIgnorado(oId)
-        }) || []
-
-      const classVendas = vendasFiltered.filter((v) =>
-        isClassico(v.origem_id || (v.avaliacoes as any)?.origem_id),
-      )
-      const secVendas = vendasFiltered.filter((v) =>
-        isSecundario(v.origem_id || (v.avaliacoes as any)?.origem_id),
-      )
-
-      const avaliacoesFiltered = avaliacoes?.filter((a) => !isIgnorado(a.origem_id)) || []
-
-      const valorOportunidades = avaliacoesFiltered.reduce(
-        (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
-        0,
-      )
-      const valorVendas = vendasFiltered.reduce(
-        (acc, curr) => acc + (Number(curr.valor_tratamento) || 0),
-        0,
-      )
-      const qtdeVendas = vendasFiltered.length
-      const pacientesAtendidos = avaliacoesFiltered.length
-
-      setMetrics({
-        global: {
-          total: globalTotal,
-          agendados: globalAgendados,
-          compareceram: globalCompareceram,
-          fechados: globalFechados,
-          faltantes: globalFaltantes,
-          qtdeVendas,
-        },
-        classico: {
-          total: classTotal,
-          agendados: classAgendados,
-          compareceram: classCompareceram,
-          fechados: classFechados,
-          faltantes: classFaltantes,
-          qtdeVendas: classVendas.length,
-        },
-        secundario: {
-          total: secTotal,
-          agendados: secAgendados,
-          compareceram: secCompareceram,
-          fechados: secFechados,
-          faltantes: secFaltantes,
-          qtdeVendas: secVendas.length,
-        },
-        valorOportunidades,
-        valorVendas,
-        qtdeVendas,
-        pacientesAtendidos,
-      })
-      setLoading(false)
+export function SemaforoConversao({
+  mesReferencia,
+  origens = [],
+  dados = [],
+  avaliacoes = [],
+}: SemaforoConversaoProps) {
+  const metrics = useMemo(() => {
+    const isClassico = (origemId: string) => {
+      const origem = origens?.find((o: any) => o.id === origemId)
+      if (!origem) return false
+      const nome = origem.nome?.toLowerCase() || ''
+      return nome.includes('facebook') || nome.includes('instagram')
     }
 
-    fetchMetrics()
-  }, [mesReferencia, origens])
+    const isIgnorado = (origemId: string) => {
+      const origem = origens?.find((o: any) => o.id === origemId)
+      if (!origem) return true
+      const nome = origem.nome?.toLowerCase() || ''
+      return nome.includes('recorrente')
+    }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-slate-900/50 rounded-lg border border-slate-800">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-      </div>
+    const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
+
+    const calcGroup = (filterFn: (oId: string) => boolean) => {
+      return dados
+        .filter((d) => filterFn(d.origem_id))
+        .reduce(
+          (acc, curr) => ({
+            total: acc.total + Number(curr.leads_realizado || 0),
+            agendados: acc.agendados + Number(curr.agendamentos_realizado || 0),
+            compareceram: acc.compareceram + Number(curr.comparecimentos_realizado || 0),
+            fechados: acc.fechados + Number(curr.fechamentos_qtde_realizado || 0),
+            faltantes: acc.faltantes + Number(curr.faltas_realizado || 0),
+            qtdeVendas: acc.qtdeVendas + Number(curr.fechamentos_qtde_realizado || 0),
+            valorVendas: acc.valorVendas + Number(curr.fechamentos_valor_realizado || 0),
+          }),
+          {
+            total: 0,
+            agendados: 0,
+            compareceram: 0,
+            fechados: 0,
+            faltantes: 0,
+            qtdeVendas: 0,
+            valorVendas: 0,
+          },
+        )
+    }
+
+    const globalMetrics = calcGroup((oId) => !isIgnorado(oId))
+    const classicoMetrics = calcGroup(isClassico)
+    const secundarioMetrics = calcGroup(isSecundario)
+
+    const avaliacoesFiltered = avaliacoes.filter((a: any) => !isIgnorado(a.origem_id))
+    const valorOportunidades = avaliacoesFiltered.reduce(
+      (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
+      0,
     )
-  }
+    const pacientesAtendidos = avaliacoesFiltered.length
+
+    return {
+      global: globalMetrics,
+      classico: classicoMetrics,
+      secundario: secundarioMetrics,
+      valorOportunidades,
+      valorVendas: globalMetrics.valorVendas,
+      qtdeVendas: globalMetrics.qtdeVendas,
+      pacientesAtendidos,
+    }
+  }, [dados, origens, avaliacoes])
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0
