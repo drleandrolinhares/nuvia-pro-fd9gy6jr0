@@ -5,7 +5,6 @@ import {
   subDays,
   startOfMonth,
   endOfMonth,
-  parseISO,
   format,
   subMonths,
 } from 'date-fns'
@@ -85,7 +84,7 @@ export default function Vendas() {
       let query = supabase.from('avaliacoes').select(
         `
         id, paciente_id, data_avaliacao, valor_orcamento, status, temperatura_lead, 
-        proxima_data_contato, tipo_tratamento,
+        proxima_data_contato, tipo_tratamento, valor_entrada,
         pacientes!inner (id, nome), dentistas_avaliadores (id, nome), crc_comercial (id, nome),
         orcamentos (valor)
       `,
@@ -102,8 +101,10 @@ export default function Vendas() {
       if (filters.crc !== 'todos') query = query.eq('crc_comercial_id', filters.crc)
       if (filters.tratamento !== 'todos') query = query.eq('tipo_tratamento', filters.tratamento)
 
-      let sd, ed
+      let sd: Date | undefined
+      let ed: Date | undefined
       const today = new Date()
+
       switch (filters.periodo) {
         case 'hoje':
           sd = startOfDay(today)
@@ -126,17 +127,25 @@ export default function Vendas() {
           ed = endOfMonth(today)
           break
         case 'personalizado':
-          if (filters.dataInicio) sd = startOfDay(parseISO(filters.dataInicio))
-          if (filters.dataFim) ed = endOfDay(parseISO(filters.dataFim))
+          if (filters.dataInicio) {
+            const [y, m, d] = filters.dataInicio.split('-').map(Number)
+            sd = startOfDay(new Date(y, m - 1, d))
+          }
+          if (filters.dataFim) {
+            const [y, m, d] = filters.dataFim.split('-').map(Number)
+            ed = endOfDay(new Date(y, m - 1, d))
+          }
           break
         default:
           if (filters.periodo && filters.periodo.match(/^\d{4}-\d{2}$/)) {
-            const parsedDate = parseISO(`${filters.periodo}-01`)
+            const [y, m] = filters.periodo.split('-').map(Number)
+            const parsedDate = new Date(y, m - 1, 1)
             sd = startOfMonth(parsedDate)
             ed = endOfMonth(parsedDate)
           }
           break
       }
+
       if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
       if (ed) query = query.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
 
