@@ -74,32 +74,22 @@ export default function FunilVendas() {
 
     const { data: avaliacoesData } = await supabase
       .from('avaliacoes')
-      .select('id, origem_id, valor_orcamento, status')
+      .select('id, origem_id, valor_orcamento, status, pacientes(nome)')
       .gte('data_avaliacao', dataInicio)
       .lte('data_avaliacao', dataFim)
 
-    const vendasDiretasNomes = new Set(
-      (vendasData || [])
-        .filter((v: any) => !v.oportunidade_id)
-        .map((v: any) => v.paciente_nome.toLowerCase().trim()),
-    )
-
+    const processado = new Set<string>()
     const aggregatedLeads: Record<string, any> = {}
 
     ;(leadsData || []).forEach((lead: any) => {
-      const nome = lead.nome.toLowerCase().trim()
-      if (vendasDiretasNomes.has(nome)) return
+      const nome = lead.nome?.toLowerCase().trim()
+      if (nome) processado.add(nome)
 
       const oId = lead.origem_id
       if (!oId) return
 
       if (!aggregatedLeads[oId]) {
-        aggregatedLeads[oId] = {
-          leads: 0,
-          agendamentos: 0,
-          comparecimentos: 0,
-          faltas: 0,
-        }
+        aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
       }
 
       aggregatedLeads[oId].leads++
@@ -129,6 +119,40 @@ export default function FunilVendas() {
       if (isAgendado) aggregatedLeads[oId].agendamentos++
       if (isCompareceu) aggregatedLeads[oId].comparecimentos++
       if (isFaltante) aggregatedLeads[oId].faltas++
+    })
+
+    ;(avaliacoesData || []).forEach((av: any) => {
+      const nome = av.pacientes?.nome?.toLowerCase().trim()
+      if (nome && processado.has(nome)) return
+      if (nome) processado.add(nome)
+
+      const oId = av.origem_id
+      if (!oId) return
+
+      if (!aggregatedLeads[oId]) {
+        aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
+      }
+
+      aggregatedLeads[oId].leads++
+      aggregatedLeads[oId].agendamentos++
+      aggregatedLeads[oId].comparecimentos++
+    })
+
+    ;(vendasData || []).forEach((v: any) => {
+      const nome = v.paciente_nome?.toLowerCase().trim()
+      if (nome && processado.has(nome)) return
+      if (nome) processado.add(nome)
+
+      const oId = v.origem_id || v.avaliacoes?.origem_id
+      if (!oId) return
+
+      if (!aggregatedLeads[oId]) {
+        aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
+      }
+
+      aggregatedLeads[oId].leads++
+      aggregatedLeads[oId].agendamentos++
+      aggregatedLeads[oId].comparecimentos++
     })
 
     const allOrigensIds = [

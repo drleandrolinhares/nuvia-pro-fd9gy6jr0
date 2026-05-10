@@ -26,8 +26,29 @@ import {
 } from 'lucide-react'
 
 export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
-  const totais = useMemo(() => {
-    return dados.reduce(
+  const isClassico = (origemId: string) => {
+    const origem = origens.find((o: any) => o.id === origemId)
+    if (!origem) return false
+    const nome = origem.nome.toLowerCase()
+    return nome.includes('facebook') || nome.includes('instagram')
+  }
+
+  const isIgnorado = (origemId: string) => {
+    const origem = origens.find((o: any) => o.id === origemId)
+    if (!origem) return true
+    const nome = origem.nome.toLowerCase()
+    return nome.includes('recorrente')
+  }
+
+  const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
+
+  const dadosFiltrados = useMemo(
+    () => dados.filter((d: any) => !isIgnorado(d.origem_id)),
+    [dados, origens],
+  )
+
+  const calcTotais = (dadosList: any[]) => {
+    return dadosList.reduce(
       (acc: any, curr: any) => ({
         investimento: acc.investimento + Number(curr.investimento || 0),
         leads: acc.leads + Number(curr.leads_realizado || 0),
@@ -47,26 +68,48 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
         valor_fechado: 0,
       },
     )
-  }, [dados])
+  }
 
-  const totalAvaliacoes = avaliacoes ? avaliacoes.length : 0
+  const totaisGerais = useMemo(() => calcTotais(dadosFiltrados), [dadosFiltrados])
+  const totaisClassico = useMemo(
+    () => calcTotais(dados.filter((d: any) => isClassico(d.origem_id))),
+    [dados, origens],
+  )
+  const totaisSecundario = useMemo(
+    () => calcTotais(dados.filter((d: any) => isSecundario(d.origem_id))),
+    [dados, origens],
+  )
 
-  const valorOportunidades = useMemo(() => {
-    if (!avaliacoes) return 0
-    return avaliacoes.reduce(
-      (acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0),
-      0,
-    )
-  }, [avaliacoes])
+  const avaliacoesFiltradas = useMemo(
+    () => (avaliacoes ? avaliacoes.filter((a: any) => !isIgnorado(a.origem_id)) : []),
+    [avaliacoes, origens],
+  )
+  const totalAvaliacoes = avaliacoesFiltradas.length
 
-  const conversaoTotal = useMemo(() => {
-    if (valorOportunidades === 0) return 0
-    return (totais.valor_fechado / valorOportunidades) * 100
-  }, [totais.valor_fechado, valorOportunidades])
+  const calcOportunidades = (avs: any[]) =>
+    avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
+
+  const valorOportunidadesClassico = useMemo(
+    () => calcOportunidades(avaliacoesFiltradas.filter((a: any) => isClassico(a.origem_id))),
+    [avaliacoesFiltradas, origens],
+  )
+  const valorOportunidadesSecundario = useMemo(
+    () => calcOportunidades(avaliacoesFiltradas.filter((a: any) => isSecundario(a.origem_id))),
+    [avaliacoesFiltradas, origens],
+  )
+
+  const conversaoTotalClassico =
+    valorOportunidadesClassico > 0
+      ? (totaisClassico.valor_fechado / valorOportunidadesClassico) * 100
+      : 0
+  const conversaoTotalSecundario =
+    valorOportunidadesSecundario > 0
+      ? (totaisSecundario.valor_fechado / valorOportunidadesSecundario) * 100
+      : 0
 
   const pieData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo)
+      .filter((o: any) => o.ativo && !isIgnorado(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id)
         return { name: o.nome, value: d ? Number(d.leads_realizado) : 0 }
@@ -91,7 +134,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
   const barData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo)
+      .filter((o: any) => o.ativo && !isIgnorado(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id)
         return {
@@ -110,7 +153,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
   const matrizData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo)
+      .filter((o: any) => o.ativo && !isIgnorado(o.id))
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id) || {}
         const leads = Number(d.leads_realizado || 0)
@@ -134,6 +177,80 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+  const renderFunnelBlocks = (totais: any) => (
+    <div className="grid grid-cols-4 gap-3 text-center">
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+        <Calendar className="w-5 h-5 text-blue-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Agendamento
+        </span>
+        <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Comparecimento
+        </span>
+        <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Faltas
+        </span>
+        <span className="text-2xl font-bold text-white">{totais.faltas}</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Fechamento
+        </span>
+        <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
+      </div>
+    </div>
+  )
+
+  const renderOportunidadesBlocks = (valorOpp: number, conversao: number, totais: any) => (
+    <div className="grid grid-cols-4 gap-3 text-center">
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+        <Target className="w-5 h-5 text-purple-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Oport. Geradas
+        </span>
+        <span className="text-lg font-bold text-white">{formatBrl(valorOpp)}</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <Percent className="w-5 h-5 text-blue-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Conversão Total
+        </span>
+        <span className="text-2xl font-bold text-white">{conversao.toFixed(1)}%</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Fechamentos
+        </span>
+        <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
+      </div>
+      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Ticket Médio
+        </span>
+        <span className="text-lg font-bold text-emerald-400">
+          {formatBrl(totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0)}
+        </span>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -241,26 +358,26 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
         <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              Leads
+              Leads Qualificados
             </CardTitle>
             <Users className="w-5 h-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{totais.leads}</div>
-            <p className="text-xs text-slate-400 mt-1">Total captado no período</p>
+            <div className="text-3xl font-bold text-white">{totaisGerais.leads}</div>
+            <p className="text-xs text-slate-400 mt-1">Excluindo pacientes recorrentes</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              Avaliações
+              Avaliações Realizadas
             </CardTitle>
             <CheckSquare className="w-5 h-5 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{totalAvaliacoes}</div>
-            <p className="text-xs text-slate-400 mt-1">Total realizadas no período</p>
+            <p className="text-xs text-slate-400 mt-1">Excluindo pacientes recorrentes</p>
           </CardContent>
         </Card>
       </div>
@@ -278,49 +395,19 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
           <div className="h-px bg-slate-800 flex-1"></div>
         </div>
 
+        {/* Funil Clássico */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-slate-900 border-slate-800 shadow-sm">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-500" />
-                Funil Clássico
+                Funil Clássico (Tráfego Pago)
               </CardTitle>
+              <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
+                Facebook e Instagram
+              </p>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
-                  <Calendar className="w-5 h-5 text-blue-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Agendamento
-                  </span>
-                  <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Comparecimento
-                  </span>
-                  <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Faltas
-                  </span>
-                  <span className="text-2xl font-bold text-white">{totais.faltas}</span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Fechamento
-                  </span>
-                  <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
-                </div>
-              </div>
-            </CardContent>
+            <CardContent className="pt-6">{renderFunnelBlocks(totaisClassico)}</CardContent>
           </Card>
 
           <Card className="bg-slate-900 border-slate-800 shadow-sm">
@@ -328,55 +415,56 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
               <div className="flex flex-col">
                 <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
                   <Target className="w-5 h-5 text-amber-500" />
-                  Funil Por Oportunidades Geradas em R$
+                  Funil Clássico: Oportunidades em R$
                 </CardTitle>
                 <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                  Soma de avaliações realizadas no período
+                  Soma de avaliações do Funil Clássico
                 </p>
               </div>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
-                  <Target className="w-5 h-5 text-purple-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Oport. Geradas
-                  </span>
-                  <span className="text-lg font-bold text-white">
-                    {formatBrl(valorOportunidades)}
-                  </span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <Percent className="w-5 h-5 text-blue-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Conversão Total
-                  </span>
-                  <span className="text-2xl font-bold text-white">
-                    {conversaoTotal.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Fechamentos
-                  </span>
-                  <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
-                </div>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
-                  <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-                  <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Ticket Médio
-                  </span>
-                  <span className="text-lg font-bold text-emerald-400">
-                    {formatBrl(
-                      totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0,
-                    )}
-                  </span>
-                </div>
+              {renderOportunidadesBlocks(
+                valorOportunidadesClassico,
+                conversaoTotalClassico,
+                totaisClassico,
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Funil Secundário */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+            <CardHeader className="border-b border-slate-800/50 pb-4">
+              <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-emerald-500" />
+                Funil Secundário (Orgânico e Outros)
+              </CardTitle>
+              <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
+                Indicações, Google, Sorriso dos Sonhos e Campanhas
+              </p>
+            </CardHeader>
+            <CardContent className="pt-6">{renderFunnelBlocks(totaisSecundario)}</CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+            <CardHeader className="border-b border-slate-800/50 pb-4">
+              <div className="flex flex-col">
+                <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Target className="w-5 h-5 text-emerald-500" />
+                  Funil Secundário: Oportunidades em R$
+                </CardTitle>
+                <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
+                  Soma de avaliações do Funil Secundário
+                </p>
               </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {renderOportunidadesBlocks(
+                valorOportunidadesSecundario,
+                conversaoTotalSecundario,
+                totaisSecundario,
+              )}
             </CardContent>
           </Card>
         </div>
@@ -486,7 +574,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {origens
-            .filter((o: any) => o.ativo)
+            .filter((o: any) => o.ativo && !isIgnorado(o.id))
             .map((origem: any) => (
               <OrigemCard
                 key={origem.id}
@@ -496,7 +584,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
                 onUpdate={onUpdate}
               />
             ))}
-          {origens.filter((o: any) => o.ativo).length === 0 && (
+          {origens.filter((o: any) => o.ativo && !isIgnorado(o.id)).length === 0 && (
             <div className="col-span-full p-12 text-center text-slate-400 bg-slate-900/50 rounded-lg border border-slate-800 flex flex-col items-center gap-3">
               <Target className="w-12 h-12 text-slate-700" />
               <p className="text-lg">Nenhuma origem ativa encontrada.</p>
