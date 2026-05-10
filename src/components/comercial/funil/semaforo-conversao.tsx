@@ -187,7 +187,9 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
             <div className="text-2xl font-bold mb-2 text-blue-400">
               {formatBrl(metrics.valorOportunidades)}
             </div>
-            <p className="text-xs text-slate-400 font-medium">Soma de avaliações</p>
+            <p className="text-[10px] text-slate-400 font-medium mt-1">
+              Soma de avaliações realizadas no período
+            </p>
           </div>
 
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
@@ -201,7 +203,9 @@ export function SemaforoConversao({ mesReferencia }: SemaforoConversaoProps) {
             <div className="text-2xl font-bold mb-2 text-emerald-400">
               {formatBrl(metrics.valorVendas)}
             </div>
-            <p className="text-xs text-slate-400 font-medium">Receita gerada</p>
+            <p className="text-[10px] text-slate-400 font-medium mt-1">
+              Vendas finalizadas no período (independente da data da avaliação)
+            </p>
           </div>
 
           <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">

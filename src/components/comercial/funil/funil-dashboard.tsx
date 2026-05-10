@@ -327,7 +327,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
                 <Target className="w-5 h-5 text-amber-500" />
-                Funil Por Oportunidade Geradas em R$
+                Funil Por Oportunidades Geradas em R$
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
