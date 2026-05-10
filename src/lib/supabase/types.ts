@@ -5993,19 +5993,6 @@ export const Constants = {
 //   END;
 //   $function$
 //
-// FUNCTION prevent_data_avaliacao_update()
-//   CREATE OR REPLACE FUNCTION public.prevent_data_avaliacao_update()
-//    RETURNS trigger
-//    LANGUAGE plpgsql
-//   AS $function$
-//   BEGIN
-//     IF NEW.data_avaliacao IS DISTINCT FROM OLD.data_avaliacao THEN
-//       NEW.data_avaliacao = OLD.data_avaliacao;
-//     END IF;
-//     RETURN NEW;
-//   END;
-//   $function$
-//
 // FUNCTION processar_fechamento_mes_feijao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_feijao(p_mes text)
 //    RETURNS void
@@ -6421,6 +6408,38 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_sync_avaliacoes_to_vendas()
+//   CREATE OR REPLACE FUNCTION public.trg_sync_avaliacoes_to_vendas()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF pg_trigger_depth() > 1 THEN
+//       RETURN NEW;
+//     END IF;
+//
+//     IF TG_OP = 'UPDATE' THEN
+//       UPDATE public.vendas_confirmadas SET
+//         data_original = NEW.data_avaliacao,
+//         data_fechamento = COALESCE(NEW.data_fechamento, data_fechamento),
+//         valor_tratamento = COALESCE(NEW.valor_orcamento, valor_tratamento),
+//         valor_entrada = COALESCE(NEW.valor_entrada, valor_entrada),
+//         percentual_entrada = CASE
+//           WHEN COALESCE(NEW.valor_orcamento, valor_tratamento) > 0
+//           THEN (COALESCE(NEW.valor_entrada, valor_entrada) / COALESCE(NEW.valor_orcamento, valor_tratamento)) * 100
+//           ELSE 0
+//         END,
+//         dentista_avaliador = NEW.dentista_avaliador_id,
+//         crc = NEW.crc_comercial_id,
+//         destino_fiscal = NEW.destino_fiscal,
+//         origem_id = NEW.origem_id
+//       WHERE oportunidade_id = NEW.id;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_sync_carteira_bonificacao()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_carteira_bonificacao()
 //    RETURNS trigger
@@ -6587,6 +6606,35 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_sync_vendas_to_avaliacoes()
+//   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_to_avaliacoes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF pg_trigger_depth() > 1 THEN
+//       RETURN NEW;
+//     END IF;
+//
+//     IF TG_OP = 'UPDATE' THEN
+//       IF NEW.oportunidade_id IS NOT NULL THEN
+//         UPDATE public.avaliacoes SET
+//           data_avaliacao = NEW.data_original,
+//           data_fechamento = NEW.data_fechamento,
+//           valor_orcamento = NEW.valor_tratamento,
+//           valor_entrada = NEW.valor_entrada,
+//           dentista_avaliador_id = NEW.dentista_avaliador,
+//           crc_comercial_id = NEW.crc,
+//           destino_fiscal = NEW.destino_fiscal,
+//           origem_id = NEW.origem_id
+//         WHERE id = NEW.oportunidade_id;
+//       END IF;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_update_funil_dados_mensais_from_leads()
 //   CREATE OR REPLACE FUNCTION public.trg_update_funil_dados_mensais_from_leads()
 //    RETURNS trigger
@@ -6721,7 +6769,7 @@ export const Constants = {
 
 // --- TRIGGERS ---
 // Table: avaliacoes
-//   trg_prevent_data_avaliacao_update: CREATE TRIGGER trg_prevent_data_avaliacao_update BEFORE UPDATE ON public.avaliacoes FOR EACH ROW EXECUTE FUNCTION prevent_data_avaliacao_update()
+//   sync_avaliacoes_to_vendas_trigger: CREATE TRIGGER sync_avaliacoes_to_vendas_trigger AFTER UPDATE ON public.avaliacoes FOR EACH ROW EXECUTE FUNCTION trg_sync_avaliacoes_to_vendas()
 // Table: compra_itens
 //   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
 //   before_compra_item_delete: CREATE TRIGGER before_compra_item_delete BEFORE DELETE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
@@ -6743,6 +6791,7 @@ export const Constants = {
 //   trg_ativar_cascata_dentista_avaliador_update: CREATE TRIGGER trg_ativar_cascata_dentista_avaliador_update AFTER UPDATE OF cargo_id, cargo_secundario_id, nome, email, status ON public.usuarios FOR EACH ROW EXECUTE FUNCTION ativar_cascata_dentista_avaliador()
 // Table: vendas_confirmadas
 //   sync_confirmadas_to_vendas_diarias_trigger: CREATE TRIGGER sync_confirmadas_to_vendas_diarias_trigger AFTER DELETE OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_confirmadas_to_vendas_diarias()
+//   sync_vendas_to_avaliacoes_trigger: CREATE TRIGGER sync_vendas_to_avaliacoes_trigger AFTER UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_to_avaliacoes()
 //   trg_vendas_confirmadas_to_funil_tg: CREATE TRIGGER trg_vendas_confirmadas_to_funil_tg AFTER INSERT OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_vendas_confirmadas_to_funil()
 // Table: vendas_diarias
 //   sync_vendas_diarias: CREATE TRIGGER sync_vendas_diarias AFTER INSERT OR DELETE OR UPDATE ON public.vendas_diarias FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_diarias_to_confirmadas()

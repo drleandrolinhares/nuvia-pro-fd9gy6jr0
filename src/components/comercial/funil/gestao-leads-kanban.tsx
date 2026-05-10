@@ -185,7 +185,13 @@ export function GestaoLeadsKanban({
           <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
           Agenda
         </Button>
-        <div className="hidden sm:flex items-center gap-3 ml-auto">
+        <div className="hidden sm:flex items-center gap-4 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 shadow-inner">
+          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+            Leads Totais:
+          </span>
+          <span className="text-lg font-black text-amber-500 leading-none">{leads.length}</span>
+        </div>
+        <div className="hidden lg:flex items-center gap-3 ml-auto">
           <div className="p-2.5 bg-amber-500/10 rounded-lg">
             <Users className="w-5 h-5 text-amber-500" />
           </div>

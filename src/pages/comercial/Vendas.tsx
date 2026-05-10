@@ -29,6 +29,7 @@ import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
 import { VendasAtuaisWidget } from '@/components/financeiro/vendas-atuais-widget'
 import { OportunidadesWidget } from '@/components/financeiro/oportunidades-widget'
+import { QuantidadeVendasWidget } from '@/components/financeiro/quantidade-vendas-widget'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -243,6 +244,7 @@ export default function Vendas() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <OportunidadesWidget />
+          <QuantidadeVendasWidget />
           <VendasAtuaisWidget />
           {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
         </div>
