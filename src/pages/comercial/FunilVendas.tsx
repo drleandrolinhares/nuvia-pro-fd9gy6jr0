@@ -332,8 +332,8 @@ export default function FunilVendas() {
         <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 shadow-sm overflow-hidden">
           <VendasConcretizadasLista
             periodo={mesReferencia}
-            dataInicio=""
-            dataFim=""
+            dataInicio={`${mesReferencia}-01`}
+            dataFim={`${mesReferencia}-${new Date(Number(mesReferencia.split('-')[0]), Number(mesReferencia.split('-')[1]), 0).getDate()}`}
             onRevertSuccess={() => fetchData(true)}
           />
         </div>

@@ -5993,6 +5993,19 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION prevent_data_avaliacao_update()
+//   CREATE OR REPLACE FUNCTION public.prevent_data_avaliacao_update()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF NEW.data_avaliacao IS DISTINCT FROM OLD.data_avaliacao THEN
+//       NEW.data_avaliacao = OLD.data_avaliacao;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION processar_fechamento_mes_feijao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_feijao(p_mes text)
 //    RETURNS void
@@ -6669,7 +6682,17 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       -- Apenas se tiver origem informada
 //       IF NEW.origem_id IS NOT NULL THEN
-//         v_mes_referencia := to_char(NEW.data_fechamento::date, 'YYYY-MM');
+//         -- Busca a data de avaliação original caso venha de uma oportunidade
+//         IF NEW.oportunidade_id IS NOT NULL THEN
+//           SELECT to_char(data_avaliacao::date, 'YYYY-MM') INTO v_mes_referencia
+//           FROM public.avaliacoes
+//           WHERE id = NEW.oportunidade_id;
+//         END IF;
+//
+//         -- Fallback caso seja venda avulsa sem oportunidade prévia
+//         IF v_mes_referencia IS NULL THEN
+//           v_mes_referencia := to_char(NEW.data_fechamento::date, 'YYYY-MM');
+//         END IF;
 //
 //         -- Tenta achar um lead existente com o mesmo nome
 //         SELECT id INTO v_lead_id FROM public.funil_leads
@@ -6682,7 +6705,7 @@ export const Constants = {
 //           SET status = 'fechamento'
 //           WHERE id = v_lead_id AND status NOT IN ('fechamento', 'venda-fechada');
 //         ELSE
-//           -- Cria lead fantasma
+//           -- Cria lead fantasma vinculando ao mes da avaliacao original (ou fechamento se nao houver avaliacao)
 //           INSERT INTO public.funil_leads (
 //             nome, telefone, origem_id, mes_referencia, status, temperatura, qtd_agendamentos, qtd_faltas
 //           ) VALUES (
@@ -6697,6 +6720,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: avaliacoes
+//   trg_prevent_data_avaliacao_update: CREATE TRIGGER trg_prevent_data_avaliacao_update BEFORE UPDATE ON public.avaliacoes FOR EACH ROW EXECUTE FUNCTION prevent_data_avaliacao_update()
 // Table: compra_itens
 //   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()
 //   before_compra_item_delete: CREATE TRIGGER before_compra_item_delete BEFORE DELETE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()

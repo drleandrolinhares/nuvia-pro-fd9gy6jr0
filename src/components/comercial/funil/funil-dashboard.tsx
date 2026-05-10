@@ -307,7 +307,7 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
                   <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
                   <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Falt
+                    Faltas
                   </span>
                   <span className="text-2xl font-bold text-white">{totais.faltas}</span>
                 </div>
