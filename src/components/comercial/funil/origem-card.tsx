@@ -16,6 +16,7 @@ import {
   Edit,
 } from 'lucide-react'
 import { EditarVendaModal } from './editar-venda-modal'
+import { EditarLeadModal } from './editar-lead-modal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,12 +31,15 @@ import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
+export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, onUpdate }: any) {
   const [open, setOpen] = useState(false)
+  const [modalType, setModalType] = useState<string | null>(null)
   const [vendas, setVendas] = useState<any[]>([])
+  const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null)
   const [vendaEditando, setVendaEditando] = useState<any>(null)
+  const [leadEditando, setLeadEditando] = useState<any>(null)
 
   const d = dado || {
     investimento: 0,
@@ -119,16 +123,74 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
     setLoading(false)
   }
 
-  const handleOpen = () => {
+  const fetchLeads = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('funil_leads')
+      .select('*')
+      .eq('origem_id', origem.id)
+      .eq('mes_referencia', mesReferencia)
+      .order('criado_em', { ascending: false })
+
+    setLeads(data || [])
+    setLoading(false)
+  }
+
+  const handleOpenVendas = () => {
+    setModalType('vendas')
     setOpen(true)
     setFiltroTipo(null)
     fetchVendas()
+  }
+
+  const handleOpenLeads = (type: string) => {
+    setModalType(type)
+    setOpen(true)
+    fetchLeads()
   }
 
   const vendasFiltradas = useMemo(() => {
     if (!filtroTipo) return vendas
     return vendas.filter((v) => v.tipo === filtroTipo)
   }, [vendas, filtroTipo])
+
+  const leadsFiltrados = useMemo(() => {
+    if (modalType === 'leads') return leads
+    if (modalType === 'agendamentos') {
+      return leads.filter((l) => {
+        const isAgendado = [
+          'agendado',
+          'reagendado',
+          'atendido',
+          'faltou',
+          'negociacao',
+          'venda-fechada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(l.status)
+        return isAgendado || l.qtd_agendamentos > 0
+      })
+    }
+    if (modalType === 'comparecimentos') {
+      return leads.filter((l) =>
+        [
+          'atendido',
+          'negociacao',
+          'venda-fechada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(l.status),
+      )
+    }
+    if (modalType === 'faltas') {
+      return leads.filter((l) => l.status === 'faltou' || l.qtd_faltas > 0)
+    }
+    return []
+  }, [leads, modalType])
 
   const fechamentoNoAto = vendas.filter((v) => v.tipo === 'FECHAMENTO NO ATO').length
   const followDoMes = vendas.filter((v) => v.tipo === 'FOLLOW DO MÊS').length
@@ -227,7 +289,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleOpen}
+              onClick={handleOpenVendas}
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300 h-8"
             >
               <List className="w-4 h-4 mr-2" /> Analisar Vendas
@@ -245,7 +307,10 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center relative">
             <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-slate-800 -z-10 -translate-y-1/2"></div>
 
-            <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-center">
+            <div
+              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-slate-700 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
+              onClick={() => handleOpenLeads('leads')}
+            >
               <div className="flex items-center justify-center mb-3">
                 <Users className="w-5 h-5 text-slate-400" />
               </div>
@@ -255,7 +320,10 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               <p className="text-4xl font-bold text-white mt-1">{d.leads_realizado}</p>
             </div>
 
-            <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-center">
+            <div
+              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-slate-700 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
+              onClick={() => handleOpenLeads('agendamentos')}
+            >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
               </div>
@@ -268,7 +336,10 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               <p className="text-4xl font-bold text-white mt-1">{d.agendamentos_realizado}</p>
             </div>
 
-            <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-slate-700 transition-colors flex flex-col items-center justify-center">
+            <div
+              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-slate-700 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
+              onClick={() => handleOpenLeads('comparecimentos')}
+            >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
               </div>
@@ -281,7 +352,10 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
               <p className="text-4xl font-bold text-white mt-1">{d.comparecimentos_realizado}</p>
             </div>
 
-            <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-rose-900/50 transition-colors flex flex-col items-center justify-center">
+            <div
+              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-rose-900/50 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
+              onClick={() => handleOpenLeads('faltas')}
+            >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
               </div>
@@ -295,8 +369,8 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
             </div>
 
             <div
-              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative group-hover:border-emerald-900/50 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
-              onClick={handleOpen}
+              className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-emerald-900/50 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
+              onClick={handleOpenVendas}
             >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
@@ -359,7 +433,10 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
         <DialogContent className="max-w-4xl bg-slate-900 border-slate-800 text-slate-200">
           <DialogHeader>
             <DialogTitle className="text-xl">
-              Análise de Vendas - {origem.nome} ({mesReferencia})
+              {modalType === 'vendas'
+                ? 'Análise de Vendas'
+                : `Listagem de Pacientes - ${modalType === 'leads' ? 'Todos os Leads' : modalType === 'agendamentos' ? 'Agendamentos' : modalType === 'comparecimentos' ? 'Comparecimentos' : 'Faltas'}`}{' '}
+              - {origem.nome} ({mesReferencia})
             </DialogTitle>
           </DialogHeader>
 
@@ -367,7 +444,7 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
             <div className="flex justify-center p-12">
               <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
             </div>
-          ) : (
+          ) : modalType === 'vendas' ? (
             <div className="space-y-6 mt-4">
               <div className="grid grid-cols-3 gap-4">
                 <div
@@ -514,9 +591,89 @@ export function OrigemCard({ origem, dado, mesReferencia, onUpdate }: any) {
                 </Table>
               </div>
             </div>
+          ) : (
+            <div className="space-y-6 mt-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-slate-300">
+                  Total Encontrado: {leadsFiltrados.length}
+                </h3>
+              </div>
+
+              <div className="border border-slate-800 rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-slate-950 sticky top-0 z-10">
+                    <TableRow className="border-slate-800">
+                      <TableHead className="text-slate-400">Paciente</TableHead>
+                      <TableHead className="text-slate-400">Telefone</TableHead>
+                      <TableHead className="text-slate-400 text-center">Status</TableHead>
+                      <TableHead className="text-slate-400 text-center">Temperatura</TableHead>
+                      <TableHead className="text-slate-400 text-center">Data</TableHead>
+                      <TableHead className="text-slate-400 w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leadsFiltrados.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                          Nenhum paciente encontrado.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      leadsFiltrados.map((l) => (
+                        <TableRow key={l.id} className="border-slate-800 hover:bg-slate-800/50">
+                          <TableCell className="font-medium text-slate-200">{l.nome}</TableCell>
+                          <TableCell className="text-slate-400">{l.telefone || '-'}</TableCell>
+                          <TableCell className="text-center">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                              {etapas?.find((e: any) => e.slug === l.status)?.nome ||
+                                l.status ||
+                                '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                              {temperaturas?.find((t: any) => t.slug === l.temperatura)?.nome ||
+                                l.temperatura ||
+                                '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center text-slate-400">
+                            {l.criado_em ? format(new Date(l.criado_em), 'dd/MM/yyyy') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setLeadEditando(l)}
+                              className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {leadEditando && (
+        <EditarLeadModal
+          open={!!leadEditando}
+          onOpenChange={(isOpen: boolean) => !isOpen && setLeadEditando(null)}
+          lead={leadEditando}
+          etapas={etapas}
+          temperaturas={temperaturas}
+          onSaved={() => {
+            fetchLeads()
+            onUpdate()
+          }}
+        />
+      )}
 
       {vendaEditando && (
         <EditarVendaModal

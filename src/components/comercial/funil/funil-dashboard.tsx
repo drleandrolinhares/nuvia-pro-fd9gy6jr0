@@ -25,7 +25,15 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUpdate }: any) {
+export function FunilDashboard({
+  origens,
+  dados,
+  mesReferencia,
+  avaliacoes,
+  etapas,
+  temperaturas,
+  onUpdate,
+}: any) {
   const isClassico = (origemId: string) => {
     const origem = origens.find((o: any) => o.id === origemId)
     if (!origem) return false
@@ -581,6 +589,8 @@ export function FunilDashboard({ origens, dados, mesReferencia, avaliacoes, onUp
                 origem={origem}
                 dado={dados.find((d: any) => d.origem_id === origem.id)}
                 mesReferencia={mesReferencia}
+                etapas={etapas}
+                temperaturas={temperaturas}
                 onUpdate={onUpdate}
               />
             ))}

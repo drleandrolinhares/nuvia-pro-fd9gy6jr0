@@ -346,6 +346,8 @@ export default function FunilVendas() {
           dados={dadosMensais}
           mesReferencia={mesReferencia}
           avaliacoes={avaliacoesMes}
+          etapas={etapas}
+          temperaturas={temperaturas}
           onUpdate={() => fetchData(false)}
         />
       ) : view === 'bussola' ? (
