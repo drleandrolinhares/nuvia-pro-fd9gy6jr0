@@ -95,13 +95,6 @@ export default function Vendas() {
       if (filters.search) query = query.ilike('pacientes.nome', `%${filters.search}%`)
       if (filters.status !== 'todos') {
         query = query.eq('status', filters.status)
-      } else {
-        // Remove as vendas já concretizadas da visualização padrão de oportunidades,
-        // pois elas agora possuem uma aba própria. Mantemos a lógica existente intacta.
-        query = query
-          .not('status', 'eq', 'Fechada em Comercial')
-          .not('status', 'eq', 'Fechada em Avaliação')
-          .not('status', 'eq', 'venda_concretizada')
       }
 
       if (filters.temperatura !== 'todas') query = query.eq('temperatura_lead', filters.temperatura)
