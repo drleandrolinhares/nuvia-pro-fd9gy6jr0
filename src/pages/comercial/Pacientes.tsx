@@ -5,6 +5,9 @@ import { PacienteDashboard } from './components/paciente/PacienteDashboard'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/components/ui/use-toast'
 import {
   Table,
   TableHeader,
@@ -13,7 +16,14 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table'
-import { Search, Users } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Search, Users, Pencil, Trash, Loader2 } from 'lucide-react'
 
 function formatarDataLocal(dataStr: string | null) {
   if (!dataStr) return '-'
@@ -38,12 +48,21 @@ export default function Pacientes() {
 
 function PacientesList() {
   const navigate = useNavigate()
+  const { profile } = useAuth()
+  const { toast } = useToast()
+  const isAdmin = profile?.role === 'admin'
+
   const [pacientes, setPacientes] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const PAGE_SIZE = 50
+
+  const [editingPatient, setEditingPatient] = useState<any>(null)
+  const [deletingPatient, setDeletingPatient] = useState<any>(null)
+  const [saving, setSaving] = useState(false)
+  const [editForm, setEditForm] = useState({ nome: '', telefone: '', email: '' })
 
   const observer = useRef<IntersectionObserver | null>(null)
 
@@ -123,6 +142,62 @@ function PacientesList() {
     }
   }, [page])
 
+  const handleEditClick = (e: React.MouseEvent, paciente: any) => {
+    e.stopPropagation()
+    setEditingPatient(paciente)
+    setEditForm({
+      nome: paciente.nome || '',
+      telefone: paciente.telefone || '',
+      email: paciente.email || '',
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingPatient) return
+    setSaving(true)
+    const { error } = await supabase
+      .from('pacientes')
+      .update({
+        nome: editForm.nome,
+        telefone: editForm.telefone,
+        email: editForm.email,
+      })
+      .eq('id', editingPatient.id)
+
+    setSaving(false)
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
+    setPacientes((prev) =>
+      prev.map((p) => (p.id === editingPatient.id ? { ...p, ...editForm } : p)),
+    )
+    setEditingPatient(null)
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent, paciente: any) => {
+    e.stopPropagation()
+    setDeletingPatient(paciente)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingPatient) return
+    setSaving(true)
+    const { error } = await supabase.from('pacientes').delete().eq('id', deletingPatient.id)
+
+    setSaving(false)
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    toast({ title: 'Sucesso', description: 'Paciente removido.' })
+    setPacientes((prev) => prev.filter((p) => p.id !== deletingPatient.id))
+    setDeletingPatient(null)
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
@@ -165,12 +240,16 @@ function PacientesList() {
                   <TableHead>Telefone</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Data Cadastro</TableHead>
+                  {isAdmin && <TableHead className="w-[100px] text-right">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pacientes.length === 0 && !loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={isAdmin ? 5 : 4}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       Nenhum paciente encontrado.
                     </TableCell>
                   </TableRow>
@@ -188,13 +267,35 @@ function PacientesList() {
                         <TableCell>{p.telefone || '-'}</TableCell>
                         <TableCell>{p.email || '-'}</TableCell>
                         <TableCell>{formatarDataLocal(p.data_cadastro)}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-100/50"
+                                onClick={(e) => handleEditClick(e, p)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-100/50"
+                                onClick={(e) => handleDeleteClick(e, p)}
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     )
                   })
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
+                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center py-8">
                       <div className="flex justify-center items-center gap-2 text-muted-foreground">
                         <span className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></span>
                         Carregando...
@@ -207,6 +308,67 @@ function PacientesList() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!editingPatient} onOpenChange={(open) => !open && setEditingPatient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Paciente</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome</Label>
+              <Input
+                value={editForm.nome}
+                onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Telefone</Label>
+              <Input
+                value={editForm.telefone}
+                onChange={(e) => setEditForm({ ...editForm, telefone: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPatient(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingPatient} onOpenChange={(open) => !open && setDeletingPatient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remover Paciente</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-slate-600">
+            Tem certeza que deseja remover o paciente <strong>{deletingPatient?.nome}</strong>? Esta
+            ação não poderá ser desfeita.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPatient(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Remover
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
