@@ -271,7 +271,7 @@ export function LeadDialog({
       <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl">
-            {formData.id ? 'Gerenciar Lead' : 'Novo Lead'}
+            {formData.id || initialData?.nome ? 'Gerenciar Lead' : 'Novo Lead'}
           </DialogTitle>
         </DialogHeader>
 

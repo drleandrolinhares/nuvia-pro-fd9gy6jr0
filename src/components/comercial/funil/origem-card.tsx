@@ -125,14 +125,93 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
   const fetchLeads = async () => {
     setLoading(true)
-    const { data } = await supabase
+    const [ano, mes] = mesReferencia.split('-')
+    const dataInicio = `${mesReferencia}-01`
+    const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+    const dataFim = `${mesReferencia}-${ultimoDia}`
+
+    const { data: leadsData } = await supabase
       .from('funil_leads')
       .select('*')
       .eq('origem_id', origem.id)
       .eq('mes_referencia', mesReferencia)
       .order('criado_em', { ascending: false })
 
-    setLeads(data || [])
+    const { data: avaliacoesData } = await supabase
+      .from('avaliacoes')
+      .select(
+        'id, origem_id, valor_orcamento, status, data_avaliacao, criado_em, pacientes(nome, telefone)',
+      )
+      .eq('origem_id', origem.id)
+      .gte('data_avaliacao', dataInicio)
+      .lte('data_avaliacao', dataFim)
+
+    const { data: vendasData } = await supabase
+      .from('vendas_confirmadas')
+      .select(
+        'id, paciente_nome, telefone, data_fechamento, criado_em, origem_id, avaliacoes(origem_id)',
+      )
+      .gte('data_fechamento', dataInicio)
+      .lte('data_fechamento', dataFim)
+
+    const vendasOrigem = (vendasData || []).filter(
+      (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === origem.id,
+    )
+
+    const processado = new Set<string>()
+    const unifiedLeads: any[] = []
+
+    ;(leadsData || []).forEach((lead: any) => {
+      const nome = lead.nome?.toLowerCase().trim()
+      if (nome) processado.add(nome)
+      unifiedLeads.push(lead)
+    })
+
+    ;(avaliacoesData || []).forEach((av: any) => {
+      const nome = av.pacientes?.nome?.toLowerCase().trim()
+      if (nome && processado.has(nome)) return
+      if (nome) processado.add(nome)
+
+      unifiedLeads.push({
+        _key: `av-${av.id}`,
+        id: '',
+        nome: av.pacientes?.nome || 'Sem nome',
+        telefone: av.pacientes?.telefone || '',
+        status: 'avaliacao',
+        temperatura: 'quente',
+        criado_em: av.data_avaliacao || av.criado_em,
+        origem_id: av.origem_id,
+        mes_referencia: mesReferencia,
+        qtd_agendamentos: 1,
+        qtd_faltas: 0,
+      })
+    })
+
+    ;(vendasOrigem || []).forEach((v: any) => {
+      const nome = v.paciente_nome?.toLowerCase().trim()
+      if (nome && processado.has(nome)) return
+      if (nome) processado.add(nome)
+
+      unifiedLeads.push({
+        _key: `vd-${v.id}`,
+        id: '',
+        nome: v.paciente_nome || 'Sem nome',
+        telefone: v.telefone || '',
+        status: 'venda-fechada',
+        temperatura: 'quente',
+        criado_em: v.data_fechamento || v.criado_em,
+        origem_id: v.origem_id || v.avaliacoes?.origem_id,
+        mes_referencia: mesReferencia,
+        qtd_agendamentos: 1,
+        qtd_faltas: 0,
+      })
+    })
+
+    unifiedLeads.sort(
+      (a, b) => new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime(),
+    )
+
+    setLeads(unifiedLeads)
     setLoading(false)
   }
 
@@ -619,8 +698,11 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
                         </TableCell>
                       </TableRow>
                     ) : (
-                      leadsFiltrados.map((l) => (
-                        <TableRow key={l.id} className="border-slate-800 hover:bg-slate-800/50">
+                      leadsFiltrados.map((l, idx) => (
+                        <TableRow
+                          key={l.id || l._key || idx}
+                          className="border-slate-800 hover:bg-slate-800/50"
+                        >
                           <TableCell className="font-medium text-slate-200">{l.nome}</TableCell>
                           <TableCell className="text-slate-400">{l.telefone || '-'}</TableCell>
                           <TableCell className="text-center">
