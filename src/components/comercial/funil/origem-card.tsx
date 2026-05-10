@@ -9,13 +9,10 @@ import {
   DollarSign,
   Target,
   UserMinus,
-  List,
-  FileDown,
-  FileText,
   Loader2,
   Edit,
+  BarChart3,
 } from 'lucide-react'
-import { EditarVendaModal } from './editar-venda-modal'
 import { EditarLeadModal } from './editar-lead-modal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -29,16 +26,13 @@ import {
 } from '@/components/ui/table'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
 
 export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, onUpdate }: any) {
   const [open, setOpen] = useState(false)
+  const [openAnalise, setOpenAnalise] = useState(false)
   const [modalType, setModalType] = useState<string | null>(null)
-  const [vendas, setVendas] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [filtroTipo, setFiltroTipo] = useState<string | null>(null)
-  const [vendaEditando, setVendaEditando] = useState<any>(null)
   const [leadEditando, setLeadEditando] = useState<any>(null)
 
   const d = dado || {
@@ -66,62 +60,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-  const fetchVendas = async () => {
-    setLoading(true)
-    const [ano, mes] = mesReferencia.split('-')
-    const dataInicio = `${mesReferencia}-01`
-    const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-    const dataFim = `${mesReferencia}-${ultimoDia}`
-
-    const { data: vendasData } = await supabase
-      .from('vendas_confirmadas')
-      .select(`
-        id,
-        paciente_nome,
-        data_fechamento,
-        data_original,
-        valor_tratamento,
-        origem_id,
-        dentista_avaliador,
-        crc,
-        forma_pagamento,
-        avaliacoes (
-          origem_id,
-          data_avaliacao
-        )
-      `)
-      .gte('data_fechamento', dataInicio)
-      .lte('data_fechamento', dataFim)
-
-    const filteredVendas = (vendasData || [])
-      .filter((v: any) => {
-        const vOrigem = v.origem_id || (v.avaliacoes && v.avaliacoes.origem_id)
-        return vOrigem === origem.id
-      })
-      .map((v: any) => {
-        const dataAvaliacao = v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
-        let tipo = 'FECHAMENTO NO ATO'
-
-        if (dataAvaliacao && v.data_fechamento) {
-          const mesAvaliacao = dataAvaliacao.substring(0, 7)
-          if (dataAvaliacao < v.data_fechamento && mesAvaliacao === mesReferencia) {
-            tipo = 'FOLLOW DO MÊS'
-          } else if (mesAvaliacao < mesReferencia) {
-            tipo = 'FOLLOW RESGATE'
-          }
-        }
-
-        return {
-          ...v,
-          data_avaliacao: dataAvaliacao,
-          tipo,
-        }
-      })
-
-    setVendas(filteredVendas)
-    setLoading(false)
-  }
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -215,23 +153,11 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     setLoading(false)
   }
 
-  const handleOpenVendas = () => {
-    setModalType('vendas')
-    setOpen(true)
-    setFiltroTipo(null)
-    fetchVendas()
-  }
-
   const handleOpenLeads = (type: string) => {
     setModalType(type)
     setOpen(true)
     fetchLeads()
   }
-
-  const vendasFiltradas = useMemo(() => {
-    if (!filtroTipo) return vendas
-    return vendas.filter((v) => v.tipo === filtroTipo)
-  }, [vendas, filtroTipo])
 
   const leadsFiltrados = useMemo(() => {
     if (modalType === 'leads') return leads
@@ -271,85 +197,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     return []
   }, [leads, modalType])
 
-  const fechamentoNoAto = vendas.filter((v) => v.tipo === 'FECHAMENTO NO ATO').length
-  const followDoMes = vendas.filter((v) => v.tipo === 'FOLLOW DO MÊS').length
-  const followResgate = vendas.filter((v) => v.tipo === 'FOLLOW RESGATE').length
-
-  const exportToCsv = () => {
-    const headers = ['Paciente', 'Data Avaliação', 'Data Fechamento', 'Valor', 'Classificação']
-    const rows = vendasFiltradas.map((v) => [
-      `"${v.paciente_nome}"`,
-      v.data_avaliacao ? format(new Date(v.data_avaliacao + 'T00:00:00'), 'dd/MM/yyyy') : '',
-      v.data_fechamento ? format(new Date(v.data_fechamento + 'T00:00:00'), 'dd/MM/yyyy') : '',
-      v.valor_tratamento,
-      v.tipo,
-    ])
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `Vendas_${origem.nome}_${mesReferencia}.csv`
-    link.click()
-  }
-
-  const exportToPdf = () => {
-    const printWindow = window.open('', '', 'width=800,height=600')
-    if (!printWindow) return
-
-    const html = `
-      <html>
-        <head>
-          <title>Relatório de Vendas - ${origem.nome}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f4f4f4; color: #333; }
-            h2 { color: #333; font-size: 18px; }
-            .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; }
-            .bg-emerald { background-color: #d1fae5; color: #059669; }
-            .bg-blue { background-color: #dbeafe; color: #2563eb; }
-            .bg-amber { background-color: #fef3c7; color: #d97706; }
-          </style>
-        </head>
-        <body>
-          <h2>Análise de Vendas - ${origem.nome} (${mesReferencia})</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Paciente</th>
-                <th>Data Avaliação</th>
-                <th>Data Fechamento</th>
-                <th>Valor</th>
-                <th>Classificação</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${vendasFiltradas
-                .map(
-                  (v) => `
-                <tr>
-                  <td>${v.paciente_nome}</td>
-                  <td>${v.data_avaliacao ? format(new Date(v.data_avaliacao + 'T00:00:00'), 'dd/MM/yyyy') : '-'}</td>
-                  <td>${v.data_fechamento ? format(new Date(v.data_fechamento + 'T00:00:00'), 'dd/MM/yyyy') : '-'}</td>
-                  <td>${formatBrl(v.valor_tratamento)}</td>
-                  <td><span class="badge ${v.tipo === 'FECHAMENTO NO ATO' ? 'bg-emerald' : v.tipo === 'FOLLOW DO MÊS' ? 'bg-blue' : 'bg-amber'}">${v.tipo}</span></td>
-                </tr>
-              `,
-                )
-                .join('')}
-            </tbody>
-          </table>
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
-        </body>
-      </html>
-    `
-    printWindow.document.write(html)
-    printWindow.document.close()
-  }
-
   return (
     <>
       <Card className="bg-slate-900 border-slate-800 shadow-md relative overflow-hidden transition-all hover:border-slate-700 group">
@@ -368,12 +215,15 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
             <Button
               variant="outline"
               size="sm"
-              onClick={handleOpenVendas}
-              className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300 h-8"
+              onClick={() => setOpenAnalise(true)}
+              className="h-8 px-3 bg-slate-800 border-slate-700 text-white hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/50 transition-all shadow-sm"
             >
-              <List className="w-4 h-4 mr-2" /> Analisar Vendas
+              <BarChart3 className="w-4 h-4 mr-2" />
+              ANÁLISE
             </Button>
             <EditarDadosDialog
+              open={openAnalise}
+              onOpenChange={setOpenAnalise}
               origem={origem}
               dado={dado}
               mesReferencia={mesReferencia}
@@ -449,7 +299,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
             <div
               className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-emerald-900/50 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
-              onClick={handleOpenVendas}
+              onClick={() => setOpenAnalise(true)}
             >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
@@ -512,9 +362,14 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         <DialogContent className="max-w-4xl bg-slate-900 border-slate-800 text-slate-200">
           <DialogHeader>
             <DialogTitle className="text-xl">
-              {modalType === 'vendas'
-                ? 'Análise de Vendas'
-                : `Listagem de Pacientes - ${modalType === 'leads' ? 'Todos os Leads' : modalType === 'agendamentos' ? 'Agendamentos' : modalType === 'comparecimentos' ? 'Comparecimentos' : 'Faltas'}`}{' '}
+              Listagem de Pacientes -{' '}
+              {modalType === 'leads'
+                ? 'Todos os Leads'
+                : modalType === 'agendamentos'
+                  ? 'Agendamentos'
+                  : modalType === 'comparecimentos'
+                    ? 'Comparecimentos'
+                    : 'Faltas'}{' '}
               - {origem.nome} ({mesReferencia})
             </DialogTitle>
           </DialogHeader>
@@ -522,153 +377,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           {loading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-            </div>
-          ) : modalType === 'vendas' ? (
-            <div className="space-y-6 mt-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div
-                  className={cn(
-                    'p-4 rounded-xl border text-center cursor-pointer transition-all',
-                    filtroTipo === 'FECHAMENTO NO ATO'
-                      ? 'bg-emerald-950/40 border-emerald-500/50 ring-1 ring-emerald-500/50'
-                      : 'bg-slate-950 border-slate-800 hover:border-slate-700',
-                  )}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FECHAMENTO NO ATO' ? null : 'FECHAMENTO NO ATO')
-                  }
-                >
-                  <p className="text-xs font-semibold text-emerald-500 mb-1 uppercase">
-                    Fechamento no Ato
-                  </p>
-                  <p className="text-3xl font-bold text-white">{fechamentoNoAto}</p>
-                </div>
-                <div
-                  className={cn(
-                    'p-4 rounded-xl border text-center cursor-pointer transition-all',
-                    filtroTipo === 'FOLLOW DO MÊS'
-                      ? 'bg-blue-950/40 border-blue-500/50 ring-1 ring-blue-500/50'
-                      : 'bg-slate-950 border-slate-800 hover:border-slate-700',
-                  )}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FOLLOW DO MÊS' ? null : 'FOLLOW DO MÊS')
-                  }
-                >
-                  <p className="text-xs font-semibold text-blue-500 mb-1 uppercase">
-                    Follow do Mês
-                  </p>
-                  <p className="text-3xl font-bold text-white">{followDoMes}</p>
-                </div>
-                <div
-                  className={cn(
-                    'p-4 rounded-xl border text-center cursor-pointer transition-all',
-                    filtroTipo === 'FOLLOW RESGATE'
-                      ? 'bg-amber-950/40 border-amber-500/50 ring-1 ring-amber-500/50'
-                      : 'bg-slate-950 border-slate-800 hover:border-slate-700',
-                  )}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FOLLOW RESGATE' ? null : 'FOLLOW RESGATE')
-                  }
-                >
-                  <p className="text-xs font-semibold text-amber-500 mb-1 uppercase">
-                    Follow Resgate
-                  </p>
-                  <p className="text-3xl font-bold text-white">{followResgate}</p>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-slate-300">
-                  {filtroTipo ? `Listando: ${filtroTipo}` : 'Todas as Vendas'} (
-                  {vendasFiltradas.length})
-                </h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={exportToCsv}
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
-                  >
-                    <FileDown className="w-4 h-4 mr-2" /> Excel
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={exportToPdf}
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
-                  >
-                    <FileText className="w-4 h-4 mr-2" /> PDF
-                  </Button>
-                </div>
-              </div>
-
-              <div className="border border-slate-800 rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="bg-slate-950 sticky top-0 z-10">
-                    <TableRow className="border-slate-800">
-                      <TableHead className="text-slate-400">Paciente</TableHead>
-                      <TableHead className="text-slate-400 text-center">Data Avaliação</TableHead>
-                      <TableHead className="text-slate-400 text-center">Data Fechamento</TableHead>
-                      <TableHead className="text-slate-400 text-right">Valor</TableHead>
-                      <TableHead className="text-slate-400 text-center">Classificação</TableHead>
-                      <TableHead className="text-slate-400 w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vendasFiltradas.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                          Nenhuma venda encontrada para o filtro selecionado.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      vendasFiltradas.map((v) => (
-                        <TableRow key={v.id} className="border-slate-800 hover:bg-slate-800/50">
-                          <TableCell className="font-medium text-slate-200">
-                            {v.paciente_nome}
-                          </TableCell>
-                          <TableCell className="text-center text-slate-400">
-                            {v.data_avaliacao
-                              ? format(new Date(v.data_avaliacao + 'T00:00:00'), 'dd/MM/yyyy')
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-center text-slate-400">
-                            {v.data_fechamento
-                              ? format(new Date(v.data_fechamento + 'T00:00:00'), 'dd/MM/yyyy')
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-medium text-emerald-400">
-                            {formatBrl(v.valor_tratamento)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span
-                              className={cn(
-                                'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
-                                v.tipo === 'FECHAMENTO NO ATO'
-                                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                  : v.tipo === 'FOLLOW DO MÊS'
-                                    ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                    : 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
-                              )}
-                            >
-                              {v.tipo}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setVendaEditando(v)}
-                              className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
             </div>
           ) : (
             <div className="space-y-6 mt-4">
@@ -752,18 +460,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           temperaturas={temperaturas}
           onSaved={() => {
             fetchLeads()
-            onUpdate()
-          }}
-        />
-      )}
-
-      {vendaEditando && (
-        <EditarVendaModal
-          open={!!vendaEditando}
-          onOpenChange={(isOpen: boolean) => !isOpen && setVendaEditando(null)}
-          venda={vendaEditando}
-          onSaved={() => {
-            fetchVendas()
             onUpdate()
           }}
         />
