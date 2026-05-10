@@ -48,24 +48,22 @@ export function FunilDashboard({
     return nome.includes('recorrente')
   }
 
-  const isSecundario = (origemId: string) => !isClassico(origemId) && !isRecorrente(origemId)
-
-  const dadosFiltrados = useMemo(
-    () => dados.filter((d: any) => !isRecorrente(d.origem_id)),
-    [dados, origens],
-  )
+  const isSecundario = (origemId: string) => !isClassico(origemId)
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
-      (acc: any, curr: any) => ({
-        investimento: acc.investimento + Number(curr.investimento || 0),
-        leads: acc.leads + Number(curr.leads_realizado || 0),
-        agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
-        comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
-        faltas: acc.faltas + Number(curr.faltas_realizado || 0),
-        fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado || 0),
-        valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado || 0),
-      }),
+      (acc: any, curr: any) => {
+        const isRec = isRecorrente(curr.origem_id)
+        return {
+          investimento: acc.investimento + Number(curr.investimento || 0),
+          leads: acc.leads + (isRec ? 0 : Number(curr.leads_realizado || 0)),
+          agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
+          comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
+          faltas: acc.faltas + Number(curr.faltas_realizado || 0),
+          fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado || 0),
+          valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado || 0),
+        }
+      },
       {
         investimento: 0,
         leads: 0,
@@ -78,7 +76,7 @@ export function FunilDashboard({
     )
   }
 
-  const totaisGerais = useMemo(() => calcTotais(dadosFiltrados), [dadosFiltrados])
+  const totaisGerais = useMemo(() => calcTotais(dados), [dados, origens])
   const totaisClassico = useMemo(
     () => calcTotais(dados.filter((d: any) => isClassico(d.origem_id))),
     [dados, origens],
@@ -88,22 +86,24 @@ export function FunilDashboard({
     [dados, origens],
   )
 
-  const avaliacoesFiltradas = useMemo(
+  const avaliacoesSemRecorrente = useMemo(
     () => (avaliacoes ? avaliacoes.filter((a: any) => !isRecorrente(a.origem_id)) : []),
     [avaliacoes, origens],
   )
-  const totalAvaliacoes = avaliacoesFiltradas.length
+  const totalAvaliacoes = avaliacoesSemRecorrente.length
 
   const calcOportunidades = (avs: any[]) =>
     avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
 
+  const avaliacoesAtuais = avaliacoes || []
+
   const valorOportunidadesClassico = useMemo(
-    () => calcOportunidades(avaliacoesFiltradas.filter((a: any) => isClassico(a.origem_id))),
-    [avaliacoesFiltradas, origens],
+    () => calcOportunidades(avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id))),
+    [avaliacoesAtuais, origens],
   )
   const valorOportunidadesSecundario = useMemo(
-    () => calcOportunidades(avaliacoesFiltradas.filter((a: any) => isSecundario(a.origem_id))),
-    [avaliacoesFiltradas, origens],
+    () => calcOportunidades(avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id))),
+    [avaliacoesAtuais, origens],
   )
 
   const conversaoTotalClassico =
@@ -142,7 +142,7 @@ export function FunilDashboard({
 
   const barData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isRecorrente(o.id))
+      .filter((o: any) => o.ativo)
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id)
         return {
@@ -161,7 +161,7 @@ export function FunilDashboard({
 
   const matrizData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isRecorrente(o.id))
+      .filter((o: any) => o.ativo)
       .map((o: any) => {
         const d = dados.find((x: any) => x.origem_id === o.id) || {}
         const leads = Number(d.leads_realizado || 0)
