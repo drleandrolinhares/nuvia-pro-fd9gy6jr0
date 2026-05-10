@@ -39,10 +39,13 @@ export function LeadDialog({
     id: '',
     nome: '',
     telefone: '',
+    email: '',
     origem_id: '',
     temperatura: 'frio',
     status: 'novo',
     data_proximo_contato: '',
+    descricao: '',
+    criado_em: new Date().toISOString(),
   })
 
   const [notas, setNotas] = useState<any[]>([])
@@ -55,6 +58,7 @@ export function LeadDialog({
         id: leadData.id || '',
         nome: leadData.nome || '',
         telefone: leadData.telefone || '',
+        email: leadData.email || '',
         origem_id: leadData.origem_id || origens?.find((o: any) => o.ativo)?.id || '',
         temperatura:
           leadData.temperatura || temperaturas?.find((t: any) => t.ativo)?.slug || 'frio',
@@ -62,6 +66,8 @@ export function LeadDialog({
         data_proximo_contato: leadData.data_proximo_contato
           ? leadData.data_proximo_contato.substring(0, 16)
           : '',
+        descricao: leadData.descricao || '',
+        criado_em: leadData.criado_em || new Date().toISOString(),
       }
       setFormData(data)
       setInitialData(data)
@@ -146,9 +152,11 @@ export function LeadDialog({
       const payload = {
         nome: formData.nome,
         telefone: formData.telefone,
+        email: formData.email,
         origem_id: formData.origem_id,
         temperatura: formData.temperatura,
         status: formData.status,
+        descricao: formData.descricao,
         data_proximo_contato: formData.data_proximo_contato
           ? new Date(formData.data_proximo_contato).toISOString()
           : null,
@@ -187,6 +195,8 @@ export function LeadDialog({
           if (initialData.nome !== formData.nome)
             mudancas.push(`Nome: de "${initialData.nome}" para "${formData.nome}"`)
           if (initialData.telefone !== formData.telefone) mudancas.push(`Telefone atualizado`)
+          if (initialData.email !== formData.email) mudancas.push(`Email atualizado`)
+          if (initialData.descricao !== formData.descricao) mudancas.push(`Observações atualizadas`)
 
           if (initialData.origem_id !== formData.origem_id) {
             const oldOrigem = origens?.find((o: any) => o.id === initialData.origem_id)?.nome
@@ -316,45 +326,55 @@ export function LeadDialog({
 
           {tab === 'dados' && (
             <form onSubmit={handleSaveDados} className="space-y-5">
-              <div className="space-y-2">
-                <Label className="text-slate-300">Telefone *</Label>
-                <div className="relative">
-                  <Input
-                    value={formData.telefone}
-                    onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                    onBlur={handlePhoneSearch}
-                    className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
-                    placeholder="(00) 00000-0000"
-                    required
-                    autoFocus={!formData.id}
-                  />
-                  {searchingPhone && (
-                    <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-amber-500" />
+              <div className="flex items-center justify-between bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                <span className="text-xs text-slate-400 font-medium">Data de Inclusão:</span>
+                <span className="text-sm font-bold text-white">
+                  {format(new Date(formData.criado_em), 'dd/MM/yyyy HH:mm')}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Telefone *</Label>
+                  <div className="relative">
+                    <Input
+                      value={formData.telefone}
+                      onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                      onBlur={handlePhoneSearch}
+                      className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
+                      placeholder="(00) 00000-0000"
+                      required
+                      autoFocus={!formData.id}
+                    />
+                    {searchingPhone && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-amber-500" />
+                    )}
+                  </div>
+                  {pacienteInfo && (
+                    <span
+                      className={cn(
+                        'text-xs font-semibold px-2 py-1 rounded-md inline-block',
+                        pacienteInfo === 'Novo paciente'
+                          ? 'text-amber-500 bg-amber-500/10'
+                          : 'text-emerald-500 bg-emerald-500/10',
+                      )}
+                    >
+                      {pacienteInfo}
+                    </span>
                   )}
                 </div>
-                {pacienteInfo && (
-                  <span
-                    className={cn(
-                      'text-xs font-semibold px-2 py-1 rounded-md inline-block',
-                      pacienteInfo === 'Novo paciente'
-                        ? 'text-amber-500 bg-amber-500/10'
-                        : 'text-emerald-500 bg-emerald-500/10',
-                    )}
-                  >
-                    {pacienteInfo}
-                  </span>
-                )}
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Nome do Lead *</Label>
+                  <Input
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 font-medium text-white"
+                    placeholder="Ex: João Silva"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-slate-300">Nome do Lead *</Label>
-                <Input
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 font-medium text-white"
-                  placeholder="Ex: João Silva"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300">Origem *</Label>
                   <Select
@@ -396,7 +416,7 @@ export function LeadDialog({
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300">Status</Label>
                   <Select
@@ -428,6 +448,25 @@ export function LeadDialog({
                     className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">Email</Label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
+                  placeholder="exemplo@email.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">Observações</Label>
+                <Textarea
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white min-h-[80px]"
+                  placeholder="Detalhes adicionais..."
+                />
               </div>
               <div className="flex justify-end gap-3 pt-6">
                 <Button

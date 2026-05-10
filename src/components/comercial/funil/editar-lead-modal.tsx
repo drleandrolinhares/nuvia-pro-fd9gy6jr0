@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import {
   Dialog,
   DialogContent,
@@ -21,14 +22,26 @@ import { toast } from '@/hooks/use-toast'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 
-export function EditarLeadModal({ open, onOpenChange, lead, etapas, temperaturas, onSaved }: any) {
+export function EditarLeadModal({
+  open,
+  onOpenChange,
+  lead,
+  etapas,
+  temperaturas,
+  origens,
+  onSaved,
+}: any) {
   const [loading, setLoading] = useState(false)
+  const [localOrigens, setLocalOrigens] = useState<any[]>(origens || [])
   const [formData, setFormData] = useState({
     nome: '',
     telefone: '',
+    email: '',
+    origem_id: '',
     status: '',
     temperatura: '',
     descricao: '',
+    criado_em: new Date().toISOString(),
   })
 
   useEffect(() => {
@@ -36,12 +49,30 @@ export function EditarLeadModal({ open, onOpenChange, lead, etapas, temperaturas
       setFormData({
         nome: lead.nome || '',
         telefone: lead.telefone || '',
+        email: lead.email || '',
+        origem_id: lead.origem_id || '',
         status: lead.status || '',
         temperatura: lead.temperatura || '',
         descricao: lead.descricao || '',
+        criado_em: lead.criado_em || new Date().toISOString(),
       })
     }
   }, [lead])
+
+  useEffect(() => {
+    if (!origens || origens.length === 0) {
+      supabase
+        .from('funil_origens')
+        .select('*')
+        .eq('ativo', true)
+        .order('ordem')
+        .then(({ data }) => {
+          if (data) setLocalOrigens(data)
+        })
+    } else {
+      setLocalOrigens(origens)
+    }
+  }, [origens])
 
   const handleSave = async () => {
     if (!formData.nome) {
@@ -56,6 +87,8 @@ export function EditarLeadModal({ open, onOpenChange, lead, etapas, temperaturas
         .update({
           nome: formData.nome,
           telefone: formData.telefone,
+          email: formData.email,
+          origem_id: formData.origem_id,
           status: formData.status,
           temperatura: formData.temperatura,
           descricao: formData.descricao,
@@ -83,6 +116,40 @@ export function EditarLeadModal({ open, onOpenChange, lead, etapas, temperaturas
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <div className="flex items-center justify-between bg-slate-950 p-3 rounded-lg border border-slate-800">
+            <span className="text-xs text-slate-400 font-medium">Data de Inclusão:</span>
+            <span className="text-sm font-bold text-white">
+              {format(new Date(formData.criado_em), 'dd/MM/yyyy HH:mm')}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Origem</Label>
+              <Select
+                value={formData.origem_id}
+                onValueChange={(val) => setFormData({ ...formData, origem_id: val })}
+              >
+                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  {localOrigens?.map((o: any) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input
+                value={formData.telefone}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                className="bg-slate-950 border-slate-800 text-white"
+              />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>Nome</Label>
             <Input
@@ -92,10 +159,11 @@ export function EditarLeadModal({ open, onOpenChange, lead, etapas, temperaturas
             />
           </div>
           <div className="space-y-2">
-            <Label>Telefone</Label>
+            <Label>Email</Label>
             <Input
-              value={formData.telefone}
-              onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="bg-slate-950 border-slate-800 text-white"
             />
           </div>

@@ -1661,6 +1661,7 @@ export type Database = {
           criado_em: string
           data_proximo_contato: string | null
           descricao: string | null
+          email: string | null
           id: string
           mes_referencia: string
           nome: string
@@ -1676,6 +1677,7 @@ export type Database = {
           criado_em?: string
           data_proximo_contato?: string | null
           descricao?: string | null
+          email?: string | null
           id?: string
           mes_referencia: string
           nome: string
@@ -1691,6 +1693,7 @@ export type Database = {
           criado_em?: string
           data_proximo_contato?: string | null
           descricao?: string | null
+          email?: string | null
           id?: string
           mes_referencia?: string
           nome?: string
@@ -4387,6 +4390,7 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   telefone: text (nullable)
+//   email: text (nullable)
 //   origem_id: uuid (not null)
 //   descricao: text (nullable)
 //   temperatura: text (nullable, default: 'frio'::text)
