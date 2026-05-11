@@ -88,7 +88,11 @@ export function DashboardLeadsModal({
               fonte: 'Avaliação',
             }))
 
-          setData(filtered)
+          const deduplicated = Array.from(
+            new Map(filtered.map((item) => [item.nome.trim().toLowerCase(), item])).values(),
+          ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+
+          setData(deduplicated)
           return
         }
 
@@ -119,7 +123,11 @@ export function DashboardLeadsModal({
               fonte: 'Venda Confirmada',
             }))
 
-          setData(filtered)
+          const deduplicated = Array.from(
+            new Map(filtered.map((item) => [item.nome.trim().toLowerCase(), item])).values(),
+          ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+
+          setData(deduplicated)
           return
         }
 
@@ -257,7 +265,11 @@ export function DashboardLeadsModal({
           }
         })
 
-        setData(unifiedList)
+        const deduplicated = Array.from(
+          new Map(unifiedList.map((item) => [item.nome.trim().toLowerCase(), item])).values(),
+        ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+
+        setData(deduplicated)
       } catch (err) {
         console.error(err)
       } finally {

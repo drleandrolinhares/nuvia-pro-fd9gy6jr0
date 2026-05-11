@@ -124,8 +124,8 @@ export function SemaforoConversao({
       0,
     )
 
-    const pacientesAtendidosConsolidado = classicoMetrics.total + secundarioMetrics.total
-    const qtdeVendasConsolidado = classicoMetrics.qtdeVendas + secundarioMetrics.qtdeVendas
+    const pacientesAtendidosConsolidado = globalMetrics.total
+    const qtdeVendasConsolidado = globalMetrics.qtdeVendas
 
     return {
       global: globalMetrics,
@@ -341,8 +341,8 @@ export function SemaforoConversao({
               setModalConfig({
                 isOpen: true,
                 type: 'leads',
-                origens: [...metrics.origensClassicoIds, ...metrics.origensSecundarioIds],
-                title: 'Leads Atendidos (Consolidado)',
+                origens: [],
+                title: 'Leads Atendidos (Consolidado Global)',
               })
             }
           >
@@ -364,8 +364,8 @@ export function SemaforoConversao({
               setModalConfig({
                 isOpen: true,
                 type: 'fechamentos',
-                origens: [...metrics.origensClassicoIds, ...metrics.origensSecundarioIds],
-                title: 'Total de Fechamentos (Consolidado)',
+                origens: [],
+                title: 'Total de Fechamentos (Consolidado Global)',
               })
             }
           >
