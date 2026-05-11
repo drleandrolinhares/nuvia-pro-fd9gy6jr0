@@ -28,6 +28,40 @@ function getPastMonths(count = 6) {
   return dates
 }
 
+function getPastSaturdaysOfMonth(monthStr: string) {
+  const [year, month] = monthStr.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  const saturdays = []
+  const now = new Date()
+
+  while (date.getMonth() === month - 1) {
+    if (date.getDay() === 6) {
+      const deadline = new Date(date)
+      deadline.setHours(11, 59, 0, 0)
+      if (now > deadline) {
+        saturdays.push(format(date, 'yyyy-MM-dd'))
+      }
+    }
+    date.setDate(date.getDate() + 1)
+  }
+  return saturdays
+}
+
+const isValidSubmission = (s: any) => {
+  if (!s) return false
+  if (s.status_gestao === 'invalido') return false
+  const hasPp =
+    s.pontos_positivos &&
+    s.pontos_positivos.trim() !== '' &&
+    s.pontos_positivos !== 'Nenhum ponto positivo registrado.'
+  const hasLegacyPdm =
+    s.pontos_melhoria &&
+    s.pontos_melhoria.trim() !== '' &&
+    s.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
+  const hasPdmItems = s.pdm_itens && Array.isArray(s.pdm_itens) && s.pdm_itens.length > 0
+  return hasPp || hasLegacyPdm || hasPdmItems
+}
+
 export function ManagerBonificacaoMatrix() {
   const pastMonths = getPastMonths()
   const [selectedMonth, setSelectedMonth] = useState(pastMonths[0])
@@ -46,33 +80,122 @@ export function ManagerBonificacaoMatrix() {
 
   const loadData = async () => {
     setLoading(true)
-    const [{ data: uData }, { data: iData }, { data: rData }] = await Promise.all([
-      supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('obrigatorio_bonificacao', true)
-        .order('nome'),
-      supabase
-        .from('performance_bonificacao_itens' as any)
-        .select('*')
-        .eq('ativo', true)
-        .order('ordem'),
-      supabase
-        .from('performance_bonificacao' as any)
-        .select('*')
-        .eq('mes_referencia', selectedMonth),
-    ])
+    const pastSaturdays = getPastSaturdaysOfMonth(selectedMonth)
+
+    const [{ data: uData }, { data: iData }, { data: rData }, { data: ppData }] = await Promise.all(
+      [
+        supabase
+          .from('usuarios')
+          .select('id, nome, obrigatorio_pp_pdm')
+          .eq('obrigatorio_bonificacao', true)
+          .eq('status', 'ativo')
+          .order('nome'),
+        supabase
+          .from('performance_bonificacao_itens' as any)
+          .select('*')
+          .eq('ativo', true)
+          .order('ordem'),
+        supabase
+          .from('performance_bonificacao' as any)
+          .select('*')
+          .eq('mes_referencia', selectedMonth),
+        pastSaturdays.length > 0
+          ? supabase
+              .from('performance_pp_pdm' as any)
+              .select(
+                'usuario_id, data_registro, pontos_positivos, pontos_melhoria, pdm_itens, status_gestao',
+              )
+              .in('data_registro', pastSaturdays)
+          : Promise.resolve({ data: [] }),
+      ],
+    )
 
     if (uData) setUsers(uData)
     if (iData) setItems(iData)
+
+    let fetchedRecords = rData || []
+    setRecords(fetchedRecords)
+
+    let newMatrix: Record<string, string[]> = {}
+
     if (rData) {
-      setRecords(rData)
-      const newMatrix: Record<string, string[]> = {}
       rData.forEach((r) => {
         newMatrix[r.usuario_id] = r.itens_marcados || []
       })
-      setMatrix(newMatrix)
     }
+
+    const ppItem = iData?.find(
+      (i) => i.descricao.toLowerCase().includes('pp') && i.descricao.toLowerCase().includes('pdm'),
+    )
+    let needsAutoSave = false
+    const toSave: any[] = []
+
+    if (uData && iData) {
+      uData.forEach((u) => {
+        let userItems = newMatrix[u.id] ? [...newMatrix[u.id]] : []
+        let modified = false
+
+        if (ppItem && u.obrigatorio_pp_pdm) {
+          const alreadyChecked =
+            userItems.includes(ppItem.id) || userItems.includes(iData.indexOf(ppItem) as any)
+          if (!alreadyChecked) {
+            let missed = false
+            for (const sat of pastSaturdays) {
+              const sub = ppData?.find((s) => s.usuario_id === u.id && s.data_registro === sat)
+              if (!isValidSubmission(sub)) {
+                missed = true
+                break
+              }
+            }
+            if (missed) {
+              userItems.push(ppItem.id)
+              modified = true
+            }
+          }
+        }
+
+        if (modified || !newMatrix[u.id]) {
+          newMatrix[u.id] = userItems
+          if (modified) {
+            needsAutoSave = true
+            toSave.push({
+              usuario_id: u.id,
+              userItems,
+            })
+          }
+        }
+      })
+    }
+
+    setMatrix(newMatrix)
+
+    if (needsAutoSave && toSave.length > 0) {
+      toSave.forEach(async (ts) => {
+        const isEligible = ts.userItems.length === 0 && (iData?.length || 0) > 0
+        const pontuacao = isEligible ? 100 : 0
+        const existing = fetchedRecords?.find((r) => r.usuario_id === ts.usuario_id)
+        if (existing) {
+          await supabase
+            .from('performance_bonificacao' as any)
+            .update({
+              itens_marcados: ts.userItems,
+              pontuacao_total: pontuacao,
+              atingiu_meta: isEligible,
+              atualizado_em: new Date().toISOString(),
+            })
+            .eq('id', existing.id)
+        } else {
+          await supabase.from('performance_bonificacao' as any).insert({
+            usuario_id: ts.usuario_id,
+            mes_referencia: selectedMonth,
+            itens_marcados: ts.userItems,
+            pontuacao_total: pontuacao,
+            atingiu_meta: isEligible,
+          })
+        }
+      })
+    }
+
     setLoading(false)
   }
 

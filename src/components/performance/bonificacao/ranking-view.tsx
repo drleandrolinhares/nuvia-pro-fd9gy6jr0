@@ -41,6 +41,7 @@ export function RankingBonificacaoView() {
       supabase
         .from('usuarios')
         .select('id, nome, data_admissao, obrigatorio_bonificacao')
+        .eq('status', 'ativo')
         .order('nome'),
       supabase
         .from('performance_bonificacao' as any)

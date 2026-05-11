@@ -481,6 +481,15 @@ function FilledUserCard({
             Requer Reunião
           </Badge>
         )
+      case 'invalido':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100"
+          >
+            Invalidado
+          </Badge>
+        )
       default:
         return (
           <Badge
@@ -619,6 +628,7 @@ function FilledUserCard({
                       <SelectItem value="aguardando_acao">Aguardando Ação</SelectItem>
                       <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
                       <SelectItem value="requer_reuniao">Requer Reunião</SelectItem>
+                      <SelectItem value="invalido">Invalidado (Desclassifica)</SelectItem>
                       <SelectItem value="resolvido" disabled={!allFilled}>
                         Resolvido {!allFilled ? '(Pendente)' : ''}
                       </SelectItem>
@@ -707,6 +717,7 @@ export function ManagerPPDMView() {
       .from('usuarios')
       .select('id, nome, avatar_url')
       .eq('obrigatorio_pp_pdm', true)
+      .eq('status', 'ativo')
     if (uData) setUsers(uData)
 
     const { data: sData } = await supabase
@@ -746,22 +757,9 @@ export function ManagerPPDMView() {
     setLoading(false)
   }
 
-  const isValidSubmission = (s: any) => {
-    const hasPp =
-      s.pontos_positivos &&
-      s.pontos_positivos.trim() !== '' &&
-      s.pontos_positivos !== 'Nenhum ponto positivo registrado.'
-    const hasLegacyPdm =
-      s.pontos_melhoria &&
-      s.pontos_melhoria.trim() !== '' &&
-      s.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
-    const hasPdmItems = s.pdm_itens && Array.isArray(s.pdm_itens) && s.pdm_itens.length > 0
-    return hasPp || hasLegacyPdm || hasPdmItems
-  }
-
   const filledUsers = users.filter((u) => {
     const s = submissions.find((sub) => sub.usuario_id === u.id)
-    return s && isValidSubmission(s)
+    return !!s
   })
   const pendingUsers = users.filter((u) => !filledUsers.some((fu) => fu.id === u.id))
 
