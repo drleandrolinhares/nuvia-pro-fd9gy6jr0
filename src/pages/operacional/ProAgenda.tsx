@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Loader2, BookOpen, Clock, Search, Plus, Edit, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ManageProcedureDialog } from '@/components/operacional/manage-procedure-dialog'
@@ -122,7 +123,7 @@ export default function ProAgenda() {
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-800 text-white">
               <SelectItem value="all" className="focus:bg-slate-800">
-                Visão Geral (Sem tempo)
+                Visão Geral
               </SelectItem>
               {dentistas.map((d) => (
                 <SelectItem key={d.id} value={d.id} className="focus:bg-slate-800">
@@ -160,29 +161,44 @@ export default function ProAgenda() {
       ) : (
         <div className="flex flex-col gap-4">
           {filteredProcedimentos.map((proc) => {
-            const tempoObj = tempos.find(
-              (t) => t.procedimento_id === proc.id && t.dentista_id === selectedDentista,
-            )
-            const tempo = tempoObj ? tempoObj.tempo_minutos : null
-
             const dentistasAptos = tempos
               .filter((t) => t.procedimento_id === proc.id && t.tempo_minutos > 0)
               .map((t) => {
                 const d = dentistas.find((den) => den.id === t.dentista_id)
-                return d ? d.nome.split(' ')[0] : null
+                return d ? { id: d.id, nome: d.nome.split(' ')[0], tempo: t.tempo_minutos } : null
               })
               .filter(Boolean)
 
             return (
               <Card
                 key={proc.id}
-                className="bg-slate-900 border-slate-800 flex flex-col sm:flex-row group relative overflow-hidden transition-all hover:border-slate-700 hover:shadow-md"
+                className="bg-slate-900 border-slate-800 flex flex-col group relative overflow-hidden transition-all hover:border-slate-700 hover:shadow-md"
               >
-                <div className="flex-1 flex flex-col p-5">
+                <div className="p-4 sm:p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-4">
-                    <CardTitle className="text-lg text-white font-bold leading-tight">
-                      {proc.nome}
-                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-base sm:text-lg text-white font-bold leading-tight flex items-center gap-2">
+                        {proc.nome}
+                        {proc.descricao && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-slate-400 hover:text-amber-500 bg-slate-800/50 hover:bg-slate-800 rounded-full"
+                              >
+                                <Search className="h-3.5 w-3.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 bg-slate-800 border-slate-700 text-slate-200 shadow-xl p-4">
+                              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                                {proc.descricao}
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </CardTitle>
+                    </div>
                     {isAdmin && (
                       <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/90 rounded-md p-0.5 border border-slate-800 backdrop-blur-sm shrink-0">
                         <Button
@@ -207,47 +223,42 @@ export default function ProAgenda() {
                       </div>
                     )}
                   </div>
-                  <p className="text-sm text-slate-400 mt-2 leading-relaxed whitespace-pre-wrap max-w-4xl">
-                    {proc.descricao}
-                  </p>
 
                   {dentistasAptos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {dentistasAptos.map((nome, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700"
-                        >
-                          {nome}
-                        </span>
-                      ))}
+                    <div className="flex flex-wrap gap-2">
+                      {dentistasAptos.map((d: any, idx: number) => {
+                        const isSelected = selectedDentista === d.id
+                        return (
+                          <div
+                            key={idx}
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors border ${
+                              isSelected
+                                ? 'bg-amber-500/10 border-amber-500/30'
+                                : 'bg-slate-950/50 border-slate-800/80'
+                            }`}
+                          >
+                            <span
+                              className={
+                                isSelected
+                                  ? 'text-amber-100 font-semibold'
+                                  : 'text-slate-300 font-medium'
+                              }
+                            >
+                              {d.nome}
+                            </span>
+                            <span className={isSelected ? 'text-amber-500/50' : 'text-slate-600'}>
+                              -
+                            </span>
+                            <div className="flex items-center gap-1 text-amber-500">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span className="font-bold">{d.tempo} min</span>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
-
-                {selectedDentista !== 'all' && (
-                  <div className="sm:w-64 border-t sm:border-t-0 sm:border-l border-slate-800/50 bg-slate-900/30 p-5 flex items-center justify-between sm:justify-center">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-amber-500/10 rounded-lg shrink-0">
-                        <Clock className="w-5 h-5 text-amber-500" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                          Tempo Estimado
-                        </span>
-                        <span className="text-base font-bold text-white">
-                          {tempo ? (
-                            `${tempo} min`
-                          ) : (
-                            <span className="text-slate-500 italic font-normal text-sm">
-                              Não definido
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </Card>
             )
           })}
