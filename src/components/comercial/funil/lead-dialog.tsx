@@ -41,9 +41,10 @@ export function LeadDialog({
     telefone: '',
     email: '',
     origem_id: '',
-    temperatura: 'frio',
+    quantidade_contatos: 0,
     status: 'novo',
     data_proximo_contato: '',
+    data_agendamento: '',
     descricao: '',
     criado_em: new Date().toISOString(),
   })
@@ -60,11 +61,13 @@ export function LeadDialog({
         telefone: leadData.telefone || '',
         email: leadData.email || '',
         origem_id: leadData.origem_id || origens?.find((o: any) => o.ativo)?.id || '',
-        temperatura:
-          leadData.temperatura || temperaturas?.find((t: any) => t.ativo)?.slug || 'frio',
+        quantidade_contatos: leadData.quantidade_contatos || 0,
         status: leadData.status || etapas?.find((e: any) => e.ativo)?.slug || 'novo',
         data_proximo_contato: leadData.data_proximo_contato
           ? leadData.data_proximo_contato.substring(0, 16)
+          : '',
+        data_agendamento: leadData.data_agendamento
+          ? leadData.data_agendamento.substring(0, 16)
           : '',
         descricao: leadData.descricao || '',
         criado_em: leadData.criado_em || new Date().toISOString(),
@@ -154,11 +157,14 @@ export function LeadDialog({
         telefone: formData.telefone,
         email: formData.email,
         origem_id: formData.origem_id,
-        temperatura: formData.temperatura,
+        quantidade_contatos: formData.quantidade_contatos,
         status: formData.status,
         descricao: formData.descricao,
         data_proximo_contato: formData.data_proximo_contato
           ? new Date(formData.data_proximo_contato).toISOString()
+          : null,
+        data_agendamento: formData.data_agendamento
+          ? new Date(formData.data_agendamento).toISOString()
           : null,
         mes_referencia: mesReferencia || leadData?.mes_referencia || format(new Date(), 'yyyy-MM'),
       }
@@ -204,16 +210,23 @@ export function LeadDialog({
             mudancas.push(`Origem: de "${oldOrigem}" para "${newOrigem}"`)
           }
 
-          if (initialData.temperatura !== formData.temperatura) {
-            const oldTemp = temperaturas?.find((t: any) => t.slug === initialData.temperatura)?.nome
-            const newTemp = temperaturas?.find((t: any) => t.slug === formData.temperatura)?.nome
-            mudancas.push(`Temperatura: de "${oldTemp}" para "${newTemp}"`)
+          if (initialData.quantidade_contatos !== formData.quantidade_contatos) {
+            mudancas.push(
+              `Contatos: de "${initialData.quantidade_contatos}" para "${formData.quantidade_contatos}"`,
+            )
           }
 
           if (initialData.status !== formData.status) {
             const oldStatus = etapas?.find((e: any) => e.slug === initialData.status)?.nome
             const newStatus = etapas?.find((e: any) => e.slug === formData.status)?.nome
             mudancas.push(`Status: de "${oldStatus}" para "${newStatus}"`)
+          }
+
+          if (initialData.data_agendamento !== formData.data_agendamento) {
+            const dateStr = formData.data_agendamento
+              ? format(new Date(formData.data_agendamento), 'dd/MM/yyyy HH:mm')
+              : 'Removido'
+            mudancas.push(`Agendamento: ${dateStr}`)
           }
 
           if (initialData.data_proximo_contato !== formData.data_proximo_contato) {
@@ -396,22 +409,22 @@ export function LeadDialog({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Temperatura</Label>
+                  <Label className="text-slate-300">Qtd. Contatos</Label>
                   <Select
-                    value={formData.temperatura}
-                    onValueChange={(v) => setFormData({ ...formData, temperatura: v })}
+                    value={formData.quantidade_contatos.toString()}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, quantidade_contatos: parseInt(v) })
+                    }
                   >
                     <SelectTrigger className="bg-slate-950 border-slate-800 focus:ring-amber-500 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                      {temperaturas
-                        ?.filter((t: any) => t.ativo)
-                        .map((t: any) => (
-                          <SelectItem key={t.slug} value={t.slug}>
-                            {t.nome}
-                          </SelectItem>
-                        ))}
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} {num === 1 ? 'Contato' : 'Contatos'}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -437,6 +450,19 @@ export function LeadDialog({
                     </SelectContent>
                   </Select>
                 </div>
+                {formData.status === 'agendado' && (
+                  <div className="space-y-2">
+                    <Label className="text-amber-500 font-bold">Data/Hora Agendamento</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formData.data_agendamento}
+                      onChange={(e) =>
+                        setFormData({ ...formData, data_agendamento: e.target.value })
+                      }
+                      className="bg-amber-500/10 border-amber-500/30 focus-visible:ring-amber-500 text-white"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label className="text-slate-300">Próximo Contato</Label>
                   <Input

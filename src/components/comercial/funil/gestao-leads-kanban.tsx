@@ -20,24 +20,12 @@ import { VendasModal } from '@/pages/comercial/components/VendasModal'
 import { format } from 'date-fns'
 import { LeadDialog } from './lead-dialog'
 
-const TemperaturaBadge = ({
-  tempSlug,
-  temperaturas,
-}: {
-  tempSlug: string
-  temperaturas: any[]
-}) => {
-  const temp = temperaturas.find((t: any) => t.slug === tempSlug)
-  if (!temp) return null
+const ContatosBadge = ({ contatos }: { contatos: number }) => {
   return (
-    <span
-      className={cn(
-        'text-[10px] px-1.5 py-0.5 rounded border uppercase font-bold tracking-wider',
-        temp.cor || 'bg-slate-500/10 text-slate-500 border-slate-500/20',
-      )}
-    >
-      {temp.nome}
-    </span>
+    <div className="flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded border tracking-wider bg-slate-50 text-slate-600 border-slate-200 shadow-sm">
+      <Phone className="w-3 h-3 text-slate-400" />
+      {contatos} {contatos === 1 ? 'Contato' : 'Contatos'}
+    </div>
   )
 }
 
@@ -304,15 +292,19 @@ export function GestaoLeadsKanban({
                           </div>
 
                           <div className="flex items-center justify-between mb-3">
-                            <TemperaturaBadge
-                              tempSlug={lead.temperatura}
-                              temperaturas={temperaturas}
-                            />
+                            <ContatosBadge contatos={lead.quantidade_contatos || 0} />
                             <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                               <Tag className="w-3 h-3 text-slate-400" />
                               <span className="truncate max-w-[90px]">{origemNome}</span>
                             </div>
                           </div>
+
+                          {lead.data_agendamento && lead.status === 'agendado' && (
+                            <div className="flex items-center gap-1.5 mb-2 bg-amber-50 p-1.5 rounded-md border border-amber-200/50 text-[11px] font-semibold text-amber-700">
+                              <CalendarIcon className="w-3 h-3" />
+                              {format(new Date(lead.data_agendamento), "dd/MM 'às' HH:mm")}
+                            </div>
+                          )}
 
                           {lead.telefone && (
                             <div className="flex items-center gap-2 text-xs text-slate-500 mb-2 bg-slate-50 p-1.5 rounded-md border border-slate-100/50">

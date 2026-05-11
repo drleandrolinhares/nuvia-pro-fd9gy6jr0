@@ -39,7 +39,8 @@ export function EditarLeadModal({
     email: '',
     origem_id: '',
     status: '',
-    temperatura: '',
+    quantidade_contatos: 0,
+    data_agendamento: '',
     descricao: '',
     criado_em: new Date().toISOString(),
   })
@@ -52,7 +53,8 @@ export function EditarLeadModal({
         email: lead.email || '',
         origem_id: lead.origem_id || '',
         status: lead.status || '',
-        temperatura: lead.temperatura || '',
+        quantidade_contatos: lead.quantidade_contatos || 0,
+        data_agendamento: lead.data_agendamento ? lead.data_agendamento.substring(0, 16) : '',
         descricao: lead.descricao || '',
         criado_em: lead.criado_em || new Date().toISOString(),
       })
@@ -89,7 +91,10 @@ export function EditarLeadModal({
           email: formData.email,
           origem_id: formData.origem_id,
           status: formData.status,
-          temperatura: formData.temperatura,
+          quantidade_contatos: formData.quantidade_contatos,
+          data_agendamento: formData.data_agendamento
+            ? new Date(formData.data_agendamento).toISOString()
+            : null,
           descricao: formData.descricao,
           atualizado_em: new Date().toISOString(),
         })
@@ -188,23 +193,36 @@ export function EditarLeadModal({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Temperatura</Label>
+              <Label>Qtd. Contatos</Label>
               <Select
-                value={formData.temperatura}
-                onValueChange={(val) => setFormData({ ...formData, temperatura: val })}
+                value={formData.quantidade_contatos.toString()}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, quantidade_contatos: parseInt(val) })
+                }
               >
                 <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  {temperaturas?.map((temp: any) => (
-                    <SelectItem key={temp.slug} value={temp.slug}>
-                      {temp.nome}
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} {num === 1 ? 'Contato' : 'Contatos'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            {formData.status === 'agendado' && (
+              <div className="space-y-2">
+                <Label className="text-amber-500 font-bold">Data/Hora Agendamento</Label>
+                <Input
+                  type="datetime-local"
+                  value={formData.data_agendamento}
+                  onChange={(e) => setFormData({ ...formData, data_agendamento: e.target.value })}
+                  className="bg-amber-500/10 border-amber-500/30 text-white focus-visible:ring-amber-500"
+                />
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Observações</Label>
