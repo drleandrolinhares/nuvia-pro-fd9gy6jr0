@@ -67,10 +67,10 @@ interface PeriodoFerias {
 }
 
 const getTempoDeCasa = (dataAdmissao: string) => {
-  const dateISO = parseISO(dataAdmissao)
-  if (!isValid(dateISO)) return '0 dias'
+  const [year, month, day] = dataAdmissao.split('T')[0].split('-').map(Number)
+  if (!year || !month || !day) return '0 dias'
 
-  const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+  const admissao = new Date(year, month - 1, day)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
 
@@ -140,55 +140,61 @@ export function GestaoRH() {
 
       const fetchedPeriodos = periodosData || []
 
-      for (const p of fetchedPeriodos) {
-        if (p.periodo_inicio) {
-          const dateISO = parseISO(p.periodo_inicio)
-          const pInicio = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
-
-          const expectedFim = format(subDays(addYears(pInicio, 1), 1), 'yyyy-MM-dd')
-          const expectedLimite = format(subDays(addYears(pInicio, 2), 1), 'yyyy-MM-dd')
-
-          let updated = false
-          const updates: any = {}
-
-          if (p.periodo_fim !== expectedFim) {
-            p.periodo_fim = expectedFim
-            updates.periodo_fim = expectedFim
-            updated = true
-          }
-
-          if (p.prazo_limite !== expectedLimite) {
-            p.prazo_limite = expectedLimite
-            updates.prazo_limite = expectedLimite
-            updated = true
-          }
-
-          if (updated) {
-            supabase.from('rh_ferias').update(updates).eq('id', p.id).then()
-          }
-        }
-      }
-
       for (const u of usersData || []) {
         if (!u.data_admissao) continue
-        const dateISO = parseISO(u.data_admissao)
-        if (!isValid(dateISO)) continue
 
-        const admissao = new Date(dateISO.getFullYear(), dateISO.getMonth(), dateISO.getDate())
+        const [year, month, day] = u.data_admissao.split('T')[0].split('-').map(Number)
+        if (!year || !month || !day) continue
+
+        const admissao = new Date(year, month - 1, day)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
         let userPeriodos = fetchedPeriodos.filter((p) => p.usuario_id === u.id)
         userPeriodos.sort((a, b) => a.periodo_inicio.localeCompare(b.periodo_inicio))
 
+        // Alinha os períodos existentes estritamente com a data de admissão e a ordem
+        for (let i = 0; i < userPeriodos.length; i++) {
+          const p = userPeriodos[i]
+          const expectedInicio = addYears(admissao, i)
+          const expectedFim = subDays(addYears(expectedInicio, 1), 1)
+          const expectedLimite = subDays(addYears(expectedInicio, 2), 1)
+
+          const strInicio = format(expectedInicio, 'yyyy-MM-dd')
+          const strFim = format(expectedFim, 'yyyy-MM-dd')
+          const strLimite = format(expectedLimite, 'yyyy-MM-dd')
+
+          if (
+            p.periodo_inicio !== strInicio ||
+            p.periodo_fim !== strFim ||
+            p.prazo_limite !== strLimite
+          ) {
+            p.periodo_inicio = strInicio
+            p.periodo_fim = strFim
+            p.prazo_limite = strLimite
+
+            supabase
+              .from('rh_ferias')
+              .update({
+                periodo_inicio: strInicio,
+                periodo_fim: strFim,
+                prazo_limite: strLimite,
+              })
+              .eq('id', p.id)
+              .then()
+          }
+        }
+
         if (userPeriodos.length === 0) {
-          const pFim = subDays(addYears(admissao, 1), 1)
-          const limite = subDays(addYears(admissao, 2), 1)
+          const expectedInicio = admissao
+          const expectedFim = subDays(addYears(expectedInicio, 1), 1)
+          const expectedLimite = subDays(addYears(expectedInicio, 2), 1)
+
           const novo = {
             usuario_id: u.id,
-            periodo_inicio: format(admissao, 'yyyy-MM-dd'),
-            periodo_fim: format(pFim, 'yyyy-MM-dd'),
-            prazo_limite: format(limite, 'yyyy-MM-dd'),
+            periodo_inicio: format(expectedInicio, 'yyyy-MM-dd'),
+            periodo_fim: format(expectedFim, 'yyyy-MM-dd'),
+            prazo_limite: format(expectedLimite, 'yyyy-MM-dd'),
             dias_direito: 30,
             dias_gozados: 0,
             historico: [],
@@ -208,26 +214,21 @@ export function GestaoRH() {
         let latest = userPeriodos[userPeriodos.length - 1]
         let safeguard = 0
         while (safeguard < 10 && latest) {
-          const lastFimDate = parseISO(latest.periodo_fim)
-          const lastFim = new Date(
-            lastFimDate.getFullYear(),
-            lastFimDate.getMonth(),
-            lastFimDate.getDate(),
-          )
+          const [lYear, lMonth, lDay] = latest.periodo_fim.split('T')[0].split('-').map(Number)
+          const lastFim = new Date(lYear, lMonth - 1, lDay)
 
           if (isBefore(lastFim, today)) {
             const nextInicio = addDays(lastFim, 1)
             const nextFim = subDays(addYears(nextInicio, 1), 1)
             const nextLimite = subDays(addYears(nextInicio, 2), 1)
 
-            const existing = userPeriodos.find(
-              (p) => p.periodo_inicio === format(nextInicio, 'yyyy-MM-dd'),
-            )
+            const strNextInicio = format(nextInicio, 'yyyy-MM-dd')
+            const existing = userPeriodos.find((p) => p.periodo_inicio === strNextInicio)
             if (existing) break
 
             const novo = {
               usuario_id: u.id,
-              periodo_inicio: format(nextInicio, 'yyyy-MM-dd'),
+              periodo_inicio: strNextInicio,
               periodo_fim: format(nextFim, 'yyyy-MM-dd'),
               prazo_limite: format(nextLimite, 'yyyy-MM-dd'),
               dias_direito: 30,
@@ -296,8 +297,10 @@ export function GestaoRH() {
       return
     }
 
-    const dInicio = parseISO(dataInicio)
-    const dFim = parseISO(dataFim)
+    const [iYear, iMonth, iDay] = dataInicio.split('-').map(Number)
+    const [fYear, fMonth, fDay] = dataFim.split('-').map(Number)
+    const dInicio = new Date(iYear, iMonth - 1, iDay)
+    const dFim = new Date(fYear, fMonth - 1, fDay)
 
     if (isBefore(dFim, dInicio)) {
       toast.error('Data Fim deve ser maior ou igual a Data Início.')
@@ -364,7 +367,8 @@ export function GestaoRH() {
     if (active) {
       diasRestantes = active.dias_direito - active.dias_gozados
       if (diasRestantes > 0) {
-        diffDays = differenceInDays(parseISO(active.prazo_limite), new Date())
+        const [pYear, pMonth, pDay] = active.prazo_limite.split('T')[0].split('-').map(Number)
+        diffDays = differenceInDays(new Date(pYear, pMonth - 1, pDay), new Date())
         mesesAteLimite = diffDays / 30
         if (diffDays < 0) statusSemaforo = 'red'
         else if (mesesAteLimite < 2) statusSemaforo = 'red'
@@ -395,8 +399,13 @@ export function GestaoRH() {
     if (ordenacao === 'urgencia') {
       return a.diffDays - b.diffDays
     }
-    const dateA = a.usuario.data_admissao ? parseISO(a.usuario.data_admissao).getTime() : 0
-    const dateB = b.usuario.data_admissao ? parseISO(b.usuario.data_admissao).getTime() : 0
+    const getDate = (dateStr: string | null) => {
+      if (!dateStr) return 0
+      const [year, month, day] = dateStr.split('T')[0].split('-').map(Number)
+      return new Date(year, month - 1, day).getTime()
+    }
+    const dateA = getDate(a.usuario.data_admissao)
+    const dateB = getDate(b.usuario.data_admissao)
     if (ordenacao === 'mais_antigos') {
       return dateA - dateB
     }
@@ -510,12 +519,11 @@ export function GestaoRH() {
                   let isAdquirido = false
 
                   if (item.periodo) {
-                    const targetDateISO = parseISO(item.periodo.periodo_fim)
-                    const target = new Date(
-                      targetDateISO.getFullYear(),
-                      targetDateISO.getMonth(),
-                      targetDateISO.getDate(),
-                    )
+                    const [tYear, tMonth, tDay] = item.periodo.periodo_fim
+                      .split('T')[0]
+                      .split('-')
+                      .map(Number)
+                    const target = new Date(tYear, tMonth - 1, tDay)
                     const now = new Date()
                     now.setHours(0, 0, 0, 0)
 
@@ -563,13 +571,12 @@ export function GestaoRH() {
                   let inExperiencia = false
                   let diasRestantesExperiencia = 0
                   if (item.usuario.data_admissao) {
-                    const dateISO = parseISO(item.usuario.data_admissao)
-                    if (isValid(dateISO)) {
-                      const admissao = new Date(
-                        dateISO.getFullYear(),
-                        dateISO.getMonth(),
-                        dateISO.getDate(),
-                      )
+                    const [year, month, day] = item.usuario.data_admissao
+                      .split('T')[0]
+                      .split('-')
+                      .map(Number)
+                    if (year && month && day) {
+                      const admissao = new Date(year, month - 1, day)
                       const now = new Date()
                       now.setHours(0, 0, 0, 0)
                       const diasDesdeAdmissao = differenceInDays(now, admissao)
@@ -624,7 +631,23 @@ export function GestaoRH() {
                               <span>
                                 Admissão:{' '}
                                 {item.usuario.data_admissao
-                                  ? format(parseISO(item.usuario.data_admissao), 'dd/MM/yyyy')
+                                  ? format(
+                                      new Date(
+                                        item.usuario.data_admissao
+                                          .split('T')[0]
+                                          .split('-')
+                                          .map(Number)[0],
+                                        item.usuario.data_admissao
+                                          .split('T')[0]
+                                          .split('-')
+                                          .map(Number)[1] - 1,
+                                        item.usuario.data_admissao
+                                          .split('T')[0]
+                                          .split('-')
+                                          .map(Number)[2],
+                                      ),
+                                      'dd/MM/yyyy',
+                                    )
                                   : '-'}
                               </span>
                               {item.usuario.data_admissao && (
@@ -640,9 +663,33 @@ export function GestaoRH() {
                         {item.periodo ? (
                           <div className="flex flex-col">
                             <span className="text-xs">
-                              {format(parseISO(item.periodo.periodo_inicio), 'dd/MM/yy')} até{' '}
-                              <br className="hidden lg:block" />
-                              {format(parseISO(item.periodo.periodo_fim), 'dd/MM/yy')}
+                              {format(
+                                new Date(
+                                  item.periodo.periodo_inicio
+                                    .split('T')[0]
+                                    .split('-')
+                                    .map(Number)[0],
+                                  item.periodo.periodo_inicio
+                                    .split('T')[0]
+                                    .split('-')
+                                    .map(Number)[1] - 1,
+                                  item.periodo.periodo_inicio
+                                    .split('T')[0]
+                                    .split('-')
+                                    .map(Number)[2],
+                                ),
+                                'dd/MM/yy',
+                              )}{' '}
+                              até <br className="hidden lg:block" />
+                              {format(
+                                new Date(
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[0],
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[1] -
+                                    1,
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[2],
+                                ),
+                                'dd/MM/yy',
+                              )}
                             </span>
                           </div>
                         ) : (
@@ -653,7 +700,15 @@ export function GestaoRH() {
                         {item.periodo ? (
                           <div className="flex flex-col gap-1.5 items-start">
                             <span className="font-medium text-slate-200">
-                              {format(parseISO(item.periodo.periodo_fim), 'dd/MM/yyyy')}
+                              {format(
+                                new Date(
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[0],
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[1] -
+                                    1,
+                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[2],
+                                ),
+                                'dd/MM/yyyy',
+                              )}
                             </span>
                             <Badge
                               variant="outline"
@@ -684,7 +739,17 @@ export function GestaoRH() {
                                     : 'text-slate-300',
                               )}
                             >
-                              {format(parseISO(item.periodo.prazo_limite), 'dd/MM/yyyy')}
+                              {format(
+                                new Date(
+                                  item.periodo.prazo_limite.split('T')[0].split('-').map(Number)[0],
+                                  item.periodo.prazo_limite
+                                    .split('T')[0]
+                                    .split('-')
+                                    .map(Number)[1] - 1,
+                                  item.periodo.prazo_limite.split('T')[0].split('-').map(Number)[2],
+                                ),
+                                'dd/MM/yyyy',
+                              )}
                             </span>
                             {item.statusSemaforo === 'red' && (
                               <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
@@ -831,7 +896,23 @@ export function GestaoRH() {
                   <p className="text-xs text-slate-500">
                     Admissão:{' '}
                     {selectedUserHistory.usuario.data_admissao
-                      ? format(parseISO(selectedUserHistory.usuario.data_admissao), 'dd/MM/yyyy')
+                      ? format(
+                          new Date(
+                            selectedUserHistory.usuario.data_admissao
+                              .split('T')[0]
+                              .split('-')
+                              .map(Number)[0],
+                            selectedUserHistory.usuario.data_admissao
+                              .split('T')[0]
+                              .split('-')
+                              .map(Number)[1] - 1,
+                            selectedUserHistory.usuario.data_admissao
+                              .split('T')[0]
+                              .split('-')
+                              .map(Number)[2],
+                          ),
+                          'dd/MM/yyyy',
+                        )
                       : '-'}
                   </p>
                 </div>
@@ -848,13 +929,36 @@ export function GestaoRH() {
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-200">
-                            Período {i + 1}: {format(parseISO(p.periodo_inicio), 'dd/MM/yyyy')} a{' '}
-                            {format(parseISO(p.periodo_fim), 'dd/MM/yyyy')}
+                            Período {i + 1}:{' '}
+                            {format(
+                              new Date(
+                                p.periodo_inicio.split('T')[0].split('-').map(Number)[0],
+                                p.periodo_inicio.split('T')[0].split('-').map(Number)[1] - 1,
+                                p.periodo_inicio.split('T')[0].split('-').map(Number)[2],
+                              ),
+                              'dd/MM/yyyy',
+                            )}{' '}
+                            a{' '}
+                            {format(
+                              new Date(
+                                p.periodo_fim.split('T')[0].split('-').map(Number)[0],
+                                p.periodo_fim.split('T')[0].split('-').map(Number)[1] - 1,
+                                p.periodo_fim.split('T')[0].split('-').map(Number)[2],
+                              ),
+                              'dd/MM/yyyy',
+                            )}
                           </p>
                           <p className="text-xs text-slate-400 mt-1">
                             Prazo Limite:{' '}
                             <span className="text-slate-300">
-                              {format(parseISO(p.prazo_limite), 'dd/MM/yyyy')}
+                              {format(
+                                new Date(
+                                  p.prazo_limite.split('T')[0].split('-').map(Number)[0],
+                                  p.prazo_limite.split('T')[0].split('-').map(Number)[1] - 1,
+                                  p.prazo_limite.split('T')[0].split('-').map(Number)[2],
+                                ),
+                                'dd/MM/yyyy',
+                              )}
                             </span>
                           </p>
                         </div>
@@ -903,19 +1007,40 @@ export function GestaoRH() {
                                 <div>
                                   <span className="text-xs text-slate-500 block">Início</span>
                                   <span className="text-slate-300">
-                                    {format(parseISO(h.data_inicio), 'dd/MM/yyyy')}
+                                    {format(
+                                      new Date(
+                                        h.data_inicio.split('T')[0].split('-').map(Number)[0],
+                                        h.data_inicio.split('T')[0].split('-').map(Number)[1] - 1,
+                                        h.data_inicio.split('T')[0].split('-').map(Number)[2],
+                                      ),
+                                      'dd/MM/yyyy',
+                                    )}
                                   </span>
                                 </div>
                                 <div>
                                   <span className="text-xs text-slate-500 block">Fim</span>
                                   <span className="text-slate-300">
-                                    {format(parseISO(h.data_fim), 'dd/MM/yyyy')}
+                                    {format(
+                                      new Date(
+                                        h.data_fim.split('T')[0].split('-').map(Number)[0],
+                                        h.data_fim.split('T')[0].split('-').map(Number)[1] - 1,
+                                        h.data_fim.split('T')[0].split('-').map(Number)[2],
+                                      ),
+                                      'dd/MM/yyyy',
+                                    )}
                                   </span>
                                 </div>
                                 <div>
                                   <span className="text-xs text-slate-500 block">Retorno</span>
                                   <span className="text-slate-300">
-                                    {format(parseISO(h.data_retorno), 'dd/MM/yyyy')}
+                                    {format(
+                                      new Date(
+                                        h.data_retorno.split('T')[0].split('-').map(Number)[0],
+                                        h.data_retorno.split('T')[0].split('-').map(Number)[1] - 1,
+                                        h.data_retorno.split('T')[0].split('-').map(Number)[2],
+                                      ),
+                                      'dd/MM/yyyy',
+                                    )}
                                   </span>
                                 </div>
                               </div>
