@@ -70,11 +70,23 @@ export default function ProAgenda() {
   }
 
   const filteredProcedimentos = procedimentos
-    .filter(
-      (p) =>
+    .filter((p) => {
+      const matchesSearch =
         p.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.descricao.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
+        p.descricao.toLowerCase().includes(searchQuery.toLowerCase())
+
+      if (!matchesSearch) return false
+
+      if (selectedDentista !== 'all') {
+        const hasTime = tempos.some(
+          (t) =>
+            t.procedimento_id === p.id && t.dentista_id === selectedDentista && t.tempo_minutos > 0,
+        )
+        if (!hasTime) return false
+      }
+
+      return true
+    })
     .sort((a, b) => a.nome.localeCompare(b.nome))
 
   return (
@@ -153,6 +165,14 @@ export default function ProAgenda() {
             )
             const tempo = tempoObj ? tempoObj.tempo_minutos : null
 
+            const dentistasAptos = tempos
+              .filter((t) => t.procedimento_id === proc.id && t.tempo_minutos > 0)
+              .map((t) => {
+                const d = dentistas.find((den) => den.id === t.dentista_id)
+                return d ? d.nome.split(' ')[0] : null
+              })
+              .filter(Boolean)
+
             return (
               <Card
                 key={proc.id}
@@ -190,6 +210,19 @@ export default function ProAgenda() {
                   <p className="text-sm text-slate-400 mt-2 leading-relaxed whitespace-pre-wrap max-w-4xl">
                     {proc.descricao}
                   </p>
+
+                  {dentistasAptos.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {dentistasAptos.map((nome, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700"
+                        >
+                          {nome}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {selectedDentista !== 'all' && (

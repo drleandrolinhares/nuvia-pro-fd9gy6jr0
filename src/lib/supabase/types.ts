@@ -2582,6 +2582,30 @@ export type Database = {
           },
         ]
       }
+      pro_agenda_dentistas: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          id: string
+          nome: string
+          status: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       pro_agenda_procedimentos: {
         Row: {
           atualizado_em: string
@@ -2633,7 +2657,7 @@ export type Database = {
             foreignKeyName: 'pro_agenda_tempos_dentista_id_fkey'
             columns: ['dentista_id']
             isOneToOne: false
-            referencedRelation: 'dentistas'
+            referencedRelation: 'pro_agenda_dentistas'
             referencedColumns: ['id']
           },
           {
@@ -4670,6 +4694,12 @@ export const Constants = {
 //   honorarios_dentista: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: pro_agenda_dentistas
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_em: timestamp with time zone (nullable, default: now())
+//   atualizado_em: timestamp with time zone (nullable, default: now())
 // Table: pro_agenda_procedimentos
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5176,10 +5206,12 @@ export const Constants = {
 // Table: precificacao_procedimentos
 //   FOREIGN KEY precificacao_procedimentos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES precificacao_especialidades(id) ON DELETE CASCADE
 //   PRIMARY KEY precificacao_procedimentos_pkey: PRIMARY KEY (id)
+// Table: pro_agenda_dentistas
+//   PRIMARY KEY pro_agenda_dentistas_pkey: PRIMARY KEY (id)
 // Table: pro_agenda_procedimentos
 //   PRIMARY KEY pro_agenda_procedimentos_pkey: PRIMARY KEY (id)
 // Table: pro_agenda_tempos
-//   FOREIGN KEY pro_agenda_tempos_dentista_id_fkey: FOREIGN KEY (dentista_id) REFERENCES dentistas(id) ON DELETE CASCADE
+//   FOREIGN KEY pro_agenda_tempos_dentista_id_fkey: FOREIGN KEY (dentista_id) REFERENCES pro_agenda_dentistas(id) ON DELETE CASCADE
 //   PRIMARY KEY pro_agenda_tempos_pkey: PRIMARY KEY (id)
 //   UNIQUE pro_agenda_tempos_procedimento_id_dentista_id_key: UNIQUE (procedimento_id, dentista_id)
 //   FOREIGN KEY pro_agenda_tempos_procedimento_id_fkey: FOREIGN KEY (procedimento_id) REFERENCES pro_agenda_procedimentos(id) ON DELETE CASCADE
@@ -5632,6 +5664,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: precificacao_procedimentos
 //   Policy "precificacao_procedimentos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: pro_agenda_dentistas
+//   Policy "pro_agenda_dentistas_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: pro_agenda_procedimentos
