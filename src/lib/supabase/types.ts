@@ -1659,6 +1659,7 @@ export type Database = {
         Row: {
           atualizado_em: string
           criado_em: string
+          data_agendamento: string | null
           data_proximo_contato: string | null
           descricao: string | null
           email: string | null
@@ -1668,6 +1669,7 @@ export type Database = {
           origem_id: string
           qtd_agendamentos: number | null
           qtd_faltas: number | null
+          quantidade_contatos: number | null
           status: string | null
           telefone: string | null
           temperatura: string | null
@@ -1675,6 +1677,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           criado_em?: string
+          data_agendamento?: string | null
           data_proximo_contato?: string | null
           descricao?: string | null
           email?: string | null
@@ -1684,6 +1687,7 @@ export type Database = {
           origem_id: string
           qtd_agendamentos?: number | null
           qtd_faltas?: number | null
+          quantidade_contatos?: number | null
           status?: string | null
           telefone?: string | null
           temperatura?: string | null
@@ -1691,6 +1695,7 @@ export type Database = {
         Update: {
           atualizado_em?: string
           criado_em?: string
+          data_agendamento?: string | null
           data_proximo_contato?: string | null
           descricao?: string | null
           email?: string | null
@@ -1700,6 +1705,7 @@ export type Database = {
           origem_id?: string
           qtd_agendamentos?: number | null
           qtd_faltas?: number | null
+          quantidade_contatos?: number | null
           status?: string | null
           telefone?: string | null
           temperatura?: string | null
@@ -4488,6 +4494,8 @@ export const Constants = {
 //   qtd_faltas: integer (nullable, default: 0)
 //   data_proximo_contato: timestamp with time zone (nullable)
 //   email: text (nullable)
+//   quantidade_contatos: integer (nullable, default: 0)
+//   data_agendamento: timestamp with time zone (nullable)
 // Table: funil_leads_historico
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)

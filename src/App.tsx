@@ -27,6 +27,7 @@ import SAC from './pages/operacional/SAC'
 import Pedidos from './pages/operacional/pedidos/Pedidos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
 import ProAgenda from './pages/operacional/ProAgenda'
+import Roteiros from './pages/diretrizes/Roteiros'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
 import Negociacao from './pages/comercial/Negociacao'
@@ -411,17 +412,6 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/operacional/pro-agenda"
-          element={
-            <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['operacional_pro_agenda', 'Acessar Pro Agenda']}
-            >
-              <ProAgenda />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/operacional/performance"
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
@@ -452,6 +442,27 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]}>
               <Precificacao />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Diretrizes Routes */}
+        <Route
+          path="/diretrizes/pro-agenda"
+          element={
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={['operacional_pro_agenda', 'Acessar Pro Agenda']}
+            >
+              <ProAgenda />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/diretrizes/roteiros"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Roteiros />
             </ProtectedRoute>
           }
         />

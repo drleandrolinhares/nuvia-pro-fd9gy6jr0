@@ -3,6 +3,7 @@ import {
   Activity,
   BarChart3,
   Bell,
+  BookOpen,
   Briefcase,
   ChevronRight,
   Clock,
@@ -16,6 +17,7 @@ import {
   LayoutDashboard,
   ListTodo,
   LogOut,
+  MapIcon,
   MessageSquare,
   ClipboardList,
   Package,
@@ -104,12 +106,6 @@ const navData = [
         permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
       },
       {
-        title: 'PRO AGENDA',
-        url: '/operacional/pro-agenda',
-        icon: FileText,
-        permission: ['operacional_pro_agenda', 'Acessar Pro Agenda'],
-      },
-      {
         title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
@@ -187,6 +183,23 @@ const navData = [
         url: '/administrativo/precificacao',
         icon: Calculator,
         showRole: ['admin'],
+      },
+    ],
+  },
+  {
+    title: 'DIRETRIZES',
+    icon: BookOpen,
+    items: [
+      {
+        title: 'PRO AGENDA',
+        url: '/diretrizes/pro-agenda',
+        icon: FileText,
+        permission: ['operacional_pro_agenda', 'Acessar Pro Agenda'],
+      },
+      {
+        title: 'ROTEIROS',
+        url: '/diretrizes/roteiros',
+        icon: MapIcon,
       },
     ],
   },
