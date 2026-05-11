@@ -92,6 +92,15 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
 
+    const { data: pastVendas } = await supabase
+      .from('vendas_confirmadas')
+      .select('paciente_nome')
+      .lt('data_fechamento', dataInicio)
+
+    const pacientesRecorrentes = new Set(
+      (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
+    )
+
     const vendasOrigem = (vendasData || []).filter(
       (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === origem.id,
     )
@@ -120,8 +129,13 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         criado_em: av.data_avaliacao || av.criado_em,
         origem_id: av.origem_id,
         mes_referencia: mesReferencia,
-        qtd_agendamentos: 1,
+        qtd_agendamentos:
+          origem.nome?.toLowerCase().includes('recorrente') ||
+          (nome && pacientesRecorrentes.has(nome))
+            ? 0
+            : 1,
         qtd_faltas: 0,
+        isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
       })
     })
 
@@ -140,9 +154,21 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         criado_em: v.data_fechamento || v.criado_em,
         origem_id: v.origem_id || v.avaliacoes?.origem_id,
         mes_referencia: mesReferencia,
-        qtd_agendamentos: 1,
+        qtd_agendamentos:
+          origem.nome?.toLowerCase().includes('recorrente') ||
+          (nome && pacientesRecorrentes.has(nome))
+            ? 0
+            : 1,
         qtd_faltas: 0,
+        isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
       })
+    })
+
+    unifiedLeads.forEach((lead) => {
+      if (lead.isRecorrente === undefined) {
+        const nome = lead.nome?.toLowerCase().trim()
+        lead.isRecorrente = nome ? pacientesRecorrentes.has(nome) : false
+      }
     })
 
     unifiedLeads.sort(
@@ -163,6 +189,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     if (modalType === 'leads') return leads
     if (modalType === 'agendamentos') {
       return leads.filter((l) => {
+        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
         const isAgendado = [
           'agendado',
           'reagendado',
@@ -179,8 +206,9 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       })
     }
     if (modalType === 'comparecimentos') {
-      return leads.filter((l) =>
-        [
+      return leads.filter((l) => {
+        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
+        return [
           'atendido',
           'negociacao',
           'venda-fechada',
@@ -188,14 +216,17 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           'avaliacao',
           'fechamento',
           'em_follow_up',
-        ].includes(l.status),
-      )
+        ].includes(l.status)
+      })
     }
     if (modalType === 'faltas') {
-      return leads.filter((l) => l.status === 'faltou' || l.qtd_faltas > 0)
+      return leads.filter((l) => {
+        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
+        return l.status === 'faltou' || l.qtd_faltas > 0
+      })
     }
     return []
-  }, [leads, modalType])
+  }, [leads, modalType, origem.nome])
 
   return (
     <>

@@ -6460,7 +6460,6 @@ export const Constants = {
 //     v_possui_carteira boolean;
 //     v_credito_existente boolean;
 //     v_debito_existente boolean;
-//     v_mes_atual text;
 //   BEGIN
 //     -- Verifica se o usuário possui carteira
 //     SELECT possui_carteira INTO v_possui_carteira FROM public.usuarios WHERE id = NEW.usuario_id;
@@ -6468,8 +6467,6 @@ export const Constants = {
 //     IF COALESCE(v_possui_carteira, true) = false THEN
 //       RETURN NEW;
 //     END IF;
-//
-//     v_mes_atual := to_char((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM');
 //
 //     -- Verifica se o crédito já existe
 //     SELECT EXISTS (
@@ -6497,26 +6494,23 @@ export const Constants = {
 //       DELETE FROM public.carteira_transacoes
 //       WHERE origem_id = NEW.id AND tipo = 'debito';
 //     ELSE
-//       -- Se não atingiu a meta, APENAS adiciona o débito se já PASSOU do mês de referência
-//       -- Isso garante que o adiantamento fique limpo durante o mês corrente
-//       IF NEW.mes_referencia < v_mes_atual THEN
-//         SELECT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes
-//           WHERE origem_id = NEW.id AND tipo = 'debito'
-//         ) INTO v_debito_existente;
+//       -- Adiciona o débito imediatamente
+//       SELECT EXISTS (
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE origem_id = NEW.id AND tipo = 'debito'
+//       ) INTO v_debito_existente;
 //
-//         IF NOT v_debito_existente THEN
-//           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
-//           VALUES (
-//             NEW.usuario_id,
-//             'debito',
-//             350,
-//             'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
-//             NEW.mes_referencia,
-//             NEW.id,
-//             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
-//           );
-//         END IF;
+//       IF NOT v_debito_existente THEN
+//         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
+//         VALUES (
+//           NEW.usuario_id,
+//           'debito',
+//           350,
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
+//           NEW.mes_referencia,
+//           NEW.id,
+//           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
+//         );
 //       END IF;
 //     END IF;
 //
