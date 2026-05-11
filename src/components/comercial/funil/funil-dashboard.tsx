@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { OrigemCard } from './origem-card'
+import { DashboardLeadsModal } from './dashboard-leads-modal'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import {
@@ -190,19 +191,60 @@ export function FunilDashboard({
       .sort((a: any, b: any) => b.valor - a.valor)
   }, [origens, dados])
 
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: 'leads' | 'agendamentos' | 'comparecimentos' | 'faltas' | 'fechamentos' | 'oportunidades'
+    origens: string[]
+    title: string
+  }>({
+    isOpen: false,
+    type: 'leads',
+    origens: [],
+    title: '',
+  })
+
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  const renderFunnelBlocks = (totais: any) => (
+  const origensClassico = useMemo(
+    () => origens.filter((o: any) => isClassico(o.id)).map((o: any) => o.id),
+    [origens],
+  )
+  const origensSecundario = useMemo(
+    () => origens.filter((o: any) => isSecundario(o.id)).map((o: any) => o.id),
+    [origens],
+  )
+
+  const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => (
     <div className="grid grid-cols-4 gap-3 text-center">
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'agendamentos',
+            origens: origensFilter,
+            title: `Agendamentos - ${funilName}`,
+          })
+        }
+      >
         <Calendar className="w-5 h-5 text-blue-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Agendamento
         </span>
         <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'comparecimentos',
+            origens: origensFilter,
+            title: `Comparecimentos - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -210,7 +252,17 @@ export function FunilDashboard({
         </span>
         <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'faltas',
+            origens: origensFilter,
+            title: `Faltas - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -218,7 +270,17 @@ export function FunilDashboard({
         </span>
         <span className="text-2xl font-bold text-white">{totais.faltas}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'fechamentos',
+            origens: origensFilter,
+            title: `Fechamentos - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -229,9 +291,25 @@ export function FunilDashboard({
     </div>
   )
 
-  const renderOportunidadesBlocks = (valorOpp: number, conversao: number, totais: any) => (
+  const renderOportunidadesBlocks = (
+    valorOpp: number,
+    conversao: number,
+    totais: any,
+    origensFilter: string[],
+    funilName: string,
+  ) => (
     <div className="grid grid-cols-4 gap-3 text-center">
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'oportunidades',
+            origens: origensFilter,
+            title: `Oportunidades Geradas - ${funilName}`,
+          })
+        }
+      >
         <Target className="w-5 h-5 text-purple-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Oport. Geradas
@@ -246,7 +324,17 @@ export function FunilDashboard({
         </span>
         <span className="text-2xl font-bold text-white">{conversao.toFixed(1)}%</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'fechamentos',
+            origens: origensFilter,
+            title: `Fechamentos - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -422,7 +510,9 @@ export function FunilDashboard({
                 Facebook e Instagram
               </p>
             </CardHeader>
-            <CardContent className="pt-6">{renderFunnelBlocks(totaisClassico)}</CardContent>
+            <CardContent className="pt-6">
+              {renderFunnelBlocks(totaisClassico, origensClassico, 'Funil Clássico')}
+            </CardContent>
           </Card>
 
           <Card className="bg-slate-900 border-slate-800 shadow-sm">
@@ -442,6 +532,8 @@ export function FunilDashboard({
                 valorOportunidadesClassico,
                 conversaoTotalClassico,
                 totaisClassico,
+                origensClassico,
+                'Funil Clássico',
               )}
             </CardContent>
           </Card>
@@ -459,7 +551,9 @@ export function FunilDashboard({
                 Indicações, Google, Sorriso dos Sonhos e Campanhas
               </p>
             </CardHeader>
-            <CardContent className="pt-6">{renderFunnelBlocks(totaisSecundario)}</CardContent>
+            <CardContent className="pt-6">
+              {renderFunnelBlocks(totaisSecundario, origensSecundario, 'Funil Secundário')}
+            </CardContent>
           </Card>
 
           <Card className="bg-slate-900 border-slate-800 shadow-sm">
@@ -479,6 +573,8 @@ export function FunilDashboard({
                 valorOportunidadesSecundario,
                 conversaoTotalSecundario,
                 totaisSecundario,
+                origensSecundario,
+                'Funil Secundário',
               )}
             </CardContent>
           </Card>
@@ -612,6 +708,15 @@ export function FunilDashboard({
           )}
         </div>
       </div>
+
+      <DashboardLeadsModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        origens={modalConfig.origens}
+        mesReferencia={mesReferencia}
+        title={modalConfig.title}
+      />
     </div>
   )
 }

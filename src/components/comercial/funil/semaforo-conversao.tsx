@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { DashboardLeadsModal } from './dashboard-leads-modal'
 import {
   Users,
   CalendarCheck,
@@ -37,7 +38,42 @@ export function SemaforoConversao({
   dados = [],
   avaliacoes = [],
 }: SemaforoConversaoProps) {
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: 'leads' | 'agendamentos' | 'comparecimentos' | 'faltas' | 'fechamentos' | 'oportunidades'
+    origens: string[]
+    title: string
+  }>({
+    isOpen: false,
+    type: 'leads',
+    origens: [],
+    title: '',
+  })
+
   const metrics = useMemo(() => {
+    const origensClassicoIds =
+      origens
+        ?.filter((o: any) => {
+          const nome = o.nome?.toLowerCase() || ''
+          return nome.includes('facebook') || nome.includes('instagram')
+        })
+        .map((o) => o.id) || []
+
+    const origensIgnoradosIds =
+      origens
+        ?.filter((o: any) => {
+          const nome = o.nome?.toLowerCase() || ''
+          return nome.includes('recorrente')
+        })
+        .map((o) => o.id) || []
+
+    const origensSecundarioIds =
+      origens
+        ?.filter(
+          (o: any) => !origensClassicoIds.includes(o.id) && !origensIgnoradosIds.includes(o.id),
+        )
+        .map((o) => o.id) || []
+
     const isClassico = (origemId: string) => {
       const origem = origens?.find((o: any) => o.id === origemId)
       if (!origem) return false
@@ -100,6 +136,8 @@ export function SemaforoConversao({
       qtdeVendas: globalMetrics.qtdeVendas,
       pacientesAtendidosConsolidado,
       qtdeVendasConsolidado,
+      origensClassicoIds,
+      origensSecundarioIds,
     }
   }, [dados, origens, avaliacoes])
 
@@ -133,7 +171,17 @@ export function SemaforoConversao({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+          <div
+            className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                type: 'oportunidades',
+                origens: [],
+                title: 'Oportunidades Geradas (Global)',
+              })
+            }
+          >
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
               <Target className="w-8 h-8 text-blue-500" />
             </div>
@@ -177,7 +225,17 @@ export function SemaforoConversao({
             <p className="text-xs text-slate-400 font-medium">Vendas / Oportunidades</p>
           </div>
 
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+          <div
+            className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden cursor-pointer hover:bg-slate-800 transition-colors"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                type: 'fechamentos',
+                origens: [],
+                title: 'Fechamentos (Global)',
+              })
+            }
+          >
             <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-violet-500/20">
               <CheckSquare className="w-8 h-8 text-violet-500" />
@@ -216,7 +274,18 @@ export function SemaforoConversao({
           </div>
         </div>
 
-        <FunilMetricsBlock metrics={metrics.classico} />
+        <FunilMetricsBlock
+          metrics={metrics.classico}
+          funilName="Funil Clássico"
+          onCardClick={(type) =>
+            setModalConfig({
+              isOpen: true,
+              type: type as any,
+              origens: metrics.origensClassicoIds,
+              title: `${type} - Funil Clássico`,
+            })
+          }
+        />
       </div>
 
       {/* BLOCO 3: FUNIL SECUNDÁRIO */}
@@ -235,7 +304,18 @@ export function SemaforoConversao({
           </div>
         </div>
 
-        <FunilMetricsBlock metrics={metrics.secundario} />
+        <FunilMetricsBlock
+          metrics={metrics.secundario}
+          funilName="Funil Secundário"
+          onCardClick={(type) =>
+            setModalConfig({
+              isOpen: true,
+              type: type as any,
+              origens: metrics.origensSecundarioIds,
+              title: `${type} - Funil Secundário`,
+            })
+          }
+        />
       </div>
 
       {/* BLOCO 4: CONVERSÃO DE OPORTUNIDADES QUANTITATIVAS */}
@@ -255,7 +335,17 @@ export function SemaforoConversao({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+          <div
+            className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                type: 'leads',
+                origens: [...metrics.origensClassicoIds, ...metrics.origensSecundarioIds],
+                title: 'Leads Atendidos (Consolidado)',
+              })
+            }
+          >
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
               <Users className="w-8 h-8 text-blue-500" />
             </div>
@@ -268,7 +358,17 @@ export function SemaforoConversao({
             <p className="text-xs text-slate-400 font-medium">Soma de leads dos funis</p>
           </div>
 
-          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+          <div
+            className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden cursor-pointer hover:bg-slate-800 transition-colors"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                type: 'fechamentos',
+                origens: [...metrics.origensClassicoIds, ...metrics.origensSecundarioIds],
+                title: 'Total de Fechamentos (Consolidado)',
+              })
+            }
+          >
             <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
             <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-emerald-500/20">
               <CheckSquare className="w-8 h-8 text-emerald-500" />
@@ -296,11 +396,28 @@ export function SemaforoConversao({
           </div>
         </div>
       </div>
+
+      <DashboardLeadsModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        origens={modalConfig.origens}
+        mesReferencia={mesReferencia}
+        title={modalConfig.title}
+      />
     </div>
   )
 }
 
-function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
+function FunilMetricsBlock({
+  metrics,
+  onCardClick,
+  funilName,
+}: {
+  metrics: any
+  onCardClick: (type: string) => void
+  funilName: string
+}) {
   const percAgendamento =
     metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
   const percComparecimento =
@@ -312,7 +429,10 @@ function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+      <div
+        className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
+        onClick={() => onCardClick('leads')}
+      >
         <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
           <Users className="w-8 h-8 text-blue-500" />
         </div>
@@ -330,6 +450,7 @@ function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
         type="agendamento"
         icon={CalendarCheck}
         subtitle={`% sobre Total de Leads`}
+        onClick={() => onCardClick('agendamentos')}
       />
       <SemaforoCard
         title="Comparecimentos"
@@ -338,6 +459,7 @@ function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
         type="comparecimento"
         icon={CheckSquare}
         subtitle={`% sobre Agendados`}
+        onClick={() => onCardClick('comparecimentos')}
       />
       <SemaforoCard
         title="Faltantes"
@@ -346,6 +468,7 @@ function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
         type="faltante"
         icon={UserMinus}
         subtitle={`% sobre Agendados`}
+        onClick={() => onCardClick('faltas')}
       />
       <SemaforoCard
         title="Fechamentos"
@@ -354,12 +477,13 @@ function FunilMetricsBlock({ metrics }: { metrics: FunilMetrics }) {
         type="fechamento"
         icon={DollarSign}
         subtitle={`% sobre Comparecimentos`}
+        onClick={() => onCardClick('fechamentos')}
       />
     </div>
   )
 }
 
-function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle }: any) {
+function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle, onClick }: any) {
   let colorClass = 'text-slate-400 bg-slate-800/50 border-slate-700'
   let indicator = 'bg-slate-500'
   let iconColor = 'text-slate-400'
@@ -425,9 +549,10 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle }: 
   return (
     <div
       className={cn(
-        'p-6 rounded-xl border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl',
+        'p-6 rounded-xl border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer hover:bg-slate-800/80',
         colorClass,
       )}
+      onClick={onClick}
     >
       <div
         className={cn('absolute top-4 right-4 w-3 h-3 rounded-full animate-pulse', indicator)}
