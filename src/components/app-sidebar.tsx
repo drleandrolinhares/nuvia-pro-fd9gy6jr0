@@ -104,6 +104,12 @@ const navData = [
         permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
       },
       {
+        title: 'PRO AGENDA',
+        url: '/operacional/pro-agenda',
+        icon: FileText,
+        permission: ['operacional_pro_agenda', 'Acessar Pro Agenda'],
+      },
+      {
         title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
