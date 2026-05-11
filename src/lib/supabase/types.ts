@@ -2582,6 +2582,69 @@ export type Database = {
           },
         ]
       }
+      pro_agenda_procedimentos: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          descricao: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      pro_agenda_tempos: {
+        Row: {
+          criado_em: string
+          dentista_id: string
+          id: string
+          procedimento_id: string
+          tempo_minutos: number
+        }
+        Insert: {
+          criado_em?: string
+          dentista_id: string
+          id?: string
+          procedimento_id: string
+          tempo_minutos?: number
+        }
+        Update: {
+          criado_em?: string
+          dentista_id?: string
+          id?: string
+          procedimento_id?: string
+          tempo_minutos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pro_agenda_tempos_dentista_id_fkey'
+            columns: ['dentista_id']
+            isOneToOne: false
+            referencedRelation: 'dentistas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pro_agenda_tempos_procedimento_id_fkey'
+            columns: ['procedimento_id']
+            isOneToOne: false
+            referencedRelation: 'pro_agenda_procedimentos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       produto_campos_valores: {
         Row: {
           atualizado_em: string
@@ -4607,6 +4670,18 @@ export const Constants = {
 //   honorarios_dentista: numeric (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: pro_agenda_procedimentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   descricao: text (not null)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: pro_agenda_tempos
+//   id: uuid (not null, default: gen_random_uuid())
+//   procedimento_id: uuid (not null)
+//   dentista_id: uuid (not null)
+//   tempo_minutos: integer (not null, default: 30)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: produto_campos_valores
 //   id: uuid (not null, default: gen_random_uuid())
 //   produto_id: uuid (not null)
@@ -5101,6 +5176,13 @@ export const Constants = {
 // Table: precificacao_procedimentos
 //   FOREIGN KEY precificacao_procedimentos_especialidade_id_fkey: FOREIGN KEY (especialidade_id) REFERENCES precificacao_especialidades(id) ON DELETE CASCADE
 //   PRIMARY KEY precificacao_procedimentos_pkey: PRIMARY KEY (id)
+// Table: pro_agenda_procedimentos
+//   PRIMARY KEY pro_agenda_procedimentos_pkey: PRIMARY KEY (id)
+// Table: pro_agenda_tempos
+//   FOREIGN KEY pro_agenda_tempos_dentista_id_fkey: FOREIGN KEY (dentista_id) REFERENCES dentistas(id) ON DELETE CASCADE
+//   PRIMARY KEY pro_agenda_tempos_pkey: PRIMARY KEY (id)
+//   UNIQUE pro_agenda_tempos_procedimento_id_dentista_id_key: UNIQUE (procedimento_id, dentista_id)
+//   FOREIGN KEY pro_agenda_tempos_procedimento_id_fkey: FOREIGN KEY (procedimento_id) REFERENCES pro_agenda_procedimentos(id) ON DELETE CASCADE
 // Table: produto_campos_valores
 //   FOREIGN KEY produto_campos_valores_campo_id_fkey: FOREIGN KEY (campo_id) REFERENCES campos_personalizados(id) ON DELETE CASCADE
 //   PRIMARY KEY produto_campos_valores_pkey: PRIMARY KEY (id)
@@ -5550,6 +5632,14 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: precificacao_procedimentos
 //   Policy "precificacao_procedimentos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: pro_agenda_procedimentos
+//   Policy "pro_agenda_procedimentos_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: pro_agenda_tempos
+//   Policy "pro_agenda_tempos_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: produto_campos_valores
@@ -6868,6 +6958,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX precificacao_ocupacao_cadeiras_consultorio_turno_dia_semana_sem ON public.precificacao_ocupacao_cadeiras USING btree (consultorio, turno, dia_semana, semana)
 // Table: precificacao_ocupacao_config
 //   CREATE UNIQUE INDEX precificacao_ocupacao_config_tipo_nome_idx ON public.precificacao_ocupacao_config USING btree (tipo, nome)
+// Table: pro_agenda_tempos
+//   CREATE UNIQUE INDEX pro_agenda_tempos_procedimento_id_dentista_id_key ON public.pro_agenda_tempos USING btree (procedimento_id, dentista_id)
 // Table: produto_campos_valores
 //   CREATE UNIQUE INDEX produto_campos_valores_produto_id_campo_id_key ON public.produto_campos_valores USING btree (produto_id, campo_id)
 // Table: rotinas_usuarios

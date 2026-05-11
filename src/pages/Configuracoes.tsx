@@ -6,6 +6,7 @@ import { PermissoesTab } from './configuracoes/PermissoesTab'
 import CadastrosBasicos from './admin/CadastrosBasicos'
 import DescontosPorPrazo from './configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './configuracoes/EntradaEFaixas'
+import DentistasProTab from './configuracoes/DentistasProTab'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Configuracoes() {
@@ -69,6 +70,14 @@ export default function Configuracoes() {
               <Database className="size-4 mr-2" /> CADASTROS BÁSICOS
             </TabsTrigger>
           )}
+          {canViewCadastros && (
+            <TabsTrigger
+              value="dentistas-pro"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+            >
+              <Users className="size-4 mr-2" /> DENTISTAS PRO
+            </TabsTrigger>
+          )}
           {canViewNegociacao && (
             <TabsTrigger
               value="descontos"
@@ -105,6 +114,15 @@ export default function Configuracoes() {
             className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
           >
             <CadastrosBasicos />
+          </TabsContent>
+        )}
+
+        {canViewCadastros && (
+          <TabsContent
+            value="dentistas-pro"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+          >
+            <DentistasProTab />
           </TabsContent>
         )}
 
