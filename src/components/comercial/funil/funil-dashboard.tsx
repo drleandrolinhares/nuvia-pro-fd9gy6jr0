@@ -458,7 +458,17 @@ export function FunilDashboard({
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-2 gap-4">
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+        <Card
+          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'leads',
+              origens: origens.filter((o: any) => !isRecorrente(o.id)).map((o: any) => o.id),
+              title: 'Leads Qualificados (Sem Recorrentes)',
+            })
+          }
+        >
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Leads Qualificados
@@ -471,7 +481,17 @@ export function FunilDashboard({
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700">
+        <Card
+          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'oportunidades',
+              origens: origens.filter((o: any) => !isRecorrente(o.id)).map((o: any) => o.id),
+              title: 'Avaliações Realizadas (Sem Recorrentes)',
+            })
+          }
+        >
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
               Avaliações Realizadas

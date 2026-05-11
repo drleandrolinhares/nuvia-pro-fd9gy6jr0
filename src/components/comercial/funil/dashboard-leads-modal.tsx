@@ -37,81 +37,227 @@ export function DashboardLeadsModal({
     const fetchData = async () => {
       setLoading(true)
       try {
+        const [ano, mes] = mesReferencia.split('-')
+        const dataInicio = `${mesReferencia}-01`
+        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+        const dataFim = `${mesReferencia}-${ultimoDia}`
+
+        const { data: origensData } = await supabase.from('funil_origens').select('*')
+
+        const { data: pastVendas } = await supabase
+          .from('vendas_confirmadas')
+          .select('paciente_nome')
+          .lt('data_fechamento', dataInicio)
+
+        const pacientesRecorrentes = new Set(
+          (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
+        )
+
+        const getOrigemNome = (id: string) =>
+          (origensData || []).find((o) => o.id === id)?.nome?.toLowerCase() || ''
+        const isRecorrenteOrigem = (id: string) => getOrigemNome(id).includes('recorrente')
+
         if (type === 'oportunidades') {
-          let query = supabase.from('avaliacoes').select(`
+          const { data: rawAvaliacoes, error } = await supabase
+            .from('avaliacoes')
+            .select(`
               id,
+              origem_id,
               valor_orcamento,
               status,
               data_avaliacao,
-              pacientes ( nome )
+              pacientes ( nome, telefone )
             `)
-
-          if (origens && origens.length > 0) {
-            query = query.in('origem_id', origens)
-          }
-
-          const { data: avaliacoes, error } = await query
+            .gte('data_avaliacao', dataInicio)
+            .lte('data_avaliacao', dataFim)
 
           if (error) throw error
 
-          const filtered = (avaliacoes || []).filter((a) => {
-            if (!a.data_avaliacao) return false
-            return a.data_avaliacao.startsWith(mesReferencia)
-          })
+          const filtered = (rawAvaliacoes || [])
+            .filter((a: any) => {
+              if (origens && origens.length > 0 && !origens.includes(a.origem_id)) return false
+              return true
+            })
+            .map((a) => ({
+              id: a.id,
+              nome: a.pacientes?.nome || 'N/A',
+              telefone: a.pacientes?.telefone || '-',
+              status: a.status || 'Avaliação',
+              data: a.data_avaliacao,
+              valor: a.valor_orcamento || 0,
+              fonte: 'Avaliação',
+            }))
 
           setData(filtered)
-        } else {
-          let query = supabase.from('funil_leads').select('*').eq('mes_referencia', mesReferencia)
-
-          if (origens && origens.length > 0) {
-            query = query.in('origem_id', origens)
-          }
-
-          const { data: leads, error } = await query
-
-          if (error) throw error
-
-          let filtered = leads || []
-
-          if (type === 'agendamentos') {
-            filtered = filtered.filter((l) =>
-              [
-                'agendado',
-                'reagendado',
-                'atendido',
-                'faltou',
-                'negociacao',
-                'venda-fechada',
-                'venda-perdida',
-                'avaliacao',
-                'fechamento',
-                'em_follow_up',
-              ].includes(l.status || ''),
-            )
-          } else if (type === 'comparecimentos') {
-            filtered = filtered.filter((l) =>
-              [
-                'atendido',
-                'negociacao',
-                'venda-fechada',
-                'venda-perdida',
-                'avaliacao',
-                'fechamento',
-                'em_follow_up',
-              ].includes(l.status || ''),
-            )
-          } else if (type === 'fechamentos') {
-            filtered = filtered.filter((l) =>
-              ['fechamento', 'venda-fechada'].includes(l.status || ''),
-            )
-          } else if (type === 'faltas') {
-            filtered = filtered.filter(
-              (l) => l.status === 'faltou' || (l.qtd_faltas && l.qtd_faltas > 0),
-            )
-          }
-
-          setData(filtered)
+          return
         }
+
+        if (type === 'fechamentos') {
+          const { data: rawVendas, error } = await supabase
+            .from('vendas_confirmadas')
+            .select(
+              'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id), telefone, data_fechamento, status_comissao',
+            )
+            .gte('data_fechamento', dataInicio)
+            .lte('data_fechamento', dataFim)
+
+          if (error) throw error
+
+          const filtered = (rawVendas || [])
+            .filter((v: any) => {
+              const oId = v.origem_id || v.avaliacoes?.origem_id
+              if (origens && origens.length > 0 && !origens.includes(oId)) return false
+              return true
+            })
+            .map((v: any) => ({
+              id: v.id,
+              nome: v.paciente_nome,
+              telefone: v.telefone || '-',
+              status: 'venda-fechada',
+              data: v.data_fechamento,
+              valor: v.valor_tratamento || 0,
+              fonte: 'Venda Confirmada',
+            }))
+
+          setData(filtered)
+          return
+        }
+
+        // For leads, agendamentos, comparecimentos, faltas
+        const { data: rawLeads } = await supabase
+          .from('funil_leads')
+          .select('*')
+          .eq('mes_referencia', mesReferencia)
+
+        const { data: rawAvaliacoes } = await supabase
+          .from('avaliacoes')
+          .select(
+            'id, origem_id, valor_orcamento, status, pacientes(nome, telefone), data_avaliacao',
+          )
+          .gte('data_avaliacao', dataInicio)
+          .lte('data_avaliacao', dataFim)
+
+        const { data: rawVendas } = await supabase
+          .from('vendas_confirmadas')
+          .select(
+            'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id), telefone, data_fechamento',
+          )
+          .gte('data_fechamento', dataInicio)
+          .lte('data_fechamento', dataFim)
+
+        const unifiedList: any[] = []
+        const processado = new Set<string>()
+
+        ;(rawLeads || []).forEach((lead: any) => {
+          const nome = lead.nome?.toLowerCase().trim()
+          if (nome) processado.add(nome)
+
+          const oId = lead.origem_id
+          if (origens && origens.length > 0 && !origens.includes(oId)) return
+
+          const isRecorrente =
+            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+          const status = lead.status || ''
+
+          const isAgendado = [
+            'agendado',
+            'reagendado',
+            'atendido',
+            'faltou',
+            'negociacao',
+            'venda-fechada',
+            'venda-perdida',
+            'avaliacao',
+            'fechamento',
+          ].includes(status)
+          const isCompareceu = [
+            'atendido',
+            'negociacao',
+            'venda-fechada',
+            'venda-perdida',
+            'avaliacao',
+            'fechamento',
+          ].includes(status)
+          const isFaltante = status === 'faltou'
+
+          let include = false
+          if (type === 'leads') include = true
+          if (type === 'agendamentos' && isAgendado && !isRecorrente) include = true
+          if (type === 'comparecimentos' && isCompareceu && !isRecorrente) include = true
+          if (type === 'faltas' && isFaltante && !isRecorrente) include = true
+
+          if (include) {
+            unifiedList.push({
+              id: lead.id,
+              nome: lead.nome,
+              telefone: lead.telefone,
+              status: lead.status,
+              data: lead.data_agendamento || lead.criado_em,
+              contatos: lead.quantidade_contatos,
+              fonte: 'Lead',
+            })
+          }
+        })
+
+        ;(rawAvaliacoes || []).forEach((av: any) => {
+          const nome = av.pacientes?.nome?.toLowerCase().trim()
+          if (nome && processado.has(nome)) return
+          if (nome) processado.add(nome)
+
+          const oId = av.origem_id
+          if (origens && origens.length > 0 && !origens.includes(oId)) return
+
+          const isRecorrente =
+            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+
+          let include = false
+          if (type === 'leads') include = true
+          if (type === 'agendamentos' && !isRecorrente) include = true
+          if (type === 'comparecimentos' && !isRecorrente) include = true
+
+          if (include) {
+            unifiedList.push({
+              id: av.id,
+              nome: av.pacientes?.nome || 'N/A',
+              telefone: av.pacientes?.telefone || '-',
+              status: av.status || 'avaliacao',
+              data: av.data_avaliacao,
+              contatos: 1,
+              fonte: 'Avaliação',
+            })
+          }
+        })
+
+        ;(rawVendas || []).forEach((v: any) => {
+          const nome = v.paciente_nome?.toLowerCase().trim()
+          if (nome && processado.has(nome)) return
+          if (nome) processado.add(nome)
+
+          const oId = v.origem_id || v.avaliacoes?.origem_id
+          if (origens && origens.length > 0 && !origens.includes(oId)) return
+
+          const isRecorrente =
+            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+
+          let include = false
+          if (type === 'leads') include = true
+          if (type === 'agendamentos' && !isRecorrente) include = true
+          if (type === 'comparecimentos' && !isRecorrente) include = true
+
+          if (include) {
+            unifiedList.push({
+              id: v.id,
+              nome: v.paciente_nome,
+              telefone: v.telefone || '-',
+              status: 'venda-fechada',
+              data: v.data_fechamento,
+              contatos: 1,
+              fonte: 'Venda',
+            })
+          }
+        })
+
+        setData(unifiedList)
       } catch (err) {
         console.error(err)
       } finally {
@@ -144,9 +290,11 @@ export function DashboardLeadsModal({
               <TableHeader>
                 <TableRow className="border-slate-800 hover:bg-transparent">
                   <TableHead className="text-slate-400">Nome do Paciente</TableHead>
-                  {type === 'oportunidades' ? (
+                  {type === 'oportunidades' || type === 'fechamentos' ? (
                     <>
-                      <TableHead className="text-slate-400">Data Avaliação</TableHead>
+                      <TableHead className="text-slate-400">
+                        Data {type === 'fechamentos' ? 'Fechamento' : 'Avaliação'}
+                      </TableHead>
                       <TableHead className="text-slate-400">Status</TableHead>
                       <TableHead className="text-slate-400 text-right">Valor</TableHead>
                     </>
@@ -160,49 +308,46 @@ export function DashboardLeadsModal({
                       <TableHead className="text-slate-400 text-center">Contatos</TableHead>
                     </>
                   )}
+                  <TableHead className="text-slate-400 text-right">Fonte</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((item: any) => (
                   <TableRow key={item.id} className="border-slate-800/50 hover:bg-slate-800/30">
-                    {type === 'oportunidades' ? (
+                    <TableCell className="font-medium text-slate-300">{item.nome}</TableCell>
+                    {type === 'oportunidades' || type === 'fechamentos' ? (
                       <>
-                        <TableCell className="font-medium text-slate-300">
-                          {item.pacientes?.nome || 'N/A'}
-                        </TableCell>
                         <TableCell>
-                          {item.data_avaliacao
-                            ? new Date(item.data_avaliacao).toLocaleDateString('pt-BR', {
+                          {item.data
+                            ? new Date(item.data).toLocaleDateString('pt-BR', {
                                 timeZone: 'UTC',
                               })
                             : '-'}
                         </TableCell>
                         <TableCell className="capitalize">
-                          {item.status?.replace(/_/g, ' ') || '-'}
+                          {item.status?.replace(/-/g, ' ') || '-'}
                         </TableCell>
-                        <TableCell className="text-right text-emerald-400">
-                          {formatBrl(item.valor_orcamento || 0)}
+                        <TableCell className="text-right text-emerald-400 font-medium">
+                          {formatBrl(item.valor || 0)}
                         </TableCell>
                       </>
                     ) : (
                       <>
-                        <TableCell className="font-medium text-slate-300">{item.nome}</TableCell>
                         <TableCell>{item.telefone || '-'}</TableCell>
                         <TableCell className="capitalize">
                           {item.status?.replace(/-/g, ' ') || '-'}
                         </TableCell>
                         {type === 'agendamentos' && (
                           <TableCell>
-                            {item.data_agendamento
-                              ? new Date(item.data_agendamento).toLocaleString('pt-BR')
-                              : '-'}
+                            {item.data ? new Date(item.data).toLocaleString('pt-BR') : '-'}
                           </TableCell>
                         )}
-                        <TableCell className="text-center">
-                          {item.quantidade_contatos || 0}
-                        </TableCell>
+                        <TableCell className="text-center">{item.contatos || 0}</TableCell>
                       </>
                     )}
+                    <TableCell className="text-right text-xs text-slate-500">
+                      {item.fonte}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
