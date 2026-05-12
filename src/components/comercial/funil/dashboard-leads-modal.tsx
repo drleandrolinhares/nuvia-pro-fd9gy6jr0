@@ -53,6 +53,8 @@ export function DashboardLeadsModal({
           (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
         )
 
+        const getOrigemDisplayNome = (id: string) =>
+          (origensData || []).find((o) => o.id === id)?.nome || 'Não informada'
         const getOrigemNome = (id: string) =>
           (origensData || []).find((o) => o.id === id)?.nome?.toLowerCase() || ''
         const isRecorrenteOrigem = (id: string) => getOrigemNome(id).includes('recorrente')
@@ -86,6 +88,7 @@ export function DashboardLeadsModal({
               data: a.data_avaliacao,
               valor: a.valor_orcamento || 0,
               fonte: 'Avaliação',
+              origem_nome: getOrigemDisplayNome(a.origem_id),
             }))
 
           const deduplicated = Array.from(
@@ -121,6 +124,7 @@ export function DashboardLeadsModal({
               data: v.data_fechamento,
               valor: v.valor_tratamento || 0,
               fonte: 'Venda Confirmada',
+              origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             }))
 
           const deduplicated = Array.from(
@@ -203,6 +207,7 @@ export function DashboardLeadsModal({
               data: lead.data_agendamento || lead.criado_em,
               contatos: lead.quantidade_contatos,
               fonte: 'Lead',
+              origem_nome: getOrigemDisplayNome(lead.origem_id),
             })
           }
         })
@@ -232,6 +237,7 @@ export function DashboardLeadsModal({
               data: av.data_avaliacao,
               contatos: 1,
               fonte: 'Avaliação',
+              origem_nome: getOrigemDisplayNome(av.origem_id),
             })
           }
         })
@@ -261,6 +267,7 @@ export function DashboardLeadsModal({
               data: v.data_fechamento,
               contatos: 1,
               fonte: 'Venda',
+              origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             })
           }
         })
@@ -320,6 +327,7 @@ export function DashboardLeadsModal({
                       <TableHead className="text-slate-400 text-center">Contatos</TableHead>
                     </>
                   )}
+                  <TableHead className="text-slate-400">Origem</TableHead>
                   <TableHead className="text-slate-400 text-right">Fonte</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,6 +365,11 @@ export function DashboardLeadsModal({
                         <TableCell className="text-center">{item.contatos || 0}</TableCell>
                       </>
                     )}
+                    <TableCell className="text-slate-300">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                        {item.origem_nome}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-right text-xs text-slate-500">
                       {item.fonte}
                     </TableCell>
