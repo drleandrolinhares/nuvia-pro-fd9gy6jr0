@@ -60,11 +60,16 @@ export function RoteiroCard({
 
   return (
     <>
-      <Card className="bg-slate-900 border-slate-800 flex flex-col">
-        <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-          <div className="space-y-1.5 pr-2">
-            <CardTitle className="text-base text-white leading-tight">{roteiro.titulo}</CardTitle>
-            <Badge variant="secondary" className="bg-slate-800 text-slate-300 hover:bg-slate-700">
+      <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
+        <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0 border-b border-slate-800/50">
+          <div className="space-y-2 pr-2">
+            <CardTitle className="text-base font-semibold text-slate-100 leading-tight">
+              {roteiro.titulo}
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
+            >
               {getIcon()}
               {roteiro.tipo_comunicacao}
             </Badge>
@@ -73,7 +78,7 @@ export function RoteiroCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+              className="h-8 w-8 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
               onClick={onEdit}
             >
               <Edit2 className="w-4 h-4" />
@@ -81,28 +86,38 @@ export function RoteiroCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-red-400"
+              className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
               onClick={() => setDeleteOpen(true)}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-4 pt-2 flex-1 flex flex-col">
+        <CardContent className="p-4 pt-4 flex-1 flex flex-col">
           {roteiro.objetivo && (
-            <p className="text-sm text-slate-400 italic mb-4">Objetivo: {roteiro.objetivo}</p>
+            <div className="mb-4">
+              <p className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+                Objetivo
+              </p>
+              <p className="text-sm text-slate-300">{roteiro.objetivo}</p>
+            </div>
           )}
-          <div className="mt-auto relative group">
-            <div className="bg-slate-950 rounded-md p-3 text-sm text-slate-300 min-h-[80px] whitespace-pre-wrap font-mono border border-slate-800/50">
-              {roteiro.conteudo || 'Sem conteúdo cadastrado.'}
+          <div className="mt-auto relative group flex-1 flex flex-col">
+            <p className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+              Conteúdo
+            </p>
+            <div className="bg-slate-950 rounded-md p-3.5 text-sm text-slate-200 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700/80 shadow-inner flex-1">
+              {roteiro.conteudo || (
+                <span className="text-slate-500 italic">Sem conteúdo cadastrado.</span>
+              )}
             </div>
             <Button
               size="sm"
               variant="secondary"
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700"
+              className="absolute top-7 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 shadow-sm"
               onClick={handleCopy}
             >
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
         </CardContent>

@@ -20,7 +20,7 @@ export default function Roteiros() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
         <div className="flex items-center gap-4">
           <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
@@ -36,7 +36,7 @@ export default function Roteiros() {
         <Button
           onClick={() => setSetorDialog(true)}
           variant="outline"
-          className="border-slate-700 shrink-0"
+          className="border-slate-600 hover:bg-slate-800 text-slate-200 hover:text-white shrink-0"
         >
           <Settings className="w-4 h-4 mr-2" />
           Gerenciar Setores
@@ -50,15 +50,15 @@ export default function Roteiros() {
       )}
 
       {!loading && setores.length === 0 && (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-8 shadow-sm flex flex-col items-center justify-center min-h-[300px] text-center">
-          <MapIcon className="w-16 h-16 text-slate-600 mb-4 opacity-50" />
-          <h3 className="text-xl font-medium text-slate-300">Nenhum setor cadastrado</h3>
-          <p className="text-slate-500 mt-2 max-w-md">
+        <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-8 shadow-sm flex flex-col items-center justify-center min-h-[300px] text-center">
+          <MapIcon className="w-16 h-16 text-slate-500 mb-4 opacity-70" />
+          <h3 className="text-xl font-medium text-slate-200">Nenhum setor cadastrado</h3>
+          <p className="text-slate-400 mt-2 max-w-md">
             Comece criando os setores (ex: Recepção, Comercial) para organizar seus roteiros.
           </p>
           <Button
             onClick={() => setSetorDialog(true)}
-            className="mt-6 bg-amber-600 hover:bg-amber-700"
+            className="mt-6 bg-amber-600 hover:bg-amber-700 text-white"
           >
             Criar Primeiro Setor
           </Button>
@@ -68,12 +68,12 @@ export default function Roteiros() {
       {!loading && setores.length > 0 && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <ScrollArea className="w-full whitespace-nowrap rounded-md pb-2">
-            <TabsList className="bg-slate-900 border border-slate-800 justify-start h-12 p-1 inline-flex w-max min-w-full">
+            <TabsList className="bg-slate-900 border border-slate-700 justify-start h-12 p-1 inline-flex w-max min-w-full">
               {setores.map((setor) => (
                 <TabsTrigger
                   key={setor.id}
                   value={setor.id}
-                  className="data-[state=active]:bg-slate-800 min-w-[120px]"
+                  className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-500 data-[state=active]:font-medium text-slate-400 hover:text-slate-200 min-w-[120px] transition-colors"
                 >
                   {setor.nome}
                 </TabsTrigger>

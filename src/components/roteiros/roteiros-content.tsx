@@ -18,14 +18,16 @@ export function RoteirosContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/40 p-4 rounded-lg border border-slate-800/60">
         <div>
-          <h3 className="text-xl font-medium text-white">{setor.nome}</h3>
-          <p className="text-sm text-slate-400">Gerencie os roteiros e mensagens deste setor.</p>
+          <h3 className="text-xl font-medium text-slate-100">{setor.nome}</h3>
+          <p className="text-sm text-slate-400 mt-1">
+            Gerencie os roteiros e mensagens deste setor.
+          </p>
         </div>
         <Button
           onClick={() => setDialog({ open: true })}
-          className="bg-amber-600 hover:bg-amber-700 shrink-0"
+          className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 shadow-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Roteiro
@@ -33,8 +35,13 @@ export function RoteirosContent({
       </div>
 
       {roteiros.length === 0 ? (
-        <div className="text-center p-8 bg-slate-900/50 rounded-lg border border-slate-800">
-          <p className="text-slate-400">Nenhum roteiro cadastrado neste setor.</p>
+        <div className="text-center p-12 bg-slate-900/60 rounded-lg border border-slate-700 flex flex-col items-center justify-center min-h-[250px]">
+          <p className="text-slate-300 font-medium text-lg">
+            Nenhum roteiro cadastrado neste setor.
+          </p>
+          <p className="text-slate-400 text-sm mt-2">
+            Clique em "Novo Roteiro" para adicionar o primeiro roteiro.
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

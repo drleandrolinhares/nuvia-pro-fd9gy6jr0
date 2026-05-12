@@ -2930,6 +2930,74 @@ export type Database = {
           },
         ]
       }
+      roteiros: {
+        Row: {
+          atualizado_em: string
+          conteudo: string | null
+          criado_em: string
+          id: string
+          objetivo: string | null
+          ordem: number
+          setor_id: string
+          tipo_comunicacao: string
+          titulo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          objetivo?: string | null
+          ordem?: number
+          setor_id: string
+          tipo_comunicacao: string
+          titulo: string
+        }
+        Update: {
+          atualizado_em?: string
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          objetivo?: string | null
+          ordem?: number
+          setor_id?: string
+          tipo_comunicacao?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'roteiros_setor_id_fkey'
+            columns: ['setor_id']
+            isOneToOne: false
+            referencedRelation: 'roteiros_setores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      roteiros_setores: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: []
+      }
       rotinas_usuarios: {
         Row: {
           ativa: boolean
@@ -4780,6 +4848,22 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: roteiros
+//   id: uuid (not null, default: gen_random_uuid())
+//   setor_id: uuid (not null)
+//   titulo: text (not null)
+//   objetivo: text (nullable)
+//   tipo_comunicacao: text (not null)
+//   conteudo: text (nullable)
+//   ordem: integer (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: roteiros_setores
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   ordem: integer (not null, default: 0)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: rotinas_usuarios
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (nullable)
@@ -5240,6 +5324,11 @@ export const Constants = {
 // Table: rh_ferias
 //   PRIMARY KEY rh_ferias_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY rh_ferias_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: roteiros
+//   PRIMARY KEY roteiros_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY roteiros_setor_id_fkey: FOREIGN KEY (setor_id) REFERENCES roteiros_setores(id) ON DELETE CASCADE
+// Table: roteiros_setores
+//   PRIMARY KEY roteiros_setores_pkey: PRIMARY KEY (id)
 // Table: rotinas_usuarios
 //   FOREIGN KEY rotinas_usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   PRIMARY KEY rotinas_usuarios_pkey: PRIMARY KEY (id)
@@ -5710,6 +5799,14 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: rh_ferias
 //   Policy "rh_ferias_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: roteiros
+//   Policy "roteiros_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: roteiros_setores
+//   Policy "roteiros_setores_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: rotinas_usuarios

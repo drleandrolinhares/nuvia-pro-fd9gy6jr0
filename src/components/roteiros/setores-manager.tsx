@@ -121,17 +121,19 @@ export function SetoresManager({ open, onOpenChange, setores, onSuccess }: Props
             )}
           </form>
 
-          <div className="border border-slate-800 rounded-md divide-y divide-slate-800 max-h-[300px] overflow-y-auto">
+          <div className="border border-slate-700 rounded-md divide-y divide-slate-700 max-h-[300px] overflow-y-auto">
             {setores.length === 0 ? (
-              <div className="p-4 text-center text-sm text-slate-400">Nenhum setor cadastrado.</div>
+              <div className="p-6 text-center text-sm text-slate-400 bg-slate-900/40">
+                Nenhum setor cadastrado.
+              </div>
             ) : (
               setores.map((setor) => (
                 <div
                   key={setor.id}
-                  className="flex items-center justify-between p-3 bg-slate-900/50 hover:bg-slate-800/50 transition-colors"
+                  className="flex items-center justify-between p-3 bg-slate-900/80 hover:bg-slate-800 transition-colors"
                 >
                   <span
-                    className={`text-sm ${editingId === setor.id ? 'opacity-50' : 'text-slate-200'}`}
+                    className={`text-sm font-medium ${editingId === setor.id ? 'opacity-50 text-slate-400' : 'text-slate-200'}`}
                   >
                     {setor.nome}
                   </span>
@@ -139,7 +141,7 @@ export function SetoresManager({ open, onOpenChange, setores, onSuccess }: Props
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-white"
+                      className="h-8 w-8 text-slate-400 hover:text-slate-100 hover:bg-slate-700"
                       onClick={() => startEdit(setor)}
                       disabled={loading || editingId !== null}
                     >
@@ -148,7 +150,7 @@ export function SetoresManager({ open, onOpenChange, setores, onSuccess }: Props
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-red-400"
+                      className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
                       onClick={() => handleDelete(setor.id)}
                       disabled={loading || editingId !== null}
                     >
