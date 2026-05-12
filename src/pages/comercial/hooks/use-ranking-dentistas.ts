@@ -106,7 +106,7 @@ export function useRankingDentistas(periodo: string, dataInicio: string, dataFim
 
         let vendasQuery = supabase
           .from('vendas_confirmadas')
-          .select('id, dentista_avaliador, valor_tratamento, data_fechamento')
+          .select('id, dentista_avaliador, valor_tratamento, data_fechamento, oportunidade_id')
         if (sd) vendasQuery = vendasQuery.gte('data_fechamento', format(sd, 'yyyy-MM-dd'))
         if (ed) vendasQuery = vendasQuery.lte('data_fechamento', format(ed, 'yyyy-MM-dd'))
         const { data: vendas } = await vendasQuery
@@ -123,15 +123,19 @@ export function useRankingDentistas(periodo: string, dataInicio: string, dataFim
           const vds = vendas?.filter((v) => v.dentista_avaliador === d.id) || []
           const crs = criativos?.filter((c) => c.dentista_avaliador_id === d.id) || []
 
-          const qtdAvaliacoes = avs.length
-          const qtdComparecimentos = avs.length
+          // Vendas que não têm uma avaliação contabilizada neste período
+          const vendasSemAvaliacao = vds.filter(
+            (v) => !v.oportunidade_id || !avs.some((a) => a.id === v.oportunidade_id),
+          )
+
+          const qtdAvaliacoes = avs.length + vendasSemAvaliacao.length
+          const qtdComparecimentos = avs.length + vendasSemAvaliacao.length
           const qtdFechamentos = vds.length
           const conversao = qtdAvaliacoes > 0 ? (qtdFechamentos / qtdAvaliacoes) * 100 : 0
 
-          const valorTotalOportunidade = avs.reduce(
-            (acc, curr) => acc + (curr.valor_orcamento || 0),
-            0,
-          )
+          const valorTotalOportunidade =
+            avs.reduce((acc, curr) => acc + (curr.valor_orcamento || 0), 0) +
+            vendasSemAvaliacao.reduce((acc, curr) => acc + (curr.valor_tratamento || 0), 0)
           const ticketOportunidade = qtdAvaliacoes > 0 ? valorTotalOportunidade / qtdAvaliacoes : 0
 
           const valorTotalConversao = vds.reduce(
