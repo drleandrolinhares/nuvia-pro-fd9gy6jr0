@@ -62,18 +62,14 @@ export function EditarLeadModal({
   }, [lead])
 
   useEffect(() => {
-    if (!origens || origens.length === 0) {
-      supabase
-        .from('funil_origens')
-        .select('*')
-        .order('ordem')
-        .then(({ data }) => {
-          if (data) setLocalOrigens(data)
-        })
-    } else {
-      setLocalOrigens(origens)
-    }
-  }, [origens])
+    supabase
+      .from('funil_origens')
+      .select('*')
+      .order('ordem')
+      .then(({ data }) => {
+        if (data) setLocalOrigens(data)
+      })
+  }, [])
 
   const handleSave = async () => {
     if (!formData.nome) {
@@ -103,7 +99,7 @@ export function EditarLeadModal({
       if (error) throw error
 
       toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
-      onSaved()
+      onSaved({ id: lead.id, ...formData, atualizado_em: new Date().toISOString() })
       onOpenChange(false)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
