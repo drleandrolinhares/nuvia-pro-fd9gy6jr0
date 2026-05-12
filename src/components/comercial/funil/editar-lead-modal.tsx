@@ -70,11 +70,11 @@ export function EditarLeadModal({
   }, [])
 
   const sanitizeUuid = (id: any) => {
-    if (!id || typeof id !== 'string') return null
-    const cleaned = id.trim()
+    if (!id) return null
+    const cleaned = String(id).trim()
     if (!cleaned) return null
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    return uuidRegex.test(cleaned) ? cleaned : null
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : cleaned
   }
 
   const handleSave = async () => {
@@ -106,7 +106,7 @@ export function EditarLeadModal({
       console.error('[SILENT LOG] ID inválido detectado na tentativa de update:', lead?.id)
       toast({
         title: 'Erro',
-        description: 'ID do paciente ausente ou inválido.',
+        description: 'ID do paciente ausente ou inválido. Feche e abra a janela novamente.',
         variant: 'destructive',
       })
       return
@@ -117,7 +117,7 @@ export function EditarLeadModal({
       // Cross-check: verifica se o registro existe
       const { data: existingLead, error: checkError } = await supabase
         .from('funil_leads')
-        .select('id')
+        .select('id, origem_id, status, nome, telefone, descricao')
         .eq('id', leadIdSanitizado)
         .single()
 
@@ -131,28 +131,36 @@ export function EditarLeadModal({
         )
       }
 
-      const { error } = await supabase
-        .from('funil_leads')
-        .update({
-          nome: nomeLimpo,
-          telefone: formData.telefone?.trim() || null,
-          origem_id: origemIdSanitizada,
-          status: formData.status,
-          quantidade_contatos: formData.quantidade_contatos || 0,
-          data_agendamento: formData.data_agendamento
-            ? new Date(formData.data_agendamento).toISOString()
-            : null,
-          descricao: formData.descricao?.trim() || null,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq('id', existingLead.id)
+      const payload: any = {
+        atualizado_em: new Date().toISOString(),
+      }
+
+      if (nomeLimpo !== existingLead.nome) payload.nome = nomeLimpo
+      if (origemIdSanitizada !== existingLead.origem_id) payload.origem_id = origemIdSanitizada
+      if (formData.status !== existingLead.status) payload.status = formData.status
+
+      const newTelefone = formData.telefone?.trim() || null
+      if (newTelefone !== existingLead.telefone) payload.telefone = newTelefone
+
+      const newDescricao = formData.descricao?.trim() || null
+      if (newDescricao !== existingLead.descricao) payload.descricao = newDescricao
+
+      payload.quantidade_contatos = formData.quantidade_contatos || 0
+      payload.data_agendamento = formData.data_agendamento
+        ? new Date(formData.data_agendamento).toISOString()
+        : null
+
+      const { error } = await supabase.from('funil_leads').update(payload).eq('id', existingLead.id)
 
       if (error) {
         console.error('[SILENT LOG] Erro na Atualização de Lead Modal:', error)
         throw error
       }
 
-      toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso e realocado.' })
+      toast({
+        title: 'Sucesso',
+        description: 'Salvamento Confirmado: Origem e dados do paciente atualizados com sucesso.',
+      })
       onSaved({ id: lead.id, ...formData, atualizado_em: new Date().toISOString() })
       onOpenChange(false)
     } catch (error: any) {

@@ -71,10 +71,11 @@ export function GestaoLeadsKanban({
   }
 
   const sanitizeUuid = (id: any) => {
-    if (!id || typeof id !== 'string') return null
-    const cleaned = id.trim()
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    return uuidRegex.test(cleaned) ? cleaned : null
+    if (!id) return null
+    const cleaned = String(id).trim()
+    if (!cleaned) return null
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : cleaned
   }
 
   const saveEditing = async (lead: any) => {
