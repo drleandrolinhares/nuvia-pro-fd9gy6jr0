@@ -60,15 +60,15 @@ export function RoteiroCard({
 
   return (
     <>
-      <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
-        <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0 border-b border-slate-800/50">
+      <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-none">
+        <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0 border-b border-slate-700">
           <div className="space-y-2 pr-2">
             <CardTitle className="text-base font-semibold text-white leading-tight">
               {roteiro.titulo}
             </CardTitle>
             <Badge
               variant="secondary"
-              className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
+              className="bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700"
             >
               {getIcon()}
               {roteiro.tipo_comunicacao}
@@ -96,17 +96,17 @@ export function RoteiroCard({
         <CardContent className="p-4 pt-4 flex-1 flex flex-col">
           {roteiro.objetivo && (
             <div className="mb-4">
-              <p className="text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">
                 Objetivo
               </p>
-              <p className="text-sm text-slate-200">{roteiro.objetivo}</p>
+              <p className="text-sm text-white">{roteiro.objetivo}</p>
             </div>
           )}
           <div className="mt-auto relative group flex-1 flex flex-col">
-            <p className="text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">
               Conteúdo
             </p>
-            <div className="bg-slate-950 rounded-md p-3.5 text-sm text-slate-200 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700/80 shadow-inner flex-1">
+            <div className="bg-slate-950 rounded-md p-3.5 text-sm text-slate-100 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700 flex-1">
               {roteiro.conteudo || (
                 <span className="text-slate-400 italic">Sem conteúdo cadastrado.</span>
               )}
@@ -114,7 +114,7 @@ export function RoteiroCard({
             <Button
               size="sm"
               variant="secondary"
-              className="absolute top-7 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 shadow-sm"
+              className="absolute top-7 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none"
               onClick={handleCopy}
             >
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}

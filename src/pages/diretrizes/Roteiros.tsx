@@ -27,7 +27,7 @@ export default function Roteiros() {
             <MapIcon className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Guia de Roteiros Nuvia</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Guia de Roteiros</h2>
             <p className="text-sm text-slate-300 mt-1">
               Padronize mensagens, áudios e vídeos para a equipe.
             </p>
@@ -50,9 +50,9 @@ export default function Roteiros() {
       )}
 
       {!loading && setores.length === 0 && (
-        <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-8 shadow-sm flex flex-col items-center justify-center min-h-[300px] text-center">
-          <MapIcon className="w-16 h-16 text-slate-500 mb-4 opacity-70" />
-          <h3 className="text-xl font-medium text-slate-200">Nenhum setor cadastrado</h3>
+        <div className="bg-slate-900 border border-slate-700 rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
+          <MapIcon className="w-16 h-16 text-slate-400 mb-4" />
+          <h3 className="text-xl font-medium text-white">Nenhum setor cadastrado</h3>
           <p className="text-slate-300 mt-2 max-w-md">
             Comece criando os setores (ex: Recepção, Comercial) para organizar seus roteiros.
           </p>
