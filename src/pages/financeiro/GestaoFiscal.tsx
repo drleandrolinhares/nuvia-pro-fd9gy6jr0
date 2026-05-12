@@ -15,6 +15,21 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CurrencyInput } from '@/components/precificacao/CurrencyInput'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-'
+  const [y, m, d] = dateStr.split('-')
+  return `${d}/${m}/${y}`
+}
 
 const PercInput = ({ value, onChange, className }: any) => (
   <div className="relative w-full">
@@ -56,6 +71,20 @@ export default function GestaoFiscal() {
   const [realizadoPJ1, setRealizadoPJ1] = useState(0)
   const [realizadoPJ2, setRealizadoPJ2] = useState(0)
 
+  const [vendasPF, setVendasPF] = useState<any[]>([])
+  const [vendasPJ1, setVendasPJ1] = useState<any[]>([])
+  const [vendasPJ2, setVendasPJ2] = useState<any[]>([])
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalData, setModalData] = useState<any[]>([])
+
+  const handleOpenModal = (title: string, data: any[]) => {
+    setModalTitle(title)
+    setModalData(data)
+    setModalOpen(true)
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase.from('gestao_fiscal_config').select('*').limit(1).single()
@@ -75,24 +104,40 @@ export default function GestaoFiscal() {
 
       const { data: vendas } = await supabase
         .from('vendas_diarias')
-        .select('valor, destino_fiscal')
+        .select('id, valor, destino_fiscal, paciente_nome, data_venda')
         .gte('data_venda', startOfMonth)
         .lte('data_venda', endOfMonth)
+        .order('data_venda', { ascending: false })
 
       if (vendas) {
         let pf = 0
         let pj1 = 0
         let pj2 = 0
 
+        const pfList: any[] = []
+        const pj1List: any[] = []
+        const pj2List: any[] = []
+
         vendas.forEach((v) => {
-          if (v.destino_fiscal === 'PESSOA FISICA') pf += Number(v.valor)
-          else if (v.destino_fiscal === 'VITALI ODONTOLOGIA') pj1 += Number(v.valor)
-          else if (v.destino_fiscal === 'SOUZA FILHO ODONTOLOGIA') pj2 += Number(v.valor)
+          if (v.destino_fiscal === 'PESSOA FISICA') {
+            pf += Number(v.valor)
+            pfList.push(v)
+          } else if (v.destino_fiscal === 'VITALI ODONTOLOGIA') {
+            pj1 += Number(v.valor)
+            pj1List.push(v)
+          } else if (v.destino_fiscal === 'SOUZA FILHO ODONTOLOGIA') {
+            pj2 += Number(v.valor)
+            pj2List.push(v)
+          }
         })
 
         setRealizadoPF(pf)
         setRealizadoPJ1(pj1)
         setRealizadoPJ2(pj2)
+
+        setVendasPF(pfList)
+        setVendasPJ1(pj1List)
+        setVendasPJ2(pj2List)
       }
 
       setLoading(false)
@@ -202,7 +247,10 @@ export default function GestaoFiscal() {
                 />
               </div>
               <div className="mt-auto pt-6">
-                <div className="cursor-pointer group hover:border-amber-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm">
+                <div
+                  onClick={() => handleOpenModal('PESSOA FÍSICA', vendasPF)}
+                  className="cursor-pointer group hover:border-amber-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm"
+                >
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
@@ -334,7 +382,10 @@ export default function GestaoFiscal() {
                     />
                   </div>
                 </div>
-                <div className="cursor-pointer group hover:border-blue-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm">
+                <div
+                  onClick={() => handleOpenModal(c.pj1_titulo || 'VITALI ODONTOLOGIA', vendasPJ1)}
+                  className="cursor-pointer group hover:border-blue-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm"
+                >
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
@@ -434,7 +485,12 @@ export default function GestaoFiscal() {
                     />
                   </div>
                 </div>
-                <div className="cursor-pointer group hover:border-emerald-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center min-h-[68px] shadow-sm">
+                <div
+                  onClick={() =>
+                    handleOpenModal(c.pj2_titulo || 'SOUZA FILHO ODONTOLOGIA', vendasPJ2)
+                  }
+                  className="cursor-pointer group hover:border-emerald-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center min-h-[68px] shadow-sm"
+                >
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
@@ -465,6 +521,76 @@ export default function GestaoFiscal() {
           </div>
         </div>
       </div>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              Detalhamento - {modalTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto mt-4 pr-2">
+            {modalData.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                Nenhuma venda registrada para este destino fiscal no período.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-slate-950/50 sticky top-0 z-10 shadow-sm">
+                  <TableRow className="border-slate-800 hover:bg-transparent">
+                    <TableHead className="text-slate-400 font-bold uppercase text-xs">
+                      Paciente
+                    </TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-xs w-[120px]">
+                      Data
+                    </TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-xs w-[150px] text-right">
+                      Valor (R$)
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modalData.map((venda) => (
+                    <TableRow
+                      key={venda.id}
+                      className="border-slate-800 hover:bg-slate-800/50 transition-colors"
+                    >
+                      <TableCell className="font-medium text-slate-300">
+                        {venda.paciente_nome || 'Não informado'}
+                      </TableCell>
+                      <TableCell className="text-slate-400">
+                        {formatDate(venda.data_venda)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-slate-200">
+                        {Number(venda.valor).toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="border-t border-slate-700 bg-slate-950 hover:bg-slate-950">
+                    <TableCell
+                      colSpan={2}
+                      className="font-bold text-slate-400 uppercase text-right tracking-wider text-xs"
+                    >
+                      Total
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-amber-500 text-base">
+                      {modalData
+                        .reduce((acc, curr) => acc + Number(curr.valor), 0)
+                        .toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-6 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
