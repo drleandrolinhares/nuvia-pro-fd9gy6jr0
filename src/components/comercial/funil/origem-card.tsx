@@ -106,8 +106,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     const vendasOrigem = (vendasData || []).filter((v: any) => {
       const matched = (v.origem_id || v.avaliacoes?.origem_id) === origem.id
       if (!matched) return false
-      const vNome = v.paciente_nome?.toLowerCase().trim()
-      if (vNome === 'eduardo ferreira soares' && isRecorrenteOrigem) return false
       return true
     })
 
@@ -116,7 +114,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
     ;(leadsData || []).forEach((lead: any) => {
       const nome = lead.nome?.toLowerCase().trim()
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
 
       if (nome) processado.add(nome)
       unifiedLeads.push(lead)
@@ -124,7 +121,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
     ;(avaliacoesData || []).forEach((av: any) => {
       const nome = av.pacientes?.nome?.toLowerCase().trim()
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
 
       if (nome && processado.has(nome)) return
       if (nome) processado.add(nome)
@@ -151,7 +147,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
     ;(vendasOrigem || []).forEach((v: any) => {
       const nome = v.paciente_nome?.toLowerCase().trim()
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
 
       if (nome && processado.has(nome)) return
       if (nome) processado.add(nome)
