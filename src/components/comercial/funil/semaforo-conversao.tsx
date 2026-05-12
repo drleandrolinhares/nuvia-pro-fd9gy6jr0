@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { DashboardLeadsModal } from './dashboard-leads-modal'
+import { supabase } from '@/lib/supabase/client'
 import {
   Users,
   CalendarCheck,
@@ -49,6 +50,39 @@ export function SemaforoConversao({
     origens: [],
     title: '',
   })
+
+  const [realVendas, setRealVendas] = useState({ qtde: 0, valor: 0, loaded: false })
+
+  useEffect(() => {
+    const fetchRealVendas = async () => {
+      try {
+        const [ano, mes] = mesReferencia.split('-')
+        const dataInicio = `${mesReferencia}-01`
+        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+        const dataFim = `${mesReferencia}-${ultimoDia}`
+
+        const { data } = await supabase
+          .from('vendas_confirmadas')
+          .select('valor_tratamento')
+          .gte('data_fechamento', dataInicio)
+          .lte('data_fechamento', dataFim)
+
+        if (data) {
+          setRealVendas({
+            qtde: data.length,
+            valor: data.reduce((acc, curr) => acc + Number(curr.valor_tratamento || 0), 0),
+            loaded: true,
+          })
+        }
+      } catch (err) {
+        console.error('Erro ao buscar vendas reais:', err)
+      }
+    }
+
+    if (mesReferencia) {
+      fetchRealVendas()
+    }
+  }, [mesReferencia])
 
   const metrics = useMemo(() => {
     const origensClassicoIds =
@@ -132,14 +166,14 @@ export function SemaforoConversao({
       classico: classicoMetrics,
       secundario: secundarioMetrics,
       valorOportunidades,
-      valorVendas: globalMetrics.valorVendas,
-      qtdeVendas: globalMetrics.qtdeVendas,
+      valorVendas: realVendas.loaded ? realVendas.valor : globalMetrics.valorVendas,
+      qtdeVendas: realVendas.loaded ? realVendas.qtde : globalMetrics.qtdeVendas,
       pacientesAtendidosConsolidado,
-      qtdeVendasConsolidado,
+      qtdeVendasConsolidado: realVendas.loaded ? realVendas.qtde : globalMetrics.qtdeVendas,
       origensClassicoIds,
       origensSecundarioIds,
     }
-  }, [dados, origens, avaliacoes])
+  }, [dados, origens, avaliacoes, realVendas])
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0

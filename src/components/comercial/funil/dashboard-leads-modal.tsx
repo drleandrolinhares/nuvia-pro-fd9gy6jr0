@@ -220,7 +220,7 @@ export function DashboardLeadsModal({
 
           let include = false
           if (type === 'leads') {
-            if (!isVendaFechada && !isInVendas && status !== 'avaliacao') include = true
+            include = true
           }
           if (type === 'agendamentos' && isAgendado && !isRecorrente) include = true
           if (type === 'comparecimentos' && isCompareceu && !isRecorrente) include = true
