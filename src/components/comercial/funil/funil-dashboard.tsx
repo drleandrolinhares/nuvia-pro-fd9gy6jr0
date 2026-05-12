@@ -99,7 +99,7 @@ export function FunilDashboard({
     const map = new Map()
     avaliacoes.forEach((a: any) => {
       const status = (a.status || '').toLowerCase()
-      if (['perdido', 'cancelado', 'erro', 'rascunho'].includes(status)) {
+      if (['erro', 'rascunho'].includes(status)) {
         return
       }
 
@@ -120,33 +120,37 @@ export function FunilDashboard({
     return Array.from(map.values())
   }, [avaliacoes])
 
-  const avaliacoesEmAberto = useMemo(() => {
-    return avaliacoesAtuais.filter((a: any) => {
-      const status = (a.status || '').toLowerCase()
-      return !['venda_concretizada', 'venda-fechada'].includes(status)
-    })
-  }, [avaliacoesAtuais])
-
   const avaliacoesSemRecorrente = useMemo(
     () => (avaliacoesAtuais ? avaliacoesAtuais.filter((a: any) => !isRecorrente(a.origem_id)) : []),
     [avaliacoesAtuais, origens],
   )
   const totalAvaliacoes = avaliacoesSemRecorrente.length
 
-  const calcValorEmAberto = (avs: any[]) =>
-    avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
+  const calcValorOportunidades = (avs: any[], fechadoTotal: number) => {
+    const totalOrcamentos = avs.reduce(
+      (acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0),
+      0,
+    )
+    return Math.max(totalOrcamentos, fechadoTotal)
+  }
 
-  const valorEmAbertoClassico = useMemo(
-    () => calcValorEmAberto(avaliacoesEmAberto.filter((a: any) => isClassico(a.origem_id))),
-    [avaliacoesEmAberto, origens],
+  const valorOportunidadesClassico = useMemo(
+    () =>
+      calcValorOportunidades(
+        avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id)),
+        totaisClassico.valor_fechado,
+      ),
+    [avaliacoesAtuais, origens, totaisClassico.valor_fechado],
   )
-  const valorOportunidadesClassico = valorEmAbertoClassico + totaisClassico.valor_fechado
 
-  const valorEmAbertoSecundario = useMemo(
-    () => calcValorEmAberto(avaliacoesEmAberto.filter((a: any) => isSecundario(a.origem_id))),
-    [avaliacoesEmAberto, origens],
+  const valorOportunidadesSecundario = useMemo(
+    () =>
+      calcValorOportunidades(
+        avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id)),
+        totaisSecundario.valor_fechado,
+      ),
+    [avaliacoesAtuais, origens, totaisSecundario.valor_fechado],
   )
-  const valorOportunidadesSecundario = valorEmAbertoSecundario + totaisSecundario.valor_fechado
 
   const conversaoTotalClassico =
     valorOportunidadesClassico > 0

@@ -292,7 +292,7 @@ export default function FunilVendas() {
       const oId = av.origem_id
       const status = (av.status || '').toLowerCase()
 
-      if (['perdido', 'cancelado', 'erro', 'rascunho'].includes(status)) {
+      if (['erro', 'rascunho'].includes(status)) {
         return false
       }
 

@@ -153,20 +153,22 @@ export function SemaforoConversao({
     const classicoMetrics = calcGroup(isClassico)
     const secundarioMetrics = calcGroup(isSecundario)
 
-    const valorOportunidades = avaliacoes.reduce(
+    const valorOportunidadesBruto = avaliacoes.reduce(
       (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
       0,
     )
 
     const pacientesAtendidosConsolidado = globalMetrics.total
     const qtdeVendasConsolidado = globalMetrics.qtdeVendas
+    const valorVendasFinal = realVendas.loaded ? realVendas.valor : globalMetrics.valorVendas
+    const valorOportunidades = Math.max(valorOportunidadesBruto, valorVendasFinal)
 
     return {
       global: globalMetrics,
       classico: classicoMetrics,
       secundario: secundarioMetrics,
       valorOportunidades,
-      valorVendas: realVendas.loaded ? realVendas.valor : globalMetrics.valorVendas,
+      valorVendas: valorVendasFinal,
       qtdeVendas: realVendas.loaded ? realVendas.qtde : globalMetrics.qtdeVendas,
       pacientesAtendidosConsolidado,
       qtdeVendasConsolidado: realVendas.loaded ? realVendas.qtde : globalMetrics.qtdeVendas,
