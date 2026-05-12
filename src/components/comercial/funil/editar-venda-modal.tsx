@@ -87,6 +87,31 @@ export function EditarVendaModal({ open, onOpenChange, venda, onSaved }: any) {
 
       if (error) throw error
 
+      if (formData.paciente_nome && formData.origem_id) {
+        await supabase
+          .from('funil_leads')
+          .update({ origem_id: formData.origem_id })
+          .ilike('nome', formData.paciente_nome)
+        if (venda.oportunidade_id) {
+          await supabase
+            .from('avaliacoes')
+            .update({ origem_id: formData.origem_id })
+            .eq('id', venda.oportunidade_id)
+        } else {
+          const { data: paciente } = await supabase
+            .from('pacientes')
+            .select('id')
+            .ilike('nome', formData.paciente_nome)
+            .maybeSingle()
+          if (paciente?.id) {
+            await supabase
+              .from('avaliacoes')
+              .update({ origem_id: formData.origem_id })
+              .eq('paciente_id', paciente.id)
+          }
+        }
+      }
+
       toast.success('Venda atualizada com sucesso!')
       onOpenChange(false)
       if (onSaved) onSaved()

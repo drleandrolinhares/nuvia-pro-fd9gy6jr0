@@ -133,6 +133,7 @@ export function VendasConcretizadasLista({
   const handleEdit = (venda: any) => {
     setSelectedVenda({
       id: venda.id,
+      oportunidade_id: venda.oportunidade_id,
       paciente_nome: venda.paciente_nome || '',
       original_nome: venda.paciente_nome || '',
       data_original: venda.data_original ? venda.data_original.substring(0, 10) : '',
@@ -201,15 +202,51 @@ export function VendasConcretizadasLista({
 
       if (error) throw error
 
+      const promises = []
+
       if (oldName && oldName !== newName) {
-        await Promise.all([
+        promises.push(
           supabase.from('pacientes').update({ nome: newName }).eq('nome', oldName),
           supabase
             .from('vendas_diarias')
             .update({ paciente_nome: newName })
             .eq('paciente_nome', oldName),
           supabase.from('funil_leads').update({ nome: newName }).eq('nome', oldName),
-        ])
+        )
+      }
+
+      if (origem) {
+        promises.push(
+          supabase.from('funil_leads').update({ origem_id: origem }).ilike('nome', newName),
+        )
+        if (selectedVenda.oportunidade_id) {
+          promises.push(
+            supabase
+              .from('avaliacoes')
+              .update({ origem_id: origem })
+              .eq('id', selectedVenda.oportunidade_id),
+          )
+        } else {
+          promises.push(
+            supabase
+              .from('pacientes')
+              .select('id')
+              .ilike('nome', newName)
+              .maybeSingle()
+              .then(({ data }) => {
+                if (data?.id) {
+                  return supabase
+                    .from('avaliacoes')
+                    .update({ origem_id: origem })
+                    .eq('paciente_id', data.id)
+                }
+              }),
+          )
+        }
+      }
+
+      if (promises.length > 0) {
+        await Promise.all(promises)
       }
 
       toast({ title: 'Sucesso', description: 'Venda atualizada com sucesso!' })

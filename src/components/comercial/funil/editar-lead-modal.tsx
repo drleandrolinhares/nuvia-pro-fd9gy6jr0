@@ -157,6 +157,29 @@ export function EditarLeadModal({
         throw error
       }
 
+      if (
+        origemIdSanitizada &&
+        origemIdSanitizada !== existingLead.origem_id &&
+        existingLead.nome
+      ) {
+        await supabase
+          .from('vendas_confirmadas')
+          .update({ origem_id: origemIdSanitizada })
+          .ilike('paciente_nome', existingLead.nome)
+
+        const { data: paciente } = await supabase
+          .from('pacientes')
+          .select('id')
+          .ilike('nome', existingLead.nome)
+          .maybeSingle()
+        if (paciente?.id) {
+          await supabase
+            .from('avaliacoes')
+            .update({ origem_id: origemIdSanitizada })
+            .eq('paciente_id', paciente.id)
+        }
+      }
+
       toast({
         title: 'Sucesso',
         description: 'Salvamento Confirmado: Origem e dados do paciente atualizados com sucesso.',

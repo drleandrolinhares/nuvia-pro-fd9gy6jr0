@@ -111,6 +111,20 @@ export function EditarOportunidadeModal({
 
       if (error) throw error
 
+      const nomePaciente = (avaliacao as any).pacientes?.nome
+      const origemUpdate = formData.origem_id === 'nenhum' ? null : formData.origem_id || null
+
+      if (nomePaciente && origemUpdate) {
+        await supabase
+          .from('funil_leads')
+          .update({ origem_id: origemUpdate })
+          .ilike('nome', nomePaciente)
+        await supabase
+          .from('vendas_confirmadas')
+          .update({ origem_id: origemUpdate })
+          .ilike('paciente_nome', nomePaciente)
+      }
+
       toast({ title: 'Sucesso', description: 'Oportunidade atualizada com sucesso!' })
       onSuccess()
       onClose()
