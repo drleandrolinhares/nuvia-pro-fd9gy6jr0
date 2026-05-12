@@ -281,7 +281,7 @@ export default function GestaoFiscal() {
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden mb-2">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
@@ -292,6 +292,10 @@ export default function GestaoFiscal() {
                       }}
                     />
                   </div>
+                  <p className="text-[9px] text-slate-500 leading-tight">
+                    * Considera apenas entradas efetivas (valores à vista). Não inclui parcelas
+                    futuras do tratamento.
+                  </p>
                 </div>
               </div>
             </div>
@@ -416,7 +420,7 @@ export default function GestaoFiscal() {
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden mb-2">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
@@ -427,6 +431,10 @@ export default function GestaoFiscal() {
                       }}
                     />
                   </div>
+                  <p className="text-[9px] text-slate-500 leading-tight">
+                    * Considera apenas entradas efetivas (valores à vista). Não inclui parcelas
+                    futuras do tratamento.
+                  </p>
                 </div>
               </div>
             </div>
@@ -489,9 +497,9 @@ export default function GestaoFiscal() {
                   onClick={() =>
                     handleOpenModal(c.pj2_titulo || 'SOUZA FILHO ODONTOLOGIA', vendasPJ2)
                   }
-                  className="cursor-pointer group hover:border-emerald-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center min-h-[68px] shadow-sm"
+                  className="cursor-pointer group hover:border-emerald-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center shadow-sm"
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-2">
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
                         Realizado SFO (Excedente)
@@ -505,6 +513,10 @@ export default function GestaoFiscal() {
                       </span>
                     </div>
                   </div>
+                  <p className="text-[9px] text-slate-500 leading-tight">
+                    * Considera apenas entradas efetivas (valores à vista). Não inclui parcelas
+                    futuras do tratamento.
+                  </p>
                 </div>
               </div>
             </div>
