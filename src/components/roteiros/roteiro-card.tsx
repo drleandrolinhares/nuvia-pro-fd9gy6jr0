@@ -3,7 +3,19 @@ import { Roteiro } from '@/hooks/use-roteiros'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Edit2, Trash2, Check, MessageSquare, Video, Mic } from 'lucide-react'
+import {
+  Copy,
+  Edit2,
+  Trash2,
+  Check,
+  MessageSquare,
+  Video,
+  Mic,
+  Eye,
+  EyeOff,
+  Clock,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -28,6 +40,7 @@ export function RoteiroCard({
 }) {
   const [copied, setCopied] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleCopy = () => {
     if (roteiro.conteudo) {
@@ -63,9 +76,20 @@ export function RoteiroCard({
       <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-none overflow-hidden">
         {/* Top Header - Full Width */}
         <div className="p-4 border-b border-slate-700 flex justify-between items-start gap-4 bg-slate-900/80">
-          <CardTitle className="text-lg font-semibold text-white leading-tight">
-            {roteiro.titulo}
-          </CardTitle>
+          <div className="flex flex-col gap-2">
+            <CardTitle className="text-lg font-semibold text-white leading-tight">
+              {roteiro.titulo}
+            </CardTitle>
+            {roteiro.quando && (
+              <Badge
+                variant="outline"
+                className="text-amber-400 border-amber-500/30 bg-amber-500/10 w-fit"
+              >
+                <Clock className="w-3 h-3 mr-1" />
+                {roteiro.quando}
+              </Badge>
+            )}
+          </div>
           <div className="flex gap-1 shrink-0 -mt-1 -mr-1">
             <Button
               variant="ghost"
@@ -117,22 +141,47 @@ export function RoteiroCard({
               </p>
             </div>
 
-            <div className="bg-slate-950 rounded-md p-4 text-sm text-slate-100 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700 flex-1 relative">
+            <div
+              className={cn(
+                'bg-slate-950 rounded-md p-4 text-sm text-slate-100 whitespace-pre-wrap font-mono border border-slate-700 flex-1 relative transition-all duration-200',
+                !isExpanded &&
+                  roteiro.conteudo &&
+                  roteiro.conteudo.length > 250 &&
+                  'max-h-[150px] overflow-hidden',
+              )}
+            >
               {roteiro.conteudo || (
                 <span className="text-slate-500 italic">Sem conteúdo cadastrado.</span>
               )}
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-8 w-8"
-                onClick={handleCopy}
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-green-400" />
-                ) : (
-                  <Copy className="w-4 h-4" />
+
+              {!isExpanded && roteiro.conteudo && roteiro.conteudo.length > 250 && (
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
+              )}
+
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                {roteiro.conteudo && roteiro.conteudo.length > 250 && (
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-8 w-8"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                  >
+                    {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
                 )}
-              </Button>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-8 w-8"
+                  onClick={handleCopy}
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

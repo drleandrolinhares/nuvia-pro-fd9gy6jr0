@@ -16,6 +16,7 @@ export interface Roteiro {
   tipo_comunicacao: string
   conteudo: string | null
   ordem: number
+  quando: string | null
 }
 
 export function useRoteiros() {

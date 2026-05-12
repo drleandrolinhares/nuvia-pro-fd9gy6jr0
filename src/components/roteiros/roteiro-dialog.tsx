@@ -38,6 +38,7 @@ const schema = z.object({
   objetivo: z.string().optional(),
   tipo_comunicacao: z.string().min(1, 'Obrigatório'),
   conteudo: z.string().optional(),
+  quando: z.string().optional(),
 })
 
 interface Props {
@@ -58,6 +59,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, setores, roteiro, o
       objetivo: '',
       tipo_comunicacao: '',
       conteudo: '',
+      quando: '',
     },
   })
 
@@ -70,6 +72,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, setores, roteiro, o
           objetivo: roteiro.objetivo || '',
           tipo_comunicacao: roteiro.tipo_comunicacao,
           conteudo: roteiro.conteudo || '',
+          quando: roteiro.quando || '',
         })
       } else {
         form.reset({
@@ -78,6 +81,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, setores, roteiro, o
           objetivo: '',
           tipo_comunicacao: '',
           conteudo: '',
+          quando: '',
         })
       }
     }
@@ -147,19 +151,34 @@ export function RoteiroDialog({ open, onOpenChange, setorId, setores, roteiro, o
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="tipo_comunicacao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Comunicação (Formato)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Mensagem de Texto, Áudio, Vídeo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tipo_comunicacao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comunicação (Formato)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Mensagem de Texto, Áudio..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quando"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quando (Momento da Ação)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Um dia antes, Ao agendar..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="objetivo"
