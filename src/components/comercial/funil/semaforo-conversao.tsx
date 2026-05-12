@@ -84,6 +84,18 @@ export function SemaforoConversao({
     }
   }, [mesReferencia])
 
+  const dadosAjustados = useMemo(() => {
+    return (dados || []).map((d: any) => {
+      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
+      return {
+        ...d,
+        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
+        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
+        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+      }
+    })
+  }, [dados])
+
   const metrics = useMemo(() => {
     const origensClassicoIds =
       origens
@@ -93,39 +105,14 @@ export function SemaforoConversao({
         })
         .map((o) => o.id) || []
 
-    const origensIgnoradosIds =
-      origens
-        ?.filter((o: any) => {
-          const nome = o.nome?.toLowerCase() || ''
-          return nome.includes('recorrente')
-        })
-        .map((o) => o.id) || []
-
     const origensSecundarioIds =
-      origens
-        ?.filter(
-          (o: any) => !origensClassicoIds.includes(o.id) && !origensIgnoradosIds.includes(o.id),
-        )
-        .map((o) => o.id) || []
+      origens?.filter((o: any) => !origensClassicoIds.includes(o.id)).map((o) => o.id) || []
 
-    const isClassico = (origemId: string) => {
-      const origem = origens?.find((o: any) => o.id === origemId)
-      if (!origem) return false
-      const nome = origem.nome?.toLowerCase() || ''
-      return nome.includes('facebook') || nome.includes('instagram')
-    }
-
-    const isIgnorado = (origemId: string) => {
-      const origem = origens?.find((o: any) => o.id === origemId)
-      if (!origem) return false
-      const nome = origem.nome?.toLowerCase() || ''
-      return nome.includes('recorrente')
-    }
-
-    const isSecundario = (origemId: string) => !isClassico(origemId) && !isIgnorado(origemId)
+    const isClassico = (origemId: string) => origensClassicoIds.includes(origemId)
+    const isSecundario = (origemId: string) => !isClassico(origemId)
 
     const calcGroup = (filterFn: (oId: string) => boolean) => {
-      return dados
+      return dadosAjustados
         .filter((d) => filterFn(d.origem_id))
         .reduce(
           (acc, curr) => ({
@@ -175,7 +162,7 @@ export function SemaforoConversao({
       origensClassicoIds,
       origensSecundarioIds,
     }
-  }, [dados, origens, avaliacoes, realVendas])
+  }, [dadosAjustados, origens, avaliacoes, realVendas])
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0

@@ -42,14 +42,19 @@ export function FunilDashboard({
     return nome.includes('facebook') || nome.includes('instagram')
   }
 
-  const isRecorrente = (origemId: string) => {
-    const origem = origens.find((o: any) => o.id === origemId)
-    if (!origem) return false
-    const nome = origem.nome?.toLowerCase() || ''
-    return nome.includes('recorrente')
-  }
+  const isSecundario = (origemId: string) => !isClassico(origemId)
 
-  const isSecundario = (origemId: string) => !isClassico(origemId) && !isRecorrente(origemId)
+  const dadosAjustados = useMemo(() => {
+    return (dados || []).map((d: any) => {
+      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
+      return {
+        ...d,
+        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
+        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
+        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+      }
+    })
+  }, [dados])
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
@@ -76,22 +81,20 @@ export function FunilDashboard({
     )
   }
 
-  const totaisGerais = useMemo(() => calcTotais(dados), [dados, origens])
+  const totaisGerais = useMemo(() => calcTotais(dadosAjustados), [dadosAjustados, origens])
 
   const leadsQualificados = useMemo(
     () =>
-      dados
-        .filter((d: any) => !isRecorrente(d.origem_id))
-        .reduce((acc, curr) => acc + Number(curr.leads_realizado || 0), 0),
-    [dados, origens],
+      dadosAjustados.reduce((acc: number, curr: any) => acc + Number(curr.leads_realizado || 0), 0),
+    [dadosAjustados],
   )
   const totaisClassico = useMemo(
-    () => calcTotais(dados.filter((d: any) => isClassico(d.origem_id))),
-    [dados, origens],
+    () => calcTotais(dadosAjustados.filter((d: any) => isClassico(d.origem_id))),
+    [dadosAjustados, origens],
   )
   const totaisSecundario = useMemo(
-    () => calcTotais(dados.filter((d: any) => isSecundario(d.origem_id))),
-    [dados, origens],
+    () => calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id))),
+    [dadosAjustados, origens],
   )
 
   const avaliacoesAtuais = useMemo(() => {
@@ -120,11 +123,7 @@ export function FunilDashboard({
     return Array.from(map.values())
   }, [avaliacoes])
 
-  const avaliacoesSemRecorrente = useMemo(
-    () => (avaliacoesAtuais ? avaliacoesAtuais.filter((a: any) => !isRecorrente(a.origem_id)) : []),
-    [avaliacoesAtuais, origens],
-  )
-  const totalAvaliacoes = avaliacoesSemRecorrente.length
+  const totalAvaliacoes = Math.max(avaliacoesAtuais.length, totaisGerais.fechamentos)
 
   const calcValorOportunidades = (avs: any[], fechadoTotal: number) => {
     const totalOrcamentos = avs.reduce(
@@ -163,13 +162,13 @@ export function FunilDashboard({
 
   const pieData = useMemo(() => {
     return origens
-      .filter((o: any) => o.ativo && !isRecorrente(o.id))
+      .filter((o: any) => o.ativo)
       .map((o: any) => {
-        const d = dados.find((x: any) => x.origem_id === o.id)
+        const d = dadosAjustados.find((x: any) => x.origem_id === o.id)
         return { name: o.nome, value: d ? Number(d.leads_realizado) : 0 }
       })
       .filter((x: any) => x.value > 0)
-  }, [origens, dados])
+  }, [origens, dadosAjustados])
 
   const COLORS = [
     '#f59e0b',
@@ -190,7 +189,7 @@ export function FunilDashboard({
     return origens
       .filter((o: any) => o.ativo)
       .map((o: any) => {
-        const d = dados.find((x: any) => x.origem_id === o.id)
+        const d = dadosAjustados.find((x: any) => x.origem_id === o.id)
         return {
           name: o.nome,
           investimento: d ? Number(d.investimento) : 0,
@@ -198,7 +197,7 @@ export function FunilDashboard({
         }
       })
       .filter((x: any) => x.investimento > 0 || x.receita > 0)
-  }, [origens, dados])
+  }, [origens, dadosAjustados])
 
   const barChartConfig = {
     investimento: { label: 'Investimento', color: '#ef4444' },
@@ -209,7 +208,7 @@ export function FunilDashboard({
     return origens
       .filter((o: any) => o.ativo)
       .map((o: any) => {
-        const d = dados.find((x: any) => x.origem_id === o.id) || {}
+        const d = dadosAjustados.find((x: any) => x.origem_id === o.id) || {}
         const leads = Number(d.leads_realizado || 0)
         const vendas = Number(d.fechamentos_qtde_realizado || 0)
         const valor = Number(d.fechamentos_valor_realizado || 0)
@@ -502,8 +501,8 @@ export function FunilDashboard({
             setModalConfig({
               isOpen: true,
               type: 'leads',
-              origens: origens.filter((o: any) => !isRecorrente(o.id)).map((o: any) => o.id),
-              title: 'Leads Qualificados (Sem Recorrentes)',
+              origens: origens.map((o: any) => o.id),
+              title: 'Leads Qualificados (Global)',
             })
           }
         >
@@ -515,7 +514,7 @@ export function FunilDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{leadsQualificados}</div>
-            <p className="text-xs text-slate-400 mt-1">Excluindo pacientes recorrentes</p>
+            <p className="text-xs text-slate-400 mt-1">Total de leads gerados</p>
           </CardContent>
         </Card>
 
@@ -525,8 +524,8 @@ export function FunilDashboard({
             setModalConfig({
               isOpen: true,
               type: 'oportunidades',
-              origens: origens.filter((o: any) => !isRecorrente(o.id)).map((o: any) => o.id),
-              title: 'Avaliações Realizadas (Sem Recorrentes)',
+              origens: origens.map((o: any) => o.id),
+              title: 'Avaliações Realizadas (Global)',
             })
           }
         >
@@ -538,7 +537,7 @@ export function FunilDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{totalAvaliacoes}</div>
-            <p className="text-xs text-slate-400 mt-1">Excluindo pacientes recorrentes</p>
+            <p className="text-xs text-slate-400 mt-1">Total de avaliações e vendas</p>
           </CardContent>
         </Card>
       </div>
@@ -748,7 +747,7 @@ export function FunilDashboard({
               <OrigemCard
                 key={origem.id}
                 origem={origem}
-                dado={dados.find((d: any) => d.origem_id === origem.id)}
+                dado={dadosAjustados.find((d: any) => d.origem_id === origem.id)}
                 mesReferencia={mesReferencia}
                 etapas={etapas}
                 temperaturas={temperaturas}

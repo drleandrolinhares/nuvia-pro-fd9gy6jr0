@@ -5991,25 +5991,25 @@ export const Constants = {
 //       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND status NOT IN ('venda-fechada', 'fechamento', 'avaliacao');
+//       AND LOWER(status) NOT IN ('venda-fechada', 'venda_concretizada', 'fechamento', 'avaliacao');
 //
 //       -- Agendamentos (mantém histórico do funil para métricas de conversão)
 //       SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
+//       AND LOWER(status) IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
 //       -- Comparecimentos (mantém histórico)
 //       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
+//       AND LOWER(status) IN ('atendido', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
 //       -- Fechamentos
 //       SELECT COUNT(*) INTO v_fechamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND status IN ('fechamento', 'venda-fechada');
+//       AND LOWER(status) IN ('fechamento', 'venda-fechada', 'venda_concretizada');
 //
 //       -- Faltas
 //       SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
@@ -6059,7 +6059,7 @@ export const Constants = {
 //         faltas_realizado = EXCLUDED.faltas_realizado,
 //         atualizado_em = NOW();
 //     END;
-//   $function$
+//     $function$
 //
 // FUNCTION gerar_adiantamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)
@@ -7073,14 +7073,14 @@ export const Constants = {
 //
 //           IF v_lead_id IS NOT NULL THEN
 //             UPDATE public.funil_leads
-//             SET status = 'venda-fechada',
+//             SET status = 'venda_concretizada',
 //                 origem_id = NEW.origem_id
 //             WHERE id = v_lead_id;
 //           ELSE
 //             INSERT INTO public.funil_leads (
 //               nome, telefone, origem_id, mes_referencia, status, temperatura, qtd_agendamentos, qtd_faltas
 //             ) VALUES (
-//               NEW.paciente_nome, NEW.telefone, NEW.origem_id, v_mes_referencia, 'venda-fechada', 'quente', 1, 0
+//               NEW.paciente_nome, NEW.telefone, NEW.origem_id, v_mes_referencia, 'venda_concretizada', 'quente', 1, 0
 //             );
 //           END IF;
 //         END IF;

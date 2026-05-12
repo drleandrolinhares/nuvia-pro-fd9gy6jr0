@@ -135,11 +135,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         criado_em: av.data_avaliacao || av.criado_em,
         origem_id: av.origem_id,
         mes_referencia: mesReferencia,
-        qtd_agendamentos:
-          origem.nome?.toLowerCase().includes('recorrente') ||
-          (nome && pacientesRecorrentes.has(nome))
-            ? 0
-            : 1,
+        qtd_agendamentos: 1,
         qtd_faltas: 0,
         isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
       })
@@ -161,11 +157,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         criado_em: v.data_fechamento || v.criado_em,
         origem_id: v.origem_id || v.avaliacoes?.origem_id,
         mes_referencia: mesReferencia,
-        qtd_agendamentos:
-          origem.nome?.toLowerCase().includes('recorrente') ||
-          (nome && pacientesRecorrentes.has(nome))
-            ? 0
-            : 1,
+        qtd_agendamentos: 1,
         qtd_faltas: 0,
         isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
       })
@@ -196,7 +188,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     if (modalType === 'leads') return leads
     if (modalType === 'agendamentos') {
       return leads.filter((l) => {
-        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
         const isAgendado = [
           'agendado',
           'reagendado',
@@ -215,7 +206,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     }
     if (modalType === 'comparecimentos') {
       return leads.filter((l) => {
-        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
         return [
           'atendido',
           'negociacao',
@@ -230,12 +220,11 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     }
     if (modalType === 'faltas') {
       return leads.filter((l) => {
-        if (origem.nome?.toLowerCase().includes('recorrente') || l.isRecorrente) return false
         return l.status === 'faltou' || l.qtd_faltas > 0
       })
     }
     return []
-  }, [leads, modalType, origem.nome])
+  }, [leads, modalType])
 
   return (
     <>

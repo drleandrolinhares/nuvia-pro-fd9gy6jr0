@@ -32,10 +32,22 @@ export function BussolaComercial({
     }
   }, [mesReferencia])
 
+  const dadosAjustados = useMemo(() => {
+    return (dados || []).map((d: any) => {
+      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
+      return {
+        ...d,
+        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
+        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
+        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+      }
+    })
+  }, [dados])
+
   const matriz = useMemo(() => {
     return origens
       .map((origem) => {
-        const d = dados.find((x) => x.origem_id === origem.id) || {
+        const d = dadosAjustados.find((x) => x.origem_id === origem.id) || {
           leads_realizado: 0,
           agendamentos_realizado: 0,
           comparecimentos_realizado: 0,
@@ -80,7 +92,7 @@ export function BussolaComercial({
         }
       })
       .sort((a, b) => b.score - a.score)
-  }, [origens, dados])
+  }, [origens, dadosAjustados])
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
