@@ -2938,6 +2938,7 @@ export type Database = {
           id: string
           objetivo: string | null
           ordem: number
+          quando: string | null
           setor_id: string
           tipo_comunicacao: string
           titulo: string
@@ -2949,6 +2950,7 @@ export type Database = {
           id?: string
           objetivo?: string | null
           ordem?: number
+          quando?: string | null
           setor_id: string
           tipo_comunicacao: string
           titulo: string
@@ -2960,6 +2962,7 @@ export type Database = {
           id?: string
           objetivo?: string | null
           ordem?: number
+          quando?: string | null
           setor_id?: string
           tipo_comunicacao?: string
           titulo?: string
@@ -4858,6 +4861,7 @@ export const Constants = {
 //   ordem: integer (not null, default: 0)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   quando: text (nullable)
 // Table: roteiros_setores
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)

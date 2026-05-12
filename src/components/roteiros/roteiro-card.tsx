@@ -71,6 +71,10 @@ export function RoteiroCard({
     return <MessageSquare className="w-3 h-3 mr-1" />
   }
 
+  const isObjetivoLongo = roteiro.objetivo && roteiro.objetivo.length > 150
+  const isConteudoLongo = roteiro.conteudo && roteiro.conteudo.length > 250
+  const needsExpansion = isObjetivoLongo || isConteudoLongo
+
   return (
     <>
       <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-none overflow-hidden">
@@ -110,9 +114,9 @@ export function RoteiroCard({
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row flex-1">
+        <div className="flex flex-col md:flex-row flex-1 group/card">
           {/* Info Section (Left on Desktop) */}
-          <div className="p-4 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col">
+          <div className="p-4 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col relative">
             <div className="mb-4">
               <Badge
                 variant="secondary"
@@ -128,13 +132,23 @@ export function RoteiroCard({
                 <p className="text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
                   Objetivo
                 </p>
-                <p className="text-sm text-slate-300 leading-relaxed">{roteiro.objetivo}</p>
+                <div
+                  className={cn(
+                    'text-sm text-slate-300 leading-relaxed transition-all duration-200 relative',
+                    !isExpanded && isObjetivoLongo && 'max-h-[100px] overflow-hidden',
+                  )}
+                >
+                  {roteiro.objetivo}
+                  {!isExpanded && isObjetivoLongo && (
+                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+                  )}
+                </div>
               </div>
             )}
           </div>
 
           {/* Content Section (Right on Desktop) */}
-          <div className="p-4 md:w-2/3 flex flex-col relative group bg-slate-900/50">
+          <div className="p-4 md:w-2/3 flex flex-col relative bg-slate-900/50">
             <div className="flex justify-between items-center mb-2">
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Conteúdo
@@ -144,22 +158,19 @@ export function RoteiroCard({
             <div
               className={cn(
                 'bg-slate-950 rounded-md p-4 text-sm text-slate-100 whitespace-pre-wrap font-mono border border-slate-700 flex-1 relative transition-all duration-200',
-                !isExpanded &&
-                  roteiro.conteudo &&
-                  roteiro.conteudo.length > 250 &&
-                  'max-h-[150px] overflow-hidden',
+                !isExpanded && isConteudoLongo && 'max-h-[150px] overflow-hidden',
               )}
             >
               {roteiro.conteudo || (
                 <span className="text-slate-500 italic">Sem conteúdo cadastrado.</span>
               )}
 
-              {!isExpanded && roteiro.conteudo && roteiro.conteudo.length > 250 && (
+              {!isExpanded && isConteudoLongo && (
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
               )}
 
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
-                {roteiro.conteudo && roteiro.conteudo.length > 250 && (
+              <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-2 z-10">
+                {needsExpansion && (
                   <Button
                     size="icon"
                     variant="secondary"
