@@ -39,7 +39,6 @@ export function LeadDialog({
     id: '',
     nome: '',
     telefone: '',
-    email: '',
     origem_id: '',
     quantidade_contatos: 0,
     status: 'novo',
@@ -59,7 +58,6 @@ export function LeadDialog({
         id: leadData.id || '',
         nome: leadData.nome || '',
         telefone: leadData.telefone || '',
-        email: leadData.email || '',
         origem_id: leadData.origem_id || origens?.find((o: any) => o.ativo)?.id || '',
         quantidade_contatos: leadData.quantidade_contatos || 0,
         status: leadData.status || etapas?.find((e: any) => e.ativo)?.slug || 'novo',
@@ -145,8 +143,8 @@ export function LeadDialog({
 
   const handleSaveDados = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.nome || !formData.origem_id) {
-      toast.error('Nome e Origem são obrigatórios')
+    if (!formData.nome || !formData.origem_id || !formData.status) {
+      toast.error('Nome, Origem e Status são obrigatórios')
       return
     }
 
@@ -155,7 +153,6 @@ export function LeadDialog({
       const payload = {
         nome: formData.nome,
         telefone: formData.telefone,
-        email: formData.email,
         origem_id: formData.origem_id,
         quantidade_contatos: formData.quantidade_contatos,
         status: formData.status,
@@ -201,7 +198,6 @@ export function LeadDialog({
           if (initialData.nome !== formData.nome)
             mudancas.push(`Nome: de "${initialData.nome}" para "${formData.nome}"`)
           if (initialData.telefone !== formData.telefone) mudancas.push(`Telefone atualizado`)
-          if (initialData.email !== formData.email) mudancas.push(`Email atualizado`)
           if (initialData.descricao !== formData.descricao) mudancas.push(`Observações atualizadas`)
 
           if (initialData.origem_id !== formData.origem_id) {
@@ -476,16 +472,6 @@ export function LeadDialog({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Email</Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500 text-white"
-                  placeholder="exemplo@email.com"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label className="text-slate-300">Observações</Label>
                 <Textarea
                   value={formData.descricao}
@@ -505,7 +491,7 @@ export function LeadDialog({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading || !formData.nome || !formData.origem_id}
+                  disabled={loading || !formData.nome || !formData.origem_id || !formData.status}
                   className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6"
                 >
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

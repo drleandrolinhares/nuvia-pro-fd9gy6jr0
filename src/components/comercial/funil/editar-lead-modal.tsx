@@ -36,7 +36,6 @@ export function EditarLeadModal({
   const [formData, setFormData] = useState({
     nome: '',
     telefone: '',
-    email: '',
     origem_id: '',
     status: '',
     quantidade_contatos: 0,
@@ -50,16 +49,15 @@ export function EditarLeadModal({
       setFormData({
         nome: lead.nome || '',
         telefone: lead.telefone || '',
-        email: lead.email || '',
         origem_id: lead.origem_id || '',
-        status: lead.status || '',
+        status: lead.status || etapas?.[0]?.slug || '',
         quantidade_contatos: lead.quantidade_contatos || 0,
         data_agendamento: lead.data_agendamento ? lead.data_agendamento.substring(0, 16) : '',
         descricao: lead.descricao || '',
         criado_em: lead.criado_em || new Date().toISOString(),
       })
     }
-  }, [lead])
+  }, [lead, etapas])
 
   useEffect(() => {
     supabase
@@ -76,6 +74,14 @@ export function EditarLeadModal({
       toast({ title: 'Erro', description: 'O nome é obrigatório.', variant: 'destructive' })
       return
     }
+    if (!formData.origem_id) {
+      toast({ title: 'Erro', description: 'A origem é obrigatória.', variant: 'destructive' })
+      return
+    }
+    if (!formData.status) {
+      toast({ title: 'Erro', description: 'A etapa é obrigatória.', variant: 'destructive' })
+      return
+    }
 
     setLoading(true)
     try {
@@ -84,7 +90,6 @@ export function EditarLeadModal({
         .update({
           nome: formData.nome,
           telefone: formData.telefone,
-          email: formData.email,
           origem_id: formData.origem_id,
           status: formData.status,
           quantidade_contatos: formData.quantidade_contatos,
@@ -157,15 +162,6 @@ export function EditarLeadModal({
             <Input
               value={formData.nome}
               onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              className="bg-slate-950 border-slate-800 text-white"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="bg-slate-950 border-slate-800 text-white"
             />
           </div>
