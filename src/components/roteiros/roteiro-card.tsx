@@ -94,15 +94,24 @@ export function RoteiroCard({
             <CardTitle className="text-lg font-semibold text-white leading-tight">
               {roteiro.titulo}
             </CardTitle>
-            {roteiro.quando && (
+            <div className="flex flex-wrap gap-2 items-center">
               <Badge
-                variant="outline"
-                className="text-amber-400 border-amber-500/30 bg-amber-500/10 w-fit"
+                variant="secondary"
+                className="bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700 w-fit"
               >
-                <Clock className="w-3 h-3 mr-1" />
-                {roteiro.quando}
+                {getIcon()}
+                {roteiro.tipo_comunicacao}
               </Badge>
-            )}
+              {roteiro.quando && (
+                <Badge
+                  variant="outline"
+                  className="text-amber-400 border-amber-500/30 bg-amber-500/10 w-fit"
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  {roteiro.quando}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="flex gap-1 shrink-0 -mt-1 -mr-1">
             <Button
@@ -126,67 +135,56 @@ export function RoteiroCard({
 
         <div className="flex flex-col md:flex-row flex-1">
           {/* Info Section (Left on Desktop) */}
-          <div className="p-4 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col relative group/objetivo">
-            <div className="mb-4">
-              <Badge
-                variant="secondary"
-                className="bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700 w-fit"
-              >
-                {getIcon()}
-                {roteiro.tipo_comunicacao}
-              </Badge>
+          <div className="p-4 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col relative bg-slate-900/50 group/objetivo">
+            <div className="flex justify-between items-center mb-2 min-h-[24px]">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Objetivo
+              </p>
+
+              <div className="opacity-0 group-hover/objetivo:opacity-100 transition-opacity flex gap-1.5 z-10">
+                {isObjetivoLongo && (
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-6 w-6"
+                    onClick={() => setIsExpandedObjetivo(!isExpandedObjetivo)}
+                  >
+                    {isExpandedObjetivo ? (
+                      <EyeOff className="w-3 h-3" />
+                    ) : (
+                      <Eye className="w-3 h-3" />
+                    )}
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-6 w-6"
+                  onClick={handleCopyObjetivo}
+                >
+                  {copiedObjetivo ? (
+                    <Check className="w-3 h-3 text-green-400" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
             </div>
 
-            {roteiro.objetivo && (
-              <div className="mt-auto relative">
-                <div className="flex justify-between items-center mb-1.5 min-h-[24px]">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Objetivo
-                  </p>
+            <div
+              className={cn(
+                'bg-slate-950 rounded-md p-4 text-sm text-slate-100 whitespace-pre-wrap font-mono border border-slate-700 flex-1 relative transition-all duration-200',
+                !isExpandedObjetivo && isObjetivoLongo && 'max-h-[150px] overflow-hidden',
+              )}
+            >
+              {roteiro.objetivo || (
+                <span className="text-slate-500 italic">Sem objetivo cadastrado.</span>
+              )}
 
-                  <div className="opacity-0 group-hover/objetivo:opacity-100 transition-opacity flex gap-1.5 z-10">
-                    {isObjetivoLongo && (
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-6 w-6"
-                        onClick={() => setIsExpandedObjetivo(!isExpandedObjetivo)}
-                      >
-                        {isExpandedObjetivo ? (
-                          <EyeOff className="w-3 h-3" />
-                        ) : (
-                          <Eye className="w-3 h-3" />
-                        )}
-                      </Button>
-                    )}
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-6 w-6"
-                      onClick={handleCopyObjetivo}
-                    >
-                      {copiedObjetivo ? (
-                        <Check className="w-3 h-3 text-green-400" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div
-                  className={cn(
-                    'text-sm text-slate-300 leading-relaxed transition-all duration-200 relative',
-                    !isExpandedObjetivo && isObjetivoLongo && 'max-h-[100px] overflow-hidden',
-                  )}
-                >
-                  {roteiro.objetivo}
-                  {!isExpandedObjetivo && isObjetivoLongo && (
-                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
-                  )}
-                </div>
-              </div>
-            )}
+              {!isExpandedObjetivo && isObjetivoLongo && (
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
+              )}
+            </div>
           </div>
 
           {/* Content Section (Right on Desktop) */}
