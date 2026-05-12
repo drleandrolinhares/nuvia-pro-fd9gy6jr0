@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import { Search } from 'lucide-react'
 import { VendasFiltersState } from '../types'
 
 interface Props {
@@ -27,12 +28,16 @@ export function VendasFiltros({ filters, setFilters, setPage, dentistas, crcs }:
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-muted/20 p-4 rounded-lg border">
       <div>
-        <Label className="mb-2 block">Buscar Paciente</Label>
-        <Input
-          placeholder="Nome do paciente..."
-          value={filters.search}
-          onChange={(e) => updateFilter('search', e.target.value)}
-        />
+        <Label className="mb-2 block text-slate-700 dark:text-slate-300">Buscar Paciente</Label>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+          <Input
+            placeholder="Nome do paciente..."
+            value={filters.search}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <div>

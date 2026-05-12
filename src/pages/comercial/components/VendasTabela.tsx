@@ -9,6 +9,7 @@ import {
   FileText,
   Check,
   Edit2,
+  Trash2,
 } from 'lucide-react'
 import { ConfirmacaoVendaModal } from './ConfirmacaoVendaModal'
 import { EditarOportunidadeModal } from './EditarOportunidadeModal'
@@ -22,6 +23,18 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
+import { supabase } from '@/lib/supabase/client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +64,7 @@ interface Props {
   dentistas?: any[]
   crcs?: any[]
   onSuccess?: () => void
+  isAdmin?: boolean
 }
 
 export function VendasTabela({
@@ -66,12 +80,34 @@ export function VendasTabela({
   dentistas = [],
   crcs = [],
   onSuccess = () => {},
+  isAdmin = false,
 }: Props) {
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<Avaliacao | null>(null)
   const [avaliacaoParaEditar, setAvaliacaoParaEditar] = useState<Avaliacao | null>(null)
+  const [avaliacaoParaExcluir, setAvaliacaoParaExcluir] = useState<Avaliacao | null>(null)
+
+  const handleDelete = async () => {
+    if (!avaliacaoParaExcluir) return
+    setIsDeleting(true)
+    try {
+      const { error } = await supabase.from('avaliacoes').delete().eq('id', avaliacaoParaExcluir.id)
+      if (error) throw error
+      toast({ title: 'Sucesso', description: 'Oportunidade excluída com sucesso.' })
+      onSuccess()
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      setAvaliacaoParaExcluir(null)
+    }
+  }
 
   const getMaiorValor = (av: Avaliacao) => {
     const maxOrcamentos = av.orcamentos?.length
@@ -240,6 +276,17 @@ export function VendasTabela({
                           >
                             <FileText className="mr-2 h-4 w-4" /> Ver Ficha
                           </DropdownMenuItem>
+                          {isAdmin && (
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => {
+                                setAvaliacaoParaExcluir(av)
+                                setDeleteDialogOpen(true)
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir Oportunidade
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -300,6 +347,34 @@ export function VendasTabela({
           onSuccess={onSuccess}
         />
       )}
+
+      {/* Exclusão de Oportunidade */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente a oportunidade de venda
+              do paciente <strong>{avaliacaoParaExcluir?.pacientes?.nome}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setAvaliacaoParaExcluir(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

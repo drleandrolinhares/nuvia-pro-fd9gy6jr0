@@ -350,6 +350,7 @@ export default function Vendas() {
                 dentistas={dentistas}
                 crcs={crcs}
                 onSuccess={fetchAvaliacoes}
+                isAdmin={profile?.role === 'admin'}
               />
             </CardContent>
           </Card>
