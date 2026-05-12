@@ -63,7 +63,7 @@ export function RoteiroCard({
       <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
         <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0 border-b border-slate-800/50">
           <div className="space-y-2 pr-2">
-            <CardTitle className="text-base font-semibold text-slate-100 leading-tight">
+            <CardTitle className="text-base font-semibold text-white leading-tight">
               {roteiro.titulo}
             </CardTitle>
             <Badge
@@ -78,7 +78,7 @@ export function RoteiroCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+              className="h-8 w-8 text-slate-300 hover:text-white hover:bg-slate-800"
               onClick={onEdit}
             >
               <Edit2 className="w-4 h-4" />
@@ -86,7 +86,7 @@ export function RoteiroCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+              className="h-8 w-8 text-slate-300 hover:text-red-400 hover:bg-red-500/10"
               onClick={() => setDeleteOpen(true)}
             >
               <Trash2 className="w-4 h-4" />
@@ -96,19 +96,19 @@ export function RoteiroCard({
         <CardContent className="p-4 pt-4 flex-1 flex flex-col">
           {roteiro.objetivo && (
             <div className="mb-4">
-              <p className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+              <p className="text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">
                 Objetivo
               </p>
-              <p className="text-sm text-slate-300">{roteiro.objetivo}</p>
+              <p className="text-sm text-slate-200">{roteiro.objetivo}</p>
             </div>
           )}
           <div className="mt-auto relative group flex-1 flex flex-col">
-            <p className="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+            <p className="text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">
               Conteúdo
             </p>
             <div className="bg-slate-950 rounded-md p-3.5 text-sm text-slate-200 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700/80 shadow-inner flex-1">
               {roteiro.conteudo || (
-                <span className="text-slate-500 italic">Sem conteúdo cadastrado.</span>
+                <span className="text-slate-400 italic">Sem conteúdo cadastrado.</span>
               )}
             </div>
             <Button

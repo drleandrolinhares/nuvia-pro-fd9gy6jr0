@@ -28,7 +28,7 @@ export default function Roteiros() {
           </div>
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-white">Guia de Roteiros Nuvia</h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-300 mt-1">
               Padronize mensagens, áudios e vídeos para a equipe.
             </p>
           </div>
@@ -53,12 +53,12 @@ export default function Roteiros() {
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-8 shadow-sm flex flex-col items-center justify-center min-h-[300px] text-center">
           <MapIcon className="w-16 h-16 text-slate-500 mb-4 opacity-70" />
           <h3 className="text-xl font-medium text-slate-200">Nenhum setor cadastrado</h3>
-          <p className="text-slate-400 mt-2 max-w-md">
+          <p className="text-slate-300 mt-2 max-w-md">
             Comece criando os setores (ex: Recepção, Comercial) para organizar seus roteiros.
           </p>
           <Button
             onClick={() => setSetorDialog(true)}
-            className="mt-6 bg-amber-600 hover:bg-amber-700 text-white"
+            className="mt-6 bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold"
           >
             Criar Primeiro Setor
           </Button>
@@ -73,7 +73,7 @@ export default function Roteiros() {
                 <TabsTrigger
                   key={setor.id}
                   value={setor.id}
-                  className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-500 data-[state=active]:font-medium text-slate-400 hover:text-slate-200 min-w-[120px] transition-colors"
+                  className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-500 data-[state=active]:font-medium text-slate-300 hover:text-white min-w-[120px] transition-colors"
                 >
                   {setor.nome}
                 </TabsTrigger>
