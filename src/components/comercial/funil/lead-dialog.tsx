@@ -141,22 +141,33 @@ export function LeadDialog({
     }
   }
 
+  const sanitizeUuid = (id: any) => {
+    if (!id || typeof id !== 'string') return null
+    const cleaned = id.trim()
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : null
+  }
+
   const handleSaveDados = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.nome || !formData.origem_id || !formData.status) {
-      toast.error('Nome, Origem e Status são obrigatórios')
+
+    const nomeLimpo = formData.nome?.trim()
+    const origemIdSanitizada = sanitizeUuid(formData.origem_id)
+
+    if (!nomeLimpo || !origemIdSanitizada || !formData.status) {
+      toast.error('Nome, Origem válida e Status são obrigatórios')
       return
     }
 
     setLoading(true)
     try {
       const payload = {
-        nome: formData.nome,
-        telefone: formData.telefone,
-        origem_id: formData.origem_id,
-        quantidade_contatos: formData.quantidade_contatos,
+        nome: nomeLimpo,
+        telefone: formData.telefone?.trim() || null,
+        origem_id: origemIdSanitizada,
+        quantidade_contatos: formData.quantidade_contatos || 0,
         status: formData.status,
-        descricao: formData.descricao,
+        descricao: formData.descricao?.trim() || null,
         data_proximo_contato: formData.data_proximo_contato
           ? new Date(formData.data_proximo_contato).toISOString()
           : null,
@@ -166,8 +177,8 @@ export function LeadDialog({
         mes_referencia: mesReferencia || leadData?.mes_referencia || format(new Date(), 'yyyy-MM'),
       }
 
+      const isNew = !sanitizeUuid(formData.id)
       let newId = formData.id
-      const isNew = !formData.id
 
       if (isNew) {
         const { data, error } = await supabase
@@ -255,12 +266,13 @@ export function LeadDialog({
   }
 
   const handleAddNota = async () => {
-    if (!novaNota.trim() || !formData.id || !user) return
+    const leadIdSanitizado = sanitizeUuid(formData.id)
+    if (!novaNota.trim() || !leadIdSanitizado || !user) return
     setLoading(true)
     try {
       await supabase.from('funil_leads_notas').insert([
         {
-          lead_id: formData.id,
+          lead_id: leadIdSanitizado,
           usuario_id: user.id,
           nota: novaNota.trim(),
         },
@@ -268,7 +280,7 @@ export function LeadDialog({
 
       await supabase.from('funil_leads_historico').insert([
         {
-          lead_id: formData.id,
+          lead_id: leadIdSanitizado,
           usuario_id: user.id,
           acao: 'Nova Nota Adicionada',
           detalhes: novaNota.trim(),
@@ -491,7 +503,12 @@ export function LeadDialog({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading || !formData.nome || !formData.origem_id || !formData.status}
+                  disabled={
+                    loading ||
+                    !formData.nome?.trim() ||
+                    !sanitizeUuid(formData.origem_id) ||
+                    !formData.status
+                  }
                   className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6"
                 >
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

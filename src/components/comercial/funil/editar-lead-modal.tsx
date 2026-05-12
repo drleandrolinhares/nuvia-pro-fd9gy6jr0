@@ -69,17 +69,40 @@ export function EditarLeadModal({
       })
   }, [])
 
+  const sanitizeUuid = (id: any) => {
+    if (!id || typeof id !== 'string') return null
+    const cleaned = id.trim()
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : null
+  }
+
   const handleSave = async () => {
-    if (!formData.nome) {
+    const nomeLimpo = formData.nome?.trim()
+    const origemIdSanitizada = sanitizeUuid(formData.origem_id)
+    const leadIdSanitizado = sanitizeUuid(lead?.id)
+
+    if (!nomeLimpo) {
       toast({ title: 'Erro', description: 'O nome é obrigatório.', variant: 'destructive' })
       return
     }
-    if (!formData.origem_id) {
-      toast({ title: 'Erro', description: 'A origem é obrigatória.', variant: 'destructive' })
+    if (!origemIdSanitizada) {
+      toast({
+        title: 'Erro',
+        description: 'A origem é obrigatória e deve ser válida.',
+        variant: 'destructive',
+      })
       return
     }
     if (!formData.status) {
-      toast({ title: 'Erro', description: 'A etapa é obrigatória.', variant: 'destructive' })
+      toast({
+        title: 'Erro',
+        description: 'A etapa (status) é obrigatória.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (!leadIdSanitizado) {
+      toast({ title: 'Erro', description: 'ID do paciente inválido.', variant: 'destructive' })
       return
     }
 
@@ -88,18 +111,18 @@ export function EditarLeadModal({
       const { error } = await supabase
         .from('funil_leads')
         .update({
-          nome: formData.nome,
-          telefone: formData.telefone,
-          origem_id: formData.origem_id,
+          nome: nomeLimpo,
+          telefone: formData.telefone?.trim() || null,
+          origem_id: origemIdSanitizada,
           status: formData.status,
-          quantidade_contatos: formData.quantidade_contatos,
+          quantidade_contatos: formData.quantidade_contatos || 0,
           data_agendamento: formData.data_agendamento
             ? new Date(formData.data_agendamento).toISOString()
             : null,
-          descricao: formData.descricao,
+          descricao: formData.descricao?.trim() || null,
           atualizado_em: new Date().toISOString(),
         })
-        .eq('id', lead.id)
+        .eq('id', leadIdSanitizado)
 
       if (error) throw error
 
@@ -236,8 +259,13 @@ export function EditarLeadModal({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={loading}
-            className="bg-amber-500 hover:bg-amber-600 text-amber-950"
+            disabled={
+              loading ||
+              !formData.nome?.trim() ||
+              !sanitizeUuid(formData.origem_id) ||
+              !formData.status
+            }
+            className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold"
           >
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Salvar

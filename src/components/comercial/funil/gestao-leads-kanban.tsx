@@ -70,17 +70,31 @@ export function GestaoLeadsKanban({
     e.preventDefault()
   }
 
+  const sanitizeUuid = (id: any) => {
+    if (!id || typeof id !== 'string') return null
+    const cleaned = id.trim()
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : null
+  }
+
   const saveEditing = async (lead: any) => {
     const novoNome = editName.trim()
-    if (novoNome && novoNome !== lead.nome) {
+    const leadIdSanitizado = sanitizeUuid(lead.id)
+
+    if (novoNome && novoNome !== lead.nome && leadIdSanitizado) {
       const oldName = lead.nome
-      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nome: novoNome } : l)))
+      setLeads((prev) =>
+        prev.map((l) => (l.id === leadIdSanitizado ? { ...l, nome: novoNome } : l)),
+      )
       supabase
         .from('funil_leads')
-        .update({ nome: novoNome })
-        .eq('id', lead.id)
+        .update({ nome: novoNome, atualizado_em: new Date().toISOString() })
+        .eq('id', leadIdSanitizado)
         .then(async ({ error }) => {
-          if (!error) {
+          if (error) {
+            toast.error(`Erro ao salvar nome: ${error.message}`)
+            fetchLeads(false)
+          } else {
             await Promise.all([
               supabase.from('pacientes').update({ nome: novoNome }).eq('nome', oldName),
               supabase
@@ -95,10 +109,10 @@ export function GestaoLeadsKanban({
             if (user) {
               await supabase.from('funil_leads_historico').insert([
                 {
-                  lead_id: lead.id,
+                  lead_id: leadIdSanitizado,
                   usuario_id: user.id,
                   acao: 'Atualização de Nome',
-                  detalhes: `Nome alterado de "${lead.nome}" para "${novoNome}"`,
+                  detalhes: `Nome alterado de "${oldName}" para "${novoNome}"`,
                 },
               ])
             }
@@ -110,8 +124,13 @@ export function GestaoLeadsKanban({
 
   const handleDrop = async (e: React.DragEvent, statusId: string) => {
     e.preventDefault()
-    const leadId = e.dataTransfer.getData('leadId')
-    if (!leadId) return
+    const rawLeadId = e.dataTransfer.getData('leadId')
+    const leadId = sanitizeUuid(rawLeadId)
+
+    if (!leadId) {
+      toast.error('ID do lead inválido')
+      return
+    }
 
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.status === statusId) return
@@ -126,10 +145,11 @@ export function GestaoLeadsKanban({
 
     const { error } = await supabase
       .from('funil_leads')
-      .update({ status: statusId })
+      .update({ status: statusId, atualizado_em: new Date().toISOString() })
       .eq('id', leadId)
+
     if (error) {
-      toast.error('Erro ao atualizar status do lead')
+      toast.error(`Erro ao atualizar status do lead: ${error.message}`)
       fetchLeads(false)
     } else {
       if (user) {
@@ -148,19 +168,25 @@ export function GestaoLeadsKanban({
   }
 
   const handleDelete = async (id: string) => {
+    const leadIdSanitizado = sanitizeUuid(id)
+    if (!leadIdSanitizado) {
+      toast.error('ID do lead inválido')
+      return
+    }
+
     if (!confirm('Deseja realmente excluir este lead?')) return
-    setLeads((prev) => prev.filter((l) => l.id !== id))
+    setLeads((prev) => prev.filter((l) => l.id !== leadIdSanitizado))
 
     supabase
       .from('funil_leads')
       .delete()
-      .eq('id', id)
+      .eq('id', leadIdSanitizado)
       .then(({ error }) => {
         if (error) {
-          toast.error('Erro ao excluir')
+          toast.error(`Erro ao excluir: ${error.message}`)
           fetchLeads(false)
         } else {
-          toast.success('Lead excluído')
+          toast.success('Lead excluído com sucesso')
         }
       })
   }

@@ -225,22 +225,38 @@ export function EditarDadosDialog({
     setFormData((prev) => ({ ...prev, [name]: Number(value) }))
   }
 
+  const sanitizeUuid = (id: any) => {
+    if (!id || typeof id !== 'string') return null
+    const cleaned = id.trim()
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(cleaned) ? cleaned : null
+  }
+
   const handleSubmit = async (e: any) => {
     e.preventDefault()
+
+    const origemIdSanitizada = sanitizeUuid(origem?.id)
+    if (!origemIdSanitizada) {
+      toast.error('ID da origem inválido.')
+      return
+    }
+
     setLoading(true)
     try {
       const payload = {
-        origem_id: origem.id,
+        origem_id: origemIdSanitizada,
         mes_referencia: mesReferencia,
         ...formData,
       }
 
       let error
-      if (dado?.id) {
+      const dadoIdSanitizado = sanitizeUuid(dado?.id)
+
+      if (dadoIdSanitizado) {
         const { error: err } = await supabase
           .from('funil_dados_mensais')
           .update(payload)
-          .eq('id', dado.id)
+          .eq('id', dadoIdSanitizado)
         error = err
       } else {
         const { error: err } = await supabase.from('funil_dados_mensais').insert([payload])
