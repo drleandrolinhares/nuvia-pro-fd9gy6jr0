@@ -148,6 +148,10 @@ export default function FunilVendas() {
       const oId = av.origem_id
       if (!oId) return
 
+      const origemTempNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      if (!origemTempNome.includes('recorrente')) return
+
       const nome = av.pacientes?.nome?.toLowerCase().trim()
 
       if (nome) {
@@ -167,6 +171,10 @@ export default function FunilVendas() {
     ;(vendasData || []).forEach((v: any) => {
       const oId = v.origem_id || v.avaliacoes?.origem_id
       if (!oId) return
+
+      const origemTempNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      if (!origemTempNome.includes('recorrente')) return
 
       const nome = v.paciente_nome?.toLowerCase().trim()
 

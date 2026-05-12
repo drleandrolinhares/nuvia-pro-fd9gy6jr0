@@ -119,49 +119,51 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       unifiedLeads.push(lead)
     })
 
-    ;(avaliacoesData || []).forEach((av: any) => {
-      const nome = av.pacientes?.nome?.toLowerCase().trim()
+    if (isRecorrenteOrigem) {
+      ;(avaliacoesData || []).forEach((av: any) => {
+        const nome = av.pacientes?.nome?.toLowerCase().trim()
 
-      if (nome && processado.has(nome)) return
-      if (nome) processado.add(nome)
+        if (nome && processado.has(nome)) return
+        if (nome) processado.add(nome)
 
-      unifiedLeads.push({
-        _key: `av-${av.id}`,
-        id: '',
-        nome: av.pacientes?.nome || 'Sem nome',
-        telefone: av.pacientes?.telefone || '',
-        status: 'avaliacao',
-        temperatura: 'quente',
-        criado_em: av.data_avaliacao || av.criado_em,
-        origem_id: av.origem_id,
-        mes_referencia: mesReferencia,
-        qtd_agendamentos: 1,
-        qtd_faltas: 0,
-        isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+        unifiedLeads.push({
+          _key: `av-${av.id}`,
+          id: '',
+          nome: av.pacientes?.nome || 'Sem nome',
+          telefone: av.pacientes?.telefone || '',
+          status: 'avaliacao',
+          temperatura: 'quente',
+          criado_em: av.data_avaliacao || av.criado_em,
+          origem_id: av.origem_id,
+          mes_referencia: mesReferencia,
+          qtd_agendamentos: 1,
+          qtd_faltas: 0,
+          isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+        })
       })
-    })
 
-    ;(vendasOrigem || []).forEach((v: any) => {
-      const nome = v.paciente_nome?.toLowerCase().trim()
+      ;(vendasOrigem || []).forEach((v: any) => {
+        const nome = v.paciente_nome?.toLowerCase().trim()
 
-      if (nome && processado.has(nome)) return
-      if (nome) processado.add(nome)
+        if (nome && processado.has(nome)) return
+        if (nome) processado.add(nome)
 
-      unifiedLeads.push({
-        _key: `vd-${v.id}`,
-        id: '',
-        nome: v.paciente_nome || 'Sem nome',
-        telefone: v.telefone || '',
-        status: 'venda_concretizada',
-        temperatura: 'quente',
-        criado_em: v.data_fechamento || v.criado_em,
-        origem_id: v.origem_id || v.avaliacoes?.origem_id,
-        mes_referencia: mesReferencia,
-        qtd_agendamentos: 1,
-        qtd_faltas: 0,
-        isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+        unifiedLeads.push({
+          _key: `vd-${v.id}`,
+          id: '',
+          nome: v.paciente_nome || 'Sem nome',
+          telefone: v.telefone || '',
+          status: 'venda_concretizada',
+          temperatura: 'quente',
+          criado_em: v.data_fechamento || v.criado_em,
+          origem_id: v.origem_id || v.avaliacoes?.origem_id,
+          mes_referencia: mesReferencia,
+          qtd_agendamentos: 1,
+          qtd_faltas: 0,
+          isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+        })
       })
-    })
+    }
 
     unifiedLeads.forEach((lead) => {
       if (lead.isRecorrente === undefined) {
