@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -35,6 +35,10 @@ export function LeadDialog({
   const [pacienteInfo, setPacienteInfo] = useState('')
 
   const [initialData, setInitialData] = useState<any>(null)
+
+  // Ref para garantir a imutabilidade do ID atual do lead (transmissão segura)
+  const leadIdRef = useRef<string | null>(null)
+
   const [formData, setFormData] = useState({
     id: '',
     nome: '',
@@ -54,6 +58,9 @@ export function LeadDialog({
 
   useEffect(() => {
     if (open && leadData) {
+      // 1. Ajuste na passagem de parâmetros
+      leadIdRef.current = leadData.id || null
+
       const data = {
         id: leadData.id || '',
         nome: leadData.nome || '',
@@ -74,6 +81,7 @@ export function LeadDialog({
       setInitialData(data)
       setTab('dados')
       setPacienteInfo('')
+
       if (leadData.id) {
         fetchNotasAndHistorico(leadData.id)
       } else {
@@ -81,23 +89,28 @@ export function LeadDialog({
         setHistorico([])
       }
     }
-  }, [open, leadData])
+  }, [open, leadData, origens, etapas])
 
   const fetchNotasAndHistorico = async (id: string) => {
-    const [{ data: nData }, { data: hData }] = await Promise.all([
-      supabase
-        .from('funil_leads_notas')
-        .select('*, usuario:usuarios(nome)')
-        .eq('lead_id', id)
-        .order('criado_em', { ascending: false }),
-      supabase
-        .from('funil_leads_historico')
-        .select('*, usuario:usuarios(nome)')
-        .eq('lead_id', id)
-        .order('criado_em', { ascending: false }),
-    ])
-    setNotas(nData || [])
-    setHistorico(hData || [])
+    if (!id) return
+    try {
+      const [{ data: nData }, { data: hData }] = await Promise.all([
+        supabase
+          .from('funil_leads_notas')
+          .select('*, usuario:usuarios(nome)')
+          .eq('lead_id', id)
+          .order('criado_em', { ascending: false }),
+        supabase
+          .from('funil_leads_historico')
+          .select('*, usuario:usuarios(nome)')
+          .eq('lead_id', id)
+          .order('criado_em', { ascending: false }),
+      ])
+      setNotas(nData || [])
+      setHistorico(hData || [])
+    } catch (error) {
+      console.error('[SILENT LOG] Falha ao buscar histórico:', error)
+    }
   }
 
   const handlePhoneSearch = async () => {
@@ -115,6 +128,7 @@ export function LeadDialog({
         .from('pacientes')
         .select('nome, telefone')
         .ilike('telefone', wildcardSearch)
+
       const pac = pacs?.find((p) => p.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
 
       if (pac) {
@@ -126,6 +140,7 @@ export function LeadDialog({
           .select('nome, telefone')
           .ilike('telefone', wildcardSearch)
           .order('criado_em', { ascending: false })
+
         const lead = leads?.find((l) => l.telefone?.replace(/\D/g, '').endsWith(searchSuffix))
         if (lead) {
           setFormData((prev) => ({ ...prev, nome: lead.nome }))
@@ -135,7 +150,7 @@ export function LeadDialog({
         }
       }
     } catch (e) {
-      console.error(e)
+      console.error('[SILENT LOG] Erro na busca de telefone:', e)
     } finally {
       setSearchingPhone(false)
     }
@@ -144,6 +159,7 @@ export function LeadDialog({
   const sanitizeUuid = (id: any) => {
     if (!id || typeof id !== 'string') return null
     const cleaned = id.trim()
+    if (!cleaned) return null
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     return uuidRegex.test(cleaned) ? cleaned : null
   }
@@ -154,8 +170,11 @@ export function LeadDialog({
     const nomeLimpo = formData.nome?.trim()
     const origemIdSanitizada = sanitizeUuid(formData.origem_id)
 
+    // Verificadores de ID em tempo real - Usando a referência forte
+    const leadIdSanitizado = sanitizeUuid(leadIdRef.current || formData.id)
+
     if (!nomeLimpo || !origemIdSanitizada || !formData.status) {
-      toast.error('Nome, Origem válida e Status são obrigatórios')
+      toast.error('Por favor, preencha o Nome, a Origem válida e o Status (Etapa) do funil.')
       return
     }
 
@@ -177,8 +196,8 @@ export function LeadDialog({
         mes_referencia: mesReferencia || leadData?.mes_referencia || format(new Date(), 'yyyy-MM'),
       }
 
-      const isNew = !sanitizeUuid(formData.id)
-      let newId = formData.id
+      const isNew = !leadIdSanitizado
+      let newId = leadIdSanitizado
 
       if (isNew) {
         const { data, error } = await supabase
@@ -186,8 +205,15 @@ export function LeadDialog({
           .insert([payload])
           .select()
           .single()
-        if (error) throw error
+
+        if (error) {
+          console.error('[SILENT LOG] Erro na Inserção de Lead:', error)
+          throw new Error('Falha ao criar paciente. Verifique os dados e tente novamente.')
+        }
+
         newId = data.id
+        leadIdRef.current = newId
+
         if (user) {
           await supabase.from('funil_leads_historico').insert([
             {
@@ -200,10 +226,31 @@ export function LeadDialog({
         }
         toast.success('Lead criado com sucesso')
       } else {
-        const { error } = await supabase.from('funil_leads').update(payload).eq('id', newId)
-        if (error) throw error
+        // Checagem cruzada (Cross-check) antes da atualização
+        const { data: existingLead, error: checkError } = await supabase
+          .from('funil_leads')
+          .select('id')
+          .eq('id', newId)
+          .single()
 
-        if (user) {
+        if (checkError || !existingLead) {
+          console.error('[SILENT LOG] Cross-check de ID falhou. ID:', newId, 'Erro:', checkError)
+          throw new Error(
+            'Não foi possível localizar o paciente no banco de dados. A janela será fechada por segurança.',
+          )
+        }
+
+        const { error } = await supabase
+          .from('funil_leads')
+          .update(payload)
+          .eq('id', existingLead.id)
+
+        if (error) {
+          console.error('[SILENT LOG] Erro na Atualização de Lead:', error)
+          throw new Error('Falha ao salvar as alterações do paciente.')
+        }
+
+        if (user && initialData) {
           const mudancas: string[] = []
 
           if (initialData.nome !== formData.nome)
@@ -246,7 +293,7 @@ export function LeadDialog({
           if (mudancas.length > 0) {
             await supabase.from('funil_leads_historico').insert([
               {
-                lead_id: newId,
+                lead_id: existingLead.id,
                 usuario_id: user.id,
                 acao: 'Atualização de Dados',
                 detalhes: mudancas.join(' | '),
@@ -254,19 +301,19 @@ export function LeadDialog({
             ])
           }
         }
-        toast.success('Lead atualizado com sucesso')
+        toast.success('Lead atualizado com sucesso e movimentado (se aplicável)')
       }
 
       onSaved({ id: newId, ...payload })
     } catch (err: any) {
-      toast.error('Erro: ' + err.message)
+      toast.error('Erro de Validação: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleAddNota = async () => {
-    const leadIdSanitizado = sanitizeUuid(formData.id)
+    const leadIdSanitizado = sanitizeUuid(leadIdRef.current || formData.id)
     if (!novaNota.trim() || !leadIdSanitizado || !user) return
     setLoading(true)
     try {
@@ -288,10 +335,11 @@ export function LeadDialog({
       ])
 
       setNovaNota('')
-      fetchNotasAndHistorico(formData.id)
+      fetchNotasAndHistorico(leadIdSanitizado)
       toast.success('Nota registrada')
     } catch (err: any) {
-      toast.error('Erro: ' + err.message)
+      console.error('[SILENT LOG] Erro ao adicionar nota:', err)
+      toast.error('Erro ao adicionar nota: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -509,10 +557,16 @@ export function LeadDialog({
                     !sanitizeUuid(formData.origem_id) ||
                     !formData.status
                   }
-                  className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6"
+                  className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6 min-w-[140px]"
                 >
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Salvar Lead
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar Lead'
+                  )}
                 </Button>
               </div>
             </form>
@@ -561,7 +615,11 @@ export function LeadDialog({
                   size="icon"
                   className="absolute bottom-2 right-2 h-8 w-8 bg-amber-500 hover:bg-amber-600 text-amber-950 rounded"
                 >
-                  <Send className="w-4 h-4" />
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>

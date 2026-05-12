@@ -128,7 +128,8 @@ export function GestaoLeadsKanban({
     const leadId = sanitizeUuid(rawLeadId)
 
     if (!leadId) {
-      toast.error('ID do lead inválido')
+      console.error('[SILENT LOG] Drop falhou: ID ausente ou inválido', rawLeadId)
+      toast.error('O sistema bloqueou a ação pois o ID do lead estava corrompido.')
       return
     }
 
@@ -143,15 +144,22 @@ export function GestaoLeadsKanban({
 
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status: statusId } : l)))
 
-    const { error } = await supabase
-      .from('funil_leads')
-      .update({ status: statusId, atualizado_em: new Date().toISOString() })
-      .eq('id', leadId)
+    try {
+      // Segurança: verifica existência no banco
+      const { data: exist, error: checkErr } = await supabase
+        .from('funil_leads')
+        .select('id')
+        .eq('id', leadId)
+        .single()
+      if (checkErr || !exist) throw new Error('Lead órfão. Recarregue a página.')
 
-    if (error) {
-      toast.error(`Erro ao atualizar status do lead: ${error.message}`)
-      fetchLeads(false)
-    } else {
+      const { error } = await supabase
+        .from('funil_leads')
+        .update({ status: statusId, atualizado_em: new Date().toISOString() })
+        .eq('id', exist.id)
+
+      if (error) throw error
+
       if (user) {
         const oldStatusName = etapas.find((et: any) => et.slug === lead.status)?.nome || lead.status
         const newStatusName = etapas.find((et: any) => et.slug === statusId)?.nome || statusId
@@ -159,11 +167,16 @@ export function GestaoLeadsKanban({
           {
             lead_id: leadId,
             usuario_id: user.id,
-            acao: 'Mudança de Etapa',
+            acao: 'Mudança de Etapa via Arrastar',
             detalhes: `Movido de "${oldStatusName}" para "${newStatusName}"`,
           },
         ])
       }
+      toast.success('Etapa do paciente atualizada com sucesso.')
+    } catch (err: any) {
+      console.error('[SILENT LOG] Falha ao atualizar via drop:', err)
+      toast.error(`Erro ao mover o paciente: ${err.message}`)
+      fetchLeads(false)
     }
   }
 

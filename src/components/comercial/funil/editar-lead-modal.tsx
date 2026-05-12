@@ -72,6 +72,7 @@ export function EditarLeadModal({
   const sanitizeUuid = (id: any) => {
     if (!id || typeof id !== 'string') return null
     const cleaned = id.trim()
+    if (!cleaned) return null
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     return uuidRegex.test(cleaned) ? cleaned : null
   }
@@ -102,12 +103,34 @@ export function EditarLeadModal({
       return
     }
     if (!leadIdSanitizado) {
-      toast({ title: 'Erro', description: 'ID do paciente inválido.', variant: 'destructive' })
+      console.error('[SILENT LOG] ID inválido detectado na tentativa de update:', lead?.id)
+      toast({
+        title: 'Erro',
+        description: 'ID do paciente ausente ou inválido.',
+        variant: 'destructive',
+      })
       return
     }
 
     setLoading(true)
     try {
+      // Cross-check: verifica se o registro existe
+      const { data: existingLead, error: checkError } = await supabase
+        .from('funil_leads')
+        .select('id')
+        .eq('id', leadIdSanitizado)
+        .single()
+
+      if (checkError || !existingLead) {
+        console.error(
+          '[SILENT LOG] Erro ao validar integridade do lead antes do update',
+          checkError,
+        )
+        throw new Error(
+          'Não foi possível verificar a integridade do paciente. Recarregue a página.',
+        )
+      }
+
       const { error } = await supabase
         .from('funil_leads')
         .update({
@@ -122,11 +145,14 @@ export function EditarLeadModal({
           descricao: formData.descricao?.trim() || null,
           atualizado_em: new Date().toISOString(),
         })
-        .eq('id', leadIdSanitizado)
+        .eq('id', existingLead.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('[SILENT LOG] Erro na Atualização de Lead Modal:', error)
+        throw error
+      }
 
-      toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
+      toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso e realocado.' })
       onSaved({ id: lead.id, ...formData, atualizado_em: new Date().toISOString() })
       onOpenChange(false)
     } catch (error: any) {
