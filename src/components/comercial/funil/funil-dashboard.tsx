@@ -98,7 +98,7 @@ export function FunilDashboard({
     if (!avaliacoes) return []
     const map = new Map()
     avaliacoes.forEach((a: any) => {
-      if (a.status === 'venda-fechada') return
+      // Inclui tudo (fechado e não fechado) para mostrar o volume total avaliado
       const nome = a.pacientes?.nome ? String(a.pacientes.nome).trim().toLowerCase() : a.id
       map.set(nome, a)
     })

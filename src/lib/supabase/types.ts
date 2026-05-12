@@ -6673,6 +6673,40 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_garantir_avaliacao_para_venda()
+//   CREATE OR REPLACE FUNCTION public.trg_garantir_avaliacao_para_venda()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_paciente_id uuid;
+//   BEGIN
+//     IF NEW.oportunidade_id IS NULL THEN
+//       -- Try to find patient by name
+//       SELECT id INTO v_paciente_id FROM public.pacientes WHERE nome ILIKE NEW.paciente_nome LIMIT 1;
+//
+//       -- If not found, create one
+//       IF v_paciente_id IS NULL THEN
+//         v_paciente_id := gen_random_uuid();
+//         INSERT INTO public.pacientes (id, nome, telefone) VALUES (v_paciente_id, NEW.paciente_nome, NEW.telefone);
+//       END IF;
+//
+//       -- Create evaluation
+//       NEW.oportunidade_id := gen_random_uuid();
+//       INSERT INTO public.avaliacoes (
+//         id, paciente_id, dentista_avaliador_id, crc_comercial_id,
+//         data_avaliacao, data_fechamento, valor_orcamento, valor_entrada,
+//         status, temperatura_lead, origem_id, destino_fiscal
+//       ) VALUES (
+//         NEW.oportunidade_id, v_paciente_id, NEW.dentista_avaliador, NEW.crc,
+//         COALESCE(NEW.data_original, NEW.data_fechamento), NEW.data_fechamento, NEW.valor_tratamento, NEW.valor_entrada,
+//         'venda_concretizada', 'quente', NEW.origem_id, NEW.destino_fiscal
+//       );
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_incrementa_status_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_incrementa_status_funil()
 //    RETURNS trigger
@@ -6941,30 +6975,30 @@ export const Constants = {
 //    RETURNS trigger
 //    LANGUAGE plpgsql
 //   AS $function$
-//     BEGIN
-//       IF pg_trigger_depth() > 1 THEN
-//         RETURN NEW;
-//       END IF;
-//
-//       IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
-//         IF NEW.oportunidade_id IS NOT NULL THEN
-//           UPDATE public.avaliacoes SET
-//             data_avaliacao = COALESCE(NEW.data_original, data_avaliacao),
-//             data_fechamento = NEW.data_fechamento,
-//             valor_orcamento = NEW.valor_tratamento,
-//             valor_entrada = NEW.valor_entrada,
-//             dentista_avaliador_id = NEW.dentista_avaliador,
-//             crc_comercial_id = NEW.crc,
-//             destino_fiscal = NEW.destino_fiscal,
-//             origem_id = NEW.origem_id,
-//             status = 'venda-fechada'
-//           WHERE id = NEW.oportunidade_id;
-//         END IF;
-//       END IF;
-//
+//   BEGIN
+//     IF pg_trigger_depth() > 1 THEN
 //       RETURN NEW;
-//     END;
-//     $function$
+//     END IF;
+//
+//     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+//       IF NEW.oportunidade_id IS NOT NULL THEN
+//         UPDATE public.avaliacoes SET
+//           data_avaliacao = COALESCE(NEW.data_original, data_avaliacao),
+//           data_fechamento = NEW.data_fechamento,
+//           valor_orcamento = NEW.valor_tratamento,
+//           valor_entrada = NEW.valor_entrada,
+//           dentista_avaliador_id = NEW.dentista_avaliador,
+//           crc_comercial_id = NEW.crc,
+//           destino_fiscal = NEW.destino_fiscal,
+//           origem_id = NEW.origem_id,
+//           status = 'venda_concretizada'
+//         WHERE id = NEW.oportunidade_id;
+//       END IF;
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
 //
 // FUNCTION trg_update_funil_dados_mensais_from_leads()
 //   CREATE OR REPLACE FUNCTION public.trg_update_funil_dados_mensais_from_leads()
@@ -7063,6 +7097,7 @@ export const Constants = {
 // Table: vendas_confirmadas
 //   sync_confirmadas_to_vendas_diarias_trigger: CREATE TRIGGER sync_confirmadas_to_vendas_diarias_trigger AFTER DELETE OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_confirmadas_to_vendas_diarias()
 //   sync_vendas_to_avaliacoes_trigger: CREATE TRIGGER sync_vendas_to_avaliacoes_trigger AFTER UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_to_avaliacoes()
+//   trg_garantir_avaliacao_para_venda_tg: CREATE TRIGGER trg_garantir_avaliacao_para_venda_tg BEFORE INSERT ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_garantir_avaliacao_para_venda()
 //   trg_vendas_confirmadas_to_funil_tg: CREATE TRIGGER trg_vendas_confirmadas_to_funil_tg AFTER INSERT OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_vendas_confirmadas_to_funil()
 // Table: vendas_diarias
 //   sync_vendas_diarias: CREATE TRIGGER sync_vendas_diarias AFTER INSERT OR DELETE OR UPDATE ON public.vendas_diarias FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_diarias_to_confirmadas()

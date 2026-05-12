@@ -99,6 +99,7 @@ export default function Vendas() {
       } else {
         query = query
           .neq('status', 'venda_concretizada')
+          .neq('status', 'venda-fechada')
           .neq('status', 'Fechada em Comercial')
           .neq('status', 'Fechada em Avaliação')
       }

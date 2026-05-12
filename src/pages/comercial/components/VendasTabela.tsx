@@ -212,10 +212,11 @@ export function VendasTabela({
                       variant="outline"
                       className={cn(
                         'capitalize whitespace-nowrap',
-                        av.status === 'venda_concretizada' && 'bg-green-500/10 text-green-500',
+                        (av.status === 'venda_concretizada' || av.status === 'venda-fechada') &&
+                          'bg-green-500/10 text-green-500',
                       )}
                     >
-                      {av.status?.replace('_', ' ')}
+                      {av.status?.replace('_', ' ').replace('-', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -239,7 +240,8 @@ export function VendasTabela({
                     <div className="flex items-center justify-end gap-2">
                       {av.status !== 'Fechada em Comercial' &&
                         av.status !== 'Fechada em Avaliação' &&
-                        av.status !== 'venda_concretizada' && (
+                        av.status !== 'venda_concretizada' &&
+                        av.status !== 'venda-fechada' && (
                           <Button
                             variant="outline"
                             size="sm"
