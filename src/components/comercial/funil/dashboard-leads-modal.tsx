@@ -94,11 +94,11 @@ export function DashboardLeadsModal({
           const deduplicated = Array.from(
             new Map(
               filtered.map((item) => [
-                `${item.nome.trim().toLowerCase()}-${item.origem_nome}`,
+                item.nome ? String(item.nome).trim().toLowerCase() : item.id,
                 item,
               ]),
             ).values(),
-          ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+          ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 
           setData(deduplicated)
           return
@@ -135,11 +135,11 @@ export function DashboardLeadsModal({
           const deduplicated = Array.from(
             new Map(
               filtered.map((item) => [
-                `${item.nome.trim().toLowerCase()}-${item.origem_nome}`,
+                item.nome ? String(item.nome).trim().toLowerCase() : item.id,
                 item,
               ]),
             ).values(),
-          ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+          ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 
           setData(deduplicated)
           return
@@ -168,25 +168,15 @@ export function DashboardLeadsModal({
           .lte('data_fechamento', dataFim)
 
         const unifiedList: any[] = []
-        const processadoPorOrigem: Record<string, Set<string>> = {}
-
-        const getProcessado = (oId: string) => {
-          if (!processadoPorOrigem[oId]) processadoPorOrigem[oId] = new Set<string>()
-          return processadoPorOrigem[oId]
-        }
 
         ;(rawLeads || []).forEach((lead: any) => {
           const oId = lead.origem_id
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
           const nome = lead.nome?.toLowerCase().trim()
-          if (nome) {
-            getProcessado(oId).add(nome)
-          }
-          if (origens && origens.length > 0 && !origens.includes(oId)) return
-
           const isRecorrente =
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+
           const status = lead.status || ''
 
           const isAgendado = [
@@ -237,11 +227,6 @@ export function DashboardLeadsModal({
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
           const nome = av.pacientes?.nome?.toLowerCase().trim()
-          if (nome) {
-            if (getProcessado(oId).has(nome)) return
-            getProcessado(oId).add(nome)
-          }
-
           const isRecorrente =
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
@@ -269,11 +254,6 @@ export function DashboardLeadsModal({
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
           const nome = v.paciente_nome?.toLowerCase().trim()
-          if (nome) {
-            if (getProcessado(oId).has(nome)) return
-            getProcessado(oId).add(nome)
-          }
-
           const isRecorrente =
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
@@ -290,7 +270,7 @@ export function DashboardLeadsModal({
               status: 'venda-fechada',
               data: v.data_fechamento,
               contatos: 1,
-              fonte: 'Venda',
+              fonte: 'Venda Confirmada',
               origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             })
           }
@@ -299,11 +279,11 @@ export function DashboardLeadsModal({
         const deduplicated = Array.from(
           new Map(
             unifiedList.map((item) => [
-              `${item.nome.trim().toLowerCase()}-${item.origem_nome}`,
+              item.nome ? String(item.nome).trim().toLowerCase() : item.id,
               item,
             ]),
           ).values(),
-        ).sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+        ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 
         setData(deduplicated)
       } catch (err) {

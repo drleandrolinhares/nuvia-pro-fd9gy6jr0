@@ -94,16 +94,24 @@ export function FunilDashboard({
     [dados, origens],
   )
 
+  const avaliacoesAtuais = useMemo(() => {
+    if (!avaliacoes) return []
+    const map = new Map()
+    avaliacoes.forEach((a: any) => {
+      const nome = a.pacientes?.nome ? String(a.pacientes.nome).trim().toLowerCase() : a.id
+      map.set(nome, a)
+    })
+    return Array.from(map.values())
+  }, [avaliacoes])
+
   const avaliacoesSemRecorrente = useMemo(
-    () => (avaliacoes ? avaliacoes.filter((a: any) => !isRecorrente(a.origem_id)) : []),
-    [avaliacoes, origens],
+    () => (avaliacoesAtuais ? avaliacoesAtuais.filter((a: any) => !isRecorrente(a.origem_id)) : []),
+    [avaliacoesAtuais, origens],
   )
   const totalAvaliacoes = avaliacoesSemRecorrente.length
 
   const calcOportunidades = (avs: any[]) =>
     avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
-
-  const avaliacoesAtuais = avaliacoes || []
 
   const valorOportunidadesClassico = useMemo(
     () => calcOportunidades(avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id))),
