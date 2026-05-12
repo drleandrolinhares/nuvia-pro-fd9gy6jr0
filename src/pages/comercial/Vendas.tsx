@@ -102,6 +102,10 @@ export default function Vendas() {
           .neq('status', 'venda-fechada')
           .neq('status', 'Fechada em Comercial')
           .neq('status', 'Fechada em Avaliação')
+          .neq('status', 'perdido')
+          .neq('status', 'cancelado')
+          .neq('status', 'erro')
+          .neq('status', 'rascunho')
       }
 
       if (filters.temperatura !== 'todas') query = query.eq('temperatura_lead', filters.temperatura)

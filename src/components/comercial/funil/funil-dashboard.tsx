@@ -98,9 +98,23 @@ export function FunilDashboard({
     if (!avaliacoes) return []
     const map = new Map()
     avaliacoes.forEach((a: any) => {
-      // Inclui tudo (fechado e não fechado) para mostrar o volume total avaliado
+      const status = (a.status || '').toLowerCase()
+      if (['perdido', 'cancelado', 'erro', 'rascunho'].includes(status)) {
+        return
+      }
+
       const nome = a.pacientes?.nome ? String(a.pacientes.nome).trim().toLowerCase() : a.id
-      map.set(nome, a)
+      if (map.has(nome)) {
+        const existing = map.get(nome)
+        if (
+          Number(a.valor_orcamento || 0) > Number(existing.valor_orcamento || 0) ||
+          a.status === 'venda_concretizada'
+        ) {
+          map.set(nome, a)
+        }
+      } else {
+        map.set(nome, a)
+      }
     })
     return Array.from(map.values())
   }, [avaliacoes])

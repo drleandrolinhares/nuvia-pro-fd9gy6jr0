@@ -290,14 +290,43 @@ export default function FunilVendas() {
     const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
       const nome = av.pacientes?.nome?.toLowerCase().trim()
       const oId = av.origem_id
+      const status = (av.status || '').toLowerCase()
+
+      if (['perdido', 'cancelado', 'erro', 'rascunho'].includes(status)) {
+        return false
+      }
+
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       if (nome === 'eduardo ferreira soares' && origemNome.includes('recorrente')) return false
       return true
     })
 
+    const deduplicatedAvaliacoes = Array.from(
+      avaliacoesFiltradas
+        .reduce((map, av) => {
+          const nome = av.pacientes?.nome?.toLowerCase().trim() || av.id
+          if (map.has(nome)) {
+            const existing = map.get(nome)
+            const existingIsVenda = existing.status === 'venda_concretizada'
+            const newIsVenda = av.status === 'venda_concretizada'
+            if (
+              !existingIsVenda &&
+              (newIsVenda ||
+                Number(av.valor_orcamento || 0) > Number(existing.valor_orcamento || 0))
+            ) {
+              map.set(nome, av)
+            }
+          } else {
+            map.set(nome, av)
+          }
+          return map
+        }, new Map())
+        .values(),
+    )
+
     setDadosMensais(finalDados)
-    setAvaliacoesMes(avaliacoesFiltradas)
+    setAvaliacoesMes(deduplicatedAvaliacoes)
     if (showLoader) setLoading(false)
   }
 
