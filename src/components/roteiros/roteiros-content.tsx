@@ -7,10 +7,12 @@ import { RoteiroDialog } from './roteiro-dialog'
 
 export function RoteirosContent({
   setor,
+  setores,
   roteiros,
   onRefresh,
 }: {
   setor: RoteiroSetor
+  setores: RoteiroSetor[]
   roteiros: Roteiro[]
   onRefresh: () => void
 }) {
@@ -42,7 +44,7 @@ export function RoteirosContent({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-col gap-4">
           {roteiros.map((roteiro) => (
             <RoteiroCard
               key={roteiro.id}
@@ -58,6 +60,7 @@ export function RoteirosContent({
         open={dialog.open}
         onOpenChange={(open: boolean) => setDialog({ open })}
         setorId={setor.id}
+        setores={setores}
         roteiro={dialog.roteiro}
         onSuccess={onRefresh}
       />

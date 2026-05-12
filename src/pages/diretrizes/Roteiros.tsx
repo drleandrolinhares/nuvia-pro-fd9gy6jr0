@@ -20,7 +20,7 @@ export default function Roteiros() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-none">
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
         <div className="flex items-center gap-4">
           <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
@@ -86,6 +86,7 @@ export default function Roteiros() {
             <TabsContent key={setor.id} value={setor.id} className="focus-visible:outline-none m-0">
               <RoteirosContent
                 setor={setor}
+                setores={setores}
                 roteiros={roteiros.filter((r) => r.setor_id === setor.id)}
                 onRefresh={refresh}
               />

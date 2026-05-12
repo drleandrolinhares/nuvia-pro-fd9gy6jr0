@@ -20,12 +20,20 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
-import { Roteiro } from '@/hooks/use-roteiros'
+import { Roteiro, RoteiroSetor } from '@/hooks/use-roteiros'
 import { Loader2 } from 'lucide-react'
 
 const schema = z.object({
+  setor_id: z.string().min(1, 'Obrigatório'),
   titulo: z.string().min(1, 'Obrigatório'),
   objetivo: z.string().optional(),
   tipo_comunicacao: z.string().min(1, 'Obrigatório'),
@@ -36,14 +44,16 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   setorId: string
+  setores: RoteiroSetor[]
   roteiro?: Roteiro
   onSuccess: () => void
 }
 
-export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess }: Props) {
+export function RoteiroDialog({ open, onOpenChange, setorId, setores, roteiro, onSuccess }: Props) {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
+      setor_id: setorId,
       titulo: '',
       objetivo: '',
       tipo_comunicacao: '',
@@ -55,6 +65,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess 
     if (open) {
       if (roteiro) {
         form.reset({
+          setor_id: roteiro.setor_id,
           titulo: roteiro.titulo,
           objetivo: roteiro.objetivo || '',
           tipo_comunicacao: roteiro.tipo_comunicacao,
@@ -62,6 +73,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess 
         })
       } else {
         form.reset({
+          setor_id: setorId,
           titulo: '',
           objetivo: '',
           tipo_comunicacao: '',
@@ -69,7 +81,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess 
         })
       }
     }
-  }, [open, roteiro, form])
+  }, [open, roteiro, form, setorId])
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
@@ -80,7 +92,7 @@ export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess 
           .eq('id', roteiro.id)
         toast({ title: 'Roteiro atualizado' })
       } else {
-        await supabase.from('roteiros' as any).insert({ ...values, setor_id: setorId })
+        await supabase.from('roteiros' as any).insert(values)
         toast({ title: 'Roteiro criado' })
       }
       onSuccess()
@@ -98,6 +110,30 @@ export function RoteiroDialog({ open, onOpenChange, setorId, roteiro, onSuccess 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="setor_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Setor</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um setor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {setores.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="titulo"

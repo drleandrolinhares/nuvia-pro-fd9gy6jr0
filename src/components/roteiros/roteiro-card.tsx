@@ -60,67 +60,93 @@ export function RoteiroCard({
 
   return (
     <>
-      <Card className="bg-slate-900 border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-none">
-        <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0 border-b border-slate-700">
-          <div className="space-y-2 pr-2">
-            <CardTitle className="text-base font-semibold text-white leading-tight">
+      <Card className="bg-slate-900 border-slate-700 flex flex-col md:flex-row hover:border-slate-600 transition-colors shadow-none overflow-hidden">
+        {/* Header/Info Section (Left on Desktop) */}
+        <div className="p-4 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col">
+          <div className="flex justify-between items-start gap-2 mb-3">
+            <CardTitle className="text-lg font-semibold text-white leading-tight">
               {roteiro.titulo}
             </CardTitle>
+            <div className="flex gap-1 md:hidden shrink-0 -mt-1 -mr-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                onClick={onEdit}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="mb-4">
             <Badge
               variant="secondary"
-              className="bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700"
+              className="bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700 w-fit"
             >
               {getIcon()}
               {roteiro.tipo_comunicacao}
             </Badge>
           </div>
-          <div className="flex gap-1 -mr-2 -mt-2 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-slate-300 hover:text-white hover:bg-slate-800"
-              onClick={onEdit}
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-slate-300 hover:text-red-400 hover:bg-red-500/10"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 pt-4 flex-1 flex flex-col">
+
           {roteiro.objetivo && (
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">
+            <div className="mt-auto">
+              <p className="text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
                 Objetivo
               </p>
-              <p className="text-sm text-white">{roteiro.objetivo}</p>
+              <p className="text-sm text-slate-300 leading-relaxed">{roteiro.objetivo}</p>
             </div>
           )}
-          <div className="mt-auto relative group flex-1 flex flex-col">
-            <p className="text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">
+        </div>
+
+        {/* Content Section (Right on Desktop) */}
+        <div className="p-4 md:w-2/3 flex flex-col relative group bg-slate-900/50">
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               Conteúdo
             </p>
-            <div className="bg-slate-950 rounded-md p-3.5 text-sm text-slate-100 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700 flex-1">
-              {roteiro.conteudo || (
-                <span className="text-slate-400 italic">Sem conteúdo cadastrado.</span>
-              )}
+            <div className="hidden md:flex gap-1 shrink-0 -mt-2 -mr-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                onClick={onEdit}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
+          </div>
+
+          <div className="bg-slate-950 rounded-md p-4 text-sm text-slate-100 min-h-[100px] whitespace-pre-wrap font-mono border border-slate-700 flex-1 relative">
+            {roteiro.conteudo || (
+              <span className="text-slate-500 italic">Sem conteúdo cadastrado.</span>
+            )}
             <Button
-              size="sm"
+              size="icon"
               variant="secondary"
-              className="absolute top-7 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none"
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-none h-8 w-8"
               onClick={handleCopy}
             >
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
