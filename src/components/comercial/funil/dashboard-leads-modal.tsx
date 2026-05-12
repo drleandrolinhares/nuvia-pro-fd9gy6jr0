@@ -49,8 +49,18 @@ export function DashboardLeadsModal({
           .select('paciente_nome')
           .lt('data_fechamento', dataInicio)
 
+        const { data: currentVendas } = await supabase
+          .from('vendas_confirmadas')
+          .select('paciente_nome')
+          .gte('data_fechamento', dataInicio)
+          .lte('data_fechamento', dataFim)
+
         const pacientesRecorrentes = new Set(
           (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
+        )
+
+        const vendasNomes = new Set(
+          (currentVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
         )
 
         const getOrigemDisplayNome = (id: string) =>
@@ -78,6 +88,9 @@ export function DashboardLeadsModal({
           const filtered = (rawAvaliacoes || [])
             .filter((a: any) => {
               if (origens && origens.length > 0 && !origens.includes(a.origem_id)) return false
+              if (a.status === 'venda-fechada') return false
+              const nome = a.pacientes?.nome?.toLowerCase().trim()
+              if (nome && vendasNomes.has(nome)) return false
               return true
             })
             .map((a) => ({
@@ -202,8 +215,13 @@ export function DashboardLeadsModal({
           ].includes(status)
           const isFaltante = status === 'faltou'
 
+          const isVendaFechada = status === 'venda-fechada' || status === 'fechamento'
+          const isInVendas = nome ? vendasNomes.has(nome) : false
+
           let include = false
-          if (type === 'leads') include = true
+          if (type === 'leads') {
+            if (!isVendaFechada && !isInVendas && status !== 'avaliacao') include = true
+          }
           if (type === 'agendamentos' && isAgendado && !isRecorrente) include = true
           if (type === 'comparecimentos' && isCompareceu && !isRecorrente) include = true
           if (type === 'faltas' && isFaltante && !isRecorrente) include = true
@@ -230,8 +248,13 @@ export function DashboardLeadsModal({
           const isRecorrente =
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
+          const isInVendas = nome ? vendasNomes.has(nome) : false
+          const isVendaFechada = av.status === 'venda-fechada'
+
           let include = false
-          if (type === 'leads') include = true
+          if (type === 'leads') {
+            include = false
+          }
           if (type === 'agendamentos' && !isRecorrente) include = true
           if (type === 'comparecimentos' && !isRecorrente) include = true
 
@@ -258,7 +281,9 @@ export function DashboardLeadsModal({
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
           let include = false
-          if (type === 'leads') include = true
+          if (type === 'leads') {
+            include = false
+          }
           if (type === 'agendamentos' && !isRecorrente) include = true
           if (type === 'comparecimentos' && !isRecorrente) include = true
 
