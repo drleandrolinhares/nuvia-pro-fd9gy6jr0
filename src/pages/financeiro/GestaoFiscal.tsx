@@ -179,9 +179,6 @@ export default function GestaoFiscal() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   TETO DE RECEITA
                 </label>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
-                  REALIZADO: R$ {realizadoPF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
               </div>
               <div className="text-3xl font-bold tracking-tight text-amber-400 truncate h-10 flex items-center">
                 R${' '}
@@ -193,17 +190,6 @@ export default function GestaoFiscal() {
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
                 Automático: Despesa Livro Caixa + R$ 4.000,00
               </p>
-              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all',
-                    realizadoPF > pf_receita_calc ? 'bg-red-500' : 'bg-amber-500',
-                  )}
-                  style={{
-                    width: `${Math.min(100, pf_receita_calc > 0 ? (realizadoPF / pf_receita_calc) * 100 : 0)}%`,
-                  }}
-                />
-              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div>
@@ -214,6 +200,51 @@ export default function GestaoFiscal() {
                   value={c.pf_despesa}
                   onChange={(v: number) => setC({ ...c, pf_despesa: v })}
                 />
+              </div>
+              <div className="mt-auto pt-6">
+                <div className="cursor-pointer group hover:border-amber-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm">
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
+                        Realizado PF
+                      </span>
+                      <span className="text-base font-bold text-slate-200">
+                        R${' '}
+                        {realizadoPF.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
+                        Atingido
+                      </span>
+                      <div
+                        className={cn(
+                          'text-sm font-bold',
+                          realizadoPF > pf_receita_calc ? 'text-red-500' : 'text-amber-500',
+                        )}
+                      >
+                        {pf_receita_calc > 0
+                          ? ((realizadoPF / pf_receita_calc) * 100).toFixed(1)
+                          : 0}
+                        %
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        realizadoPF > pf_receita_calc ? 'bg-red-500' : 'bg-amber-500',
+                      )}
+                      style={{
+                        width: `${Math.min(100, pf_receita_calc > 0 ? (realizadoPF / pf_receita_calc) * 100 : 0)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -239,9 +270,6 @@ export default function GestaoFiscal() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   Teto de Receita Permitida
                 </label>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
-                  REALIZADO: R$ {realizadoPJ1.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
               </div>
               <div className="text-3xl font-bold tracking-tight text-blue-400 truncate h-10 flex items-center">
                 R${' '}
@@ -253,17 +281,6 @@ export default function GestaoFiscal() {
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
                 Automático: (Despesa Folha ÷ Proporção) - R$ 1.000 (Margem de segurança)
               </p>
-              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all',
-                    realizadoPJ1 > pj1_receita_calc ? 'bg-red-500' : 'bg-blue-500',
-                  )}
-                  style={{
-                    width: `${Math.min(100, pj1_receita_calc > 0 ? (realizadoPJ1 / pj1_receita_calc) * 100 : 0)}%`,
-                  }}
-                />
-              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
               <div className="grid grid-cols-2 gap-3">
@@ -305,15 +322,60 @@ export default function GestaoFiscal() {
                   />
                 </div>
               </div>
-              <div className="mt-auto flex justify-between items-center pt-4">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Estimativa de Imposto (%)
-                </label>
-                <div className="w-24">
-                  <PercInput
-                    value={c.pj1_imposto_perc}
-                    onChange={(v: number) => setC({ ...c, pj1_imposto_perc: v })}
-                  />
+              <div className="mt-auto pt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Estimativa de Imposto (%)
+                  </label>
+                  <div className="w-24">
+                    <PercInput
+                      value={c.pj1_imposto_perc}
+                      onChange={(v: number) => setC({ ...c, pj1_imposto_perc: v })}
+                    />
+                  </div>
+                </div>
+                <div className="cursor-pointer group hover:border-blue-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm">
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
+                        Realizado VO
+                      </span>
+                      <span className="text-base font-bold text-slate-200">
+                        R${' '}
+                        {realizadoPJ1.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
+                        Atingido
+                      </span>
+                      <div
+                        className={cn(
+                          'text-sm font-bold',
+                          realizadoPJ1 > pj1_receita_calc ? 'text-red-500' : 'text-blue-500',
+                        )}
+                      >
+                        {pj1_receita_calc > 0
+                          ? ((realizadoPJ1 / pj1_receita_calc) * 100).toFixed(1)
+                          : 0}
+                        %
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        realizadoPJ1 > pj1_receita_calc ? 'bg-red-500' : 'bg-blue-500',
+                      )}
+                      style={{
+                        width: `${Math.min(100, pj1_receita_calc > 0 ? (realizadoPJ1 / pj1_receita_calc) * 100 : 0)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -345,11 +407,8 @@ export default function GestaoFiscal() {
             <div className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/80 flex flex-col justify-center shrink-0">
               <div className="flex justify-between items-start mb-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                  Receita Excedente
+                  Receita Excedente Estimada
                 </label>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded">
-                  REALIZADO: R$ {realizadoPJ2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
               </div>
               <div className="text-3xl font-bold tracking-tight text-emerald-400 truncate h-10 flex items-center">
                 R${' '}
@@ -359,30 +418,37 @@ export default function GestaoFiscal() {
                 })}
               </div>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-tight">
-                Automático: Faturamento - PF - PJ 01
+                Automático: Faturamento Previsto - Teto PF - Teto VO
               </p>
-              <div className="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all',
-                    realizadoPJ2 > excedente ? 'bg-red-500' : 'bg-emerald-500',
-                  )}
-                  style={{
-                    width: `${Math.min(100, excedente > 0 ? (realizadoPJ2 / excedente) * 100 : 0)}%`,
-                  }}
-                />
-              </div>
             </div>
             <div className="flex flex-col flex-1 mt-6">
-              <div className="mt-auto flex justify-between items-center pt-4">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Estimativa de Imposto (%)
-                </label>
-                <div className="w-24">
-                  <PercInput
-                    value={c.pj2_imposto_perc}
-                    onChange={(v: number) => setC({ ...c, pj2_imposto_perc: v })}
-                  />
+              <div className="mt-auto pt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Estimativa de Imposto (%)
+                  </label>
+                  <div className="w-24">
+                    <PercInput
+                      value={c.pj2_imposto_perc}
+                      onChange={(v: number) => setC({ ...c, pj2_imposto_perc: v })}
+                    />
+                  </div>
+                </div>
+                <div className="cursor-pointer group hover:border-emerald-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center min-h-[68px] shadow-sm">
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 group-hover:text-slate-400 transition-colors">
+                        Realizado SFO (Excedente)
+                      </span>
+                      <span className="text-base font-bold text-emerald-400">
+                        R${' '}
+                        {realizadoPJ2.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

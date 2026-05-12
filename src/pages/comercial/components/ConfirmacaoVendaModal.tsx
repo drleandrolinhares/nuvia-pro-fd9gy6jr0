@@ -41,6 +41,7 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
     crc: 'nenhum',
     tratamento: 'ortodontia',
     data_venda: new Date().toISOString().split('T')[0],
+    destino_fiscal: 'PESSOA FISICA',
   })
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
         crc: avaliacao.crc_comercial_id || 'nenhum',
         tratamento: avaliacao.tipo_tratamento || 'ortodontia',
         data_venda: new Date().toISOString().split('T')[0],
+        destino_fiscal: avaliacao.destino_fiscal || 'PESSOA FISICA',
       })
     }
   }, [isOpen, avaliacao])
@@ -81,17 +83,22 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
       const valor_entrada = Number(formData.valor_entrada || formData.valor_tratamento)
       const paciente_nome = avaliacao.pacientes?.nome || 'Desconhecido'
 
+      const dentista = formData.dentista_avaliador !== 'nenhum' ? formData.dentista_avaliador : null
+      const crc = formData.crc !== 'nenhum' ? formData.crc : null
+
       const { error: err1 } = await supabase.from('vendas_diarias').insert({
         data_venda: formData.data_venda,
         valor: valor_entrada,
         valor_tratamento: valor_tratamento,
         paciente_nome: paciente_nome,
         forma_pagamento: formData.forma_pagamento,
+        destino_fiscal: formData.destino_fiscal,
+        dentista_avaliador_id: dentista,
+        crc_comercial_id: crc,
+        origem_id: avaliacao.origem_id,
       })
       if (err1) throw err1
 
-      const dentista = formData.dentista_avaliador !== 'nenhum' ? formData.dentista_avaliador : null
-      const crc = formData.crc !== 'nenhum' ? formData.crc : null
       const percentual_entrada =
         valor_tratamento > 0 ? (valor_entrada / valor_tratamento) * 100 : 100
 
@@ -105,6 +112,9 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
         percentual_entrada: percentual_entrada,
         data_fechamento: formData.data_venda,
         tratamento: formData.tratamento,
+        forma_pagamento: formData.forma_pagamento,
+        destino_fiscal: formData.destino_fiscal,
+        origem_id: avaliacao.origem_id,
         observacoes: 'Venda Fechada via Oportunidade',
       })
       if (err2) throw err2
@@ -115,6 +125,7 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
           status: 'venda_concretizada',
           data_fechamento: formData.data_venda,
           valor_entrada: valor_entrada,
+          destino_fiscal: formData.destino_fiscal,
         })
         .eq('id', avaliacao.id)
       if (err3) throw err3
@@ -195,6 +206,44 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
+                <Label>Destino Fiscal</Label>
+                <Select
+                  value={formData.destino_fiscal}
+                  onValueChange={(v) => setFormData({ ...formData, destino_fiscal: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PESSOA FISICA">PESSOA FISICA (PF)</SelectItem>
+                    <SelectItem value="VITALI ODONTOLOGIA">VITALI ODONTOLOGIA (VO)</SelectItem>
+                    <SelectItem value="SOUZA FILHO ODONTOLOGIA">
+                      SOUZA FILHO ODONTOLOGIA (SFO)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Tipo de Tratamento</Label>
+                <Select
+                  value={formData.tratamento}
+                  onValueChange={(v) => setFormData({ ...formData, tratamento: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ortodontia">Ortodontia</SelectItem>
+                    <SelectItem value="implante">Implante</SelectItem>
+                    <SelectItem value="protese">Prótese</SelectItem>
+                    <SelectItem value="estetica">Estética</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
                 <Label>Dentista Avaliador</Label>
                 <Select
                   value={formData.dentista_avaliador}
@@ -232,24 +281,6 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>Tipo de Tratamento</Label>
-              <Select
-                value={formData.tratamento}
-                onValueChange={(v) => setFormData({ ...formData, tratamento: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ortodontia">Ortodontia</SelectItem>
-                  <SelectItem value="implante">Implante</SelectItem>
-                  <SelectItem value="protese">Prótese</SelectItem>
-                  <SelectItem value="estetica">Estética</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
