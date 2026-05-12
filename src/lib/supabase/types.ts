@@ -5985,26 +5985,40 @@ export const Constants = {
 //       v_comparecimentos INT;
 //       v_fechamentos INT;
 //       v_faltas INT;
+//       v_valor_fechado NUMERIC;
 //     BEGIN
-//       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads WHERE origem_id = p_origem_id AND mes_referencia = p_mes_referencia;
+//       -- Contagem exclusiva de Leads (apenas quem NÃO avançou para avaliação ou venda)
+//       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads
+//       WHERE origem_id = p_origem_id
+//       AND mes_referencia = p_mes_referencia
+//       AND status NOT IN ('venda-fechada', 'fechamento', 'avaliacao');
 //
+//       -- Agendamentos (mantém histórico do funil para métricas de conversão)
 //       SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
 //       AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
+//       -- Comparecimentos (mantém histórico)
 //       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
 //       AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
+//       -- Fechamentos
 //       SELECT COUNT(*) INTO v_fechamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
 //       AND status IN ('fechamento', 'venda-fechada');
 //
+//       -- Faltas
 //       SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
 //       WHERE origem_id = p_origem_id AND mes_referencia = p_mes_referencia;
+//
+//       -- Valor Fechado
+//       SELECT COALESCE(SUM(valor_tratamento), 0) INTO v_valor_fechado FROM public.vendas_confirmadas
+//       WHERE origem_id = p_origem_id
+//       AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes_referencia;
 //
 //       INSERT INTO public.funil_dados_mensais (
 //         origem_id,
@@ -6013,6 +6027,7 @@ export const Constants = {
 //         agendamentos_realizado,
 //         comparecimentos_realizado,
 //         fechamentos_qtde_realizado,
+//         fechamentos_valor_realizado,
 //         faltas_realizado,
 //         investimento,
 //         meta_leads,
@@ -6021,8 +6036,7 @@ export const Constants = {
 //         meta_comparecimentos_qtde,
 //         meta_comparecimentos_perc,
 //         meta_fechamento_valor,
-//         ticket_medio_esperado,
-//         fechamentos_valor_realizado
+//         ticket_medio_esperado
 //       )
 //       VALUES (
 //         p_origem_id,
@@ -6031,8 +6045,9 @@ export const Constants = {
 //         v_agendamentos,
 //         v_comparecimentos,
 //         v_fechamentos,
+//         v_valor_fechado,
 //         v_faltas,
-//         0, 0, 0, 0, 0, 0, 0, 0, 0
+//         0, 0, 0, 0, 0, 0, 0, 0
 //       )
 //       ON CONFLICT (origem_id, mes_referencia)
 //       DO UPDATE SET
@@ -6040,10 +6055,11 @@ export const Constants = {
 //         agendamentos_realizado = EXCLUDED.agendamentos_realizado,
 //         comparecimentos_realizado = EXCLUDED.comparecimentos_realizado,
 //         fechamentos_qtde_realizado = EXCLUDED.fechamentos_qtde_realizado,
+//         fechamentos_valor_realizado = EXCLUDED.fechamentos_valor_realizado,
 //         faltas_realizado = EXCLUDED.faltas_realizado,
 //         atualizado_em = NOW();
 //     END;
-//     $function$
+//   $function$
 //
 // FUNCTION gerar_adiantamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)

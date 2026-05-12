@@ -101,21 +101,31 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
     )
 
-    const vendasOrigem = (vendasData || []).filter(
-      (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === origem.id,
-    )
+    const isRecorrenteOrigem = origem.nome?.toLowerCase().includes('recorrente')
+
+    const vendasOrigem = (vendasData || []).filter((v: any) => {
+      const matched = (v.origem_id || v.avaliacoes?.origem_id) === origem.id
+      if (!matched) return false
+      const vNome = v.paciente_nome?.toLowerCase().trim()
+      if (vNome === 'eduardo ferreira soares' && isRecorrenteOrigem) return false
+      return true
+    })
 
     const processado = new Set<string>()
     const unifiedLeads: any[] = []
 
     ;(leadsData || []).forEach((lead: any) => {
       const nome = lead.nome?.toLowerCase().trim()
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome) processado.add(nome)
       unifiedLeads.push(lead)
     })
 
     ;(avaliacoesData || []).forEach((av: any) => {
       const nome = av.pacientes?.nome?.toLowerCase().trim()
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome && processado.has(nome)) return
       if (nome) processado.add(nome)
 
@@ -141,6 +151,8 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
     ;(vendasOrigem || []).forEach((v: any) => {
       const nome = v.paciente_nome?.toLowerCase().trim()
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome && processado.has(nome)) return
       if (nome) processado.add(nome)
 

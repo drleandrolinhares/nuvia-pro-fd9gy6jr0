@@ -101,14 +101,19 @@ export default function FunilVendas() {
       if (!oId) return
 
       const nome = lead.nome?.toLowerCase().trim()
+
+      const origemNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      const isRecorrenteOrigem = origemNome.includes('recorrente')
+
+      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
       const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
@@ -153,14 +158,19 @@ export default function FunilVendas() {
       if (!oId) return
 
       const nome = av.pacientes?.nome?.toLowerCase().trim()
+
+      const origemNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      const isRecorrenteOrigem = origemNome.includes('recorrente')
+
+      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
       const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
@@ -180,14 +190,19 @@ export default function FunilVendas() {
       if (!oId) return
 
       const nome = v.paciente_nome?.toLowerCase().trim()
+
+      const origemNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      const isRecorrenteOrigem = origemNome.includes('recorrente')
+
+      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
+      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
+
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
       const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
@@ -216,9 +231,17 @@ export default function FunilVendas() {
     const finalDados = allOrigensIds.map((oId: any) => {
       const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
 
-      const vendasOrigem = (vendasData || []).filter(
-        (v: any) => (v.origem_id || v.avaliacoes?.origem_id) === oId,
-      )
+      const origemTempNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      const isRecTemp = origemTempNome.includes('recorrente')
+
+      const vendasOrigem = (vendasData || []).filter((v: any) => {
+        const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
+        if (!matched) return false
+        const vNome = v.paciente_nome?.toLowerCase().trim()
+        if (vNome === 'eduardo ferreira soares' && isRecTemp) return false
+        return true
+      })
       const qtdeVendas = vendasOrigem.length
       const valorVendas = vendasOrigem.reduce(
         (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
@@ -264,8 +287,17 @@ export default function FunilVendas() {
       }
     })
 
+    const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
+      const nome = av.pacientes?.nome?.toLowerCase().trim()
+      const oId = av.origem_id
+      const origemNome =
+        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
+      if (nome === 'eduardo ferreira soares' && origemNome.includes('recorrente')) return false
+      return true
+    })
+
     setDadosMensais(finalDados)
-    setAvaliacoesMes(avaliacoesData || [])
+    setAvaliacoesMes(avaliacoesFiltradas)
     if (showLoader) setLoading(false)
   }
 
