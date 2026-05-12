@@ -156,7 +156,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         id: '',
         nome: v.paciente_nome || 'Sem nome',
         telefone: v.telefone || '',
-        status: 'venda-fechada',
+        status: 'venda_concretizada',
         temperatura: 'quente',
         criado_em: v.data_fechamento || v.criado_em,
         origem_id: v.origem_id || v.avaliacoes?.origem_id,
@@ -204,11 +204,12 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           'faltou',
           'negociacao',
           'venda-fechada',
+          'venda_concretizada',
           'venda-perdida',
           'avaliacao',
           'fechamento',
           'em_follow_up',
-        ].includes(l.status)
+        ].includes(l.status?.toLowerCase() || '')
         return isAgendado || l.qtd_agendamentos > 0
       })
     }
@@ -219,11 +220,12 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           'atendido',
           'negociacao',
           'venda-fechada',
+          'venda_concretizada',
           'venda-perdida',
           'avaliacao',
           'fechamento',
           'em_follow_up',
-        ].includes(l.status)
+        ].includes(l.status?.toLowerCase() || '')
       })
     }
     if (modalType === 'faltas') {

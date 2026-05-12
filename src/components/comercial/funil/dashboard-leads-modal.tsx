@@ -88,7 +88,11 @@ export function DashboardLeadsModal({
           const filtered = (rawAvaliacoes || [])
             .filter((a: any) => {
               if (origens && origens.length > 0 && !origens.includes(a.origem_id)) return false
-              if (a.status === 'venda-fechada') return false
+              if (
+                (a.status || '').toLowerCase() === 'venda-fechada' ||
+                (a.status || '').toLowerCase() === 'venda_concretizada'
+              )
+                return false
               const nome = a.pacientes?.nome?.toLowerCase().trim()
               if (nome && vendasNomes.has(nome)) return false
               return true
@@ -138,7 +142,7 @@ export function DashboardLeadsModal({
               id: v.id,
               nome: v.paciente_nome,
               telefone: v.telefone || '-',
-              status: 'venda-fechada',
+              status: 'venda_concretizada',
               data: v.data_fechamento,
               valor: v.valor_tratamento || 0,
               fonte: 'Venda Confirmada',
@@ -190,7 +194,7 @@ export function DashboardLeadsModal({
           const isRecorrente =
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
-          const status = lead.status || ''
+          const status = (lead.status || '').toLowerCase()
 
           const isAgendado = [
             'agendado',
@@ -199,6 +203,7 @@ export function DashboardLeadsModal({
             'faltou',
             'negociacao',
             'venda-fechada',
+            'venda_concretizada',
             'venda-perdida',
             'avaliacao',
             'fechamento',
@@ -208,6 +213,7 @@ export function DashboardLeadsModal({
             'atendido',
             'negociacao',
             'venda-fechada',
+            'venda_concretizada',
             'venda-perdida',
             'avaliacao',
             'fechamento',
@@ -215,7 +221,8 @@ export function DashboardLeadsModal({
           ].includes(status)
           const isFaltante = status === 'faltou'
 
-          const isVendaFechada = status === 'venda-fechada' || status === 'fechamento'
+          const isVendaFechada =
+            status === 'venda-fechada' || status === 'venda_concretizada' || status === 'fechamento'
           const isInVendas = nome ? vendasNomes.has(nome) : false
 
           let include = false
@@ -249,7 +256,9 @@ export function DashboardLeadsModal({
             isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
 
           const isInVendas = nome ? vendasNomes.has(nome) : false
-          const isVendaFechada = av.status === 'venda-fechada'
+          const isVendaFechada =
+            (av.status || '').toLowerCase() === 'venda-fechada' ||
+            (av.status || '').toLowerCase() === 'venda_concretizada'
 
           let include = false
           if (type === 'leads') {
@@ -292,7 +301,7 @@ export function DashboardLeadsModal({
               id: v.id,
               nome: v.paciente_nome,
               telefone: v.telefone || '-',
-              status: 'venda-fechada',
+              status: 'venda_concretizada',
               data: v.data_fechamento,
               contatos: 1,
               fonte: 'Venda Confirmada',

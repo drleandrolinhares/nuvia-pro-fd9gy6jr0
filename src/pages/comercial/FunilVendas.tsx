@@ -106,9 +106,6 @@ export default function FunilVendas() {
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       const isRecorrenteOrigem = origemNome.includes('recorrente')
 
-      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
-
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
@@ -122,7 +119,7 @@ export default function FunilVendas() {
 
       aggregatedLeads[oId].leads++
 
-      const status = lead.status || ''
+      const status = (lead.status || '').toLowerCase()
       const isAgendado = [
         'agendado',
         'reagendado',
@@ -130,6 +127,7 @@ export default function FunilVendas() {
         'faltou',
         'negociacao',
         'venda-fechada',
+        'venda_concretizada',
         'venda-perdida',
         'avaliacao',
         'fechamento',
@@ -139,6 +137,7 @@ export default function FunilVendas() {
         'atendido',
         'negociacao',
         'venda-fechada',
+        'venda_concretizada',
         'venda-perdida',
         'avaliacao',
         'fechamento',
@@ -162,9 +161,6 @@ export default function FunilVendas() {
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       const isRecorrenteOrigem = origemNome.includes('recorrente')
-
-      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
 
       if (nome) {
         if (getProcessado(oId).has(nome)) return
@@ -194,9 +190,6 @@ export default function FunilVendas() {
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       const isRecorrenteOrigem = origemNome.includes('recorrente')
-
-      // CIRURGICAL FIX: Excluir paciente Eduardo Ferreira Soares da origem Recorrentes
-      if (nome === 'eduardo ferreira soares' && isRecorrenteOrigem) return
 
       if (nome) {
         if (getProcessado(oId).has(nome)) return
@@ -238,8 +231,6 @@ export default function FunilVendas() {
       const vendasOrigem = (vendasData || []).filter((v: any) => {
         const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
         if (!matched) return false
-        const vNome = v.paciente_nome?.toLowerCase().trim()
-        if (vNome === 'eduardo ferreira soares' && isRecTemp) return false
         return true
       })
       const qtdeVendas = vendasOrigem.length
@@ -296,9 +287,6 @@ export default function FunilVendas() {
         return false
       }
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      if (nome === 'eduardo ferreira soares' && origemNome.includes('recorrente')) return false
       return true
     })
 
