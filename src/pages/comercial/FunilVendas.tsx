@@ -88,15 +88,23 @@ export default function FunilVendas() {
       .gte('data_avaliacao', dataInicio)
       .lte('data_avaliacao', dataFim)
 
-    const processado = new Set<string>()
+    const processadoPorOrigem: Record<string, Set<string>> = {}
     const aggregatedLeads: Record<string, any> = {}
 
-    ;(leadsData || []).forEach((lead: any) => {
-      const nome = lead.nome?.toLowerCase().trim()
-      if (nome) processado.add(nome)
+    const getProcessado = (oId: string) => {
+      if (!processadoPorOrigem[oId]) processadoPorOrigem[oId] = new Set<string>()
+      return processadoPorOrigem[oId]
+    }
 
+    ;(leadsData || []).forEach((lead: any) => {
       const oId = lead.origem_id
       if (!oId) return
+
+      const nome = lead.nome?.toLowerCase().trim()
+      if (nome) {
+        if (getProcessado(oId).has(nome)) return
+        getProcessado(oId).add(nome)
+      }
 
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
@@ -120,6 +128,7 @@ export default function FunilVendas() {
         'venda-perdida',
         'avaliacao',
         'fechamento',
+        'em_follow_up',
       ].includes(status)
       const isCompareceu = [
         'atendido',
@@ -128,6 +137,7 @@ export default function FunilVendas() {
         'venda-perdida',
         'avaliacao',
         'fechamento',
+        'em_follow_up',
       ].includes(status)
       const isFaltante = status === 'faltou'
 
@@ -139,12 +149,14 @@ export default function FunilVendas() {
     })
 
     ;(avaliacoesData || []).forEach((av: any) => {
-      const nome = av.pacientes?.nome?.toLowerCase().trim()
-      if (nome && processado.has(nome)) return
-      if (nome) processado.add(nome)
-
       const oId = av.origem_id
       if (!oId) return
+
+      const nome = av.pacientes?.nome?.toLowerCase().trim()
+      if (nome) {
+        if (getProcessado(oId).has(nome)) return
+        getProcessado(oId).add(nome)
+      }
 
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
@@ -164,12 +176,14 @@ export default function FunilVendas() {
     })
 
     ;(vendasData || []).forEach((v: any) => {
-      const nome = v.paciente_nome?.toLowerCase().trim()
-      if (nome && processado.has(nome)) return
-      if (nome) processado.add(nome)
-
       const oId = v.origem_id || v.avaliacoes?.origem_id
       if (!oId) return
+
+      const nome = v.paciente_nome?.toLowerCase().trim()
+      if (nome) {
+        if (getProcessado(oId).has(nome)) return
+        getProcessado(oId).add(nome)
+      }
 
       const origemNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
