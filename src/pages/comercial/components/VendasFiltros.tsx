@@ -51,7 +51,6 @@ export function VendasFiltros({ filters, setFilters, setPage, dentistas, crcs }:
             <SelectItem value="avaliacao_realizada">Avaliação Realizada</SelectItem>
             <SelectItem value="em_negociacao">Em Negociação</SelectItem>
             <SelectItem value="follow_up">Follow Up</SelectItem>
-            <SelectItem value="venda_concretizada">Venda Concretizada</SelectItem>
             <SelectItem value="perdido">Perdido</SelectItem>
             <SelectItem value="adiado">Adiado</SelectItem>
           </SelectContent>

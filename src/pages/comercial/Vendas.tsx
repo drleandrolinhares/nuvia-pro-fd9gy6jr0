@@ -96,6 +96,11 @@ export default function Vendas() {
       if (filters.search) query = query.ilike('pacientes.nome', `%${filters.search}%`)
       if (filters.status !== 'todos') {
         query = query.eq('status', filters.status)
+      } else {
+        query = query
+          .neq('status', 'venda_concretizada')
+          .neq('status', 'Fechada em Comercial')
+          .neq('status', 'Fechada em Avaliação')
       }
 
       if (filters.temperatura !== 'todas') query = query.eq('temperatura_lead', filters.temperatura)
