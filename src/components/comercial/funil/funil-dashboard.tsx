@@ -42,19 +42,34 @@ export function FunilDashboard({
     return nome.includes('facebook') || nome.includes('instagram')
   }
 
-  const isSecundario = (origemId: string) => !isClassico(origemId)
+  const isSecundario = (origemId: string) => {
+    const origem = origens.find((o: any) => o.id === origemId)
+    if (!origem) return false
+    const nome = origem.nome?.toLowerCase() || ''
+    return !nome.includes('facebook') && !nome.includes('instagram') && !nome.includes('recorrente')
+  }
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
+      const origem = origens.find((o: any) => o.id === d.origem_id)
+      const origemNome = origem?.nome?.toLowerCase() || ''
+      const isRecorrente = origemNome.includes('recorrente')
       const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
-      return {
-        ...d,
-        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
-        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
-        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+
+      if (isRecorrente) {
+        return {
+          ...d,
+          leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
+          agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
+          comparecimentos_realizado: Math.max(
+            Number(d.comparecimentos_realizado || 0),
+            fechamentos,
+          ),
+        }
       }
+      return { ...d }
     })
-  }, [dados])
+  }, [dados, origens])
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
@@ -253,9 +268,26 @@ export function FunilDashboard({
   )
 
   const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => (
-    <div className="grid grid-cols-4 gap-3 text-center">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
       <div
         className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'leads',
+            origens: origensFilter,
+            title: `Leads - ${funilName}`,
+          })
+        }
+      >
+        <Users className="w-5 h-5 text-slate-400 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Leads
+        </span>
+        <span className="text-2xl font-bold text-white">{totais.leads}</span>
+      </div>
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
         onClick={() =>
           setModalConfig({
             isOpen: true,
@@ -265,6 +297,7 @@ export function FunilDashboard({
           })
         }
       >
+        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
         <Calendar className="w-5 h-5 text-blue-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Agendamento
@@ -282,7 +315,7 @@ export function FunilDashboard({
           })
         }
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
         <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Comparecimento
@@ -300,7 +333,7 @@ export function FunilDashboard({
           })
         }
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
         <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Faltas
@@ -318,7 +351,7 @@ export function FunilDashboard({
           })
         }
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
+        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Fechamento

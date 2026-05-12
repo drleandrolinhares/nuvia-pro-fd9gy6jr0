@@ -86,15 +86,25 @@ export function SemaforoConversao({
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
+      const origemNome =
+        (origens || []).find((o: any) => o.id === d.origem_id)?.nome?.toLowerCase() || ''
+      const isRecorrente = origemNome.includes('recorrente')
       const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
-      return {
-        ...d,
-        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
-        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
-        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+
+      if (isRecorrente) {
+        return {
+          ...d,
+          leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
+          agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
+          comparecimentos_realizado: Math.max(
+            Number(d.comparecimentos_realizado || 0),
+            fechamentos,
+          ),
+        }
       }
+      return { ...d }
     })
-  }, [dados])
+  }, [dados, origens])
 
   const metrics = useMemo(() => {
     const origensClassicoIds =
@@ -106,7 +116,12 @@ export function SemaforoConversao({
         .map((o) => o.id) || []
 
     const origensSecundarioIds =
-      origens?.filter((o: any) => !origensClassicoIds.includes(o.id)).map((o) => o.id) || []
+      origens
+        ?.filter((o: any) => {
+          const nome = o.nome?.toLowerCase() || ''
+          return !origensClassicoIds.includes(o.id) && !nome.includes('recorrente')
+        })
+        .map((o) => o.id) || []
 
     const isClassico = (origemId: string) => origensClassicoIds.includes(origemId)
     const isSecundario = (origemId: string) => !isClassico(origemId)

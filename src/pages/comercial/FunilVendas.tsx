@@ -102,16 +102,10 @@ export default function FunilVendas() {
 
       const nome = lead.nome?.toLowerCase().trim()
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
-
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
-
-      const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -145,11 +139,9 @@ export default function FunilVendas() {
       ].includes(status)
       const isFaltante = status === 'faltou'
 
-      if (isAgendado && !isRecorrenteOrigem && !isPacienteRecorrente)
-        aggregatedLeads[oId].agendamentos++
-      if (isCompareceu && !isRecorrenteOrigem && !isPacienteRecorrente)
-        aggregatedLeads[oId].comparecimentos++
-      if (isFaltante && !isRecorrenteOrigem && !isPacienteRecorrente) aggregatedLeads[oId].faltas++
+      if (isAgendado) aggregatedLeads[oId].agendamentos++
+      if (isCompareceu) aggregatedLeads[oId].comparecimentos++
+      if (isFaltante) aggregatedLeads[oId].faltas++
     })
 
     ;(avaliacoesData || []).forEach((av: any) => {
@@ -158,27 +150,18 @@ export default function FunilVendas() {
 
       const nome = av.pacientes?.nome?.toLowerCase().trim()
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
-
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
-
-      const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
       }
 
       aggregatedLeads[oId].leads++
-
-      if (!isRecorrenteOrigem && !isPacienteRecorrente) {
-        aggregatedLeads[oId].agendamentos++
-        aggregatedLeads[oId].comparecimentos++
-      }
+      aggregatedLeads[oId].agendamentos++
+      aggregatedLeads[oId].comparecimentos++
     })
 
     ;(vendasData || []).forEach((v: any) => {
@@ -187,27 +170,18 @@ export default function FunilVendas() {
 
       const nome = v.paciente_nome?.toLowerCase().trim()
 
-      const origemNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecorrenteOrigem = origemNome.includes('recorrente')
-
       if (nome) {
         if (getProcessado(oId).has(nome)) return
         getProcessado(oId).add(nome)
       }
-
-      const isPacienteRecorrente = nome ? pacientesRecorrentes.has(nome) : false
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
       }
 
       aggregatedLeads[oId].leads++
-
-      if (!isRecorrenteOrigem && !isPacienteRecorrente) {
-        aggregatedLeads[oId].agendamentos++
-        aggregatedLeads[oId].comparecimentos++
-      }
+      aggregatedLeads[oId].agendamentos++
+      aggregatedLeads[oId].comparecimentos++
     })
 
     const allOrigensIds = [
