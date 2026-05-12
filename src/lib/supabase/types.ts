@@ -6733,6 +6733,24 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trg_prevent_duplicate_avaliacoes()
+//   CREATE OR REPLACE FUNCTION public.trg_prevent_duplicate_avaliacoes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF EXISTS (
+//       SELECT 1 FROM public.avaliacoes
+//       WHERE paciente_id = NEW.paciente_id
+//         AND to_char(COALESCE(data_avaliacao, criado_em, CURRENT_DATE)::date, 'YYYY-MM') = to_char(COALESCE(NEW.data_avaliacao, NEW.criado_em, CURRENT_DATE)::date, 'YYYY-MM')
+//         AND id != NEW.id
+//     ) THEN
+//       RAISE EXCEPTION 'Já existe uma oportunidade registrada para este paciente neste mês.';
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION trg_sorriso_fechamento()
 //   CREATE OR REPLACE FUNCTION public.trg_sorriso_fechamento()
 //    RETURNS trigger
@@ -7074,6 +7092,7 @@ export const Constants = {
 
 // --- TRIGGERS ---
 // Table: avaliacoes
+//   prevent_duplicate_avaliacoes_tg: CREATE TRIGGER prevent_duplicate_avaliacoes_tg BEFORE INSERT ON public.avaliacoes FOR EACH ROW EXECUTE FUNCTION trg_prevent_duplicate_avaliacoes()
 //   sync_avaliacoes_to_vendas_trigger: CREATE TRIGGER sync_avaliacoes_to_vendas_trigger AFTER UPDATE ON public.avaliacoes FOR EACH ROW EXECUTE FUNCTION trg_sync_avaliacoes_to_vendas()
 // Table: compra_itens
 //   after_compra_item_change: CREATE TRIGGER after_compra_item_change AFTER INSERT OR UPDATE ON public.compra_itens FOR EACH ROW EXECUTE FUNCTION trg_atualiza_estoque_compra_item()

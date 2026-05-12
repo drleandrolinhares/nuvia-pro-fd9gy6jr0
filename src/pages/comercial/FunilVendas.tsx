@@ -308,8 +308,9 @@ export default function FunilVendas() {
           const nome = av.pacientes?.nome?.toLowerCase().trim() || av.id
           if (map.has(nome)) {
             const existing = map.get(nome)
-            const existingIsVenda = existing.status === 'venda_concretizada'
-            const newIsVenda = av.status === 'venda_concretizada'
+            const existingIsVenda =
+              existing.status === 'venda_concretizada' || existing.status === 'venda-fechada'
+            const newIsVenda = av.status === 'venda_concretizada' || av.status === 'venda-fechada'
             if (
               !existingIsVenda &&
               (newIsVenda ||

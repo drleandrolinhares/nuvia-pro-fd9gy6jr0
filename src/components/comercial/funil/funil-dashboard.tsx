@@ -108,7 +108,8 @@ export function FunilDashboard({
         const existing = map.get(nome)
         if (
           Number(a.valor_orcamento || 0) > Number(existing.valor_orcamento || 0) ||
-          a.status === 'venda_concretizada'
+          a.status === 'venda_concretizada' ||
+          a.status === 'venda-fechada'
         ) {
           map.set(nome, a)
         }
@@ -119,23 +120,33 @@ export function FunilDashboard({
     return Array.from(map.values())
   }, [avaliacoes])
 
+  const avaliacoesEmAberto = useMemo(() => {
+    return avaliacoesAtuais.filter((a: any) => {
+      const status = (a.status || '').toLowerCase()
+      return !['venda_concretizada', 'venda-fechada'].includes(status)
+    })
+  }, [avaliacoesAtuais])
+
   const avaliacoesSemRecorrente = useMemo(
     () => (avaliacoesAtuais ? avaliacoesAtuais.filter((a: any) => !isRecorrente(a.origem_id)) : []),
     [avaliacoesAtuais, origens],
   )
   const totalAvaliacoes = avaliacoesSemRecorrente.length
 
-  const calcOportunidades = (avs: any[]) =>
+  const calcValorEmAberto = (avs: any[]) =>
     avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
 
-  const valorOportunidadesClassico = useMemo(
-    () => calcOportunidades(avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id))),
-    [avaliacoesAtuais, origens],
+  const valorEmAbertoClassico = useMemo(
+    () => calcValorEmAberto(avaliacoesEmAberto.filter((a: any) => isClassico(a.origem_id))),
+    [avaliacoesEmAberto, origens],
   )
-  const valorOportunidadesSecundario = useMemo(
-    () => calcOportunidades(avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id))),
-    [avaliacoesAtuais, origens],
+  const valorOportunidadesClassico = valorEmAbertoClassico + totaisClassico.valor_fechado
+
+  const valorEmAbertoSecundario = useMemo(
+    () => calcValorEmAberto(avaliacoesEmAberto.filter((a: any) => isSecundario(a.origem_id))),
+    [avaliacoesEmAberto, origens],
   )
+  const valorOportunidadesSecundario = valorEmAbertoSecundario + totaisSecundario.valor_fechado
 
   const conversaoTotalClassico =
     valorOportunidadesClassico > 0
