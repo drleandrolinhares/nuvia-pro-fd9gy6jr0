@@ -466,46 +466,7 @@ export function EditarDadosDialog({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <AnaliseCard
-                    title="Fechamento no Ato"
-                    desc="Mesmo dia da avaliação"
-                    qtd={analiseData.fechamentoNoAto.qtd}
-                    valor={analiseData.fechamentoNoAto.valor}
-                    color="emerald"
-                    Icon={Zap}
-                    isActive={filtroTipo === 'FECHAMENTO NO ATO'}
-                    onClick={() =>
-                      setFiltroTipo(filtroTipo === 'FECHAMENTO NO ATO' ? null : 'FECHAMENTO NO ATO')
-                    }
-                  />
-                  <AnaliseCard
-                    title="Fechamento por Follow do Mês"
-                    desc="Mesmo mês da avaliação"
-                    qtd={analiseData.followMes.qtd}
-                    valor={analiseData.followMes.valor}
-                    color="blue"
-                    Icon={CalendarDays}
-                    isActive={filtroTipo === 'FOLLOW DO MÊS'}
-                    onClick={() =>
-                      setFiltroTipo(filtroTipo === 'FOLLOW DO MÊS' ? null : 'FOLLOW DO MÊS')
-                    }
-                  />
-                  <AnaliseCard
-                    title="Fechamento por Follow Resgate"
-                    desc="Meses após a avaliação"
-                    qtd={analiseData.followResgate.qtd}
-                    valor={analiseData.followResgate.valor}
-                    color="purple"
-                    Icon={History}
-                    isActive={filtroTipo === 'FOLLOW RESGATE'}
-                    onClick={() =>
-                      setFiltroTipo(filtroTipo === 'FOLLOW RESGATE' ? null : 'FOLLOW RESGATE')
-                    }
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="w-4 h-4 text-purple-500" />
@@ -565,6 +526,45 @@ export function EditarDadosDialog({
                       {formatBrl(analiseData.metricas.ticketMedio)}
                     </span>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <AnaliseCard
+                    title="Fechamento no Ato"
+                    desc="Mesmo dia da avaliação"
+                    qtd={analiseData.fechamentoNoAto.qtd}
+                    valor={analiseData.fechamentoNoAto.valor}
+                    color="emerald"
+                    Icon={Zap}
+                    isActive={filtroTipo === 'FECHAMENTO NO ATO'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FECHAMENTO NO ATO' ? null : 'FECHAMENTO NO ATO')
+                    }
+                  />
+                  <AnaliseCard
+                    title="Fechamento por Follow do Mês"
+                    desc="Mesmo mês da avaliação"
+                    qtd={analiseData.followMes.qtd}
+                    valor={analiseData.followMes.valor}
+                    color="blue"
+                    Icon={CalendarDays}
+                    isActive={filtroTipo === 'FOLLOW DO MÊS'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FOLLOW DO MÊS' ? null : 'FOLLOW DO MÊS')
+                    }
+                  />
+                  <AnaliseCard
+                    title="Fechamento por Follow Resgate"
+                    desc="Meses após a avaliação"
+                    qtd={analiseData.followResgate.qtd}
+                    valor={analiseData.followResgate.valor}
+                    color="purple"
+                    Icon={History}
+                    isActive={filtroTipo === 'FOLLOW RESGATE'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FOLLOW RESGATE' ? null : 'FOLLOW RESGATE')
+                    }
+                  />
                 </div>
               </div>
             )}
