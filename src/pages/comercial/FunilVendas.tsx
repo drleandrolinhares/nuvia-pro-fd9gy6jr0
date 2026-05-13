@@ -100,6 +100,9 @@ export default function FunilVendas() {
       const oId = lead.origem_id
       if (!oId) return
 
+      const status = (lead.status || '').toLowerCase()
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
       const nome = lead.nome?.toLowerCase().trim()
 
       if (nome) {
@@ -113,7 +116,6 @@ export default function FunilVendas() {
 
       aggregatedLeads[oId].leads++
 
-      const status = (lead.status || '').toLowerCase()
       const isAgendado = [
         'agendado',
         'reagendado',
@@ -203,62 +205,67 @@ export default function FunilVendas() {
       ]),
     ].filter(Boolean)
 
-    const finalDados = allOrigensIds.map((oId: any) => {
-      const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
+    const finalDados = allOrigensIds
+      .map((oId: any) => {
+        const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
 
-      const origemTempNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      const isRecTemp = origemTempNome.includes('recorrente')
+        const origem = (origensData || []).find((o: any) => o.id === oId)
+        const origemTempNome = origem?.nome?.toLowerCase() || ''
+        const isRecTemp = origemTempNome.includes('recorrente')
 
-      const vendasOrigem = (vendasData || []).filter((v: any) => {
-        const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
-        if (!matched) return false
-        return true
-      })
-      const qtdeVendas = vendasOrigem.length
-      const valorVendas = vendasOrigem.reduce(
-        (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
-        0,
-      )
+        const vendasOrigem = (vendasData || []).filter((v: any) => {
+          const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
+          if (!matched) return false
+          return true
+        })
+        const qtdeVendas = vendasOrigem.length
+        const valorVendas = vendasOrigem.reduce(
+          (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
+          0,
+        )
 
-      const aggLeads = aggregatedLeads[oId] || {
-        leads: 0,
-        agendamentos: 0,
-        comparecimentos: 0,
-        faltas: 0,
-      }
+        const aggLeads = aggregatedLeads[oId] || {
+          leads: 0,
+          agendamentos: 0,
+          comparecimentos: 0,
+          faltas: 0,
+        }
 
-      if (existing) {
+        if (existing) {
+          return {
+            ...existing,
+            leads_realizado: aggLeads.leads,
+            agendamentos_realizado: aggLeads.agendamentos,
+            comparecimentos_realizado: aggLeads.comparecimentos,
+            faltas_realizado: aggLeads.faltas,
+            fechamentos_qtde_realizado: qtdeVendas,
+            fechamentos_valor_realizado: valorVendas,
+          }
+        }
+
         return {
-          ...existing,
+          origem_id: oId,
+          mes_referencia: mesReferencia,
+          investimento: 0,
+          meta_leads: 0,
           leads_realizado: aggLeads.leads,
+          meta_agendamentos_qtde: 0,
+          meta_agendamentos_perc: 0,
           agendamentos_realizado: aggLeads.agendamentos,
+          meta_comparecimentos_qtde: 0,
+          meta_comparecimentos_perc: 0,
           comparecimentos_realizado: aggLeads.comparecimentos,
           faltas_realizado: aggLeads.faltas,
+          meta_fechamento_valor: 0,
+          ticket_medio_esperado: 0,
           fechamentos_qtde_realizado: qtdeVendas,
           fechamentos_valor_realizado: valorVendas,
         }
-      }
-
-      return {
-        origem_id: oId,
-        mes_referencia: mesReferencia,
-        investimento: 0,
-        meta_leads: 0,
-        leads_realizado: aggLeads.leads,
-        meta_agendamentos_qtde: 0,
-        meta_agendamentos_perc: 0,
-        agendamentos_realizado: aggLeads.agendamentos,
-        meta_comparecimentos_qtde: 0,
-        meta_comparecimentos_perc: 0,
-        comparecimentos_realizado: aggLeads.comparecimentos,
-        faltas_realizado: aggLeads.faltas,
-        meta_fechamento_valor: 0,
-        ticket_medio_esperado: 0,
-        fechamentos_qtde_realizado: qtdeVendas,
-        fechamentos_valor_realizado: valorVendas,
-      }
-    })
+      })
+      .filter((d: any) => {
+        const origem = (origensData || []).find((o: any) => o.id === d.origem_id)
+        return origem && origem.ativo !== false
+      })
 
     const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
       const nome = av.pacientes?.nome?.toLowerCase().trim()

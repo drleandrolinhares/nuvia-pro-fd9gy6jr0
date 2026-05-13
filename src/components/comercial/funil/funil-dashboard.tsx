@@ -37,14 +37,14 @@ export function FunilDashboard({
 }: any) {
   const isClassico = (origemId: string) => {
     const origem = origens.find((o: any) => o.id === origemId)
-    if (!origem) return false
+    if (!origem || origem.ativo === false) return false
     const nome = origem.nome?.toLowerCase() || ''
     return nome.includes('facebook') || nome.includes('instagram')
   }
 
   const isSecundario = (origemId: string) => {
     const origem = origens.find((o: any) => o.id === origemId)
-    if (!origem) return false
+    if (!origem || origem.ativo === false) return false
     const nome = origem.nome?.toLowerCase() || ''
     return !nome.includes('facebook') && !nome.includes('instagram') && !nome.includes('recorrente')
   }
@@ -100,8 +100,12 @@ export function FunilDashboard({
 
   const leadsQualificados = useMemo(
     () =>
-      dadosAjustados.reduce((acc: number, curr: any) => acc + Number(curr.leads_realizado || 0), 0),
-    [dadosAjustados],
+      dadosAjustados.reduce((acc: number, curr: any) => {
+        const origem = origens.find((o: any) => o.id === curr.origem_id)
+        if (!origem || origem.ativo === false) return acc
+        return acc + Number(curr.leads_realizado || 0)
+      }, 0),
+    [dadosAjustados, origens],
   )
   const totaisClassico = useMemo(
     () => calcTotais(dadosAjustados.filter((d: any) => isClassico(d.origem_id))),
