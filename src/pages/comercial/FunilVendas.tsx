@@ -37,6 +37,8 @@ export default function FunilVendas() {
   const [temperaturas, setTemperaturas] = useState<any[]>([])
   const [dadosMensais, setDadosMensais] = useState<any[]>([])
   const [avaliacoesMes, setAvaliacoesMes] = useState<any[]>([])
+  const [leadsMes, setLeadsMes] = useState<any[]>([])
+  const [vendasMes, setVendasMes] = useState<any[]>([])
 
   const fetchData = async (showLoader = true) => {
     if (showLoader) setLoading(true)
@@ -305,6 +307,8 @@ export default function FunilVendas() {
 
     setDadosMensais(finalDados)
     setAvaliacoesMes(deduplicatedAvaliacoes)
+    setLeadsMes(leadsData || [])
+    setVendasMes(vendasData || [])
     if (showLoader) setLoading(false)
   }
 
@@ -433,6 +437,8 @@ export default function FunilVendas() {
           dados={dadosMensais}
           mesReferencia={mesReferencia}
           avaliacoes={avaliacoesMes}
+          leads={leadsMes}
+          vendas={vendasMes}
           etapas={etapas}
           temperaturas={temperaturas}
           onUpdate={() => fetchData(false)}

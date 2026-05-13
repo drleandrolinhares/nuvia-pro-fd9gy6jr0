@@ -31,6 +31,8 @@ export function FunilDashboard({
   dados,
   mesReferencia,
   avaliacoes,
+  leads,
+  vendas,
   etapas,
   temperaturas,
   onUpdate,
@@ -111,10 +113,80 @@ export function FunilDashboard({
     () => calcTotais(dadosAjustados.filter((d: any) => isClassico(d.origem_id))),
     [dadosAjustados, origens],
   )
-  const totaisSecundario = useMemo(
-    () => calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id))),
-    [dadosAjustados, origens],
-  )
+  const totaisSecundario = useMemo(() => {
+    const padrao = calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id)))
+
+    if (!leads) return padrao
+
+    const unifiedLeads = new Map()
+    const unifiedAgendamentos = new Map()
+    const unifiedComparecimentos = new Map()
+    const unifiedFaltas = new Map()
+
+    ;(leads || []).forEach((lead: any) => {
+      const oId = lead.origem_id
+      if (!isSecundario(oId)) return
+
+      const nome = lead.nome ? String(lead.nome).trim().toLowerCase() : lead.id
+      const status = (lead.status || '').toLowerCase()
+
+      const isAgendado = [
+        'agendado',
+        'reagendado',
+        'atendido',
+        'faltou',
+        'negociacao',
+        'venda-fechada',
+        'venda_concretizada',
+        'venda-perdida',
+        'avaliacao',
+        'fechamento',
+        'em_follow_up',
+      ].includes(status)
+      const isCompareceu = [
+        'atendido',
+        'negociacao',
+        'venda-fechada',
+        'venda_concretizada',
+        'venda-perdida',
+        'avaliacao',
+        'fechamento',
+        'em_follow_up',
+      ].includes(status)
+      const isFaltante = status === 'faltou'
+
+      unifiedLeads.set(nome, true)
+      if (isAgendado) unifiedAgendamentos.set(nome, true)
+      if (isCompareceu) unifiedComparecimentos.set(nome, true)
+      if (isFaltante) unifiedFaltas.set(nome, true)
+    })
+
+    ;(avaliacoes || []).forEach((av: any) => {
+      const oId = av.origem_id
+      if (!isSecundario(oId)) return
+      const nome = av.pacientes?.nome ? String(av.pacientes.nome).trim().toLowerCase() : av.id
+
+      unifiedAgendamentos.set(nome, true)
+      unifiedComparecimentos.set(nome, true)
+    })
+
+    ;(vendas || []).forEach((v: any) => {
+      const oId = v.origem_id || v.avaliacoes?.origem_id
+      if (!isSecundario(oId)) return
+      const nome = v.paciente_nome ? String(v.paciente_nome).trim().toLowerCase() : v.id
+
+      unifiedAgendamentos.set(nome, true)
+      unifiedComparecimentos.set(nome, true)
+    })
+
+    return {
+      ...padrao,
+      leads: unifiedLeads.size,
+      agendamentos: unifiedAgendamentos.size,
+      comparecimentos: unifiedComparecimentos.size,
+      faltas: unifiedFaltas.size,
+    }
+  }, [dadosAjustados, origens, leads, avaliacoes, vendas])
 
   const avaliacoesAtuais = useMemo(() => {
     if (!avaliacoes) return []
