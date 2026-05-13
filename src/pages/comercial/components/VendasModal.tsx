@@ -267,8 +267,33 @@ export function VendasModal({
         temperatura_lead: formData.temperatura_lead,
       }
 
-      const { error } = await supabase.from('avaliacoes').insert(payload)
-      if (error) throw error
+      // Verificar se já existe avaliação para este paciente
+      const { data: existingAvaliacoes } = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('paciente_id', currentPacienteId)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+
+      const existingAvaliacao = existingAvaliacoes?.[0]
+      let currentAvaliacaoId = ''
+
+      if (existingAvaliacao) {
+        const { error } = await supabase
+          .from('avaliacoes')
+          .update(payload)
+          .eq('id', existingAvaliacao.id)
+        if (error) throw error
+        currentAvaliacaoId = existingAvaliacao.id
+      } else {
+        const { data: insertedAvaliacao, error } = await supabase
+          .from('avaliacoes')
+          .insert(payload)
+          .select('id')
+          .single()
+        if (error) throw error
+        currentAvaliacaoId = insertedAvaliacao.id
+      }
 
       if (formData.tipo_lancamento === 'venda_concretizada') {
         const { data: vd, error: vdError } = await supabase
@@ -293,6 +318,7 @@ export function VendasModal({
             .from('vendas_confirmadas')
             .update({
               data_original: formData.data_avaliacao,
+              oportunidade_id: currentAvaliacaoId,
             })
             .eq('id', vd.id)
         }
