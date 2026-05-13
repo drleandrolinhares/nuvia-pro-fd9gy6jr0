@@ -88,18 +88,32 @@ export function DashboardLeadsModal({
           const filtered = (rawAvaliacoes || [])
             .filter((a: any) => {
               if (origens && origens.length > 0 && !origens.includes(a.origem_id)) return false
+
+              const status = (a.status || '').toLowerCase()
               if (
-                (a.status || '').toLowerCase() === 'venda-fechada' ||
-                (a.status || '').toLowerCase() === 'venda_concretizada'
+                [
+                  'erro',
+                  'rascunho',
+                  'lixo',
+                  'duplicado',
+                  'teste',
+                  'invalido',
+                  'venda-fechada',
+                  'venda_concretizada',
+                ].includes(status)
               )
                 return false
-              const nome = a.pacientes?.nome?.toLowerCase().trim()
-              if (nome && vendasNomes.has(nome)) return false
+
+              if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
+              const nome = String(a.pacientes.nome).trim().toLowerCase()
+              if (nome.includes('teste') || nome.includes('duplicado')) return false
+
+              if (vendasNomes.has(nome)) return false
               return true
             })
             .map((a) => ({
               id: a.id,
-              nome: a.pacientes?.nome || 'N/A',
+              nome: a.pacientes.nome,
               telefone: a.pacientes?.telefone || '-',
               status: a.status || 'Avaliação',
               data: a.data_avaliacao,
@@ -110,10 +124,7 @@ export function DashboardLeadsModal({
 
           const deduplicated = Array.from(
             new Map(
-              filtered.map((item) => [
-                item.nome ? String(item.nome).trim().toLowerCase() : item.id,
-                item,
-              ]),
+              filtered.map((item) => [String(item.nome).trim().toLowerCase(), item]),
             ).values(),
           ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 
@@ -136,6 +147,11 @@ export function DashboardLeadsModal({
             .filter((v: any) => {
               const oId = v.origem_id || v.avaliacoes?.origem_id
               if (origens && origens.length > 0 && !origens.includes(oId)) return false
+
+              if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return false
+              const nome = String(v.paciente_nome).trim().toLowerCase()
+              if (nome.includes('teste') || nome.includes('duplicado')) return false
+
               return true
             })
             .map((v: any) => ({
@@ -151,10 +167,7 @@ export function DashboardLeadsModal({
 
           const deduplicated = Array.from(
             new Map(
-              filtered.map((item) => [
-                item.nome ? String(item.nome).trim().toLowerCase() : item.id,
-                item,
-              ]),
+              filtered.map((item) => [String(item.nome).trim().toLowerCase(), item]),
             ).values(),
           ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 
@@ -190,11 +203,15 @@ export function DashboardLeadsModal({
           const oId = lead.origem_id
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
-          const nome = lead.nome?.toLowerCase().trim()
-          const isRecorrente =
-            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
-
           const status = (lead.status || '').toLowerCase()
+          if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
+            return
+
+          if (!lead.nome || String(lead.nome).trim() === '') return
+          const nome = String(lead.nome).trim().toLowerCase()
+          if (nome.includes('teste') || nome.includes('duplicado')) return
+
+          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
 
           const isAgendado = [
             'agendado',
@@ -251,14 +268,18 @@ export function DashboardLeadsModal({
           const oId = av.origem_id
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
-          const nome = av.pacientes?.nome?.toLowerCase().trim()
-          const isRecorrente =
-            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+          const status = (av.status || '').toLowerCase()
+          if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
+            return
 
-          const isInVendas = nome ? vendasNomes.has(nome) : false
-          const isVendaFechada =
-            (av.status || '').toLowerCase() === 'venda-fechada' ||
-            (av.status || '').toLowerCase() === 'venda_concretizada'
+          if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
+          const nome = String(av.pacientes.nome).trim().toLowerCase()
+          if (nome.includes('teste') || nome.includes('duplicado')) return
+
+          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
+
+          const isInVendas = vendasNomes.has(nome)
+          const isVendaFechada = status === 'venda-fechada' || status === 'venda_concretizada'
 
           let include = false
           if (type === 'leads') {
@@ -285,9 +306,11 @@ export function DashboardLeadsModal({
           const oId = v.origem_id || v.avaliacoes?.origem_id
           if (origens && origens.length > 0 && !origens.includes(oId)) return
 
-          const nome = v.paciente_nome?.toLowerCase().trim()
-          const isRecorrente =
-            isRecorrenteOrigem(oId) || (nome ? pacientesRecorrentes.has(nome) : false)
+          if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
+          const nome = String(v.paciente_nome).trim().toLowerCase()
+          if (nome.includes('teste') || nome.includes('duplicado')) return
+
+          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
 
           let include = false
           if (type === 'leads') {
@@ -312,10 +335,7 @@ export function DashboardLeadsModal({
 
         const deduplicated = Array.from(
           new Map(
-            unifiedList.map((item) => [
-              item.nome ? String(item.nome).trim().toLowerCase() : item.id,
-              item,
-            ]),
+            unifiedList.map((item) => [String(item.nome).trim().toLowerCase(), item]),
           ).values(),
         ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
 

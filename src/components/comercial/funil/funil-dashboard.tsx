@@ -130,7 +130,9 @@ export function FunilDashboard({
       const status = (lead.status || '').toLowerCase()
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
 
-      const nome = lead.nome ? String(lead.nome).trim().toLowerCase() : lead.id
+      if (!lead.nome || String(lead.nome).trim() === '') return
+      const nome = String(lead.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
       const isAgendado = [
         'agendado',
@@ -166,7 +168,13 @@ export function FunilDashboard({
     ;(avaliacoes || []).forEach((av: any) => {
       const oId = av.origem_id
       if (!isSecundario(oId)) return
-      const nome = av.pacientes?.nome ? String(av.pacientes.nome).trim().toLowerCase() : av.id
+
+      const status = (av.status || '').toLowerCase()
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+      if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
+      const nome = String(av.pacientes.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
       unifiedAgendamentos.set(nome, true)
       unifiedComparecimentos.set(nome, true)
@@ -175,7 +183,10 @@ export function FunilDashboard({
     ;(vendas || []).forEach((v: any) => {
       const oId = v.origem_id || v.avaliacoes?.origem_id
       if (!isSecundario(oId)) return
-      const nome = v.paciente_nome ? String(v.paciente_nome).trim().toLowerCase() : v.id
+
+      if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
+      const nome = String(v.paciente_nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
       unifiedAgendamentos.set(nome, true)
       unifiedComparecimentos.set(nome, true)
@@ -199,7 +210,10 @@ export function FunilDashboard({
         return
       }
 
-      const nome = a.pacientes?.nome ? String(a.pacientes.nome).trim().toLowerCase() : a.id
+      if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return
+      const nome = String(a.pacientes.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
+
       if (map.has(nome)) {
         const existing = map.get(nome)
         if (

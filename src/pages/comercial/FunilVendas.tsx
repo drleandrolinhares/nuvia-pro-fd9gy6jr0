@@ -105,12 +105,12 @@ export default function FunilVendas() {
       const status = (lead.status || '').toLowerCase()
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
 
-      const nome = lead.nome?.toLowerCase().trim()
+      if (!lead.nome || String(lead.nome).trim() === '') return
+      const nome = String(lead.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
-      if (nome) {
-        if (getProcessado(oId).has(nome)) return
-        getProcessado(oId).add(nome)
-      }
+      if (getProcessado(oId).has(nome)) return
+      getProcessado(oId).add(nome)
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -152,16 +152,19 @@ export default function FunilVendas() {
       const oId = av.origem_id
       if (!oId) return
 
+      const status = (av.status || '').toLowerCase()
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
       const origemTempNome =
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       if (!origemTempNome.includes('recorrente')) return
 
-      const nome = av.pacientes?.nome?.toLowerCase().trim()
+      if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
+      const nome = String(av.pacientes.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
-      if (nome) {
-        if (getProcessado(oId).has(nome)) return
-        getProcessado(oId).add(nome)
-      }
+      if (getProcessado(oId).has(nome)) return
+      getProcessado(oId).add(nome)
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -180,12 +183,12 @@ export default function FunilVendas() {
         (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
       if (!origemTempNome.includes('recorrente')) return
 
-      const nome = v.paciente_nome?.toLowerCase().trim()
+      if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
+      const nome = String(v.paciente_nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return
 
-      if (nome) {
-        if (getProcessado(oId).has(nome)) return
-        getProcessado(oId).add(nome)
-      }
+      if (getProcessado(oId).has(nome)) return
+      getProcessado(oId).add(nome)
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -270,13 +273,15 @@ export default function FunilVendas() {
       })
 
     const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
-      const nome = av.pacientes?.nome?.toLowerCase().trim()
-      const oId = av.origem_id
       const status = (av.status || '').toLowerCase()
 
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
         return false
       }
+
+      if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
+      const nome = String(av.pacientes.nome).trim().toLowerCase()
+      if (nome.includes('teste') || nome.includes('duplicado')) return false
 
       return true
     })
@@ -284,7 +289,7 @@ export default function FunilVendas() {
     const deduplicatedAvaliacoes = Array.from(
       avaliacoesFiltradas
         .reduce((map, av) => {
-          const nome = av.pacientes?.nome?.toLowerCase().trim() || av.id
+          const nome = String(av.pacientes.nome).trim().toLowerCase()
           if (map.has(nome)) {
             const existing = map.get(nome)
             const existingIsVenda =
@@ -360,7 +365,10 @@ export default function FunilVendas() {
 
       <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900/80 p-2 rounded-xl shadow-sm border border-slate-800">
         <button
-          onClick={() => setView('dashboard')}
+          onClick={() => {
+            setView('dashboard')
+            fetchData(true)
+          }}
           className={cn(
             'px-5 py-2.5 text-sm font-bold transition-all rounded-lg uppercase tracking-wider flex items-center gap-2',
             view === 'dashboard'
