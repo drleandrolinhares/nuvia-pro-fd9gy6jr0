@@ -193,7 +193,7 @@ export function FunilDashboard({
 
     return {
       ...padrao,
-      leads: 0,
+      leads: padrao.leads,
       agendamentos: unifiedAgendamentos.size,
       comparecimentos: unifiedComparecimentos.size,
       faltas: unifiedFaltas.size,
@@ -359,34 +359,25 @@ export function FunilDashboard({
   )
 
   const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => {
-    const isSecundario = funilName === 'Funil Secundário'
-
     return (
-      <div
-        className={cn(
-          'grid gap-3 text-center',
-          isSecundario ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-5',
-        )}
-      >
-        {!isSecundario && (
-          <div
-            className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
-            onClick={() =>
-              setModalConfig({
-                isOpen: true,
-                type: 'leads',
-                origens: origensFilter,
-                title: `Leads - ${funilName}`,
-              })
-            }
-          >
-            <Users className="w-5 h-5 text-slate-400 mb-2" />
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Leads
-            </span>
-            <span className="text-2xl font-bold text-white">{totais.leads}</span>
-          </div>
-        )}
+      <div className="grid gap-3 text-center grid-cols-2 md:grid-cols-5">
+        <div
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'leads',
+              origens: origensFilter,
+              title: `Leads - ${funilName}`,
+            })
+          }
+        >
+          <Users className="w-5 h-5 text-slate-400 mb-2" />
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            Leads
+          </span>
+          <span className="text-2xl font-bold text-white">{totais.leads}</span>
+        </div>
         <div
           className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
           onClick={() =>

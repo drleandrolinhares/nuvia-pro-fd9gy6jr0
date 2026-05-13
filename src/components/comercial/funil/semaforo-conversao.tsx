@@ -234,7 +234,7 @@ export function SemaforoConversao({
 
       secundarioMetrics = {
         ...secundarioMetrics,
-        total: 0,
+        total: secundarioMetrics.total,
         agendados: unifiedAgendamentos.size,
         compareceram: unifiedComparecimentos.size,
         faltantes: unifiedFaltas.size,
@@ -542,12 +542,8 @@ function FunilMetricsBlock({
   onCardClick: (type: string) => void
   funilName: string
 }) {
-  const isSecundario = funilName === 'Funil Secundário'
-
   const percAgendamento =
-    !isSecundario && metrics.total > 0
-      ? Math.round((metrics.agendados / metrics.total) * 100)
-      : null
+    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : null
   const percComparecimento =
     metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
   const percFaltantes =
@@ -556,27 +552,20 @@ function FunilMetricsBlock({
     metrics.compareceram > 0 ? Math.round((metrics.qtdeVendas / metrics.compareceram) * 100) : 0
 
   return (
-    <div
-      className={cn(
-        'grid gap-4',
-        isSecundario ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-5',
-      )}
-    >
-      {!isSecundario && (
-        <div
-          className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
-          onClick={() => onCardClick('leads')}
-        >
-          <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
-            <Users className="w-8 h-8 text-blue-500" />
-          </div>
-          <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
-            Total de Leads
-          </h3>
-          <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
-          <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-5">
+      <div
+        className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
+        onClick={() => onCardClick('leads')}
+      >
+        <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
+          <Users className="w-8 h-8 text-blue-500" />
         </div>
-      )}
+        <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
+          Total de Leads
+        </h3>
+        <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
+        <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
+      </div>
 
       <SemaforoCard
         title="Agendamentos"
@@ -584,7 +573,7 @@ function FunilMetricsBlock({
         percentage={percAgendamento}
         type="agendamento"
         icon={CalendarCheck}
-        subtitle={isSecundario ? `Total Agendados` : `% sobre Total de Leads`}
+        subtitle="% sobre Total de Leads"
         onClick={() => onCardClick('agendamentos')}
       />
       <SemaforoCard
