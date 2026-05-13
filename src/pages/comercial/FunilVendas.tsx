@@ -274,7 +274,7 @@ export default function FunilVendas() {
       const oId = av.origem_id
       const status = (av.status || '').toLowerCase()
 
-      if (['erro', 'rascunho'].includes(status)) {
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
         return false
       }
 

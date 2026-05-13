@@ -5987,29 +5987,29 @@ export const Constants = {
 //       v_faltas INT;
 //       v_valor_fechado NUMERIC;
 //     BEGIN
-//       -- Contagem exclusiva de Leads (apenas quem NÃO avançou para avaliação ou venda)
-//       SELECT COUNT(*) INTO v_total_leads FROM public.funil_leads
+//       -- Contagem exclusiva de Leads usando DISTINCT para evitar contagem de fantasmas
+//       SELECT COUNT(DISTINCT lower(trim(nome))) INTO v_total_leads FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND LOWER(status) NOT IN ('venda-fechada', 'venda_concretizada', 'fechamento', 'avaliacao');
+//       AND status NOT IN ('venda-fechada', 'venda_concretizada', 'fechamento', 'avaliacao');
 //
-//       -- Agendamentos (mantém histórico do funil para métricas de conversão)
+//       -- Agendamentos
 //       SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND LOWER(status) IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
+//       AND status IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
-//       -- Comparecimentos (mantém histórico)
-//       SELECT COUNT(*) INTO v_comparecimentos FROM public.funil_leads
+//       -- Comparecimentos
+//       SELECT COUNT(DISTINCT lower(trim(nome))) INTO v_comparecimentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND LOWER(status) IN ('atendido', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
+//       AND status IN ('atendido', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
 //
 //       -- Fechamentos
-//       SELECT COUNT(*) INTO v_fechamentos FROM public.funil_leads
+//       SELECT COUNT(DISTINCT lower(trim(nome))) INTO v_fechamentos FROM public.funil_leads
 //       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
-//       AND LOWER(status) IN ('fechamento', 'venda-fechada', 'venda_concretizada');
+//       AND status IN ('fechamento', 'venda-fechada', 'venda_concretizada');
 //
 //       -- Faltas
 //       SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
@@ -6059,7 +6059,7 @@ export const Constants = {
 //         faltas_realizado = EXCLUDED.faltas_realizado,
 //         atualizado_em = NOW();
 //     END;
-//     $function$
+//   $function$
 //
 // FUNCTION gerar_adiantamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)

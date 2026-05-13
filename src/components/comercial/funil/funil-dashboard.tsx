@@ -127,8 +127,10 @@ export function FunilDashboard({
       const oId = lead.origem_id
       if (!isSecundario(oId)) return
 
-      const nome = lead.nome ? String(lead.nome).trim().toLowerCase() : lead.id
       const status = (lead.status || '').toLowerCase()
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+      const nome = lead.nome ? String(lead.nome).trim().toLowerCase() : lead.id
 
       const isAgendado = [
         'agendado',
@@ -193,7 +195,7 @@ export function FunilDashboard({
     const map = new Map()
     avaliacoes.forEach((a: any) => {
       const status = (a.status || '').toLowerCase()
-      if (['erro', 'rascunho'].includes(status)) {
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
         return
       }
 
