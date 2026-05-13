@@ -6744,9 +6744,11 @@ export const Constants = {
 //       WHERE paciente_id = NEW.paciente_id
 //         AND to_char(COALESCE(data_avaliacao, criado_em, CURRENT_DATE)::date, 'YYYY-MM') = to_char(COALESCE(NEW.data_avaliacao, NEW.criado_em, CURRENT_DATE)::date, 'YYYY-MM')
 //         AND id != NEW.id
+//         AND status != 'venda_concretizada'
+//         AND status != 'venda-fechada'
 //         AND NEW.status != 'venda_concretizada'
+//         AND NEW.status != 'venda-fechada'
 //     ) THEN
-//       -- Substituído RAISE EXCEPTION por RAISE WARNING para não bloquear a transação em vendas
 //       RAISE WARNING 'Já existe uma oportunidade registrada para este paciente neste mês.';
 //     END IF;
 //     RETURN NEW;
@@ -7091,6 +7093,34 @@ export const Constants = {
 //     END;
 //     $function$
 //
+// FUNCTION trg_vendas_confirmadas_update_funil()
+//   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_update_funil()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF TG_OP = 'UPDATE' THEN
+//       IF OLD.valor_tratamento IS DISTINCT FROM NEW.valor_tratamento OR OLD.data_fechamento IS DISTINCT FROM NEW.data_fechamento OR OLD.origem_id IS DISTINCT FROM NEW.origem_id THEN
+//         IF OLD.origem_id IS NOT NULL THEN
+//           PERFORM public.atualizar_funil_dados_mensais(OLD.origem_id, to_char(OLD.data_fechamento::date, 'YYYY-MM'));
+//         END IF;
+//         IF NEW.origem_id IS NOT NULL THEN
+//           PERFORM public.atualizar_funil_dados_mensais(NEW.origem_id, to_char(NEW.data_fechamento::date, 'YYYY-MM'));
+//         END IF;
+//       END IF;
+//     ELSIF TG_OP = 'INSERT' THEN
+//       IF NEW.origem_id IS NOT NULL THEN
+//         PERFORM public.atualizar_funil_dados_mensais(NEW.origem_id, to_char(NEW.data_fechamento::date, 'YYYY-MM'));
+//       END IF;
+//     ELSIF TG_OP = 'DELETE' THEN
+//       IF OLD.origem_id IS NOT NULL THEN
+//         PERFORM public.atualizar_funil_dados_mensais(OLD.origem_id, to_char(OLD.data_fechamento::date, 'YYYY-MM'));
+//       END IF;
+//     END IF;
+//     RETURN NULL;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: avaliacoes
@@ -7120,6 +7150,7 @@ export const Constants = {
 //   sync_vendas_to_avaliacoes_trigger: CREATE TRIGGER sync_vendas_to_avaliacoes_trigger AFTER UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_to_avaliacoes()
 //   trg_garantir_avaliacao_para_venda_tg: CREATE TRIGGER trg_garantir_avaliacao_para_venda_tg BEFORE INSERT ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_garantir_avaliacao_para_venda()
 //   trg_vendas_confirmadas_to_funil_tg: CREATE TRIGGER trg_vendas_confirmadas_to_funil_tg AFTER INSERT OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_vendas_confirmadas_to_funil()
+//   trg_vendas_confirmadas_update_funil_tg: CREATE TRIGGER trg_vendas_confirmadas_update_funil_tg AFTER INSERT OR DELETE OR UPDATE ON public.vendas_confirmadas FOR EACH ROW EXECUTE FUNCTION trg_vendas_confirmadas_update_funil()
 // Table: vendas_diarias
 //   sync_vendas_diarias: CREATE TRIGGER sync_vendas_diarias AFTER INSERT OR DELETE OR UPDATE ON public.vendas_diarias FOR EACH ROW EXECUTE FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 

@@ -321,7 +321,7 @@ export default function FunilVendas() {
     fetchData(true)
 
     const channel = supabase
-      .channel('funil-vendas')
+      .channel(`funil-vendas-${Math.random()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'funil_dados_mensais' }, () =>
         fetchData(false),
       )

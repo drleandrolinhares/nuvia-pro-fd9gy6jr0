@@ -109,6 +109,17 @@ export function VendasConcretizadasLista({
 
   useEffect(() => {
     fetchVendas()
+
+    const channel = supabase
+      .channel(`vendas-concretizadas-${Math.random()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () => {
+        fetchVendas()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [periodo, dataInicio, dataFim])
 
   useEffect(() => {

@@ -55,38 +55,13 @@ export function SemaforoConversao({
     title: '',
   })
 
-  const [realVendas, setRealVendas] = useState({ qtde: 0, valor: 0, loaded: false })
-
-  useEffect(() => {
-    const fetchRealVendas = async () => {
-      try {
-        const [ano, mes] = mesReferencia.split('-')
-        const dataInicio = `${mesReferencia}-01`
-        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-        const dataFim = `${mesReferencia}-${ultimoDia}`
-
-        const { data } = await supabase
-          .from('vendas_confirmadas')
-          .select('valor_tratamento')
-          .gte('data_fechamento', dataInicio)
-          .lte('data_fechamento', dataFim)
-
-        if (data) {
-          setRealVendas({
-            qtde: data.length,
-            valor: data.reduce((acc, curr) => acc + Number(curr.valor_tratamento || 0), 0),
-            loaded: true,
-          })
-        }
-      } catch (err) {
-        console.error('Erro ao buscar vendas reais:', err)
-      }
+  const realVendas = useMemo(() => {
+    return {
+      qtde: vendas.length,
+      valor: vendas.reduce((acc, curr) => acc + Number(curr.valor_tratamento || 0), 0),
+      loaded: true,
     }
-
-    if (mesReferencia) {
-      fetchRealVendas()
-    }
-  }, [mesReferencia])
+  }, [vendas])
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {

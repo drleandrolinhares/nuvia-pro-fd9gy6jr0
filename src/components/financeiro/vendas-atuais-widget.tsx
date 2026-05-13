@@ -2,11 +2,17 @@ import { useState, useEffect } from 'react'
 import { Plus, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
-import { startOfMonth, endOfMonth, format } from 'date-fns'
+import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, format } from 'date-fns'
 import { useCache } from '@/hooks/use-cache'
 import { HistoricoVendasModal } from './historico-vendas-modal'
 
-export function VendasAtuaisWidget() {
+interface Props {
+  periodo?: string
+  dataInicio?: string
+  dataFim?: string
+}
+
+export function VendasAtuaisWidget({ periodo = 'mes_atual', dataInicio, dataFim }: Props = {}) {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [totalVendasMes, setTotalVendasMes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -15,16 +21,59 @@ export function VendasAtuaisWidget() {
   useEffect(() => {
     const fetchVendas = async (isInitial = false) => {
       if (isInitial) setLoading(true)
-      const todayDate = new Date()
-      const startOfMonthStr = format(startOfMonth(todayDate), 'yyyy-MM-dd')
-      const endOfMonthStr = format(endOfMonth(todayDate), 'yyyy-MM-dd')
 
-      // Agora lemos apenas vendas_confirmadas pois a tabela está unificada com as vendas_diarias via banco
-      const { data } = await supabase
-        .from('vendas_confirmadas')
-        .select('valor_tratamento')
-        .gte('data_fechamento', startOfMonthStr)
-        .lte('data_fechamento', endOfMonthStr)
+      let sd, ed
+      const todayDate = new Date()
+
+      switch (periodo) {
+        case 'hoje':
+          sd = startOfDay(todayDate)
+          ed = endOfDay(todayDate)
+          break
+        case 'ontem':
+          sd = startOfDay(subDays(todayDate, 1))
+          ed = endOfDay(subDays(todayDate, 1))
+          break
+        case 'ultimos_7':
+          sd = startOfDay(subDays(todayDate, 7))
+          ed = endOfDay(todayDate)
+          break
+        case 'ultimos_15':
+          sd = startOfDay(subDays(todayDate, 15))
+          ed = endOfDay(todayDate)
+          break
+        case 'mes_atual':
+          sd = startOfMonth(todayDate)
+          ed = endOfMonth(todayDate)
+          break
+        case 'personalizado':
+          if (dataInicio) {
+            const [y, m, d] = dataInicio.split('-').map(Number)
+            sd = startOfDay(new Date(y, m - 1, d))
+          }
+          if (dataFim) {
+            const [y, m, d] = dataFim.split('-').map(Number)
+            ed = endOfDay(new Date(y, m - 1, d))
+          }
+          break
+        case 'todos':
+          break
+        default:
+          if (periodo && periodo.match(/^\d{4}-\d{2}$/)) {
+            const [y, m] = periodo.split('-').map(Number)
+            const parsedDate = new Date(y, m - 1, 1)
+            sd = startOfMonth(parsedDate)
+            ed = endOfMonth(parsedDate)
+          }
+          break
+      }
+
+      let query = supabase.from('vendas_confirmadas').select('valor_tratamento')
+
+      if (sd) query = query.gte('data_fechamento', format(sd, 'yyyy-MM-dd'))
+      if (ed) query = query.lte('data_fechamento', format(ed, 'yyyy-MM-dd'))
+
+      const { data } = await query
 
       let total = 0
       if (data) {
@@ -37,7 +86,7 @@ export function VendasAtuaisWidget() {
     fetchVendas(true)
 
     const channel = supabase
-      .channel('vendas-atuais')
+      .channel(`vendas-atuais-${Math.random()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () => {
         fetchVendas()
       })
@@ -46,7 +95,7 @@ export function VendasAtuaisWidget() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [dataVersion])
+  }, [dataVersion, periodo, dataInicio, dataFim])
 
   return (
     <>

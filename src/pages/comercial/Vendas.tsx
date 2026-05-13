@@ -191,7 +191,7 @@ export default function Vendas() {
     fetchAvaliacoes()
 
     const channel = supabase
-      .channel('vendas-page')
+      .channel(`vendas-page-${Math.random()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () => {
         fetchAvaliacoes()
       })
@@ -267,9 +267,21 @@ export default function Vendas() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <OportunidadesWidget />
-          <QuantidadeVendasWidget />
-          <VendasAtuaisWidget />
+          <OportunidadesWidget
+            periodo={filters.periodo}
+            dataInicio={filters.dataInicio}
+            dataFim={filters.dataFim}
+          />
+          <QuantidadeVendasWidget
+            periodo={filters.periodo}
+            dataInicio={filters.dataInicio}
+            dataFim={filters.dataFim}
+          />
+          <VendasAtuaisWidget
+            periodo={filters.periodo}
+            dataInicio={filters.dataInicio}
+            dataFim={filters.dataFim}
+          />
           {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
         </div>
       </div>
