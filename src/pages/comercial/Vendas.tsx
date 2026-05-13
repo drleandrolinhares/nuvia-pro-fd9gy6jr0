@@ -189,6 +189,20 @@ export default function Vendas() {
 
   useEffect(() => {
     fetchAvaliacoes()
+
+    const channel = supabase
+      .channel('vendas-page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () => {
+        fetchAvaliacoes()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () => {
+        fetchAvaliacoes()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [fetchAvaliacoes])
 
   const handleSort = (col: string) => {

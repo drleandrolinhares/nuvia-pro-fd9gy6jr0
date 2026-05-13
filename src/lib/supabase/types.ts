@@ -6744,8 +6744,10 @@ export const Constants = {
 //       WHERE paciente_id = NEW.paciente_id
 //         AND to_char(COALESCE(data_avaliacao, criado_em, CURRENT_DATE)::date, 'YYYY-MM') = to_char(COALESCE(NEW.data_avaliacao, NEW.criado_em, CURRENT_DATE)::date, 'YYYY-MM')
 //         AND id != NEW.id
+//         AND NEW.status != 'venda_concretizada'
 //     ) THEN
-//       RAISE EXCEPTION 'Já existe uma oportunidade registrada para este paciente neste mês.';
+//       -- Substituído RAISE EXCEPTION por RAISE WARNING para não bloquear a transação em vendas
+//       RAISE WARNING 'Já existe uma oportunidade registrada para este paciente neste mês.';
 //     END IF;
 //     RETURN NEW;
 //   END;

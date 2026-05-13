@@ -319,6 +319,26 @@ export default function FunilVendas() {
 
   useEffect(() => {
     fetchData(true)
+
+    const channel = supabase
+      .channel('funil-vendas')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'funil_dados_mensais' }, () =>
+        fetchData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'funil_leads' }, () =>
+        fetchData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () =>
+        fetchData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () =>
+        fetchData(false),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [mesReferencia])
 
   const mesesOptions = Array.from({ length: 12 }).map((_, i) => {

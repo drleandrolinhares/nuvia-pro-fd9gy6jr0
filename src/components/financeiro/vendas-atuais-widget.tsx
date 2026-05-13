@@ -13,8 +13,8 @@ export function VendasAtuaisWidget() {
   const { dataVersion } = useCache()
 
   useEffect(() => {
-    const fetchVendas = async () => {
-      setLoading(true)
+    const fetchVendas = async (isInitial = false) => {
+      if (isInitial) setLoading(true)
       const todayDate = new Date()
       const startOfMonthStr = format(startOfMonth(todayDate), 'yyyy-MM-dd')
       const endOfMonthStr = format(endOfMonth(todayDate), 'yyyy-MM-dd')
@@ -32,9 +32,20 @@ export function VendasAtuaisWidget() {
       }
 
       setTotalVendasMes(total)
-      setLoading(false)
+      if (isInitial) setLoading(false)
     }
-    fetchVendas()
+    fetchVendas(true)
+
+    const channel = supabase
+      .channel('vendas-atuais')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () => {
+        fetchVendas()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [dataVersion])
 
   return (

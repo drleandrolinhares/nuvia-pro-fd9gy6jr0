@@ -8,7 +8,7 @@ export function OportunidadesWidget() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(isInitial = false) {
       try {
         const today = new Date()
         const start = format(startOfMonth(today), 'yyyy-MM-dd')
@@ -33,11 +33,22 @@ export function OportunidadesWidget() {
       } catch (err) {
         console.error(err)
       } finally {
-        setLoading(false)
+        if (isInitial) setLoading(false)
       }
     }
 
-    fetchData()
+    fetchData(true)
+
+    const channel = supabase
+      .channel('oportunidades-widget')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () =>
+        fetchData(),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   return (
