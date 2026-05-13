@@ -119,16 +119,16 @@ const navData = [
     icon: Briefcase,
     items: [
       {
-        title: 'GESTÃO DE VENDAS',
-        url: '/comercial/vendas',
-        icon: FileBarChart,
-        permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
-      },
-      {
         title: 'FUNIL DE VENDAS',
         url: '/comercial/funil',
         icon: Filter,
         permission: ['comercial_funil', 'Acessar Funil de Vendas'],
+      },
+      {
+        title: 'GESTÃO DE VENDAS',
+        url: '/comercial/vendas',
+        icon: FileBarChart,
+        permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
       },
       {
         title: 'COMISSÕES',
