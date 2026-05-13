@@ -459,6 +459,8 @@ export default function FunilVendas() {
           origens={origens}
           dados={dadosMensais}
           avaliacoes={avaliacoesMes}
+          leads={leadsMes}
+          vendas={vendasMes}
         />
       ) : view === 'vendas_concretizadas' ? (
         <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 shadow-sm overflow-hidden">

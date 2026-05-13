@@ -21,6 +21,8 @@ interface SemaforoConversaoProps {
   origens?: any[]
   dados?: any[]
   avaliacoes?: any[]
+  leads?: any[]
+  vendas?: any[]
 }
 
 interface FunilMetrics {
@@ -38,6 +40,8 @@ export function SemaforoConversao({
   origens = [],
   dados = [],
   avaliacoes = [],
+  leads = [],
+  vendas = [],
 }: SemaforoConversaoProps) {
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean
@@ -124,7 +128,7 @@ export function SemaforoConversao({
         .map((o) => o.id) || []
 
     const isClassico = (origemId: string) => origensClassicoIds.includes(origemId)
-    const isSecundario = (origemId: string) => !isClassico(origemId)
+    const isSecundario = (origemId: string) => origensSecundarioIds.includes(origemId)
 
     const calcGroup = (filterFn: (oId: string) => boolean) => {
       return dadosAjustados
@@ -153,7 +157,89 @@ export function SemaforoConversao({
 
     const globalMetrics = calcGroup(() => true)
     const classicoMetrics = calcGroup(isClassico)
-    const secundarioMetrics = calcGroup(isSecundario)
+    let secundarioMetrics = calcGroup(isSecundario)
+
+    if (leads && avaliacoes && vendas) {
+      const unifiedAgendamentos = new Map()
+      const unifiedComparecimentos = new Map()
+      const unifiedFaltas = new Map()
+
+      leads.forEach((lead: any) => {
+        const oId = lead.origem_id
+        if (!isSecundario(oId)) return
+
+        const status = (lead.status || '').toLowerCase()
+        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+        if (!lead.nome || String(lead.nome).trim() === '') return
+        const nome = String(lead.nome).trim().toLowerCase()
+        if (nome.includes('teste') || nome.includes('duplicado')) return
+
+        const isAgendado = [
+          'agendado',
+          'reagendado',
+          'atendido',
+          'faltou',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(status)
+        const isCompareceu = [
+          'atendido',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(status)
+        const isFaltante = status === 'faltou'
+
+        if (isAgendado) unifiedAgendamentos.set(nome, true)
+        if (isCompareceu) unifiedComparecimentos.set(nome, true)
+        if (isFaltante) unifiedFaltas.set(nome, true)
+      })
+
+      avaliacoes.forEach((av: any) => {
+        const oId = av.origem_id
+        if (!isSecundario(oId)) return
+
+        const status = (av.status || '').toLowerCase()
+        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+        if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
+        const nome = String(av.pacientes.nome).trim().toLowerCase()
+        if (nome.includes('teste') || nome.includes('duplicado')) return
+
+        unifiedAgendamentos.set(nome, true)
+        unifiedComparecimentos.set(nome, true)
+      })
+
+      vendas.forEach((v: any) => {
+        const oId = v.origem_id || v.avaliacoes?.origem_id
+        if (!isSecundario(oId)) return
+
+        if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
+        const nome = String(v.paciente_nome).trim().toLowerCase()
+        if (nome.includes('teste') || nome.includes('duplicado')) return
+
+        unifiedAgendamentos.set(nome, true)
+        unifiedComparecimentos.set(nome, true)
+      })
+
+      secundarioMetrics = {
+        ...secundarioMetrics,
+        total: 0,
+        agendados: unifiedAgendamentos.size,
+        compareceram: unifiedComparecimentos.size,
+        faltantes: unifiedFaltas.size,
+      }
+    }
 
     const valorOportunidadesBruto = avaliacoes.reduce(
       (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
@@ -177,7 +263,7 @@ export function SemaforoConversao({
       origensClassicoIds,
       origensSecundarioIds,
     }
-  }, [dadosAjustados, origens, avaliacoes, realVendas])
+  }, [dadosAjustados, origens, avaliacoes, realVendas, leads, vendas])
 
   const conversaoFinanceira =
     metrics.valorOportunidades > 0 ? (metrics.valorVendas / metrics.valorOportunidades) * 100 : 0
@@ -456,8 +542,12 @@ function FunilMetricsBlock({
   onCardClick: (type: string) => void
   funilName: string
 }) {
+  const isSecundario = funilName === 'Funil Secundário'
+
   const percAgendamento =
-    metrics.total > 0 ? Math.round((metrics.agendados / metrics.total) * 100) : 0
+    !isSecundario && metrics.total > 0
+      ? Math.round((metrics.agendados / metrics.total) * 100)
+      : null
   const percComparecimento =
     metrics.agendados > 0 ? Math.round((metrics.compareceram / metrics.agendados) * 100) : 0
   const percFaltantes =
@@ -466,20 +556,27 @@ function FunilMetricsBlock({
     metrics.compareceram > 0 ? Math.round((metrics.qtdeVendas / metrics.compareceram) * 100) : 0
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div
-        className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
-        onClick={() => onCardClick('leads')}
-      >
-        <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
-          <Users className="w-8 h-8 text-blue-500" />
+    <div
+      className={cn(
+        'grid gap-4',
+        isSecundario ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-5',
+      )}
+    >
+      {!isSecundario && (
+        <div
+          className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg cursor-pointer hover:bg-slate-800 transition-colors"
+          onClick={() => onCardClick('leads')}
+        >
+          <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-blue-500/20">
+            <Users className="w-8 h-8 text-blue-500" />
+          </div>
+          <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
+            Total de Leads
+          </h3>
+          <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
+          <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
         </div>
-        <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
-          Total de Leads
-        </h3>
-        <div className="text-4xl font-bold mb-2 text-white">{metrics.total}</div>
-        <p className="text-sm text-slate-400 font-medium">100% da base filtrada</p>
-      </div>
+      )}
 
       <SemaforoCard
         title="Agendamentos"
@@ -487,7 +584,7 @@ function FunilMetricsBlock({
         percentage={percAgendamento}
         type="agendamento"
         icon={CalendarCheck}
-        subtitle={`% sobre Total de Leads`}
+        subtitle={isSecundario ? `Total Agendados` : `% sobre Total de Leads`}
         onClick={() => onCardClick('agendamentos')}
       />
       <SemaforoCard
@@ -525,62 +622,80 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle, on
   let colorClass = 'text-slate-400 bg-slate-800/50 border-slate-700'
   let indicator = 'bg-slate-500'
   let iconColor = 'text-slate-400'
+  let ringClass = 'ring-slate-500/20'
 
-  if (type === 'agendamento') {
+  if (percentage === null) {
+    colorClass = 'bg-blue-500/5 border-blue-500/20'
+    indicator = 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]'
+    iconColor = 'text-blue-500'
+    ringClass = 'ring-blue-500/20'
+  } else if (type === 'agendamento') {
     if (percentage >= 40) {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
+      ringClass = 'ring-emerald-500/20'
     } else if (percentage >= 20) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
+      ringClass = 'ring-yellow-500/20'
     } else {
       colorClass = 'bg-rose-500/5 border-rose-500/20'
       indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
       iconColor = 'text-rose-500'
+      ringClass = 'ring-rose-500/20'
     }
   } else if (type === 'comparecimento') {
     if (percentage >= 50) {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
+      ringClass = 'ring-emerald-500/20'
     } else if (percentage >= 30) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
+      ringClass = 'ring-yellow-500/20'
     } else {
       colorClass = 'bg-rose-500/5 border-rose-500/20'
       indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
       iconColor = 'text-rose-500'
+      ringClass = 'ring-rose-500/20'
     }
   } else if (type === 'faltante') {
     if (percentage >= 30) {
       colorClass = 'bg-rose-500/5 border-rose-500/20'
       indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
       iconColor = 'text-rose-500'
+      ringClass = 'ring-rose-500/20'
     } else if (percentage >= 15) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
+      ringClass = 'ring-yellow-500/20'
     } else {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
+      ringClass = 'ring-emerald-500/20'
     }
   } else if (type === 'fechamento') {
     if (percentage >= 30) {
       colorClass = 'bg-emerald-500/5 border-emerald-500/20'
       indicator = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
       iconColor = 'text-emerald-500'
+      ringClass = 'ring-emerald-500/20'
     } else if (percentage >= 15) {
       colorClass = 'bg-yellow-500/5 border-yellow-500/20'
       indicator = 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]'
       iconColor = 'text-yellow-500'
+      ringClass = 'ring-yellow-500/20'
     } else {
       colorClass = 'bg-rose-500/5 border-rose-500/20'
       indicator = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
       iconColor = 'text-rose-500'
+      ringClass = 'ring-rose-500/20'
     }
   }
 
@@ -595,16 +710,20 @@ function SemaforoCard({ title, value, percentage, type, icon: Icon, subtitle, on
       <div
         className={cn('absolute top-4 right-4 w-3 h-3 rounded-full animate-pulse', indicator)}
       ></div>
-      <div className={cn('p-4 bg-slate-900 rounded-full mb-4 ring-1', `ring-${iconColor}/20`)}>
+      <div className={cn('p-4 bg-slate-900 rounded-full mb-4 ring-1', ringClass)}>
         <Icon className={cn('w-8 h-8', iconColor)} />
       </div>
       <h3 className="text-lg font-semibold mb-1 uppercase tracking-wider text-slate-200">
         {title}
       </h3>
-      <div className={cn('text-4xl font-bold mb-2', iconColor)}>{percentage}%</div>
+      {percentage !== null ? (
+        <div className={cn('text-4xl font-bold mb-2', iconColor)}>{percentage}%</div>
+      ) : (
+        <div className={cn('text-4xl font-bold mb-2', iconColor)}>-</div>
+      )}
       <div className="flex flex-col gap-1 items-center mt-auto pt-2">
         <span className="text-sm font-semibold text-white bg-slate-800/80 px-3 py-1 rounded-md">
-          {value} leads
+          {value} {title === 'Fechamentos' ? 'vendas' : 'leads'}
         </span>
         <span className="text-xs font-medium text-slate-400 mt-1">{subtitle}</span>
       </div>
