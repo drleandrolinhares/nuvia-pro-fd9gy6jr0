@@ -16,6 +16,12 @@ import {
   FileDown,
   FileText,
   Edit,
+  Target,
+  DollarSign,
+  Percent,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import {
   Table,
@@ -90,11 +96,19 @@ export function EditarDadosDialog({
   const [vendas, setVendas] = useState<any[]>([])
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null)
   const [vendaEditando, setVendaEditando] = useState<any>(null)
+  const [showForm, setShowForm] = useState(false)
 
   const [analiseData, setAnaliseData] = useState({
     fechamentoNoAto: { qtd: 0, valor: 0 },
     followMes: { qtd: 0, valor: 0 },
     followResgate: { qtd: 0, valor: 0 },
+    metricas: {
+      oportunidades: 0,
+      totalVendas: 0,
+      conversao: 0,
+      qtdFechamentos: 0,
+      ticketMedio: 0,
+    },
     loading: true,
   })
 
@@ -134,6 +148,7 @@ export function EditarDadosDialog({
         fechamentos_valor_realizado: dado?.fechamentos_valor_realizado || 0,
       })
       setFiltroTipo(null)
+      setShowForm(false)
       fetchAnalise()
     }
   }, [open, dado, mesReferencia, origem.id])
@@ -146,7 +161,7 @@ export function EditarDadosDialog({
       const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
       const dataFim = `${mesReferencia}-${ultimoDia}`
 
-      const { data: vendasData, error } = await supabase
+      const { data: vendasData, error: vendasError } = await supabase
         .from('vendas_confirmadas')
         .select(`
           id,
@@ -164,7 +179,15 @@ export function EditarDadosDialog({
         .gte('data_fechamento', dataInicio)
         .lte('data_fechamento', dataFim)
 
-      if (error) throw error
+      if (vendasError) throw vendasError
+
+      const { data: avaliacoesData, error: avaliacoesError } = await supabase
+        .from('avaliacoes')
+        .select('id, origem_id, valor_orcamento, status, data_avaliacao, pacientes(nome)')
+        .gte('data_avaliacao', dataInicio)
+        .lte('data_avaliacao', dataFim)
+
+      if (avaliacoesError) throw avaliacoesError
 
       const vendasOrigem = (vendasData || [])
         .filter((v: any) => (v.origem_id || v.avaliacoes?.origem_id) === origem.id)
@@ -192,8 +215,10 @@ export function EditarDadosDialog({
       const fMes = { qtd: 0, valor: 0 }
       const fResgate = { qtd: 0, valor: 0 }
 
+      let totalVendas = 0
       vendasOrigem.forEach((v: any) => {
         const valor = Number(v.valor_tratamento || 0)
+        totalVendas += valor
 
         if (v.tipo === 'FECHAMENTO NO ATO') {
           noAto.qtd++
@@ -207,11 +232,58 @@ export function EditarDadosDialog({
         }
       })
 
+      const avaliacoesOrigem = (avaliacoesData || []).filter((a: any) => a.origem_id === origem.id)
+
+      const processado = new Map()
+      avaliacoesOrigem.forEach((av: any) => {
+        const status = (av.status || '').toLowerCase()
+        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+        if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
+        const nome = String(av.pacientes.nome).trim().toLowerCase()
+        if (nome.includes('teste') || nome.includes('duplicado')) return
+
+        if (processado.has(nome)) {
+          const existing = processado.get(nome)
+          const existingIsVenda =
+            existing.status === 'venda_concretizada' || existing.status === 'venda-fechada'
+          const newIsVenda = av.status === 'venda_concretizada' || av.status === 'venda-fechada'
+
+          if (
+            !existingIsVenda &&
+            (newIsVenda || Number(av.valor_orcamento || 0) > Number(existing.valor_orcamento || 0))
+          ) {
+            processado.set(nome, av)
+          }
+        } else {
+          processado.set(nome, av)
+        }
+      })
+
+      const deduplicatedAvaliacoes = Array.from(processado.values())
+
+      let valorOportunidades = deduplicatedAvaliacoes.reduce(
+        (acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0),
+        0,
+      )
+
+      valorOportunidades = Math.max(valorOportunidades, totalVendas)
+      const qtdFechamentos = vendasOrigem.length
+      const conversao = valorOportunidades > 0 ? (totalVendas / valorOportunidades) * 100 : 0
+      const ticketMedio = qtdFechamentos > 0 ? totalVendas / qtdFechamentos : 0
+
       setVendas(vendasOrigem)
       setAnaliseData({
         fechamentoNoAto: noAto,
         followMes: fMes,
         followResgate: fResgate,
+        metricas: {
+          oportunidades: valorOportunidades,
+          totalVendas,
+          conversao,
+          qtdFechamentos,
+          ticketMedio,
+        },
         loading: false,
       })
     } catch (e: any) {
@@ -393,43 +465,107 @@ export function EditarDadosDialog({
                 <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <AnaliseCard
-                  title="Fechamento no Ato"
-                  desc="Mesmo dia da avaliação"
-                  qtd={analiseData.fechamentoNoAto.qtd}
-                  valor={analiseData.fechamentoNoAto.valor}
-                  color="emerald"
-                  Icon={Zap}
-                  isActive={filtroTipo === 'FECHAMENTO NO ATO'}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FECHAMENTO NO ATO' ? null : 'FECHAMENTO NO ATO')
-                  }
-                />
-                <AnaliseCard
-                  title="Fechamento por Follow do Mês"
-                  desc="Mesmo mês da avaliação"
-                  qtd={analiseData.followMes.qtd}
-                  valor={analiseData.followMes.valor}
-                  color="blue"
-                  Icon={CalendarDays}
-                  isActive={filtroTipo === 'FOLLOW DO MÊS'}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FOLLOW DO MÊS' ? null : 'FOLLOW DO MÊS')
-                  }
-                />
-                <AnaliseCard
-                  title="Fechamento por Follow Resgate"
-                  desc="Meses após a avaliação"
-                  qtd={analiseData.followResgate.qtd}
-                  valor={analiseData.followResgate.valor}
-                  color="purple"
-                  Icon={History}
-                  isActive={filtroTipo === 'FOLLOW RESGATE'}
-                  onClick={() =>
-                    setFiltroTipo(filtroTipo === 'FOLLOW RESGATE' ? null : 'FOLLOW RESGATE')
-                  }
-                />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <AnaliseCard
+                    title="Fechamento no Ato"
+                    desc="Mesmo dia da avaliação"
+                    qtd={analiseData.fechamentoNoAto.qtd}
+                    valor={analiseData.fechamentoNoAto.valor}
+                    color="emerald"
+                    Icon={Zap}
+                    isActive={filtroTipo === 'FECHAMENTO NO ATO'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FECHAMENTO NO ATO' ? null : 'FECHAMENTO NO ATO')
+                    }
+                  />
+                  <AnaliseCard
+                    title="Fechamento por Follow do Mês"
+                    desc="Mesmo mês da avaliação"
+                    qtd={analiseData.followMes.qtd}
+                    valor={analiseData.followMes.valor}
+                    color="blue"
+                    Icon={CalendarDays}
+                    isActive={filtroTipo === 'FOLLOW DO MÊS'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FOLLOW DO MÊS' ? null : 'FOLLOW DO MÊS')
+                    }
+                  />
+                  <AnaliseCard
+                    title="Fechamento por Follow Resgate"
+                    desc="Meses após a avaliação"
+                    qtd={analiseData.followResgate.qtd}
+                    valor={analiseData.followResgate.valor}
+                    color="purple"
+                    Icon={History}
+                    isActive={filtroTipo === 'FOLLOW RESGATE'}
+                    onClick={() =>
+                      setFiltroTipo(filtroTipo === 'FOLLOW RESGATE' ? null : 'FOLLOW RESGATE')
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-purple-500" />
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Oportunidades
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-white">
+                      {formatBrl(analiseData.metricas.oportunidades)}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-emerald-500" />
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Vendas (R$)
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-white">
+                      {formatBrl(analiseData.metricas.totalVendas)}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Percent className="w-4 h-4 text-blue-500" />
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Conversão Total
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-white">
+                      {analiseData.metricas.conversao.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckSquare className="w-4 h-4 text-emerald-500" />
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Fechamentos
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-white">
+                      {analiseData.metricas.qtdFechamentos}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-amber-500" />
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Ticket Médio
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-emerald-400">
+                      {formatBrl(analiseData.metricas.ticketMedio)}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -520,58 +656,310 @@ export function EditarDadosDialog({
             </div>
           )}
 
-          <div className="px-6 py-4">
-            <div className="h-px w-full bg-slate-800/60"></div>
+          <div className="px-6 py-4 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowForm(!showForm)}
+              className="w-full h-12 border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:text-white text-slate-300 font-semibold shadow-sm flex items-center justify-between px-6 transition-all"
+            >
+              <span className="flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-500" />
+                Lançamento Manual de Dados (Funil)
+              </span>
+              {showForm ? (
+                <ChevronUp className="w-5 h-5 text-slate-500" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-slate-500" />
+              )}
+            </Button>
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="p-6 pt-0 space-y-6">
-            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Edit2 className="w-4 h-4 text-blue-500" />
-              Lançamento de Dados do Funil
-            </h3>
+          {showForm && (
+            <form onSubmit={handleSubmit} className="p-6 pt-0 space-y-6 animate-fade-in-down">
+              <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-500" />
+                Lançamento de Dados do Funil
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Investimento & Leads */}
-              <div className="space-y-4">
-                <div className="bg-slate-800/30 p-5 rounded-xl border border-slate-700/50">
-                  <h4 className="font-bold text-slate-300 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                    Investimento e Captação
-                  </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Investimento & Leads */}
+                <div className="space-y-4">
+                  <div className="bg-slate-800/30 p-5 rounded-xl border border-slate-700/50">
+                    <h4 className="font-bold text-slate-300 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                      Investimento e Captação
+                    </h4>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-300">Valor Investido (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        name="investimento"
-                        value={formData.investimento}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-700 focus-visible:ring-amber-500 font-medium"
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">Valor Investido (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="investimento"
+                          value={formData.investimento}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-700 focus-visible:ring-amber-500 font-medium"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-slate-300">Leads (Realizado)</Label>
+                          <Input
+                            type="number"
+                            name="leads_realizado"
+                            value={formData.leads_realizado}
+                            onChange={handleChange}
+                            className="bg-slate-950 border-slate-700 font-medium"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-slate-400">Meta de Leads</Label>
+                          <Input
+                            type="number"
+                            name="meta_leads"
+                            value={formData.meta_leads}
+                            onChange={handleChange}
+                            className="bg-slate-950 border-slate-800 text-slate-400"
+                          />
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Agendamentos */}
+                <div className="space-y-4">
+                  <div className="bg-blue-950/10 p-5 rounded-xl border border-blue-900/30">
+                    <h4 className="font-bold text-blue-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      Agendamentos
+                    </h4>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-slate-300">Leads (Realizado)</Label>
+                        <Label className="text-slate-300">Qtd Realizado</Label>
                         <Input
                           type="number"
-                          name="leads_realizado"
-                          value={formData.leads_realizado}
+                          name="agendamentos_realizado"
+                          value={formData.agendamentos_realizado}
                           onChange={handleChange}
                           className="bg-slate-950 border-slate-700 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-slate-400">Meta de Leads</Label>
+                        <Label className="text-slate-400">Meta Qtde</Label>
                         <Input
                           type="number"
-                          name="meta_leads"
-                          value={formData.meta_leads}
+                          name="meta_agendamentos_qtde"
+                          value={formData.meta_agendamentos_qtde}
                           onChange={handleChange}
                           className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Meta (% Agend.)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          name="meta_agendamentos_perc"
+                          value={formData.meta_agendamentos_perc}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300 flex items-center gap-2">
+                          % Agendados
+                          <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="text"
+                          value={`${taxaAgendamento.toFixed(1)}%`}
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-blue-400 font-bold cursor-not-allowed opacity-80"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comparecimentos */}
+                <div className="space-y-4">
+                  <div className="bg-purple-950/10 p-5 rounded-xl border border-purple-900/30">
+                    <h4 className="font-bold text-purple-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                      Comparecimentos
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">Qtd Realizado</Label>
+                        <Input
+                          type="number"
+                          name="comparecimentos_realizado"
+                          value={formData.comparecimentos_realizado}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-700 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Meta Qtde</Label>
+                        <Input
+                          type="number"
+                          name="meta_comparecimentos_qtde"
+                          value={formData.meta_comparecimentos_qtde}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Meta (% Comp.)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          name="meta_comparecimentos_perc"
+                          value={formData.meta_comparecimentos_perc}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300 flex items-center gap-2">
+                          % Comparecidos
+                          <span className="text-[9px] text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="text"
+                          value={`${taxaComparecimento.toFixed(1)}%`}
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-purple-400 font-bold cursor-not-allowed opacity-80"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 mt-2">
+                        <div className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded text-xs border border-slate-800">
+                          <span className="text-slate-400">Faltas (Automático):</span>
+                          <span className="text-red-400 font-medium">
+                            {dado?.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fechamentos */}
+                <div className="space-y-4">
+                  <div className="bg-emerald-950/10 p-5 rounded-xl border border-emerald-900/30 h-full">
+                    <h4 className="font-bold text-emerald-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      Fechamentos (Vendas)
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-300 flex items-center gap-2">
+                          Qtd Realizado
+                          <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="number"
+                          name="fechamentos_qtde_realizado"
+                          value={formData.fechamentos_qtde_realizado}
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-emerald-500 font-medium cursor-not-allowed opacity-80"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400 flex items-center gap-2">
+                          Meta Qtde
+                          <span className="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="number"
+                          value={
+                            formData.ticket_medio_esperado
+                              ? Math.round(
+                                  formData.meta_fechamento_valor / formData.ticket_medio_esperado,
+                                )
+                              : 0
+                          }
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-slate-400 font-medium cursor-not-allowed opacity-70"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Meta (% Conv.)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          name="meta_fechamentos_perc"
+                          value={formData.meta_fechamentos_perc}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300 flex items-center gap-2">
+                          % Conversão
+                          <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="text"
+                          value={`${taxaFechamento.toFixed(1)}%`}
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-emerald-400 font-bold cursor-not-allowed opacity-80"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Meta Receita (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="meta_fechamento_valor"
+                          value={formData.meta_fechamento_valor}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-400">Ticket Médio Esp. (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="ticket_medio_esperado"
+                          value={formData.ticket_medio_esperado}
+                          onChange={handleChange}
+                          className="bg-slate-950 border-slate-800 text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 pt-2">
+                        <Label className="text-slate-300 flex items-center gap-2">
+                          Receita Realizada (R$)
+                          <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Auto
+                          </span>
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="fechamentos_valor_realizado"
+                          value={formData.fechamentos_valor_realizado}
+                          disabled
+                          className="bg-slate-900 border-slate-800 text-emerald-500 font-bold cursor-not-allowed opacity-80"
                         />
                       </div>
                     </div>
@@ -579,265 +967,30 @@ export function EditarDadosDialog({
                 </div>
               </div>
 
-              {/* Agendamentos */}
-              <div className="space-y-4">
-                <div className="bg-blue-950/10 p-5 rounded-xl border border-blue-900/30">
-                  <h4 className="font-bold text-blue-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    Agendamentos
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-300">Qtd Realizado</Label>
-                      <Input
-                        type="number"
-                        name="agendamentos_realizado"
-                        value={formData.agendamentos_realizado}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-700 font-medium"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta Qtde</Label>
-                      <Input
-                        type="number"
-                        name="meta_agendamentos_qtde"
-                        value={formData.meta_agendamentos_qtde}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta (% Agend.)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        name="meta_agendamentos_perc"
-                        value={formData.meta_agendamentos_perc}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        % Agendados
-                        <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="text"
-                        value={`${taxaAgendamento.toFixed(1)}%`}
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-blue-400 font-bold cursor-not-allowed opacity-80"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowForm(false)}
+                  className="hover:bg-slate-800 hover:text-white"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-amber-500 text-slate-950 hover:bg-amber-600 font-bold px-6"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Salvar Dados do Funil
+                </Button>
               </div>
-
-              {/* Comparecimentos */}
-              <div className="space-y-4">
-                <div className="bg-purple-950/10 p-5 rounded-xl border border-purple-900/30">
-                  <h4 className="font-bold text-purple-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                    Comparecimentos
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-300">Qtd Realizado</Label>
-                      <Input
-                        type="number"
-                        name="comparecimentos_realizado"
-                        value={formData.comparecimentos_realizado}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-700 font-medium"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta Qtde</Label>
-                      <Input
-                        type="number"
-                        name="meta_comparecimentos_qtde"
-                        value={formData.meta_comparecimentos_qtde}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta (% Comp.)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        name="meta_comparecimentos_perc"
-                        value={formData.meta_comparecimentos_perc}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        % Comparecidos
-                        <span className="text-[9px] text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="text"
-                        value={`${taxaComparecimento.toFixed(1)}%`}
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-purple-400 font-bold cursor-not-allowed opacity-80"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 mt-2">
-                      <div className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded text-xs border border-slate-800">
-                        <span className="text-slate-400">Faltas (Automático):</span>
-                        <span className="text-red-400 font-medium">
-                          {dado?.faltas_realizado || 0} faltas ({taxaFaltas.toFixed(1)}%)
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fechamentos */}
-              <div className="space-y-4">
-                <div className="bg-emerald-950/10 p-5 rounded-xl border border-emerald-900/30 h-full">
-                  <h4 className="font-bold text-emerald-400 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    Fechamentos (Vendas)
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        Qtd Realizado
-                        <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="number"
-                        name="fechamentos_qtde_realizado"
-                        value={formData.fechamentos_qtde_realizado}
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-emerald-500 font-medium cursor-not-allowed opacity-80"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400 flex items-center gap-2">
-                        Meta Qtde
-                        <span className="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="number"
-                        value={
-                          formData.ticket_medio_esperado
-                            ? Math.round(
-                                formData.meta_fechamento_valor / formData.ticket_medio_esperado,
-                              )
-                            : 0
-                        }
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-slate-400 font-medium cursor-not-allowed opacity-70"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta (% Conv.)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        name="meta_fechamentos_perc"
-                        value={formData.meta_fechamentos_perc}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        % Conversão
-                        <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="text"
-                        value={`${taxaFechamento.toFixed(1)}%`}
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-emerald-400 font-bold cursor-not-allowed opacity-80"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Meta Receita (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        name="meta_fechamento_valor"
-                        value={formData.meta_fechamento_valor}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400">Ticket Médio Esp. (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        name="ticket_medio_esperado"
-                        value={formData.ticket_medio_esperado}
-                        onChange={handleChange}
-                        className="bg-slate-950 border-slate-800 text-slate-400"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 pt-2">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        Receita Realizada (R$)
-                        <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          Auto
-                        </span>
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        name="fechamentos_valor_realizado"
-                        value={formData.fechamentos_valor_realizado}
-                        disabled
-                        className="bg-slate-900 border-slate-800 text-emerald-500 font-bold cursor-not-allowed opacity-80"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                className="hover:bg-slate-800 hover:text-white"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-amber-500 text-slate-950 hover:bg-amber-600 font-bold px-6"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4 mr-2" />
-                )}
-                Salvar Dados do Funil
-              </Button>
-            </div>
-          </form>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
