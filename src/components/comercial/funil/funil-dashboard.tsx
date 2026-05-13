@@ -25,6 +25,7 @@ import {
   UserMinus,
   ArrowRight,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function FunilDashboard({
   origens,
@@ -361,12 +362,13 @@ export function FunilDashboard({
     const isSecundario = funilName === 'Funil Secundário'
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
-        {isSecundario ? (
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
-            {/* Card vazio conforme solicitado */}
-          </div>
-        ) : (
+      <div
+        className={cn(
+          'grid gap-3 text-center',
+          isSecundario ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-5',
+        )}
+      >
+        {!isSecundario && (
           <div
             className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
             onClick={() =>
