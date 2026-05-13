@@ -116,9 +116,8 @@ export function FunilDashboard({
   const totaisSecundario = useMemo(() => {
     const padrao = calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id)))
 
-    if (!leads) return padrao
+    if (!leads) return { ...padrao, leads: 0 }
 
-    const unifiedLeads = new Map()
     const unifiedAgendamentos = new Map()
     const unifiedComparecimentos = new Map()
     const unifiedFaltas = new Map()
@@ -159,7 +158,6 @@ export function FunilDashboard({
       ].includes(status)
       const isFaltante = status === 'faltou'
 
-      unifiedLeads.set(nome, true)
       if (isAgendado) unifiedAgendamentos.set(nome, true)
       if (isCompareceu) unifiedComparecimentos.set(nome, true)
       if (isFaltante) unifiedFaltas.set(nome, true)
@@ -194,7 +192,7 @@ export function FunilDashboard({
 
     return {
       ...padrao,
-      leads: unifiedLeads.size,
+      leads: 0,
       agendamentos: unifiedAgendamentos.size,
       comparecimentos: unifiedComparecimentos.size,
       faltas: unifiedFaltas.size,
@@ -359,99 +357,109 @@ export function FunilDashboard({
     [origens],
   )
 
-  const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
-          setModalConfig({
-            isOpen: true,
-            type: 'leads',
-            origens: origensFilter,
-            title: `Leads - ${funilName}`,
-          })
-        }
-      >
-        <Users className="w-5 h-5 text-slate-400 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Leads
-        </span>
-        <span className="text-2xl font-bold text-white">{totais.leads}</span>
+  const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => {
+    const isSecundario = funilName === 'Funil Secundário'
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+        {isSecundario ? (
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center">
+            {/* Card vazio conforme solicitado */}
+          </div>
+        ) : (
+          <div
+            className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                type: 'leads',
+                origens: origensFilter,
+                title: `Leads - ${funilName}`,
+              })
+            }
+          >
+            <Users className="w-5 h-5 text-slate-400 mb-2" />
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Leads
+            </span>
+            <span className="text-2xl font-bold text-white">{totais.leads}</span>
+          </div>
+        )}
+        <div
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'agendamentos',
+              origens: origensFilter,
+              title: `Agendamentos - ${funilName}`,
+            })
+          }
+        >
+          <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
+          <Calendar className="w-5 h-5 text-blue-500 mb-2" />
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            Agendamento
+          </span>
+          <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
+        </div>
+        <div
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'comparecimentos',
+              origens: origensFilter,
+              title: `Comparecimentos - ${funilName}`,
+            })
+          }
+        >
+          <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
+          <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            Comparecimento
+          </span>
+          <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
+        </div>
+        <div
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'faltas',
+              origens: origensFilter,
+              title: `Faltas - ${funilName}`,
+            })
+          }
+        >
+          <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
+          <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            Faltas
+          </span>
+          <span className="text-2xl font-bold text-white">{totais.faltas}</span>
+        </div>
+        <div
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+          onClick={() =>
+            setModalConfig({
+              isOpen: true,
+              type: 'fechamentos',
+              origens: origensFilter,
+              title: `Fechamentos - ${funilName}`,
+            })
+          }
+        >
+          <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
+          <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            Fechamento
+          </span>
+          <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
+        </div>
       </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
-          setModalConfig({
-            isOpen: true,
-            type: 'agendamentos',
-            origens: origensFilter,
-            title: `Agendamentos - ${funilName}`,
-          })
-        }
-      >
-        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
-        <Calendar className="w-5 h-5 text-blue-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Agendamento
-        </span>
-        <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
-          setModalConfig({
-            isOpen: true,
-            type: 'comparecimentos',
-            origens: origensFilter,
-            title: `Comparecimentos - ${funilName}`,
-          })
-        }
-      >
-        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
-        <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Comparecimento
-        </span>
-        <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
-          setModalConfig({
-            isOpen: true,
-            type: 'faltas',
-            origens: origensFilter,
-            title: `Faltas - ${funilName}`,
-          })
-        }
-      >
-        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
-        <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Faltas
-        </span>
-        <span className="text-2xl font-bold text-white">{totais.faltas}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
-          setModalConfig({
-            isOpen: true,
-            type: 'fechamentos',
-            origens: origensFilter,
-            title: `Fechamentos - ${funilName}`,
-          })
-        }
-      >
-        <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
-        <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Fechamento
-        </span>
-        <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
-      </div>
-    </div>
-  )
+    )
+  }
 
   const renderOportunidadesBlocks = (
     valorOpp: number,
