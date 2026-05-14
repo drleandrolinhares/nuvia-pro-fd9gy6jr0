@@ -93,25 +93,13 @@ export function DashboardLeadsModal({
               if (!oId || !validOrigens.has(oId)) return false
 
               const status = (a.status || '').toLowerCase()
-              if (
-                [
-                  'erro',
-                  'rascunho',
-                  'lixo',
-                  'duplicado',
-                  'teste',
-                  'invalido',
-                  'venda-fechada',
-                  'venda_concretizada',
-                ].includes(status)
-              )
+              if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
                 return false
 
               if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
               const nome = normalizeNome(a.pacientes.nome)
               if (nome.includes('teste') || nome.includes('duplicado')) return false
 
-              if (vendasOportunidadesIds.has(a.id)) return false
               return true
             })
             .map((a: any) => ({
