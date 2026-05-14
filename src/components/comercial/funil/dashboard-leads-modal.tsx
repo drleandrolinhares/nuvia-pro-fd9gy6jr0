@@ -113,24 +113,7 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(a.origem_id),
             }))
 
-          const uniqueOps = new Map()
-          filtered.forEach((a: any) => {
-            const n = normalizeNome(a.nome)
-            if (!uniqueOps.has(n)) {
-              uniqueOps.set(n, a)
-            } else {
-              const existing = uniqueOps.get(n)
-              if ((a.valor || 0) > (existing.valor || 0)) {
-                uniqueOps.set(n, a)
-              }
-            }
-          })
-
-          setData(
-            Array.from(uniqueOps.values()).sort((a: any, b: any) =>
-              (a.nome || '').localeCompare(b.nome || ''),
-            ),
-          )
+          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
           return
         }
 
@@ -168,24 +151,7 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             }))
 
-          const uniqueVendas = new Map()
-          filtered.forEach((v: any) => {
-            const n = normalizeNome(v.nome)
-            if (!uniqueVendas.has(n)) {
-              uniqueVendas.set(n, v)
-            } else {
-              const existing = uniqueVendas.get(n)
-              if ((v.valor || 0) > (existing.valor || 0)) {
-                uniqueVendas.set(n, v)
-              }
-            }
-          })
-
-          setData(
-            Array.from(uniqueVendas.values()).sort((a: any, b: any) =>
-              (a.nome || '').localeCompare(b.nome || ''),
-            ),
-          )
+          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
           return
         }
 
@@ -196,7 +162,6 @@ export function DashboardLeadsModal({
           .eq('mes_referencia', mesReferencia)
 
         const unifiedList: any[] = []
-        const deduplicatedLeadsMap = new Map()
 
         ;(rawLeads || []).forEach((lead: any) => {
           const oId = lead.origem_id
@@ -211,109 +176,31 @@ export function DashboardLeadsModal({
           const nome = normalizeNome(lead.nome)
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
-          const dedupKey = nome
-
-          if (!deduplicatedLeadsMap.has(dedupKey)) {
-            deduplicatedLeadsMap.set(dedupKey, { ...lead })
-          } else {
-            const existing = deduplicatedLeadsMap.get(dedupKey)
-            if (!existing.telefone && lead.telefone) {
-              existing.telefone = lead.telefone
-            }
-
-            const isAgendado1 = [
-              'agendado',
-              'reagendado',
-              'atendido',
-              'faltou',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes((existing.status || '').toLowerCase())
-            const isAgendado2 = [
-              'agendado',
-              'reagendado',
-              'atendido',
-              'faltou',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes(status)
-
-            const isCompareceu1 = [
-              'atendido',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes((existing.status || '').toLowerCase())
-            const isCompareceu2 = [
-              'atendido',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes(status)
-
-            const isFaltante1 = (existing.status || '').toLowerCase() === 'faltou'
-            const isFaltante2 = status === 'faltou'
-
-            existing._isAgendado = isAgendado1 || isAgendado2 || existing._isAgendado
-            existing._isCompareceu = isCompareceu1 || isCompareceu2 || existing._isCompareceu
-            existing._isFaltante = isFaltante1 || isFaltante2 || existing._isFaltante
-
-            deduplicatedLeadsMap.set(dedupKey, existing)
-          }
-        })
-
-        const uniqueLeads = Array.from(deduplicatedLeadsMap.values())
-
-        uniqueLeads.forEach((lead: any) => {
-          const status = (lead.status || '').toLowerCase()
           const isAgendado =
-            lead._isAgendado !== undefined
-              ? lead._isAgendado
-              : [
-                  'agendado',
-                  'reagendado',
-                  'atendido',
-                  'faltou',
-                  'negociacao',
-                  'venda-fechada',
-                  'venda_concretizada',
-                  'venda-perdida',
-                  'avaliacao',
-                  'fechamento',
-                  'em_follow_up',
-                ].includes(status)
-          const isCompareceu =
-            lead._isCompareceu !== undefined
-              ? lead._isCompareceu
-              : [
-                  'atendido',
-                  'negociacao',
-                  'venda-fechada',
-                  'venda_concretizada',
-                  'venda-perdida',
-                  'avaliacao',
-                  'fechamento',
-                  'em_follow_up',
-                ].includes(status)
-          const isFaltante = lead._isFaltante !== undefined ? lead._isFaltante : status === 'faltou'
+            [
+              'agendado',
+              'reagendado',
+              'atendido',
+              'faltou',
+              'negociacao',
+              'venda-fechada',
+              'venda_concretizada',
+              'venda-perdida',
+              'avaliacao',
+              'fechamento',
+              'em_follow_up',
+            ].includes(status) || (lead.qtd_agendamentos || 0) > 0
+          const isCompareceu = [
+            'atendido',
+            'negociacao',
+            'venda-fechada',
+            'venda_concretizada',
+            'venda-perdida',
+            'avaliacao',
+            'fechamento',
+            'em_follow_up',
+          ].includes(status)
+          const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
 
           let include = false
           if (type === 'leads') {

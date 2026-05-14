@@ -135,9 +135,9 @@ export function SemaforoConversao({
     let secundarioMetrics = calcGroup(isSecundario)
 
     if (leads && avaliacoes && vendas) {
-      const unifiedAgendamentos = new Map()
-      const unifiedComparecimentos = new Map()
-      const unifiedFaltas = new Map()
+      let agendadosSec = 0
+      let compareceramSec = 0
+      let faltantesSec = 0
 
       leads.forEach((lead: any) => {
         const oId = lead.origem_id
@@ -150,19 +150,21 @@ export function SemaforoConversao({
         const nome = String(lead.nome).trim().toLowerCase()
         if (nome.includes('teste') || nome.includes('duplicado')) return
 
-        const isAgendado = [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status)
+        const isAgendado =
+          [
+            'agendado',
+            'reagendado',
+            'atendido',
+            'faltou',
+            'negociacao',
+            'venda-fechada',
+            'venda_concretizada',
+            'venda-perdida',
+            'avaliacao',
+            'fechamento',
+            'em_follow_up',
+          ].includes(status) || (lead.qtd_agendamentos || 0) > 0
+
         const isCompareceu = [
           'atendido',
           'negociacao',
@@ -173,11 +175,11 @@ export function SemaforoConversao({
           'fechamento',
           'em_follow_up',
         ].includes(status)
-        const isFaltante = status === 'faltou'
+        const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
 
-        if (isAgendado) unifiedAgendamentos.set(nome, true)
-        if (isCompareceu) unifiedComparecimentos.set(nome, true)
-        if (isFaltante) unifiedFaltas.set(nome, true)
+        if (isAgendado) agendadosSec++
+        if (isCompareceu) compareceramSec++
+        if (isFaltante) faltantesSec++
       })
 
       avaliacoes.forEach((av: any) => {
@@ -191,8 +193,8 @@ export function SemaforoConversao({
         const nome = String(av.pacientes.nome).trim().toLowerCase()
         if (nome.includes('teste') || nome.includes('duplicado')) return
 
-        unifiedAgendamentos.set(nome, true)
-        unifiedComparecimentos.set(nome, true)
+        agendadosSec++
+        compareceramSec++
       })
 
       vendas.forEach((v: any) => {
@@ -203,16 +205,16 @@ export function SemaforoConversao({
         const nome = String(v.paciente_nome).trim().toLowerCase()
         if (nome.includes('teste') || nome.includes('duplicado')) return
 
-        unifiedAgendamentos.set(nome, true)
-        unifiedComparecimentos.set(nome, true)
+        agendadosSec++
+        compareceramSec++
       })
 
       secundarioMetrics = {
         ...secundarioMetrics,
         total: secundarioMetrics.total,
-        agendados: unifiedAgendamentos.size,
-        compareceram: unifiedComparecimentos.size,
-        faltantes: unifiedFaltas.size,
+        agendados: agendadosSec,
+        compareceram: compareceramSec,
+        faltantes: faltantesSec,
       }
     }
 

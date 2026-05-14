@@ -94,89 +94,21 @@ export default function FunilVendas() {
     }
 
     const aggregatedLeads: Record<string, any> = {}
-    const deduplicatedLeadsMap = new Map()
 
-    ;(leadsData || []).forEach((lead: any) => {
+    const uniqueLeads = (leadsData || []).filter((lead: any) => {
       const oId = lead.origem_id
-      if (!oId || !validOrigensSet.has(oId)) return
+      if (!oId || !validOrigensSet.has(oId)) return false
 
       const status = (lead.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
+        return false
 
-      if (!lead.nome || String(lead.nome).trim() === '') return
+      if (!lead.nome || String(lead.nome).trim() === '') return false
       const nome = normalizeNome(lead.nome)
-      if (nome.includes('teste') || nome.includes('duplicado')) return
+      if (nome.includes('teste') || nome.includes('duplicado')) return false
 
-      const dedupKey = nome
-
-      if (!deduplicatedLeadsMap.has(dedupKey)) {
-        deduplicatedLeadsMap.set(dedupKey, { ...lead })
-      } else {
-        const existing = deduplicatedLeadsMap.get(dedupKey)
-        if (!existing.telefone && lead.telefone) {
-          existing.telefone = lead.telefone
-        }
-
-        const isAgendado1 = [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes((existing.status || '').toLowerCase())
-        const isAgendado2 = [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status)
-
-        const isCompareceu1 = [
-          'atendido',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes((existing.status || '').toLowerCase())
-        const isCompareceu2 = [
-          'atendido',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status)
-
-        const isFaltante1 = (existing.status || '').toLowerCase() === 'faltou'
-        const isFaltante2 = status === 'faltou'
-
-        existing._isAgendado = isAgendado1 || isAgendado2 || existing._isAgendado
-        existing._isCompareceu = isCompareceu1 || isCompareceu2 || existing._isCompareceu
-        existing._isFaltante = isFaltante1 || isFaltante2 || existing._isFaltante
-
-        deduplicatedLeadsMap.set(dedupKey, existing)
-      }
+      return true
     })
-
-    const uniqueLeads = Array.from(deduplicatedLeadsMap.values())
 
     uniqueLeads.forEach((lead: any) => {
       const oId = lead.origem_id
@@ -189,35 +121,32 @@ export default function FunilVendas() {
 
       const status = (lead.status || '').toLowerCase()
       const isAgendado =
-        lead._isAgendado !== undefined
-          ? lead._isAgendado
-          : [
-              'agendado',
-              'reagendado',
-              'atendido',
-              'faltou',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes(status)
-      const isCompareceu =
-        lead._isCompareceu !== undefined
-          ? lead._isCompareceu
-          : [
-              'atendido',
-              'negociacao',
-              'venda-fechada',
-              'venda_concretizada',
-              'venda-perdida',
-              'avaliacao',
-              'fechamento',
-              'em_follow_up',
-            ].includes(status)
-      const isFaltante = lead._isFaltante !== undefined ? lead._isFaltante : status === 'faltou'
+        [
+          'agendado',
+          'reagendado',
+          'atendido',
+          'faltou',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(status) || (lead.qtd_agendamentos || 0) > 0
+
+      const isCompareceu = [
+        'atendido',
+        'negociacao',
+        'venda-fechada',
+        'venda_concretizada',
+        'venda-perdida',
+        'avaliacao',
+        'fechamento',
+        'em_follow_up',
+      ].includes(status)
+
+      const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
 
       if (isAgendado) aggregatedLeads[oId].agendamentos++
       if (isCompareceu) aggregatedLeads[oId].comparecimentos++
@@ -239,26 +168,11 @@ export default function FunilVendas() {
       .map((oId: any) => {
         const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
 
-        const vendasOrigemRaw = (vendasData || []).filter((v: any) => {
+        const vendasOrigem = (vendasData || []).filter((v: any) => {
           const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
           if (!matched) return false
           return true
         })
-
-        const uniqueVendasMap = new Map()
-        vendasOrigemRaw.forEach((v: any) => {
-          if (!v.paciente_nome) return
-          const n = normalizeNome(v.paciente_nome)
-          if (!uniqueVendasMap.has(n)) {
-            uniqueVendasMap.set(n, v)
-          } else {
-            const ext = uniqueVendasMap.get(n)
-            if (Number(v.valor_tratamento || 0) > Number(ext.valor_tratamento || 0)) {
-              uniqueVendasMap.set(n, v)
-            }
-          }
-        })
-        const vendasOrigem = Array.from(uniqueVendasMap.values())
 
         const qtdeVendas = vendasOrigem.length
         const valorVendas = vendasOrigem.reduce(
@@ -326,39 +240,19 @@ export default function FunilVendas() {
       return true
     })
 
-    const uniqueAvaliacoesMap = new Map()
-    avaliacoesFiltradas.forEach((av: any) => {
-      const nome = normalizeNome(av.pacientes.nome)
-      if (!uniqueAvaliacoesMap.has(nome)) {
-        uniqueAvaliacoesMap.set(nome, av)
-      } else {
-        const existing = uniqueAvaliacoesMap.get(nome)
-        if ((av.valor_orcamento || 0) > (existing.valor_orcamento || 0)) {
-          uniqueAvaliacoesMap.set(nome, av)
-        }
-      }
-    })
-
-    const uniqueVendasGlobalMap = new Map()
-    ;(vendasData || []).forEach((v: any) => {
+    const vendasGlobaisFiltradas = (vendasData || []).filter((v: any) => {
       const oId = v.origem_id || v.avaliacoes?.origem_id
-      if (!oId || !validOrigensSet.has(oId)) return
-      if (!v.paciente_nome) return
+      if (!oId || !validOrigensSet.has(oId)) return false
+      if (!v.paciente_nome) return false
       const n = normalizeNome(v.paciente_nome)
-      if (!uniqueVendasGlobalMap.has(n)) {
-        uniqueVendasGlobalMap.set(n, v)
-      } else {
-        const ext = uniqueVendasGlobalMap.get(n)
-        if (Number(v.valor_tratamento || 0) > Number(ext.valor_tratamento || 0)) {
-          uniqueVendasGlobalMap.set(n, v)
-        }
-      }
+      if (n.includes('teste') || n.includes('duplicado')) return false
+      return true
     })
 
     setDadosMensais(finalDados)
-    setAvaliacoesMes(Array.from(uniqueAvaliacoesMap.values()))
+    setAvaliacoesMes(avaliacoesFiltradas)
     setLeadsMes(leadsData || [])
-    setVendasMes(Array.from(uniqueVendasGlobalMap.values()))
+    setVendasMes(vendasGlobaisFiltradas)
     if (showLoader) setLoading(false)
   }
 
