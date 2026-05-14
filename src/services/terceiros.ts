@@ -35,6 +35,12 @@ export interface TerceiroCategoria {
   ordem: number
 }
 
+export interface TerceiroEtiquetaGlobal {
+  id: string
+  nome: string
+  cor: string
+}
+
 export interface TerceiroHistorico {
   id: string
   tarefa_id: string
@@ -197,4 +203,25 @@ export const createHistorico = async (historico: {
 
   if (error) throw error
   return data
+}
+
+export const getEtiquetasGlobais = async () => {
+  const { data, error } = await supabase
+    .from('terceiros_etiquetas' as any)
+    .select('*')
+    .order('nome', { ascending: true })
+
+  if (error) throw error
+  return data as TerceiroEtiquetaGlobal[]
+}
+
+export const createEtiquetaGlobal = async (etiqueta: { nome: string; cor: string }) => {
+  const { data, error } = await supabase
+    .from('terceiros_etiquetas' as any)
+    .insert([etiqueta])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as TerceiroEtiquetaGlobal
 }

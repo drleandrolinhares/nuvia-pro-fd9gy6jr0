@@ -20,6 +20,9 @@ import {
   createCategoria,
   updateCategoria,
   TerceiroCategoria,
+  getEtiquetasGlobais,
+  createEtiquetaGlobal,
+  TerceiroEtiquetaGlobal,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
 import {
@@ -92,6 +95,7 @@ export default function Parceiros() {
   const { user } = useAuth()
   const [categorias, setCategorias] = useState<TerceiroCategoria[]>([])
   const [categoriaSlug, setCategoriaSlug] = useState('')
+  const [etiquetasGlobais, setEtiquetasGlobais] = useState<TerceiroEtiquetaGlobal[]>([])
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
   const [colunas, setColunas] = useState<TerceiroColuna[]>([])
   const [historico, setHistorico] = useState<TerceiroHistorico[]>([])
@@ -157,8 +161,18 @@ export default function Parceiros() {
     }
   }
 
+  const loadEtiquetasGlobais = async () => {
+    try {
+      const data = await getEtiquetasGlobais()
+      setEtiquetasGlobais(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     loadCategorias()
+    loadEtiquetasGlobais()
   }, [])
 
   useEffect(() => {
@@ -228,20 +242,38 @@ export default function Parceiros() {
     }
   }
 
-  const handleAddTag = () => {
+  const handleCreateGlobalTag = async () => {
     if (!tagInput.trim()) return
-    setFormData((prev) => ({
-      ...prev,
-      etiquetas: [...prev.etiquetas, { nome: tagInput.trim(), cor: tagColor }],
-    }))
-    setTagInput('')
-  }
 
-  const removeTag = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      etiquetas: prev.etiquetas.filter((_, i) => i !== index),
-    }))
+    const exists = etiquetasGlobais.find(
+      (eg) => eg.nome.toLowerCase() === tagInput.trim().toLowerCase(),
+    )
+    if (exists) {
+      if (!formData.etiquetas.some((t) => t.nome.toLowerCase() === exists.nome.toLowerCase())) {
+        setFormData((prev) => ({
+          ...prev,
+          etiquetas: [...prev.etiquetas, { nome: exists.nome, cor: exists.cor }],
+        }))
+      }
+      setTagInput('')
+      return
+    }
+
+    try {
+      const nova = await createEtiquetaGlobal({ nome: tagInput.trim(), cor: tagColor })
+      setEtiquetasGlobais((prev) => [...prev, nova])
+      setFormData((prev) => ({
+        ...prev,
+        etiquetas: [...prev.etiquetas, { nome: nova.nome, cor: nova.cor }],
+      }))
+      setTagInput('')
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao criar etiqueta no banco.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleSave = async () => {
@@ -749,18 +781,80 @@ export default function Parceiros() {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t border-slate-800">
-                <Label>Etiquetas do Card</Label>
-                <div className="flex gap-2">
+              <div className="space-y-3 pt-4 border-t border-slate-800">
+                <Label className="flex items-center justify-between text-slate-300">
+                  <span>Etiquetas (Clique para selecionar/remover)</span>
+                </Label>
+
+                <div className="flex flex-wrap gap-2 p-3 bg-slate-950/50 rounded-md border border-slate-800/50 max-h-36 overflow-y-auto custom-scrollbar">
+                  {(() => {
+                    const globalNames = etiquetasGlobais.map((e) => e.nome.toLowerCase())
+                    const extraTags = formData.etiquetas.filter(
+                      (t) => !globalNames.includes(t.nome.toLowerCase()),
+                    )
+                    const allTags = [
+                      ...etiquetasGlobais,
+                      ...extraTags.map((t) => ({ id: t.nome, nome: t.nome, cor: t.cor })),
+                    ]
+
+                    if (allTags.length === 0) {
+                      return (
+                        <span className="text-xs text-slate-500 italic">
+                          Nenhuma etiqueta cadastrada no sistema. Crie uma abaixo.
+                        </span>
+                      )
+                    }
+
+                    return allTags.map((eg) => {
+                      const isSelected = formData.etiquetas.some(
+                        (t) => t.nome.toLowerCase() === eg.nome.toLowerCase(),
+                      )
+                      return (
+                        <Badge
+                          key={eg.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                etiquetas: prev.etiquetas.filter(
+                                  (t) => t.nome.toLowerCase() !== eg.nome.toLowerCase(),
+                                ),
+                              }))
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                etiquetas: [...prev.etiquetas, { nome: eg.nome, cor: eg.cor }],
+                              }))
+                            }
+                          }}
+                          className={cn(
+                            'cursor-pointer border border-transparent transition-all px-2.5 py-1',
+                            eg.cor,
+                            isSelected
+                              ? 'opacity-100 ring-2 ring-white/50 shadow-[0_0_10px_rgba(255,255,255,0.1)] text-white'
+                              : 'opacity-40 hover:opacity-80 text-white',
+                          )}
+                        >
+                          {eg.nome}
+                          {isSelected && <Check className="w-3 h-3 ml-1" />}
+                        </Badge>
+                      )
+                    })
+                  })()}
+                </div>
+
+                <div className="flex gap-2 items-center mt-2">
                   <Input
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    placeholder="Nome da etiqueta"
-                    className="bg-slate-950 border-slate-800 flex-1"
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    placeholder="Nome da nova etiqueta..."
+                    className="bg-slate-950 border-slate-800 flex-1 h-9"
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && (e.preventDefault(), handleCreateGlobalTag())
+                    }
                   />
                   <Select value={tagColor} onValueChange={setTagColor}>
-                    <SelectTrigger className="w-[110px] bg-slate-950 border-slate-800">
+                    <SelectTrigger className="w-[110px] bg-slate-950 border-slate-800 h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -776,32 +870,13 @@ export default function Parceiros() {
                   </Select>
                   <Button
                     type="button"
-                    onClick={handleAddTag}
+                    onClick={handleCreateGlobalTag}
                     variant="secondary"
-                    className="shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700"
+                    className="shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 h-9"
                   >
-                    Adicionar
+                    Salvar no Sistema
                   </Button>
                 </div>
-                {formData.etiquetas.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.etiquetas.map((t, idx) => (
-                      <Badge
-                        key={idx}
-                        className={cn(
-                          t.cor,
-                          'text-white gap-1 pl-2 pr-1 py-0.5 font-normal hover:opacity-90 transition-opacity border-none',
-                        )}
-                      >
-                        {t.nome}
-                        <X
-                          className="w-3 h-3 ml-1 cursor-pointer hover:text-red-200"
-                          onClick={() => removeTag(idx)}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
