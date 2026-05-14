@@ -74,6 +74,18 @@ export const createCategoria = async (nome: string) => {
   return data as TerceiroCategoria
 }
 
+export const updateCategoria = async (id: string, nome: string) => {
+  const { data, error } = await supabase
+    .from('terceiros_categorias' as any)
+    .update({ nome })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as TerceiroCategoria
+}
+
 export const createColuna = async (coluna: Partial<TerceiroColuna>) => {
   const { data, error } = await supabase
     .from('terceiros_colunas' as any)

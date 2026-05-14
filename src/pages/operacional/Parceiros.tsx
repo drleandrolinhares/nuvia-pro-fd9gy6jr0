@@ -18,6 +18,7 @@ import {
   TerceiroHistorico,
   getCategorias,
   createCategoria,
+  updateCategoria,
   TerceiroCategoria,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ import {
   Check,
   X,
   History,
+  Search,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import {
@@ -103,6 +105,11 @@ export default function Parceiros() {
   const [newColTitle, setNewColTitle] = useState('')
   const [isNewCategoriaModalOpen, setIsNewCategoriaModalOpen] = useState(false)
   const [newCategoriaTitle, setNewCategoriaTitle] = useState('')
+  const [isEditCategoriaModalOpen, setIsEditCategoriaModalOpen] = useState(false)
+  const [editingCategoriaId, setEditingCategoriaId] = useState<string | null>(null)
+  const [editCategoriaTitle, setEditCategoriaTitle] = useState('')
+
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('bg-slate-500')
@@ -354,6 +361,32 @@ export default function Parceiros() {
     }
   }
 
+  const handleEditCategoria = async () => {
+    if (!editCategoriaTitle.trim() || !editingCategoriaId) return
+    try {
+      const updated = await updateCategoria(editingCategoriaId, editCategoriaTitle)
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === editingCategoriaId ? { ...c, nome: updated.nome } : c)),
+      )
+      setIsEditCategoriaModalOpen(false)
+      setEditingCategoriaId(null)
+      toast({ title: 'Sucesso', description: 'Tipo atualizado com sucesso.' })
+    } catch (error: any) {
+      console.error(error)
+      toast({ title: 'Erro', description: 'Falha ao atualizar tipo.', variant: 'destructive' })
+    }
+  }
+
+  const filteredTarefas = tarefas.filter((t) => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      (t.paciente_nome && t.paciente_nome.toLowerCase().includes(q)) ||
+      (t.titulo && t.titulo.toLowerCase().includes(q)) ||
+      (t.terceiro_nome && t.terceiro_nome.toLowerCase().includes(q))
+    )
+  })
+
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm mb-6">
@@ -368,12 +401,23 @@ export default function Parceiros() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => openModal()}
-          className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Novo Registro
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative w-full sm:w-auto">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar paciente ou serviço..."
+              className="pl-9 bg-slate-800 border-slate-700 text-slate-200 h-10 text-sm min-w-[250px]"
+            />
+          </div>
+          <Button
+            onClick={() => openModal()}
+            className="bg-slate-200 w-full sm:w-auto text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm h-10"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Novo Registro
+          </Button>
+        </div>
       </div>
 
       <Tabs
@@ -386,9 +430,24 @@ export default function Parceiros() {
             <TabsTrigger
               key={c.slug}
               value={c.slug}
-              className="flex-1 min-w-[120px] whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8"
+              className="flex-1 min-w-[120px] whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8 flex items-center justify-center gap-2 group"
             >
-              {c.nome}
+              <span>{c.nome}</span>
+              {categoriaSlug === c.slug && (
+                <div
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setEditingCategoriaId(c.id)
+                    setEditCategoriaTitle(c.nome)
+                    setIsEditCategoriaModalOpen(true)
+                  }}
+                  className="cursor-pointer text-white/70 hover:text-white"
+                  title="Renomear Categoria"
+                >
+                  <Pencil className="w-3 h-3" />
+                </div>
+              )}
             </TabsTrigger>
           ))}
           <Button
@@ -452,13 +511,13 @@ export default function Parceiros() {
                         </button>
                       </h3>
                       <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-medium border border-blue-800/50">
-                        {tarefas.filter((t) => t.status === col.id).length}
+                        {filteredTarefas.filter((t) => t.status === col.id).length}
                       </span>
                     </>
                   )}
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                  {tarefas
+                  {filteredTarefas
                     .filter((t) => t.status === col.id)
                     .map((t) => (
                       <div
@@ -530,6 +589,40 @@ export default function Parceiros() {
           </div>
         </div>
       </Tabs>
+
+      <Dialog open={isEditCategoriaModalOpen} onOpenChange={setIsEditCategoriaModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Renomear Tipo de Parceiro</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Label>Nome do Tipo</Label>
+            <Input
+              value={editCategoriaTitle}
+              onChange={(e) => setEditCategoriaTitle(e.target.value)}
+              placeholder="Ex: Ortodontia, Fornecedor..."
+              className="bg-slate-950 border-slate-800"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleEditCategoria()}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditCategoriaModalOpen(false)}
+              className="border-slate-700 hover:bg-slate-800 text-slate-300"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleEditCategoria}
+              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isNewCategoriaModalOpen} onOpenChange={setIsNewCategoriaModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
