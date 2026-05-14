@@ -168,7 +168,7 @@ export function EditarOportunidadeModal({
       const nomePaciente = (avaliacao as any).pacientes?.nome
       const origemUpdate = formData.origem_id === 'nenhum' ? null : formData.origem_id || null
 
-      if (nomePaciente && origemUpdate) {
+      if (nomePaciente && nomePaciente !== 'Paciente não identificado' && origemUpdate) {
         await supabase
           .from('funil_leads')
           .update({ origem_id: origemUpdate })

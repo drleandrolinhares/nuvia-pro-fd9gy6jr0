@@ -21,7 +21,15 @@ import { ptBR } from 'date-fns/locale'
 import { EditarOportunidadeModal } from '@/pages/comercial/components/EditarOportunidadeModal'
 import { Input } from '@/components/ui/input'
 
-export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferencia, title }: any) {
+export function DashboardLeadsModal({
+  isOpen,
+  onClose,
+  type,
+  origens,
+  mesReferencia,
+  title,
+  onUpdate,
+}: any) {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -56,22 +64,41 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
       const end = `${mesReferencia}-${new Date(Number(ano), Number(mes), 0).getDate()}`
 
       if (type === 'oportunidades' || type === 'fechamentos') {
-        const { data: avaliacoes } = await supabase
+        let query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
           .in('origem_id', origens)
-          .gte(type === 'fechamentos' ? 'data_fechamento' : 'data_avaliacao', start)
-          .lte(type === 'fechamentos' ? 'data_fechamento' : 'data_avaliacao', end)
-          .order(type === 'fechamentos' ? 'data_fechamento' : 'data_avaliacao', {
-            ascending: false,
+
+        if (type === 'fechamentos') {
+          query = query.gte('data_fechamento', start).lte('data_fechamento', end)
+        }
+
+        const { data: avaliacoes } = await query
+
+        const filtered = (avaliacoes || [])
+          .map((a: any) => {
+            if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') {
+              a.pacientes = { nome: 'Paciente não identificado' }
+            }
+            return a
+          })
+          .filter((a: any) => {
+            if (type === 'oportunidades') {
+              const dateStr = a.data_avaliacao || a.criado_em
+              if (!dateStr) return false
+              const itemDate = dateStr.substring(0, 10)
+              return itemDate >= start && itemDate <= end
+            }
+            return true
           })
 
-        setData(
-          (avaliacoes || []).filter((a: any) => {
-            if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-            return true
-          }),
-        )
+        filtered.sort((a: any, b: any) => {
+          const dA = type === 'fechamentos' ? a.data_fechamento : a.data_avaliacao || a.criado_em
+          const dB = type === 'fechamentos' ? b.data_fechamento : b.data_avaliacao || b.criado_em
+          return new Date(dB || 0).getTime() - new Date(dA || 0).getTime()
+        })
+
+        setData(filtered)
       } else {
         const { data: leads } = await supabase
           .from('funil_leads')
@@ -82,7 +109,9 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
 
         const filtered = (leads || []).filter((lead: any) => {
           const status = (lead.status || '').toLowerCase()
-          if (!lead.nome || String(lead.nome).trim() === '') return false
+          if (!lead.nome || String(lead.nome).trim() === '') {
+            lead.nome = 'Lead sem nome'
+          }
 
           if (type === 'leads') return true
 
@@ -115,7 +144,7 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
           if (type === 'agendamentos') return isAgendado
           if (type === 'comparecimentos') return isCompareceu
           if (type === 'faltas') return isFaltante
-          return false
+          return true // Fallback to return true if nothing else matches, removing strict hiding
         })
         setData(filtered)
       }
@@ -146,7 +175,7 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
     return data.filter((item: any) => {
       const nome =
         type === 'oportunidades' || type === 'fechamentos'
-          ? item.pacientes?.nome || ''
+          ? item.pacientes?.nome || 'Paciente não identificado'
           : item.nome || ''
       return nome.toLowerCase().includes(term)
     })
@@ -246,7 +275,9 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
                           </TableCell>
                           <TableCell className="text-white font-medium">
                             <div className="flex items-center gap-2">
-                              {isOportunidade ? row.pacientes?.nome : row.nome}
+                              {isOportunidade
+                                ? row.pacientes?.nome || 'Paciente não identificado'
+                                : row.nome}
                               {isOportunidade && (
                                 <span className="opacity-0 group-hover:opacity-100 text-[10px] text-amber-500 uppercase tracking-wider font-bold transition-opacity">
                                   Editar
@@ -316,6 +347,7 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
           onSuccess={() => {
             fetchData()
             setSelectedAvaliacao(null)
+            if (onUpdate) onUpdate()
           }}
         />
       )}

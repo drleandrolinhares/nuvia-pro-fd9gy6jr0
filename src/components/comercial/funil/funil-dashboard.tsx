@@ -105,10 +105,7 @@ export function FunilDashboard({
 
   const avaliacoesAtuais = useMemo(() => {
     if (!avaliacoes) return []
-    return avaliacoes.filter((a: any) => {
-      if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-      return true
-    })
+    return avaliacoes
   }, [avaliacoes])
 
   const totalAvaliacoes = avaliacoesAtuais.length
@@ -769,6 +766,7 @@ export function FunilDashboard({
         origens={modalConfig.origens}
         mesReferencia={mesReferencia}
         title={modalConfig.title}
+        onUpdate={onUpdate}
       />
     </div>
   )
