@@ -92,15 +92,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
 
-    const { data: pastVendas } = await supabase
-      .from('vendas_confirmadas')
-      .select('paciente_nome')
-      .lt('data_fechamento', dataInicio)
-
-    const pacientesRecorrentes = new Set(
-      (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
-    )
-
     const isRecorrenteOrigem = origem.nome?.toLowerCase().includes('recorrente')
 
     const vendasOrigem = (vendasData || []).filter((v: any) => {
@@ -138,7 +129,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           mes_referencia: mesReferencia,
           qtd_agendamentos: 1,
           qtd_faltas: 0,
-          isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+          isRecorrente: true,
         })
       })
 
@@ -160,15 +151,14 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           mes_referencia: mesReferencia,
           qtd_agendamentos: 1,
           qtd_faltas: 0,
-          isRecorrente: nome ? pacientesRecorrentes.has(nome) : false,
+          isRecorrente: true,
         })
       })
     }
 
     unifiedLeads.forEach((lead) => {
       if (lead.isRecorrente === undefined) {
-        const nome = lead.nome?.toLowerCase().trim()
-        lead.isRecorrente = nome ? pacientesRecorrentes.has(nome) : false
+        lead.isRecorrente = false
       }
     })
 

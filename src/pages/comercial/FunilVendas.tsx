@@ -74,16 +74,6 @@ export default function FunilVendas() {
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
 
-    // Buscar histórico para identificar recorrentes
-    const { data: pastVendas } = await supabase
-      .from('vendas_confirmadas')
-      .select('paciente_nome')
-      .lt('data_fechamento', dataInicio)
-
-    const pacientesRecorrentes = new Set(
-      (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
-    )
-
     const { data: avaliacoesData } = await supabase
       .from('avaliacoes')
       .select('id, origem_id, valor_orcamento, status, pacientes(nome)')

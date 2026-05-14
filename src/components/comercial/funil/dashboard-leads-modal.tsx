@@ -44,20 +44,11 @@ export function DashboardLeadsModal({
 
         const { data: origensData } = await supabase.from('funil_origens').select('*')
 
-        const { data: pastVendas } = await supabase
-          .from('vendas_confirmadas')
-          .select('paciente_nome')
-          .lt('data_fechamento', dataInicio)
-
         const { data: currentVendas } = await supabase
           .from('vendas_confirmadas')
           .select('paciente_nome')
           .gte('data_fechamento', dataInicio)
           .lte('data_fechamento', dataFim)
-
-        const pacientesRecorrentes = new Set(
-          (pastVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
-        )
 
         const vendasNomes = new Set(
           (currentVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
@@ -65,9 +56,6 @@ export function DashboardLeadsModal({
 
         const getOrigemDisplayNome = (id: string) =>
           (origensData || []).find((o) => o.id === id)?.nome || 'Não informada'
-        const getOrigemNome = (id: string) =>
-          (origensData || []).find((o) => o.id === id)?.nome?.toLowerCase() || ''
-        const isRecorrenteOrigem = (id: string) => getOrigemNome(id).includes('recorrente')
 
         if (type === 'oportunidades') {
           const { data: rawAvaliacoes, error } = await supabase
@@ -211,8 +199,6 @@ export function DashboardLeadsModal({
           const nome = String(lead.nome).trim().toLowerCase()
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
-          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
-
           const isAgendado = [
             'agendado',
             'reagendado',
@@ -246,9 +232,9 @@ export function DashboardLeadsModal({
           if (type === 'leads') {
             include = true
           }
-          if (type === 'agendamentos' && isAgendado && !isRecorrente) include = true
-          if (type === 'comparecimentos' && isCompareceu && !isRecorrente) include = true
-          if (type === 'faltas' && isFaltante && !isRecorrente) include = true
+          if (type === 'agendamentos' && isAgendado) include = true
+          if (type === 'comparecimentos' && isCompareceu) include = true
+          if (type === 'faltas' && isFaltante) include = true
 
           if (include) {
             unifiedList.push({
@@ -276,8 +262,6 @@ export function DashboardLeadsModal({
           const nome = String(av.pacientes.nome).trim().toLowerCase()
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
-          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
-
           const isInVendas = vendasNomes.has(nome)
           const isVendaFechada = status === 'venda-fechada' || status === 'venda_concretizada'
 
@@ -285,8 +269,8 @@ export function DashboardLeadsModal({
           if (type === 'leads') {
             include = false
           }
-          if (type === 'agendamentos' && !isRecorrente) include = true
-          if (type === 'comparecimentos' && !isRecorrente) include = true
+          if (type === 'agendamentos') include = true
+          if (type === 'comparecimentos') include = true
 
           if (include) {
             unifiedList.push({
@@ -310,14 +294,12 @@ export function DashboardLeadsModal({
           const nome = String(v.paciente_nome).trim().toLowerCase()
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
-          const isRecorrente = isRecorrenteOrigem(oId) || pacientesRecorrentes.has(nome)
-
           let include = false
           if (type === 'leads') {
             include = false
           }
-          if (type === 'agendamentos' && !isRecorrente) include = true
-          if (type === 'comparecimentos' && !isRecorrente) include = true
+          if (type === 'agendamentos') include = true
+          if (type === 'comparecimentos') include = true
 
           if (include) {
             unifiedList.push({
