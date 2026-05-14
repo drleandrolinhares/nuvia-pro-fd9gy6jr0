@@ -19,8 +19,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { Avaliacao } from '../types'
+import { useAuth } from '@/hooks/use-auth'
 
 interface Props {
   isOpen: boolean
@@ -40,8 +41,11 @@ export function EditarOportunidadeModal({
   onSuccess,
 }: Props) {
   const { toast } = useToast()
+  const { profile } = useAuth()
   const [saving, setSaving] = useState(false)
   const [origens, setOrigens] = useState<any[]>([])
+
+  const isAdmin = profile?.role === 'admin'
 
   const [formData, setFormData] = useState({
     data_avaliacao: '',
@@ -83,6 +87,26 @@ export function EditarOportunidadeModal({
       })
     }
   }, [avaliacao, isOpen])
+
+  const handleDelete = async () => {
+    if (!avaliacao) return
+    if (!confirm('Deseja realmente excluir esta oportunidade? Esta ação não pode ser desfeita.'))
+      return
+
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('avaliacoes').delete().eq('id', avaliacao.id)
+      if (error) throw error
+
+      toast({ title: 'Sucesso', description: 'Oportunidade excluída com sucesso!' })
+      onSuccess()
+      onClose()
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!avaliacao) return
@@ -306,14 +330,30 @@ export function EditarOportunidadeModal({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Salvar Alterações
-          </Button>
+        <DialogFooter className="flex sm:justify-between w-full">
+          {isAdmin ? (
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={saving}
+              className="mr-auto bg-red-500 hover:bg-red-600 text-white"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Oportunidade
+            </Button>
+          ) : (
+            <div className="mr-auto" />
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} disabled={saving} type="button">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving} type="button">
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar Alterações
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
