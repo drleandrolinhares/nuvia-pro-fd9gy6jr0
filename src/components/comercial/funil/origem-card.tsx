@@ -75,11 +75,105 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       .eq('mes_referencia', mesReferencia)
       .order('criado_em', { ascending: false })
 
-    const unifiedLeads: any[] = []
+    const normalizeNome = (n: any) => {
+      if (!n) return ''
+      return String(n)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+    }
+
+    const deduplicatedLeadsMap = new Map()
 
     ;(leadsData || []).forEach((lead: any) => {
-      unifiedLeads.push(lead)
+      const status = (lead.status || '').toLowerCase()
+      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
+
+      if (!lead.nome || String(lead.nome).trim() === '') return
+      const nome = normalizeNome(lead.nome)
+      if (nome.includes('teste') || nome.includes('duplicado')) return
+
+      const dedupKey = nome
+
+      if (!deduplicatedLeadsMap.has(dedupKey)) {
+        deduplicatedLeadsMap.set(dedupKey, { ...lead })
+      } else {
+        const existing = deduplicatedLeadsMap.get(dedupKey)
+        if (!existing.telefone && lead.telefone) {
+          existing.telefone = lead.telefone
+        }
+
+        const isAgendado1 = [
+          'agendado',
+          'reagendado',
+          'atendido',
+          'faltou',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes((existing.status || '').toLowerCase())
+        const isAgendado2 = [
+          'agendado',
+          'reagendado',
+          'atendido',
+          'faltou',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(status)
+
+        const isCompareceu1 = [
+          'atendido',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes((existing.status || '').toLowerCase())
+        const isCompareceu2 = [
+          'atendido',
+          'negociacao',
+          'venda-fechada',
+          'venda_concretizada',
+          'venda-perdida',
+          'avaliacao',
+          'fechamento',
+          'em_follow_up',
+        ].includes(status)
+
+        const isFaltante1 =
+          (existing.status || '').toLowerCase() === 'faltou' || existing.qtd_faltas > 0
+        const isFaltante2 = status === 'faltou' || lead.qtd_faltas > 0
+
+        existing._isAgendado =
+          isAgendado1 ||
+          isAgendado2 ||
+          existing._isAgendado ||
+          existing.qtd_agendamentos > 0 ||
+          lead.qtd_agendamentos > 0
+        existing._isCompareceu = isCompareceu1 || isCompareceu2 || existing._isCompareceu
+        existing._isFaltante = isFaltante1 || isFaltante2 || existing._isFaltante
+
+        existing.qtd_agendamentos = (existing.qtd_agendamentos || 0) + (lead.qtd_agendamentos || 0)
+        existing.qtd_faltas = (existing.qtd_faltas || 0) + (lead.qtd_faltas || 0)
+
+        deduplicatedLeadsMap.set(dedupKey, existing)
+      }
     })
+
+    const unifiedLeads = Array.from(deduplicatedLeadsMap.values())
 
     unifiedLeads.sort(
       (a, b) => new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime(),
@@ -99,6 +193,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     if (modalType === 'leads') return leads
     if (modalType === 'agendamentos') {
       return leads.filter((l) => {
+        if (l._isAgendado !== undefined) return l._isAgendado
         const isAgendado = [
           'agendado',
           'reagendado',
@@ -117,6 +212,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     }
     if (modalType === 'comparecimentos') {
       return leads.filter((l) => {
+        if (l._isCompareceu !== undefined) return l._isCompareceu
         return [
           'atendido',
           'negociacao',
@@ -131,6 +227,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     }
     if (modalType === 'faltas') {
       return leads.filter((l) => {
+        if (l._isFaltante !== undefined) return l._isFaltante
         return l.status === 'faltou' || l.qtd_faltas > 0
       })
     }
