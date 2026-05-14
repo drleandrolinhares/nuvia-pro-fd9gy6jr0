@@ -106,15 +106,7 @@ export function FunilDashboard({
   const avaliacoesAtuais = useMemo(() => {
     if (!avaliacoes) return []
     return avaliacoes.filter((a: any) => {
-      const status = (a.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
-        return false
-      }
-
       if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-      const nome = String(a.pacientes.nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return false
-
       return true
     })
   }, [avaliacoes])

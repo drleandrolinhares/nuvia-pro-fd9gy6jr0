@@ -103,7 +103,7 @@ export function EditarOportunidadeModal({
     if (hasVenda) {
       if (
         !confirm(
-          'ATENÇÃO: Esta oportunidade possui uma venda vinculada! Tem certeza que deseja excluí-la? Isso pode gerar inconsistências financeiras no histórico de vendas.',
+          'ATENÇÃO: Esta oportunidade possui uma venda vinculada! A venda será desvinculada (para preservar o histórico financeiro intacto) e esta oportunidade será excluída. Deseja prosseguir?',
         )
       )
         return
@@ -118,6 +118,13 @@ export function EditarOportunidadeModal({
 
     setSaving(true)
     try {
+      if (hasVenda) {
+        await supabase
+          .from('vendas_confirmadas')
+          .update({ oportunidade_id: null })
+          .eq('oportunidade_id', avaliacao.id)
+      }
+
       const { error } = await supabase.from('avaliacoes').delete().eq('id', avaliacao.id)
       if (error) throw error
 

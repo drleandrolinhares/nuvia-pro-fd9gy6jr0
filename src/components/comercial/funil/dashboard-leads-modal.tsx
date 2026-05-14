@@ -68,12 +68,7 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
 
         setData(
           (avaliacoes || []).filter((a: any) => {
-            const status = (a.status || '').toLowerCase()
-            if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
-              return false
             if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-            const nome = String(a.pacientes.nome).trim().toLowerCase()
-            if (nome.includes('teste') || nome.includes('duplicado')) return false
             return true
           }),
         )
@@ -87,11 +82,7 @@ export function DashboardLeadsModal({ isOpen, onClose, type, origens, mesReferen
 
         const filtered = (leads || []).filter((lead: any) => {
           const status = (lead.status || '').toLowerCase()
-          if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
-            return false
           if (!lead.nome || String(lead.nome).trim() === '') return false
-          const nome = String(lead.nome).trim().toLowerCase()
-          if (nome.includes('teste') || nome.includes('duplicado')) return false
 
           if (type === 'leads') return true
 

@@ -99,13 +99,7 @@ export default function FunilVendas() {
       const oId = lead.origem_id
       if (!oId || !validOrigensSet.has(oId)) return false
 
-      const status = (lead.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
-        return false
-
       if (!lead.nome || String(lead.nome).trim() === '') return false
-      const nome = normalizeNome(lead.nome)
-      if (nome.includes('teste') || nome.includes('duplicado')) return false
 
       return true
     })
@@ -227,15 +221,7 @@ export default function FunilVendas() {
       const oId = av.origem_id
       if (!oId || !validOrigensSet.has(oId)) return false
 
-      const status = (av.status || '').toLowerCase()
-
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
-        return false
-      }
-
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
-      const nome = normalizeNome(av.pacientes.nome)
-      if (nome.includes('teste') || nome.includes('duplicado')) return false
 
       return true
     })
@@ -244,8 +230,6 @@ export default function FunilVendas() {
       const oId = v.origem_id || v.avaliacoes?.origem_id
       if (!oId || !validOrigensSet.has(oId)) return false
       if (!v.paciente_nome) return false
-      const n = normalizeNome(v.paciente_nome)
-      if (n.includes('teste') || n.includes('duplicado')) return false
       return true
     })
 
