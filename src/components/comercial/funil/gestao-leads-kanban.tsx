@@ -34,6 +34,7 @@ export function GestaoLeadsKanban({
   origens,
   etapas,
   temperaturas,
+  vendas,
   onUpdate,
   onOpenAgenda,
 }: any) {
@@ -338,6 +339,21 @@ export function GestaoLeadsKanban({
                               <span className="truncate max-w-[90px]">{origemNome}</span>
                             </div>
                           </div>
+
+                          {vendas?.some(
+                            (v: any) =>
+                              v.paciente_nome &&
+                              lead.nome &&
+                              v.paciente_nome.toLowerCase().trim() ===
+                                lead.nome.toLowerCase().trim() &&
+                              (v.origem_id === lead.origem_id ||
+                                v.avaliacoes?.origem_id === lead.origem_id),
+                          ) && (
+                            <div className="flex items-center gap-1.5 mb-2 bg-emerald-50 p-1.5 rounded-md border border-emerald-200 text-[11px] font-bold text-emerald-700 shadow-sm">
+                              <DollarSign className="w-3.5 h-3.5" />
+                              Venda Concretizada
+                            </div>
+                          )}
 
                           {lead.data_agendamento && lead.status === 'agendado' && (
                             <div className="flex items-center gap-1.5 mb-2 bg-amber-50 p-1.5 rounded-md border border-amber-200/50 text-[11px] font-semibold text-amber-700">

@@ -445,6 +445,7 @@ export default function FunilVendas() {
           etapas={etapas}
           temperaturas={temperaturas}
           mesReferencia={mesReferencia}
+          vendas={vendasMes}
           onUpdate={(showLoader = true) => fetchData(showLoader)}
           onOpenAgenda={() => setView('agenda')}
         />

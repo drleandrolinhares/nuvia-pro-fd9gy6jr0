@@ -20,7 +20,7 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 
 export function EditarLeadModal({
   open,
@@ -75,6 +75,30 @@ export function EditarLeadModal({
     if (!cleaned) return null
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     return uuidRegex.test(cleaned) ? cleaned : cleaned
+  }
+
+  const handleExcluir = async () => {
+    if (!confirm('Deseja realmente excluir este lead? Esta ação não pode ser desfeita.')) return
+
+    const leadIdSanitizado = sanitizeUuid(lead?.id)
+    if (!leadIdSanitizado) return
+
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('funil_leads').delete().eq('id', leadIdSanitizado)
+      if (error) throw error
+
+      toast({
+        title: 'Sucesso',
+        description: 'Lead excluído com sucesso.',
+      })
+      onSaved()
+      onOpenChange(false)
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSave = async () => {
@@ -306,27 +330,41 @@ export function EditarLeadModal({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex sm:justify-between w-full">
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
+            variant="destructive"
+            onClick={handleExcluir}
+            disabled={loading || !lead?.id}
+            className="bg-red-500 hover:bg-red-600 text-white mr-auto"
+            type="button"
           >
-            Cancelar
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={
-              loading ||
-              !formData.nome?.trim() ||
-              !sanitizeUuid(formData.origem_id) ||
-              !formData.status
-            }
-            className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold"
-          >
-            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Salvar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
+              type="button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={
+                loading ||
+                !formData.nome?.trim() ||
+                !sanitizeUuid(formData.origem_id) ||
+                !formData.status
+              }
+              className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold"
+              type="button"
+            >
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
