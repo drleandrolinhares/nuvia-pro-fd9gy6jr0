@@ -75,91 +75,10 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
       .eq('mes_referencia', mesReferencia)
       .order('criado_em', { ascending: false })
 
-    const { data: avaliacoesData } = await supabase
-      .from('avaliacoes')
-      .select(
-        'id, origem_id, valor_orcamento, status, data_avaliacao, criado_em, pacientes(nome, telefone)',
-      )
-      .eq('origem_id', origem.id)
-      .gte('data_avaliacao', dataInicio)
-      .lte('data_avaliacao', dataFim)
-
-    const { data: vendasData } = await supabase
-      .from('vendas_confirmadas')
-      .select(
-        'id, paciente_nome, telefone, data_fechamento, criado_em, origem_id, avaliacoes(origem_id)',
-      )
-      .gte('data_fechamento', dataInicio)
-      .lte('data_fechamento', dataFim)
-
-    const isRecorrenteOrigem = origem.nome?.toLowerCase().includes('recorrente')
-
-    const vendasOrigem = (vendasData || []).filter((v: any) => {
-      const matched = (v.origem_id || v.avaliacoes?.origem_id) === origem.id
-      if (!matched) return false
-      return true
-    })
-
-    const processado = new Set<string>()
     const unifiedLeads: any[] = []
 
     ;(leadsData || []).forEach((lead: any) => {
-      const nome = lead.nome?.toLowerCase().trim()
-
-      if (nome) processado.add(nome)
       unifiedLeads.push(lead)
-    })
-
-    if (isRecorrenteOrigem) {
-      ;(avaliacoesData || []).forEach((av: any) => {
-        const nome = av.pacientes?.nome?.toLowerCase().trim()
-
-        if (nome && processado.has(nome)) return
-        if (nome) processado.add(nome)
-
-        unifiedLeads.push({
-          _key: `av-${av.id}`,
-          id: '',
-          nome: av.pacientes?.nome || 'Sem nome',
-          telefone: av.pacientes?.telefone || '',
-          status: 'avaliacao',
-          temperatura: 'quente',
-          criado_em: av.data_avaliacao || av.criado_em,
-          origem_id: av.origem_id,
-          mes_referencia: mesReferencia,
-          qtd_agendamentos: 1,
-          qtd_faltas: 0,
-          isRecorrente: true,
-        })
-      })
-
-      ;(vendasOrigem || []).forEach((v: any) => {
-        const nome = v.paciente_nome?.toLowerCase().trim()
-
-        if (nome && processado.has(nome)) return
-        if (nome) processado.add(nome)
-
-        unifiedLeads.push({
-          _key: `vd-${v.id}`,
-          id: '',
-          nome: v.paciente_nome || 'Sem nome',
-          telefone: v.telefone || '',
-          status: 'venda_concretizada',
-          temperatura: 'quente',
-          criado_em: v.data_fechamento || v.criado_em,
-          origem_id: v.origem_id || v.avaliacoes?.origem_id,
-          mes_referencia: mesReferencia,
-          qtd_agendamentos: 1,
-          qtd_faltas: 0,
-          isRecorrente: true,
-        })
-      })
-    }
-
-    unifiedLeads.forEach((lead) => {
-      if (lead.isRecorrente === undefined) {
-        lead.isRecorrente = false
-      }
     })
 
     unifiedLeads.sort(

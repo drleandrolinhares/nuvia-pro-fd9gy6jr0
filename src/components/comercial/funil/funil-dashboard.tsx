@@ -54,25 +54,9 @@ export function FunilDashboard({
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
-      const origem = origens.find((o: any) => o.id === d.origem_id)
-      const origemNome = origem?.nome?.toLowerCase() || ''
-      const isRecorrente = origemNome.includes('recorrente')
-      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
-
-      if (isRecorrente) {
-        return {
-          ...d,
-          leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
-          agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
-          comparecimentos_realizado: Math.max(
-            Number(d.comparecimentos_realizado || 0),
-            fechamentos,
-          ),
-        }
-      }
       return { ...d }
     })
-  }, [dados, origens])
+  }, [dados])
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(

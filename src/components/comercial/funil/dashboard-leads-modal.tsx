@@ -157,22 +157,6 @@ export function DashboardLeadsModal({
           .select('*')
           .eq('mes_referencia', mesReferencia)
 
-        const { data: rawAvaliacoes } = await supabase
-          .from('avaliacoes')
-          .select(
-            'id, origem_id, valor_orcamento, status, pacientes(nome, telefone), data_avaliacao',
-          )
-          .gte('data_avaliacao', dataInicio)
-          .lte('data_avaliacao', dataFim)
-
-        const { data: rawVendas } = await supabase
-          .from('vendas_confirmadas')
-          .select(
-            'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id), telefone, data_fechamento',
-          )
-          .gte('data_fechamento', dataInicio)
-          .lte('data_fechamento', dataFim)
-
         const unifiedList: any[] = []
 
         ;(rawLeads || []).forEach((lead: any) => {
@@ -230,68 +214,6 @@ export function DashboardLeadsModal({
               contatos: lead.quantidade_contatos,
               fonte: 'Lead',
               origem_nome: getOrigemDisplayNome(lead.origem_id),
-            })
-          }
-        })
-
-        ;(rawAvaliacoes || []).forEach((av: any) => {
-          const oId = av.origem_id
-          if (origens && origens.length > 0 && !origens.includes(oId)) return
-
-          const status = (av.status || '').toLowerCase()
-          if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
-            return
-
-          if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
-          const nome = String(av.pacientes.nome).trim().toLowerCase()
-          if (nome.includes('teste') || nome.includes('duplicado')) return
-
-          let include = false
-          if (type === 'leads') {
-            include = false
-          }
-          if (type === 'agendamentos') include = true
-          if (type === 'comparecimentos') include = true
-
-          if (include) {
-            unifiedList.push({
-              id: av.id,
-              nome: av.pacientes?.nome || 'N/A',
-              telefone: av.pacientes?.telefone || '-',
-              status: av.status || 'avaliacao',
-              data: av.data_avaliacao,
-              contatos: 1,
-              fonte: 'Avaliação',
-              origem_nome: getOrigemDisplayNome(av.origem_id),
-            })
-          }
-        })
-
-        ;(rawVendas || []).forEach((v: any) => {
-          const oId = v.origem_id || v.avaliacoes?.origem_id
-          if (origens && origens.length > 0 && !origens.includes(oId)) return
-
-          if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
-          const nome = String(v.paciente_nome).trim().toLowerCase()
-          if (nome.includes('teste') || nome.includes('duplicado')) return
-
-          let include = false
-          if (type === 'leads') {
-            include = false
-          }
-          if (type === 'agendamentos') include = true
-          if (type === 'comparecimentos') include = true
-
-          if (include) {
-            unifiedList.push({
-              id: v.id,
-              nome: v.paciente_nome,
-              telefone: v.telefone || '-',
-              status: 'venda_concretizada',
-              data: v.data_fechamento,
-              contatos: 1,
-              fonte: 'Venda Confirmada',
-              origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             })
           }
         })

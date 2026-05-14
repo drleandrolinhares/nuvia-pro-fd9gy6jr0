@@ -129,51 +129,6 @@ export default function FunilVendas() {
       if (isFaltante) aggregatedLeads[oId].faltas++
     })
 
-    ;(avaliacoesData || []).forEach((av: any) => {
-      const oId = av.origem_id
-      if (!oId) return
-
-      const status = (av.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
-
-      const origemTempNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      if (!origemTempNome.includes('recorrente')) return
-
-      if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
-      const nome = String(av.pacientes.nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      if (!aggregatedLeads[oId]) {
-        aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
-      }
-
-      aggregatedLeads[oId].leads++
-      aggregatedLeads[oId].agendamentos++
-      aggregatedLeads[oId].comparecimentos++
-    })
-
-    ;(vendasData || []).forEach((v: any) => {
-      const oId = v.origem_id || v.avaliacoes?.origem_id
-      if (!oId) return
-
-      const origemTempNome =
-        (origensData || []).find((o: any) => o.id === oId)?.nome?.toLowerCase() || ''
-      if (!origemTempNome.includes('recorrente')) return
-
-      if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
-      const nome = String(v.paciente_nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      if (!aggregatedLeads[oId]) {
-        aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
-      }
-
-      aggregatedLeads[oId].leads++
-      aggregatedLeads[oId].agendamentos++
-      aggregatedLeads[oId].comparecimentos++
-    })
-
     const allOrigensIds = [
       ...new Set([
         ...(origensData || []).map((o: any) => o.id),
@@ -188,10 +143,6 @@ export default function FunilVendas() {
     const finalDados = allOrigensIds
       .map((oId: any) => {
         const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
-
-        const origem = (origensData || []).find((o: any) => o.id === oId)
-        const origemTempNome = origem?.nome?.toLowerCase() || ''
-        const isRecTemp = origemTempNome.includes('recorrente')
 
         const vendasOrigem = (vendasData || []).filter((v: any) => {
           const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
