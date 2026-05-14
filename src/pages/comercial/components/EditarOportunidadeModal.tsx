@@ -46,6 +46,7 @@ export function EditarOportunidadeModal({
   const [origens, setOrigens] = useState<any[]>([])
 
   const isAdmin = profile?.role === 'admin'
+  const [hasVenda, setHasVenda] = useState(false)
 
   const [formData, setFormData] = useState({
     data_avaliacao: '',
@@ -71,6 +72,14 @@ export function EditarOportunidadeModal({
 
   useEffect(() => {
     if (avaliacao && isOpen) {
+      supabase
+        .from('vendas_confirmadas')
+        .select('id')
+        .eq('oportunidade_id', avaliacao.id)
+        .then(({ data }) => {
+          setHasVenda(!!(data && data.length > 0))
+        })
+
       setFormData({
         data_avaliacao: avaliacao.data_avaliacao ? avaliacao.data_avaliacao.substring(0, 10) : '',
         data_fechamento: avaliacao.data_fechamento
@@ -90,8 +99,22 @@ export function EditarOportunidadeModal({
 
   const handleDelete = async () => {
     if (!avaliacao) return
-    if (!confirm('Deseja realmente excluir esta oportunidade? Esta ação não pode ser desfeita.'))
-      return
+
+    if (hasVenda) {
+      if (
+        !confirm(
+          'ATENÇÃO: Esta oportunidade possui uma venda vinculada! Tem certeza que deseja excluí-la? Isso pode gerar inconsistências financeiras no histórico de vendas.',
+        )
+      )
+        return
+    } else {
+      if (
+        !confirm(
+          'Deseja realmente excluir esta oportunidade? Esta ação não pode ser desfeita e os dados serão permanentemente perdidos.',
+        )
+      )
+        return
+    }
 
     setSaving(true)
     try {
