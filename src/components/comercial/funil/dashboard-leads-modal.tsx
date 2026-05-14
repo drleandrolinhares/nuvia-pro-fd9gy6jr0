@@ -15,11 +15,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Search, Link as LinkIcon } from 'lucide-react'
+import { Loader2, Search, Link as LinkIcon, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { EditarOportunidadeModal } from '@/pages/comercial/components/EditarOportunidadeModal'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { toast } from '@/hooks/use-toast'
 
 export function DashboardLeadsModal({
   isOpen,
@@ -59,19 +61,10 @@ export function DashboardLeadsModal({
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [ano, mes] = mesReferencia.split('-')
-      const start = `${mesReferencia}-01`
-      const end = `${mesReferencia}-${new Date(Number(ano), Number(mes), 0).getDate()}`
-
       if (type === 'oportunidades' || type === 'fechamentos') {
-        let query = supabase
+        const query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
-          .in('origem_id', origens)
-
-        if (type === 'fechamentos') {
-          query = query.gte('data_fechamento', start).lte('data_fechamento', end)
-        }
 
         const { data: avaliacoes } = await query
 
@@ -83,12 +76,18 @@ export function DashboardLeadsModal({
             return a
           })
           .filter((a: any) => {
-            if (type === 'oportunidades') {
-              const dateStr = a.data_avaliacao || a.criado_em
-              if (!dateStr) return false
-              const itemDate = dateStr.substring(0, 10)
-              return itemDate >= start && itemDate <= end
+            const dateStr = a.data_avaliacao || a.criado_em || a.data_fechamento || ''
+            const itemDate = dateStr.substring(0, 7)
+            if (dateStr && itemDate !== mesReferencia) return false
+
+            if (type === 'fechamentos') {
+              if (!a.data_fechamento) return false
             }
+
+            if (origens && origens.length > 0 && origens.length < 5) {
+              if (a.origem_id && !origens.includes(a.origem_id)) return false
+            }
+
             return true
           })
 
@@ -103,7 +102,6 @@ export function DashboardLeadsModal({
         const { data: leads } = await supabase
           .from('funil_leads')
           .select('*')
-          .in('origem_id', origens)
           .eq('mes_referencia', mesReferencia)
           .order('criado_em', { ascending: false })
 
@@ -111,6 +109,10 @@ export function DashboardLeadsModal({
           const status = (lead.status || '').toLowerCase()
           if (!lead.nome || String(lead.nome).trim() === '') {
             lead.nome = 'Lead sem nome'
+          }
+
+          if (origens && origens.length > 0 && origens.length < 5) {
+            if (lead.origem_id && !origens.includes(lead.origem_id)) return false
           }
 
           if (type === 'leads') return true
@@ -144,12 +146,37 @@ export function DashboardLeadsModal({
           if (type === 'agendamentos') return isAgendado
           if (type === 'comparecimentos') return isCompareceu
           if (type === 'faltas') return isFaltante
-          return true // Fallback to return true if nothing else matches, removing strict hiding
+          return true
         })
         setData(filtered)
       }
     } catch (err) {
       console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string, isOportunidade: boolean) => {
+    if (
+      !confirm(
+        'ATENÇÃO: Deseja realmente excluir este registro? Esta ação removerá os dados do banco.',
+      )
+    )
+      return
+
+    setLoading(true)
+    try {
+      if (isOportunidade) {
+        await supabase.from('avaliacoes').delete().eq('id', id)
+      } else {
+        await supabase.from('funil_leads').delete().eq('id', id)
+      }
+      toast({ title: 'Sucesso', description: 'Registro excluído com sucesso.' })
+      fetchData()
+      if (onUpdate) onUpdate()
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -189,7 +216,7 @@ export function DashboardLeadsModal({
             <DialogTitle className="text-xl text-white">{title}</DialogTitle>
             <DialogDescription className="text-slate-400">
               {type === 'oportunidades'
-                ? 'Clique em uma oportunidade para editar ou remover registros duplicados. Oportunidades com vendas vinculadas estão identificadas.'
+                ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
                 : 'Listagem detalhada dos registros do período selecionado.'}
             </DialogDescription>
             <div className="relative mt-4">
@@ -207,11 +234,11 @@ export function DashboardLeadsModal({
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-                <p>Carregando dados...</p>
+                <p>Carregando dados completos (Auditoria)...</p>
               </div>
             ) : filteredData.length === 0 ? (
               <div className="text-center py-12 text-slate-500 bg-slate-900/50 rounded-lg border border-slate-800/50">
-                Nenhum registro encontrado para este filtro.
+                Nenhum registro encontrado para este filtro na base de dados.
               </div>
             ) : (
               <div className="rounded-md border border-slate-800 overflow-hidden bg-slate-950/30">
@@ -222,30 +249,22 @@ export function DashboardLeadsModal({
                         Data
                       </TableHead>
                       <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                        Paciente
+                        Paciente / Lead
+                      </TableHead>
+                      <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                        Origem
+                      </TableHead>
+                      <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                        Status & Vínculos
                       </TableHead>
                       {type === 'oportunidades' || type === 'fechamentos' ? (
-                        <>
-                          <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                            Origem
-                          </TableHead>
-                          <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                            Status & Vínculos
-                          </TableHead>
-                          <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-right">
-                            Valor
-                          </TableHead>
-                        </>
-                      ) : (
-                        <>
-                          <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                            Telefone
-                          </TableHead>
-                          <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                            Status
-                          </TableHead>
-                        </>
-                      )}
+                        <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-right">
+                          Valor
+                        </TableHead>
+                      ) : null}
+                      <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-center w-[80px]">
+                        Ações
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -259,7 +278,7 @@ export function DashboardLeadsModal({
                       return (
                         <TableRow
                           key={row.id}
-                          className={`border-slate-800/50 transition-colors ${isOportunidade ? 'cursor-pointer hover:bg-slate-800 group' : 'hover:bg-slate-800/50'}`}
+                          className={`border-slate-800/50 transition-colors cursor-pointer hover:bg-slate-800 group`}
                           onClick={() => {
                             if (isOportunidade) {
                               setSelectedAvaliacao(row)
@@ -285,47 +304,48 @@ export function DashboardLeadsModal({
                               )}
                             </div>
                           </TableCell>
-                          {isOportunidade ? (
-                            <>
-                              <TableCell className="text-slate-400 text-sm">
-                                {origensList.find((o) => o.id === row.origem_id)?.nome || '-'}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-slate-800 text-slate-300">
-                                    {(row.status || 'Pendente').replace(/_/g, ' ')}
-                                  </span>
-                                  {hasVenda && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                      <LinkIcon className="w-3 h-3" />
-                                      Venda Vinculada
-                                    </span>
-                                  )}
-                                  {!hasVenda && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20">
-                                      Sem Venda
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right text-emerald-400 font-semibold">
-                                {formatCurrency(
-                                  type === 'fechamentos' ? row.valor_entrada : row.valor_orcamento,
-                                )}
-                              </TableCell>
-                            </>
-                          ) : (
-                            <>
-                              <TableCell className="text-slate-400 text-sm">
-                                {row.telefone || '-'}
-                              </TableCell>
-                              <TableCell>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-slate-800 text-slate-300">
-                                  {(row.status || 'Pendente').replace(/_/g, ' ')}
+                          <TableCell className="text-slate-400 text-sm">
+                            {origensList.find((o) => o.id === row.origem_id)?.nome || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-slate-800 text-slate-300">
+                                {(row.status || 'Pendente').replace(/_/g, ' ')}
+                              </span>
+                              {isOportunidade && hasVenda && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                  <LinkIcon className="w-3 h-3" />
+                                  Venda Vinculada
                                 </span>
-                              </TableCell>
-                            </>
-                          )}
+                              )}
+                              {isOportunidade && !hasVenda && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20">
+                                  Sem Venda
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          {isOportunidade ? (
+                            <TableCell className="text-right text-emerald-400 font-semibold">
+                              {formatCurrency(
+                                type === 'fechamentos' ? row.valor_entrada : row.valor_orcamento,
+                              )}
+                            </TableCell>
+                          ) : null}
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/20 opacity-70 hover:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDelete(row.id, isOportunidade)
+                              }}
+                              title="Excluir Registro"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       )
                     })}
