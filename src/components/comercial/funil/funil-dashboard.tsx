@@ -119,32 +119,20 @@ export function FunilDashboard({
     })
   }, [avaliacoes])
 
-  const totalAvaliacoes = Math.max(avaliacoesAtuais.length, totaisGerais.fechamentos)
+  const totalAvaliacoes = avaliacoesAtuais.length
 
-  const calcValorOportunidades = (avs: any[], fechadoTotal: number) => {
-    const totalOrcamentos = avs.reduce(
-      (acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0),
-      0,
-    )
-    return Math.max(totalOrcamentos, fechadoTotal)
+  const calcValorOportunidades = (avs: any[]) => {
+    return avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
   }
 
   const valorOportunidadesClassico = useMemo(
-    () =>
-      calcValorOportunidades(
-        avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id)),
-        totaisClassico.valor_fechado,
-      ),
-    [avaliacoesAtuais, origens, totaisClassico.valor_fechado],
+    () => calcValorOportunidades(avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id))),
+    [avaliacoesAtuais, origens],
   )
 
   const valorOportunidadesSecundario = useMemo(
-    () =>
-      calcValorOportunidades(
-        avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id)),
-        totaisSecundario.valor_fechado,
-      ),
-    [avaliacoesAtuais, origens, totaisSecundario.valor_fechado],
+    () => calcValorOportunidades(avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id))),
+    [avaliacoesAtuais, origens],
   )
 
   const conversaoTotalClassico =

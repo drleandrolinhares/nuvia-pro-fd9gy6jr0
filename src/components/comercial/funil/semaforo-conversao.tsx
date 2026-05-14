@@ -224,7 +224,7 @@ export function SemaforoConversao({
     const pacientesAtendidosConsolidado = globalMetrics.total
     const qtdeVendasConsolidado = globalMetrics.qtdeVendas
     const valorVendasFinal = realVendas.loaded ? realVendas.valor : globalMetrics.valorVendas
-    const valorOportunidades = Math.max(valorOportunidadesBruto, valorVendasFinal)
+    const valorOportunidades = valorOportunidadesBruto
 
     return {
       global: globalMetrics,
