@@ -91,11 +91,10 @@ export default function FunilVendas() {
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
 
       if (!lead.nome || String(lead.nome).trim() === '') return
-      const nome = String(lead.nome).trim().toLowerCase()
+      const nome = String(lead.nome).trim().toLowerCase().replace(/\s+/g, ' ')
       if (nome.includes('teste') || nome.includes('duplicado')) return
 
-      const phone = lead.telefone ? String(lead.telefone).trim().replace(/\D/g, '') : ''
-      const dedupKey = `${oId}-${nome}-${phone}`
+      const dedupKey = nome
 
       if (!deduplicatedLeadsMap.has(dedupKey)) {
         deduplicatedLeadsMap.set(dedupKey, { ...lead })
@@ -227,11 +226,27 @@ export default function FunilVendas() {
       .map((oId: any) => {
         const existing = (dadosData || []).find((d: any) => d.origem_id === oId)
 
-        const vendasOrigem = (vendasData || []).filter((v: any) => {
+        const vendasOrigemRaw = (vendasData || []).filter((v: any) => {
           const matched = (v.origem_id || v.avaliacoes?.origem_id) === oId
           if (!matched) return false
           return true
         })
+
+        const uniqueVendasMap = new Map()
+        vendasOrigemRaw.forEach((v: any) => {
+          if (!v.paciente_nome) return
+          const n = String(v.paciente_nome).trim().toLowerCase().replace(/\s+/g, ' ')
+          if (!uniqueVendasMap.has(n)) {
+            uniqueVendasMap.set(n, v)
+          } else {
+            const ext = uniqueVendasMap.get(n)
+            if (Number(v.valor_tratamento || 0) > Number(ext.valor_tratamento || 0)) {
+              uniqueVendasMap.set(n, v)
+            }
+          }
+        })
+        const vendasOrigem = Array.from(uniqueVendasMap.values())
+
         const qtdeVendas = vendasOrigem.length
         const valorVendas = vendasOrigem.reduce(
           (acc: number, curr: any) => acc + Number(curr.valor_tratamento || 0),
@@ -289,16 +304,43 @@ export default function FunilVendas() {
       }
 
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
-      const nome = String(av.pacientes.nome).trim().toLowerCase()
+      const nome = String(av.pacientes.nome).trim().toLowerCase().replace(/\s+/g, ' ')
       if (nome.includes('teste') || nome.includes('duplicado')) return false
 
       return true
     })
 
+    const uniqueAvaliacoesMap = new Map()
+    avaliacoesFiltradas.forEach((av: any) => {
+      const nome = String(av.pacientes.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      if (!uniqueAvaliacoesMap.has(nome)) {
+        uniqueAvaliacoesMap.set(nome, av)
+      } else {
+        const existing = uniqueAvaliacoesMap.get(nome)
+        if ((av.valor_orcamento || 0) > (existing.valor_orcamento || 0)) {
+          uniqueAvaliacoesMap.set(nome, av)
+        }
+      }
+    })
+
+    const uniqueVendasGlobalMap = new Map()
+    ;(vendasData || []).forEach((v: any) => {
+      if (!v.paciente_nome) return
+      const n = String(v.paciente_nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      if (!uniqueVendasGlobalMap.has(n)) {
+        uniqueVendasGlobalMap.set(n, v)
+      } else {
+        const ext = uniqueVendasGlobalMap.get(n)
+        if (Number(v.valor_tratamento || 0) > Number(ext.valor_tratamento || 0)) {
+          uniqueVendasGlobalMap.set(n, v)
+        }
+      }
+    })
+
     setDadosMensais(finalDados)
-    setAvaliacoesMes(avaliacoesFiltradas)
+    setAvaliacoesMes(Array.from(uniqueAvaliacoesMap.values()))
     setLeadsMes(leadsData || [])
-    setVendasMes(vendasData || [])
+    setVendasMes(Array.from(uniqueVendasGlobalMap.values()))
     if (showLoader) setLoading(false)
   }
 

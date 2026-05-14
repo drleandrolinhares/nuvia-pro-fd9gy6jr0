@@ -99,7 +99,7 @@ export function DashboardLeadsModal({
               if (vendasOportunidadesIds.has(a.id)) return false
               return true
             })
-            .map((a) => ({
+            .map((a: any) => ({
               id: a.id,
               nome: a.pacientes.nome,
               telefone: a.pacientes?.telefone || '-',
@@ -110,7 +110,24 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(a.origem_id),
             }))
 
-          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
+          const uniqueOps = new Map()
+          filtered.forEach((a: any) => {
+            const n = String(a.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+            if (!uniqueOps.has(n)) {
+              uniqueOps.set(n, a)
+            } else {
+              const existing = uniqueOps.get(n)
+              if ((a.valor || 0) > (existing.valor || 0)) {
+                uniqueOps.set(n, a)
+              }
+            }
+          })
+
+          setData(
+            Array.from(uniqueOps.values()).sort((a: any, b: any) =>
+              (a.nome || '').localeCompare(b.nome || ''),
+            ),
+          )
           return
         }
 
@@ -147,7 +164,24 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             }))
 
-          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
+          const uniqueVendas = new Map()
+          filtered.forEach((v: any) => {
+            const n = String(v.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+            if (!uniqueVendas.has(n)) {
+              uniqueVendas.set(n, v)
+            } else {
+              const existing = uniqueVendas.get(n)
+              if ((v.valor || 0) > (existing.valor || 0)) {
+                uniqueVendas.set(n, v)
+              }
+            }
+          })
+
+          setData(
+            Array.from(uniqueVendas.values()).sort((a: any, b: any) =>
+              (a.nome || '').localeCompare(b.nome || ''),
+            ),
+          )
           return
         }
 
@@ -169,11 +203,10 @@ export function DashboardLeadsModal({
             return
 
           if (!lead.nome || String(lead.nome).trim() === '') return
-          const nome = String(lead.nome).trim().toLowerCase()
+          const nome = String(lead.nome).trim().toLowerCase().replace(/\s+/g, ' ')
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
-          const phone = lead.telefone ? String(lead.telefone).trim().replace(/\D/g, '') : ''
-          const dedupKey = `${oId}-${nome}-${phone}`
+          const dedupKey = nome
 
           if (!deduplicatedLeadsMap.has(dedupKey)) {
             deduplicatedLeadsMap.set(dedupKey, { ...lead })

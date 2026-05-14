@@ -99,12 +99,37 @@ function PacientesList() {
 
       if (data) {
         if (isNewSearch) {
-          setPacientes(data)
+          const unique: any[] = []
+          const names = new Set()
+          data.forEach((d) => {
+            const n = String(d.nome || '')
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, ' ')
+            if (!names.has(n)) {
+              names.add(n)
+              unique.push(d)
+            }
+          })
+          setPacientes(unique)
         } else {
           setPacientes((prev) => {
             const newPacientes = [...prev]
+            const names = new Set(
+              prev.map((p) =>
+                String(p.nome || '')
+                  .trim()
+                  .toLowerCase()
+                  .replace(/\s+/g, ' '),
+              ),
+            )
             data.forEach((d) => {
-              if (!newPacientes.find((p) => p.id === d.id)) {
+              const n = String(d.nome || '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+              if (!newPacientes.find((p) => p.id === d.id) && !names.has(n)) {
+                names.add(n)
                 newPacientes.push(d)
               }
             })
