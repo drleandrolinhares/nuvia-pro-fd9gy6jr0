@@ -80,13 +80,7 @@ export default function FunilVendas() {
       .gte('data_avaliacao', dataInicio)
       .lte('data_avaliacao', dataFim)
 
-    const processadoPorOrigem: Record<string, Set<string>> = {}
     const aggregatedLeads: Record<string, any> = {}
-
-    const getProcessado = (oId: string) => {
-      if (!processadoPorOrigem[oId]) processadoPorOrigem[oId] = new Set<string>()
-      return processadoPorOrigem[oId]
-    }
 
     ;(leadsData || []).forEach((lead: any) => {
       const oId = lead.origem_id
@@ -98,9 +92,6 @@ export default function FunilVendas() {
       if (!lead.nome || String(lead.nome).trim() === '') return
       const nome = String(lead.nome).trim().toLowerCase()
       if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      if (getProcessado(oId).has(nome)) return
-      getProcessado(oId).add(nome)
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -153,9 +144,6 @@ export default function FunilVendas() {
       const nome = String(av.pacientes.nome).trim().toLowerCase()
       if (nome.includes('teste') || nome.includes('duplicado')) return
 
-      if (getProcessado(oId).has(nome)) return
-      getProcessado(oId).add(nome)
-
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
       }
@@ -176,9 +164,6 @@ export default function FunilVendas() {
       if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
       const nome = String(v.paciente_nome).trim().toLowerCase()
       if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      if (getProcessado(oId).has(nome)) return
-      getProcessado(oId).add(nome)
 
       if (!aggregatedLeads[oId]) {
         aggregatedLeads[oId] = { leads: 0, agendamentos: 0, comparecimentos: 0, faltas: 0 }
@@ -276,32 +261,8 @@ export default function FunilVendas() {
       return true
     })
 
-    const deduplicatedAvaliacoes = Array.from(
-      avaliacoesFiltradas
-        .reduce((map, av) => {
-          const nome = String(av.pacientes.nome).trim().toLowerCase()
-          if (map.has(nome)) {
-            const existing = map.get(nome)
-            const existingIsVenda =
-              existing.status === 'venda_concretizada' || existing.status === 'venda-fechada'
-            const newIsVenda = av.status === 'venda_concretizada' || av.status === 'venda-fechada'
-            if (
-              !existingIsVenda &&
-              (newIsVenda ||
-                Number(av.valor_orcamento || 0) > Number(existing.valor_orcamento || 0))
-            ) {
-              map.set(nome, av)
-            }
-          } else {
-            map.set(nome, av)
-          }
-          return map
-        }, new Map())
-        .values(),
-    )
-
     setDadosMensais(finalDados)
-    setAvaliacoesMes(deduplicatedAvaliacoes)
+    setAvaliacoesMes(avaliacoesFiltradas)
     setLeadsMes(leadsData || [])
     setVendasMes(vendasData || [])
     if (showLoader) setLoading(false)

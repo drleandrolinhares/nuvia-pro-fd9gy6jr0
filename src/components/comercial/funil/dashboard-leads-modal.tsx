@@ -46,12 +46,12 @@ export function DashboardLeadsModal({
 
         const { data: currentVendas } = await supabase
           .from('vendas_confirmadas')
-          .select('paciente_nome')
+          .select('id, oportunidade_id')
           .gte('data_fechamento', dataInicio)
           .lte('data_fechamento', dataFim)
 
-        const vendasNomes = new Set(
-          (currentVendas || []).map((v) => v.paciente_nome?.toLowerCase().trim()).filter(Boolean),
+        const vendasOportunidadesIds = new Set(
+          (currentVendas || []).map((v) => v.oportunidade_id).filter(Boolean),
         )
 
         const getOrigemDisplayNome = (id: string) =>
@@ -96,7 +96,7 @@ export function DashboardLeadsModal({
               const nome = String(a.pacientes.nome).trim().toLowerCase()
               if (nome.includes('teste') || nome.includes('duplicado')) return false
 
-              if (vendasNomes.has(nome)) return false
+              if (vendasOportunidadesIds.has(a.id)) return false
               return true
             })
             .map((a) => ({
@@ -110,13 +110,7 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(a.origem_id),
             }))
 
-          const deduplicated = Array.from(
-            new Map(
-              filtered.map((item) => [String(item.nome).trim().toLowerCase(), item]),
-            ).values(),
-          ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
-
-          setData(deduplicated)
+          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
           return
         }
 
@@ -153,13 +147,7 @@ export function DashboardLeadsModal({
               origem_nome: getOrigemDisplayNome(v.origem_id || v.avaliacoes?.origem_id),
             }))
 
-          const deduplicated = Array.from(
-            new Map(
-              filtered.map((item) => [String(item.nome).trim().toLowerCase(), item]),
-            ).values(),
-          ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
-
-          setData(deduplicated)
+          setData(filtered.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
           return
         }
 
@@ -224,10 +212,6 @@ export function DashboardLeadsModal({
           ].includes(status)
           const isFaltante = status === 'faltou'
 
-          const isVendaFechada =
-            status === 'venda-fechada' || status === 'venda_concretizada' || status === 'fechamento'
-          const isInVendas = nome ? vendasNomes.has(nome) : false
-
           let include = false
           if (type === 'leads') {
             include = true
@@ -261,9 +245,6 @@ export function DashboardLeadsModal({
           if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
           const nome = String(av.pacientes.nome).trim().toLowerCase()
           if (nome.includes('teste') || nome.includes('duplicado')) return
-
-          const isInVendas = vendasNomes.has(nome)
-          const isVendaFechada = status === 'venda-fechada' || status === 'venda_concretizada'
 
           let include = false
           if (type === 'leads') {
@@ -315,13 +296,7 @@ export function DashboardLeadsModal({
           }
         })
 
-        const deduplicated = Array.from(
-          new Map(
-            unifiedList.map((item) => [String(item.nome).trim().toLowerCase(), item]),
-          ).values(),
-        ).sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || ''))
-
-        setData(deduplicated)
+        setData(unifiedList.sort((a: any, b: any) => (a.nome || '').localeCompare(b.nome || '')))
       } catch (err) {
         console.error(err)
       } finally {

@@ -114,119 +114,25 @@ export function FunilDashboard({
     () => calcTotais(dadosAjustados.filter((d: any) => isClassico(d.origem_id))),
     [dadosAjustados, origens],
   )
-  const totaisSecundario = useMemo(() => {
-    const padrao = calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id)))
-
-    if (!leads) return { ...padrao, leads: 0 }
-
-    const unifiedAgendamentos = new Map()
-    const unifiedComparecimentos = new Map()
-    const unifiedFaltas = new Map()
-
-    ;(leads || []).forEach((lead: any) => {
-      const oId = lead.origem_id
-      if (!isSecundario(oId)) return
-
-      const status = (lead.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
-
-      if (!lead.nome || String(lead.nome).trim() === '') return
-      const nome = String(lead.nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      const isAgendado = [
-        'agendado',
-        'reagendado',
-        'atendido',
-        'faltou',
-        'negociacao',
-        'venda-fechada',
-        'venda_concretizada',
-        'venda-perdida',
-        'avaliacao',
-        'fechamento',
-        'em_follow_up',
-      ].includes(status)
-      const isCompareceu = [
-        'atendido',
-        'negociacao',
-        'venda-fechada',
-        'venda_concretizada',
-        'venda-perdida',
-        'avaliacao',
-        'fechamento',
-        'em_follow_up',
-      ].includes(status)
-      const isFaltante = status === 'faltou'
-
-      if (isAgendado) unifiedAgendamentos.set(nome, true)
-      if (isCompareceu) unifiedComparecimentos.set(nome, true)
-      if (isFaltante) unifiedFaltas.set(nome, true)
-    })
-
-    ;(avaliacoes || []).forEach((av: any) => {
-      const oId = av.origem_id
-      if (!isSecundario(oId)) return
-
-      const status = (av.status || '').toLowerCase()
-      if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
-
-      if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
-      const nome = String(av.pacientes.nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      unifiedAgendamentos.set(nome, true)
-      unifiedComparecimentos.set(nome, true)
-    })
-
-    ;(vendas || []).forEach((v: any) => {
-      const oId = v.origem_id || v.avaliacoes?.origem_id
-      if (!isSecundario(oId)) return
-
-      if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
-      const nome = String(v.paciente_nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
-
-      unifiedAgendamentos.set(nome, true)
-      unifiedComparecimentos.set(nome, true)
-    })
-
-    return {
-      ...padrao,
-      leads: padrao.leads,
-      agendamentos: unifiedAgendamentos.size,
-      comparecimentos: unifiedComparecimentos.size,
-      faltas: unifiedFaltas.size,
-    }
-  }, [dadosAjustados, origens, leads, avaliacoes, vendas])
+  const totaisSecundario = useMemo(
+    () => calcTotais(dadosAjustados.filter((d: any) => isSecundario(d.origem_id))),
+    [dadosAjustados, origens],
+  )
 
   const avaliacoesAtuais = useMemo(() => {
     if (!avaliacoes) return []
-    const map = new Map()
-    avaliacoes.forEach((a: any) => {
+    return avaliacoes.filter((a: any) => {
       const status = (a.status || '').toLowerCase()
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
-        return
+        return false
       }
 
-      if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return
+      if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
       const nome = String(a.pacientes.nome).trim().toLowerCase()
-      if (nome.includes('teste') || nome.includes('duplicado')) return
+      if (nome.includes('teste') || nome.includes('duplicado')) return false
 
-      if (map.has(nome)) {
-        const existing = map.get(nome)
-        if (
-          Number(a.valor_orcamento || 0) > Number(existing.valor_orcamento || 0) ||
-          a.status === 'venda_concretizada' ||
-          a.status === 'venda-fechada'
-        ) {
-          map.set(nome, a)
-        }
-      } else {
-        map.set(nome, a)
-      }
+      return true
     })
-    return Array.from(map.values())
   }, [avaliacoes])
 
   const totalAvaliacoes = Math.max(avaliacoesAtuais.length, totaisGerais.fechamentos)
