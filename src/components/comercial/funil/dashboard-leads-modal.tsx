@@ -43,6 +43,19 @@ export function DashboardLeadsModal({
         const dataFim = `${mesReferencia}-${ultimoDia}`
 
         const { data: origensData } = await supabase.from('funil_origens').select('*')
+        const validOrigens = new Set(
+          (origensData || []).filter((o) => o.ativo !== false).map((o) => o.id),
+        )
+
+        const normalizeNome = (n: any) => {
+          if (!n) return ''
+          return String(n)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+        }
 
         const { data: currentVendas } = await supabase
           .from('vendas_confirmadas')
@@ -75,7 +88,9 @@ export function DashboardLeadsModal({
 
           const filtered = (rawAvaliacoes || [])
             .filter((a: any) => {
-              if (origens && origens.length > 0 && !origens.includes(a.origem_id)) return false
+              const oId = a.origem_id
+              if (origens && origens.length > 0 && !origens.includes(oId)) return false
+              if (!oId || !validOrigens.has(oId)) return false
 
               const status = (a.status || '').toLowerCase()
               if (
@@ -93,7 +108,7 @@ export function DashboardLeadsModal({
                 return false
 
               if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-              const nome = String(a.pacientes.nome).trim().toLowerCase()
+              const nome = normalizeNome(a.pacientes.nome)
               if (nome.includes('teste') || nome.includes('duplicado')) return false
 
               if (vendasOportunidadesIds.has(a.id)) return false
@@ -112,7 +127,7 @@ export function DashboardLeadsModal({
 
           const uniqueOps = new Map()
           filtered.forEach((a: any) => {
-            const n = String(a.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+            const n = normalizeNome(a.nome)
             if (!uniqueOps.has(n)) {
               uniqueOps.set(n, a)
             } else {
@@ -146,9 +161,10 @@ export function DashboardLeadsModal({
             .filter((v: any) => {
               const oId = v.origem_id || v.avaliacoes?.origem_id
               if (origens && origens.length > 0 && !origens.includes(oId)) return false
+              if (!oId || !validOrigens.has(oId)) return false
 
               if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return false
-              const nome = String(v.paciente_nome).trim().toLowerCase()
+              const nome = normalizeNome(v.paciente_nome)
               if (nome.includes('teste') || nome.includes('duplicado')) return false
 
               return true
@@ -166,7 +182,7 @@ export function DashboardLeadsModal({
 
           const uniqueVendas = new Map()
           filtered.forEach((v: any) => {
-            const n = String(v.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+            const n = normalizeNome(v.nome)
             if (!uniqueVendas.has(n)) {
               uniqueVendas.set(n, v)
             } else {
@@ -197,13 +213,14 @@ export function DashboardLeadsModal({
         ;(rawLeads || []).forEach((lead: any) => {
           const oId = lead.origem_id
           if (origens && origens.length > 0 && !origens.includes(oId)) return
+          if (!oId || !validOrigens.has(oId)) return
 
           const status = (lead.status || '').toLowerCase()
           if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
             return
 
           if (!lead.nome || String(lead.nome).trim() === '') return
-          const nome = String(lead.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+          const nome = normalizeNome(lead.nome)
           if (nome.includes('teste') || nome.includes('duplicado')) return
 
           const dedupKey = nome

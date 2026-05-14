@@ -80,18 +80,31 @@ export default function FunilVendas() {
       .gte('data_avaliacao', dataInicio)
       .lte('data_avaliacao', dataFim)
 
+    const validOrigensSet = new Set(
+      (origensData || []).filter((o: any) => o.ativo !== false).map((o: any) => o.id),
+    )
+    const normalizeNome = (nome: any) => {
+      if (!nome) return ''
+      return String(nome)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+    }
+
     const aggregatedLeads: Record<string, any> = {}
     const deduplicatedLeadsMap = new Map()
 
     ;(leadsData || []).forEach((lead: any) => {
       const oId = lead.origem_id
-      if (!oId) return
+      if (!oId || !validOrigensSet.has(oId)) return
 
       const status = (lead.status || '').toLowerCase()
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
 
       if (!lead.nome || String(lead.nome).trim() === '') return
-      const nome = String(lead.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      const nome = normalizeNome(lead.nome)
       if (nome.includes('teste') || nome.includes('duplicado')) return
 
       const dedupKey = nome
@@ -235,7 +248,7 @@ export default function FunilVendas() {
         const uniqueVendasMap = new Map()
         vendasOrigemRaw.forEach((v: any) => {
           if (!v.paciente_nome) return
-          const n = String(v.paciente_nome).trim().toLowerCase().replace(/\s+/g, ' ')
+          const n = normalizeNome(v.paciente_nome)
           if (!uniqueVendasMap.has(n)) {
             uniqueVendasMap.set(n, v)
           } else {
@@ -297,6 +310,9 @@ export default function FunilVendas() {
       })
 
     const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
+      const oId = av.origem_id
+      if (!oId || !validOrigensSet.has(oId)) return false
+
       const status = (av.status || '').toLowerCase()
 
       if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) {
@@ -304,7 +320,7 @@ export default function FunilVendas() {
       }
 
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
-      const nome = String(av.pacientes.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      const nome = normalizeNome(av.pacientes.nome)
       if (nome.includes('teste') || nome.includes('duplicado')) return false
 
       return true
@@ -312,7 +328,7 @@ export default function FunilVendas() {
 
     const uniqueAvaliacoesMap = new Map()
     avaliacoesFiltradas.forEach((av: any) => {
-      const nome = String(av.pacientes.nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      const nome = normalizeNome(av.pacientes.nome)
       if (!uniqueAvaliacoesMap.has(nome)) {
         uniqueAvaliacoesMap.set(nome, av)
       } else {
@@ -325,8 +341,10 @@ export default function FunilVendas() {
 
     const uniqueVendasGlobalMap = new Map()
     ;(vendasData || []).forEach((v: any) => {
+      const oId = v.origem_id || v.avaliacoes?.origem_id
+      if (!oId || !validOrigensSet.has(oId)) return
       if (!v.paciente_nome) return
-      const n = String(v.paciente_nome).trim().toLowerCase().replace(/\s+/g, ' ')
+      const n = normalizeNome(v.paciente_nome)
       if (!uniqueVendasGlobalMap.has(n)) {
         uniqueVendasGlobalMap.set(n, v)
       } else {
