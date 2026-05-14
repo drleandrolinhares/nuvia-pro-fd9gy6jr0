@@ -44,6 +44,20 @@ export function DashboardLeadsModal({
     if (isOpen) {
       fetchData()
       fetchOptions()
+
+      const channel = supabase
+        .channel(`modal-leads-${Math.random()}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'funil_leads' }, () => {
+          fetchData()
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () => {
+          fetchData()
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
   }, [isOpen, type, origens, mesReferencia])
 
@@ -173,8 +187,8 @@ export function DashboardLeadsModal({
         await supabase.from('funil_leads').delete().eq('id', id)
       }
       toast({ title: 'Sucesso', description: 'Registro excluído com sucesso.' })
-      fetchData()
-      if (onUpdate) onUpdate()
+      await fetchData()
+      if (onUpdate) await onUpdate()
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     } finally {
@@ -364,10 +378,10 @@ export function DashboardLeadsModal({
           avaliacao={selectedAvaliacao}
           dentistas={dentistas}
           crcs={crcs}
-          onSuccess={() => {
-            fetchData()
+          onSuccess={async () => {
+            await fetchData()
             setSelectedAvaliacao(null)
-            if (onUpdate) onUpdate()
+            if (onUpdate) await onUpdate()
           }}
         />
       )}

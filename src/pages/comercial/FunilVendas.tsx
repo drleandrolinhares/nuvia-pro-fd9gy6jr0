@@ -76,9 +76,9 @@ export default function FunilVendas() {
 
     const { data: avaliacoesData } = await supabase
       .from('avaliacoes')
-      .select('id, origem_id, valor_orcamento, status, pacientes(nome)')
-      .gte('data_avaliacao', dataInicio)
-      .lte('data_avaliacao', dataFim)
+      .select(
+        'id, origem_id, valor_orcamento, status, data_avaliacao, criado_em, data_fechamento, pacientes(nome)',
+      )
 
     const validOrigensSet = new Set(
       (origensData || []).filter((o: any) => o.ativo !== false).map((o: any) => o.id),
@@ -220,6 +220,10 @@ export default function FunilVendas() {
     const avaliacoesFiltradas = (avaliacoesData || []).filter((av: any) => {
       const oId = av.origem_id
       if (!oId || !validOrigensSet.has(oId)) return false
+
+      const dateStr = av.data_avaliacao || av.criado_em || av.data_fechamento || ''
+      const itemDate = dateStr.substring(0, 7)
+      if (dateStr && itemDate !== mesReferencia) return false
 
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
 
