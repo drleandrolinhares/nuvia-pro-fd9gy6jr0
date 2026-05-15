@@ -8,7 +8,7 @@ export default function FET() {
 
   return (
     <div className="flex flex-col h-full bg-slate-950 overflow-hidden">
-      <div className="flex items-center gap-3 p-6 pb-2">
+      <div className="flex items-center gap-3 p-4 pb-2">
         <div className="p-2 bg-amber-500/10 rounded-lg">
           <Activity className="w-5 h-5 text-amber-500" />
         </div>
@@ -18,11 +18,11 @@ export default function FET() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row flex-1 gap-4 p-6 pt-4 min-h-0">
-        <div className="w-full md:w-1/3 lg:w-1/4 h-full flex flex-col min-h-0">
+      <div className="flex flex-col md:flex-row flex-1 gap-3 p-4 pt-2 min-h-0 w-full">
+        <div className="w-full md:w-64 lg:w-72 h-full flex flex-col min-h-0 shrink-0">
           <FETPatientList selectedId={selectedPatientId} onSelect={setSelectedPatientId} />
         </div>
-        <div className="w-full md:w-2/3 lg:w-3/4 h-full flex flex-col min-h-0">
+        <div className="w-full flex-1 h-full flex flex-col min-h-0">
           {selectedPatientId ? (
             <FETPatientDetail patientId={selectedPatientId} />
           ) : (

@@ -46,7 +46,7 @@ export function FETPatientList({
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-slate-800 bg-slate-950/50 space-y-4">
+      <div className="p-4 border-b border-slate-800 bg-slate-950/50 space-y-3">
         <h2 className="text-lg font-bold text-white">Pacientes FET</h2>
         <div className="flex gap-2">
           <Input
@@ -54,23 +54,23 @@ export function FETPatientList({
             value={newNome}
             onChange={(e) => setNewNome(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            className="bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
+            className="h-9 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 text-sm"
           />
           <Button
             onClick={handleAdd}
             size="icon"
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 shrink-0"
+            className="h-9 w-9 bg-amber-500 hover:bg-amber-600 text-slate-950 shrink-0"
           >
             <Plus className="w-4 h-4" />
           </Button>
         </div>
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
           <Input
             placeholder="Buscar paciente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
+            className="h-9 pl-9 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 text-sm"
           />
         </div>
       </div>
@@ -81,7 +81,7 @@ export function FETPatientList({
               key={p.id}
               onClick={() => onSelect(p.id)}
               className={cn(
-                'w-full text-left px-3 py-3 rounded-lg transition-all border border-transparent',
+                'w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all border border-transparent',
                 selectedId === p.id
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-bold'
                   : 'text-slate-300 hover:bg-slate-800 hover:border-slate-700',
