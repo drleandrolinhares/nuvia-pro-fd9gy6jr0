@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Plus, GripVertical, Trash2 } from 'lucide-react'
+import { Plus, GripVertical, Trash2, Tags } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -13,15 +14,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+
+const TAG_COLORS = [
+  '#ef4444',
+  '#f97316',
+  '#f59e0b',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#06b6d4',
+  '#0ea5e9',
+  '#3b82f6',
+  '#6366f1',
+  '#8b5cf6',
+  '#a855f7',
+  '#ec4899',
+  '#f43f5e',
+]
 
 export function FETPatientDetail({ patientId }: { patientId: string }) {
   const [patient, setPatient] = useState<any>(null)
   const [procedimentos, setProcedimentos] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
+  const [etiquetasGerais, setEtiquetasGerais] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [newTagColor, setNewTagColor] = useState(TAG_COLORS[8])
 
   useEffect(() => {
     fetchData()
@@ -29,7 +50,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
 
   const fetchData = async () => {
     setLoading(true)
-    const [patRes, procRes, dentRes] = await Promise.all([
+    const [patRes, procRes, dentRes, etiqRes] = await Promise.all([
       supabase.from('fet_pacientes').select('*').eq('id', patientId).single(),
       supabase
         .from('fet_procedimentos')
@@ -38,11 +59,13 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
         .order('ordem')
         .order('criado_em'),
       supabase.from('pro_agenda_dentistas').select('id, nome').eq('status', 'ativo').order('nome'),
+      supabase.from('fet_etiquetas').select('*').order('nome'),
     ])
 
     if (patRes.data) setPatient(patRes.data)
     if (procRes.data) setProcedimentos(procRes.data)
     if (dentRes.data) setDentistas(dentRes.data)
+    if (etiqRes.data) setEtiquetasGerais(etiqRes.data)
     setLoading(false)
   }
 
@@ -60,13 +83,11 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       procedimento: 'Novo Procedimento',
       ordem: targetOrder,
       concluido: false,
+      etiquetas: [],
     }
 
     const { error } = await supabase.from('fet_procedimentos').insert([newProc])
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    }
-
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     fetchData()
   }
 
@@ -83,13 +104,32 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
     setProcedimentos((prev) => prev.filter((p) => p.id !== id))
   }
 
-  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const handleCreateTag = async (nome: string, cor: string) => {
+    const { data, error } = await supabase
+      .from('fet_etiquetas')
+      .insert([{ nome, cor }])
+      .select()
+      .single()
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      return null
+    }
+    setEtiquetasGerais((prev) => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)))
+    return data
+  }
 
+  const toggleEtiqueta = async (procId: string, tagId: string, currentTags: string[]) => {
+    const newTags = currentTags.includes(tagId)
+      ? currentTags.filter((id) => id !== tagId)
+      : [...currentTags, tagId]
+    handleUpdate(procId, 'etiquetas', newTags)
+  }
+
+  const [draggedId, setDraggedId] = useState<string | null>(null)
   const handleDragStart = (id: string) => setDraggedId(id)
 
   const handleDrop = async (targetId: string) => {
     if (!draggedId || draggedId === targetId) return
-
     const oldIndex = procedimentos.findIndex((p) => p.id === draggedId)
     const newIndex = procedimentos.findIndex((p) => p.id === targetId)
 
@@ -136,8 +176,8 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       <ScrollArea className="flex-1 p-6">
         <div className="space-y-4 pb-20">
           {procedimentos.map((p, index) => (
-            <div key={p.id} className="relative group/item pt-3">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+            <div key={p.id} className="relative group/item py-4">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-20">
                 <Button
                   size="sm"
                   variant="secondary"
@@ -177,7 +217,29 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                 </div>
 
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-12">
+                  <div className="md:col-span-12 flex flex-col gap-2">
+                    {(p.etiquetas || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {(p.etiquetas || []).map((tagId: string) => {
+                          const tag = etiquetasGerais.find((t) => t.id === tagId)
+                          if (!tag) return null
+                          return (
+                            <Badge
+                              key={tag.id}
+                              style={{
+                                backgroundColor: `${tag.cor}15`,
+                                color: tag.cor,
+                                borderColor: `${tag.cor}30`,
+                              }}
+                              variant="outline"
+                              className="px-2 py-0.5"
+                            >
+                              {tag.nome}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    )}
                     <Input
                       value={p.procedimento}
                       onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
@@ -186,7 +248,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                     />
                   </div>
 
-                  <div className="md:col-span-6">
+                  <div className="md:col-span-4">
                     <Select
                       value={p.dentista_id || 'none'}
                       onValueChange={(v) =>
@@ -194,7 +256,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                       }
                     >
                       <SelectTrigger className="bg-slate-900 border-slate-800 focus:ring-amber-500 text-white">
-                        <SelectValue placeholder="Selecione o Dentista" />
+                        <SelectValue placeholder="Dentista Executor" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Não definido</SelectItem>
@@ -207,13 +269,93 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                     </Select>
                   </div>
 
-                  <div className="md:col-span-6">
+                  <div className="md:col-span-4">
                     <Input
                       value={p.tempo_execucao || ''}
                       onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
                       placeholder="Tempo Estimado (ex: 30 min)"
                       className="bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
                     />
+                  </div>
+
+                  <div className="md:col-span-4">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+                        >
+                          <Tags className="w-4 h-4 mr-2" />
+                          Etiquetas
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-64 p-3 bg-slate-900 border-slate-800"
+                        align="end"
+                      >
+                        <div className="space-y-4">
+                          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                            {etiquetasGerais.length === 0 && (
+                              <p className="text-xs text-slate-500 text-center py-2">
+                                Nenhuma etiqueta.
+                              </p>
+                            )}
+                            {etiquetasGerais.map((tag) => (
+                              <div
+                                key={tag.id}
+                                className="flex items-center space-x-2 cursor-pointer hover:bg-slate-800/50 p-1.5 rounded transition-colors"
+                                onClick={() => toggleEtiqueta(p.id, tag.id, p.etiquetas || [])}
+                              >
+                                <Checkbox checked={(p.etiquetas || []).includes(tag.id)} />
+                                <Badge
+                                  style={{
+                                    backgroundColor: `${tag.cor}15`,
+                                    color: tag.cor,
+                                    borderColor: `${tag.cor}30`,
+                                  }}
+                                  variant="outline"
+                                >
+                                  {tag.nome}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="border-t border-slate-800 pt-3 space-y-3">
+                            <Input
+                              placeholder="Nova etiqueta... (Enter)"
+                              className="h-8 text-xs bg-slate-950 border-slate-800"
+                              onKeyDown={async (e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim()
+                                  if (!val) return
+                                  const tag = await handleCreateTag(val, newTagColor)
+                                  if (tag) {
+                                    toggleEtiqueta(p.id, tag.id, p.etiquetas || [])
+                                    e.currentTarget.value = ''
+                                  }
+                                }
+                              }}
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {TAG_COLORS.map((c) => (
+                                <button
+                                  key={c}
+                                  className="w-5 h-5 rounded-full transition-transform hover:scale-110"
+                                  style={{
+                                    backgroundColor: c,
+                                    boxShadow:
+                                      newTagColor === c
+                                        ? `0 0 0 2px #0f172a, 0 0 0 3px ${c}`
+                                        : 'none',
+                                  }}
+                                  onClick={() => setNewTagColor(c)}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="md:col-span-12">
@@ -226,7 +368,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                   </div>
                 </div>
 
-                <div className="flex items-start">
+                <div className="flex items-start shrink-0 pt-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -239,7 +381,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
               </div>
 
               {index === procedimentos.length - 1 && (
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-20">
                   <Button
                     size="sm"
                     variant="secondary"
@@ -254,7 +396,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
           ))}
 
           {procedimentos.length === 0 && (
-            <div className="text-center py-10 bg-slate-950 rounded-xl border border-dashed border-slate-800">
+            <div className="text-center py-10 bg-slate-950 rounded-xl border border-dashed border-slate-800 mt-4">
               <p className="text-slate-500 mb-4">Nenhum procedimento cadastrado.</p>
               <Button
                 onClick={() => handleAddProc(0)}
