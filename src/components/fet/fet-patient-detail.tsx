@@ -74,6 +74,7 @@ export function FETPatientDetail({
   const [etiquetasGerais, setEtiquetasGerais] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[8])
+  const [activeTab, setActiveTab] = useState<'a_executar' | 'executados'>('a_executar')
 
   useEffect(() => {
     fetchData()
@@ -430,264 +431,320 @@ export function FETPatientDetail({
         <Progress value={progress} className="h-1.5 bg-slate-800 [&>div]:bg-amber-500" />
       </div>
 
+      <div className="p-3 border-b border-slate-800 bg-slate-950 flex gap-2 shrink-0">
+        <button
+          onClick={() => setActiveTab('a_executar')}
+          className={cn(
+            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border',
+            activeTab === 'a_executar'
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-sm'
+              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-300',
+          )}
+        >
+          A EXECUTAR
+        </button>
+        <button
+          onClick={() => setActiveTab('executados')}
+          className={cn(
+            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border',
+            activeTab === 'executados'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-sm'
+              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-300',
+          )}
+        >
+          EXECUTADOS
+        </button>
+      </div>
+
       <ScrollArea className="flex-1 p-4">
-        <div className="space-y-3 pb-20 pt-6">
-          {procedimentos.map((p, index) => (
-            <div key={p.id} className="relative group/item">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-30">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-6 px-3 rounded-full text-[10px] shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
-                  onClick={() => handleAddProc(p.ordem)}
-                >
-                  <Plus className="w-3 h-3 mr-1" /> Inserir Acima
-                </Button>
-              </div>
-
-              <div
-                draggable
-                onDragStart={() => handleDragStart(p.id)}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  e.dataTransfer.dropEffect = 'move'
-                }}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  handleDrop(p.id)
-                }}
-                className={cn(
-                  'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex gap-2.5 transition-all hover:border-slate-700',
-                  p.concluido && 'opacity-60 bg-slate-950/50',
+        <div className="space-y-3 pb-20 pt-2">
+          {procedimentos
+            .filter((p) => (activeTab === 'executados' ? p.concluido : !p.concluido))
+            .map((p, index, displayedProcs) => (
+              <div key={p.id} className="relative group/item">
+                {activeTab === 'a_executar' && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-30">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-6 px-3 rounded-full text-[10px] shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                      onClick={() => handleAddProc(p.ordem)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Inserir Acima
+                    </Button>
+                  </div>
                 )}
-              >
-                <div className="flex flex-col items-center gap-2 pt-1 cursor-grab active:cursor-grabbing shrink-0">
-                  <GripVertical className="text-slate-600 w-4 h-4 hover:text-white" />
-                  <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-300">
-                    {index + 1}
-                  </div>
-                  <Checkbox
-                    checked={p.concluido}
-                    onCheckedChange={(c) => handleCheckStart(p.id, !!c)}
-                    disabled={!isAdmin && p.concluido}
-                    className="w-4 h-4 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
 
-                <div className="flex-1 flex flex-col gap-2 min-w-0">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap gap-1.5">
-                      {(p.etiquetas || []).map((tagId: string) => {
-                        const tag = etiquetasGerais.find((t) => t.id === tagId)
-                        if (!tag) return null
-                        return (
-                          <Badge
-                            key={tag.id}
-                            style={{
-                              backgroundColor: `${tag.cor}15`,
-                              color: tag.cor,
-                              borderColor: `${tag.cor}30`,
-                            }}
-                            variant="outline"
-                            className="px-1.5 py-0 text-[10px] leading-tight font-medium"
-                          >
-                            {tag.nome}
-                          </Badge>
-                        )
-                      })}
+                <div
+                  draggable={activeTab === 'a_executar'}
+                  onDragStart={() => handleDragStart(p.id)}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    handleDrop(p.id)
+                  }}
+                  className={cn(
+                    'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex gap-2.5 transition-all hover:border-slate-700',
+                    p.concluido && 'opacity-60 bg-slate-950/50',
+                  )}
+                >
+                  <div className="flex flex-col items-center gap-2 pt-1 cursor-grab active:cursor-grabbing shrink-0">
+                    <GripVertical
+                      className={cn(
+                        'w-4 h-4',
+                        activeTab === 'a_executar'
+                          ? 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'
+                          : 'text-slate-700',
+                      )}
+                    />
+                    <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-300">
+                      {p.ordem + 1}
                     </div>
-                    {p.criado_em && (
-                      <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
-                        <Calendar className="w-3 h-3" /> Adicionado em:{' '}
-                        {format(new Date(p.criado_em), 'dd/MM/yyyy')}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-                    <div className="lg:col-span-5">
-                      <Input
-                        value={p.procedimento}
-                        onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
-                        placeholder="Nome do Procedimento"
-                        disabled={!isAdmin && p.concluido}
-                        className="h-8 text-sm font-bold text-white placeholder:text-slate-400 placeholder:font-normal bg-slate-900 border-slate-800 focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                    </div>
-
-                    <div className="lg:col-span-3">
-                      <Select
-                        value={p.dentista_id || 'none'}
-                        onValueChange={(v) =>
-                          handleUpdate(p.id, 'dentista_id', v === 'none' ? null : v)
-                        }
-                        disabled={!isAdmin && p.concluido}
-                      >
-                        <SelectTrigger className="h-8 text-sm font-bold bg-slate-900 border-slate-800 focus:ring-amber-500 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                          <SelectValue placeholder="Dentista Executor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none" className="font-bold">
-                            Não definido
-                          </SelectItem>
-                          {dentistas.map((d) => (
-                            <SelectItem key={d.id} value={d.id} className="font-bold">
-                              {d.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <Input
-                        value={p.tempo_execucao || ''}
-                        onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
-                        placeholder="Tempo Estimado"
-                        disabled={!isAdmin && p.concluido}
-                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            disabled={!isAdmin && p.concluido}
-                            className="h-8 w-full justify-start px-2 text-xs font-bold bg-slate-900 border-slate-800 text-white hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Tags className="w-3 h-3 mr-1.5 shrink-0" />
-                            Etiquetas
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-64 p-3 bg-slate-900 border-slate-800 z-50"
-                          align="end"
-                        >
-                          <div className="space-y-4">
-                            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                              {etiquetasGerais.length === 0 && (
-                                <p className="text-xs text-slate-500 text-center py-2">
-                                  Nenhuma etiqueta.
-                                </p>
-                              )}
-                              {etiquetasGerais.map((tag) => (
-                                <div
-                                  key={tag.id}
-                                  className="flex items-center space-x-2 cursor-pointer hover:bg-slate-800/50 p-1.5 rounded transition-colors"
-                                  onClick={() => toggleEtiqueta(p.id, tag.id, p.etiquetas || [])}
-                                >
-                                  <Checkbox checked={(p.etiquetas || []).includes(tag.id)} />
-                                  <Badge
-                                    style={{
-                                      backgroundColor: `${tag.cor}15`,
-                                      color: tag.cor,
-                                      borderColor: `${tag.cor}30`,
-                                    }}
-                                    variant="outline"
-                                  >
-                                    {tag.nome}
-                                  </Badge>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="border-t border-slate-800 pt-3 space-y-3">
-                              <Input
-                                placeholder="Nova etiqueta... (Enter)"
-                                className="h-8 text-xs bg-slate-950 border-slate-800"
-                                onKeyDown={async (e) => {
-                                  if (e.key === 'Enter') {
-                                    const val = e.currentTarget.value.trim()
-                                    if (!val) return
-                                    const tag = await handleCreateTag(val, newTagColor)
-                                    if (tag) {
-                                      toggleEtiqueta(p.id, tag.id, p.etiquetas || [])
-                                      e.currentTarget.value = ''
-                                    }
-                                  }
-                                }}
-                              />
-                              <div className="flex flex-wrap gap-1">
-                                {TAG_COLORS.map((c) => (
-                                  <button
-                                    key={c}
-                                    className="w-5 h-5 rounded-full transition-transform hover:scale-110"
-                                    style={{
-                                      backgroundColor: c,
-                                      boxShadow:
-                                        newTagColor === c
-                                          ? `0 0 0 2px #0f172a, 0 0 0 3px ${c}`
-                                          : 'none',
-                                    }}
-                                    onClick={() => setNewTagColor(c)}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Textarea
-                      value={p.observacoes || ''}
-                      onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
-                      placeholder="Observações da consulta..."
+                    <Checkbox
+                      checked={p.concluido}
+                      onCheckedChange={(c) => handleCheckStart(p.id, !!c)}
                       disabled={!isAdmin && p.concluido}
-                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-4 h-4 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
-                  {p.concluido && p.concluido_em && (
-                    <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-400 bg-emerald-400/10 w-fit px-2 py-1 rounded border border-emerald-400/20 font-medium">
-                      Concluído em{' '}
-                      {format(new Date(p.concluido_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      {p.concluido_por?.nome && ` por ${p.concluido_por.nome}`}
+                  <div className="flex-1 flex flex-col gap-2 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(p.etiquetas || []).map((tagId: string) => {
+                          const tag = etiquetasGerais.find((t) => t.id === tagId)
+                          if (!tag) return null
+                          return (
+                            <Badge
+                              key={tag.id}
+                              style={{
+                                backgroundColor: `${tag.cor}15`,
+                                color: tag.cor,
+                                borderColor: `${tag.cor}30`,
+                              }}
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px] leading-tight font-medium"
+                            >
+                              {tag.nome}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                      {p.criado_em && (
+                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                          <Calendar className="w-3 h-3" /> Adicionado em:{' '}
+                          {format(new Date(p.criado_em), 'dd/MM/yyyy')}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+                      <div className="lg:col-span-5">
+                        <Input
+                          value={p.procedimento}
+                          onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
+                          placeholder="Nome do Procedimento"
+                          disabled={!isAdmin && p.concluido}
+                          className="h-8 text-sm font-bold text-white placeholder:text-slate-400 placeholder:font-normal bg-slate-900 border-slate-800 focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-3">
+                        <Select
+                          value={p.dentista_id || 'none'}
+                          onValueChange={(v) =>
+                            handleUpdate(p.id, 'dentista_id', v === 'none' ? null : v)
+                          }
+                          disabled={!isAdmin && p.concluido}
+                        >
+                          <SelectTrigger className="h-8 text-sm font-bold bg-slate-900 border-slate-800 focus:ring-amber-500 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                            <SelectValue placeholder="Dentista Executor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none" className="font-bold">
+                              Não definido
+                            </SelectItem>
+                            {dentistas.map((d) => (
+                              <SelectItem key={d.id} value={d.id} className="font-bold">
+                                {d.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <Input
+                          value={p.tempo_execucao || ''}
+                          onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
+                          placeholder="Tempo Estimado"
+                          disabled={!isAdmin && p.concluido}
+                          className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              disabled={!isAdmin && p.concluido}
+                              className="h-8 w-full justify-start px-2 text-xs font-bold bg-slate-900 border-slate-800 text-white hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Tags className="w-3 h-3 mr-1.5 shrink-0" />
+                              Etiquetas
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-64 p-3 bg-slate-900 border-slate-800 z-50"
+                            align="end"
+                          >
+                            <div className="space-y-4">
+                              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                                {etiquetasGerais.length === 0 && (
+                                  <p className="text-xs text-slate-500 text-center py-2">
+                                    Nenhuma etiqueta.
+                                  </p>
+                                )}
+                                {etiquetasGerais.map((tag) => (
+                                  <div
+                                    key={tag.id}
+                                    className="flex items-center space-x-2 cursor-pointer hover:bg-slate-800/50 p-1.5 rounded transition-colors"
+                                    onClick={() => toggleEtiqueta(p.id, tag.id, p.etiquetas || [])}
+                                  >
+                                    <Checkbox checked={(p.etiquetas || []).includes(tag.id)} />
+                                    <Badge
+                                      style={{
+                                        backgroundColor: `${tag.cor}15`,
+                                        color: tag.cor,
+                                        borderColor: `${tag.cor}30`,
+                                      }}
+                                      variant="outline"
+                                    >
+                                      {tag.nome}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="border-t border-slate-800 pt-3 space-y-3">
+                                <Input
+                                  placeholder="Nova etiqueta... (Enter)"
+                                  className="h-8 text-xs bg-slate-950 border-slate-800"
+                                  onKeyDown={async (e) => {
+                                    if (e.key === 'Enter') {
+                                      const val = e.currentTarget.value.trim()
+                                      if (!val) return
+                                      const tag = await handleCreateTag(val, newTagColor)
+                                      if (tag) {
+                                        toggleEtiqueta(p.id, tag.id, p.etiquetas || [])
+                                        e.currentTarget.value = ''
+                                      }
+                                    }
+                                  }}
+                                />
+                                <div className="flex flex-wrap gap-1">
+                                  {TAG_COLORS.map((c) => (
+                                    <button
+                                      key={c}
+                                      className="w-5 h-5 rounded-full transition-transform hover:scale-110"
+                                      style={{
+                                        backgroundColor: c,
+                                        boxShadow:
+                                          newTagColor === c
+                                            ? `0 0 0 2px #0f172a, 0 0 0 3px ${c}`
+                                            : 'none',
+                                      }}
+                                      onClick={() => setNewTagColor(c)}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Textarea
+                        value={p.observacoes || ''}
+                        onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
+                        placeholder="Observações da consulta..."
+                        disabled={!isAdmin && p.concluido}
+                        className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+
+                    {p.concluido && p.concluido_em && (
+                      <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-400 bg-emerald-400/10 w-fit px-2 py-1 rounded border border-emerald-400/20 font-medium">
+                        Concluído em{' '}
+                        {format(new Date(p.concluido_em), "dd/MM/yyyy 'às' HH:mm", {
+                          locale: ptBR,
+                        })}
+                        {p.concluido_por?.nome && ` por ${p.concluido_por.nome}`}
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <div className="flex items-start shrink-0 pt-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(p.id, p.procedimento)}
+                        className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
 
-                {isAdmin && (
-                  <div className="flex items-start shrink-0 pt-0.5">
+                {activeTab === 'a_executar' && index === displayedProcs.length - 1 && (
+                  <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-30">
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(p.id, p.procedimento)}
-                      className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      size="sm"
+                      variant="secondary"
+                      className="h-6 px-3 rounded-full text-[10px] shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                      onClick={() => handleAddProc(p.ordem + 1)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Plus className="w-3 h-3 mr-1" /> Inserir Abaixo
                     </Button>
                   </div>
                 )}
               </div>
+            ))}
 
-              {index === procedimentos.length - 1 && (
-                <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-30">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-6 px-3 rounded-full text-[10px] shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
-                    onClick={() => handleAddProc(p.ordem + 1)}
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> Inserir Abaixo
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {procedimentos.length === 0 && (
+          {procedimentos.filter((p) => (activeTab === 'executados' ? p.concluido : !p.concluido))
+            .length === 0 && (
             <div className="text-center py-10 bg-slate-950 rounded-xl border border-dashed border-slate-800 mt-4">
-              <p className="text-slate-500 mb-4 text-sm">Nenhum procedimento cadastrado.</p>
-              <Button
-                onClick={() => handleAddProc(0)}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold h-9"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Iniciar Plano de Tratamento
-              </Button>
+              <p className="text-slate-500 mb-4 text-sm">
+                {activeTab === 'a_executar'
+                  ? procedimentos.length === 0
+                    ? 'Nenhum procedimento cadastrado.'
+                    : 'Nenhum procedimento pendente a executar.'
+                  : 'Nenhum procedimento executado.'}
+              </p>
+              {activeTab === 'a_executar' && (
+                <Button
+                  onClick={() =>
+                    handleAddProc(
+                      procedimentos.length > 0
+                        ? procedimentos[procedimentos.length - 1].ordem + 1
+                        : 0,
+                    )
+                  }
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold h-9"
+                >
+                  <Plus className="w-4 h-4 mr-2" />{' '}
+                  {procedimentos.length === 0
+                    ? 'Iniciar Plano de Tratamento'
+                    : 'Adicionar Novo Procedimento'}
+                </Button>
+              )}
             </div>
           )}
         </div>
