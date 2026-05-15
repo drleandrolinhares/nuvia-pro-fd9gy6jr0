@@ -32,6 +32,8 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
+import { Badge } from '@/components/ui/badge'
+import { format, isValid } from 'date-fns'
 
 type Task = {
   id: string
@@ -1474,7 +1476,14 @@ export default function RotinaDiaria() {
                                 className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 ml-2 text-[10px] tracking-wider px-1.5 py-0"
                               >
                                 Antecipada de{' '}
-                                {format(new Date(task.originalDateStr + 'T12:00:00'), 'dd/MM')}
+                                {(() => {
+                                  try {
+                                    const d = new Date(task.originalDateStr + 'T12:00:00')
+                                    return isValid(d) ? format(d, 'dd/MM') : task.originalDateStr
+                                  } catch (e) {
+                                    return task.originalDateStr
+                                  }
+                                })()}
                               </Badge>
                             )}
                           </div>
