@@ -17,6 +17,15 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { format, differenceInDays } from 'date-fns'
@@ -47,8 +56,19 @@ export function FETPatientDetail({
   patientId: string
   onStatusChange?: () => void
 }) {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
   const [patient, setPatient] = useState<any>(null)
+
+  const [completionDialog, setCompletionDialog] = useState<{
+    isOpen: boolean
+    procId: string | null
+    date: Date | undefined
+  }>({
+    isOpen: false,
+    procId: null,
+    date: new Date(),
+  })
   const [procedimentos, setProcedimentos] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
   const [etiquetasGerais, setEtiquetasGerais] = useState<any[]>([])
@@ -146,18 +166,31 @@ export function FETPatientDetail({
     }
   }
 
-  const handleCheck = async (id: string, checked: boolean) => {
+  const handleCheckStart = (id: string, checked: boolean) => {
+    if (checked) {
+      setCompletionDialog({ isOpen: true, procId: id, date: new Date() })
+    } else {
+      if (!isAdmin) {
+        toast({
+          title: 'Acesso Negado',
+          description: 'Apenas administradores podem reabrir um procedimento.',
+          variant: 'destructive',
+        })
+        return
+      }
+      handleConfirmCheck(id, false, null)
+    }
+  }
+
+  const handleConfirmCheck = async (id: string, checked: boolean, date: Date | null) => {
     let concluido_em = null
     let concluido_por = null
 
-    if (checked && user) {
-      concluido_em = new Date().toISOString()
-      const { data: profile } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('id', user.id)
-        .single()
-      concluido_por = profile?.id
+    if (checked && user && date) {
+      const now = new Date()
+      date.setHours(now.getHours(), now.getMinutes(), now.getSeconds())
+      concluido_em = date.toISOString()
+      concluido_por = user.id
     }
 
     const procAtual = procedimentos.find((p) => p.id === id)
@@ -169,7 +202,7 @@ export function FETPatientDetail({
               ...p,
               concluido: checked,
               concluido_em,
-              concluido_por: checked && user ? { nome: 'Você' } : null,
+              concluido_por: checked && profile ? { nome: profile.nome || 'Você' } : null,
             }
           : p,
       ),
@@ -183,11 +216,13 @@ export function FETPatientDetail({
     if (!error) {
       await logFetAction(
         checked ? 'Procedimento Concluído' : 'Procedimento Reaberto',
-        `Procedimento: ${procAtual?.procedimento}`,
+        `Procedimento: ${procAtual?.procedimento}${checked && date ? ` em ${format(date, 'dd/MM/yyyy')}` : ''}`,
       )
       const newProcs = procedimentos.map((p) => (p.id === id ? { ...p, concluido: checked } : p))
       checkFinalizacao(newProcs)
     }
+
+    setCompletionDialog({ isOpen: false, procId: null, date: undefined })
   }
 
   const handleUpdate = async (id: string, field: string, value: any) => {
@@ -416,8 +451,9 @@ export function FETPatientDetail({
                   </div>
                   <Checkbox
                     checked={p.concluido}
-                    onCheckedChange={(c) => handleCheck(p.id, !!c)}
-                    className="w-4 h-4 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950"
+                    onCheckedChange={(c) => handleCheckStart(p.id, !!c)}
+                    disabled={!isAdmin && p.concluido}
+                    className="w-4 h-4 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -457,7 +493,8 @@ export function FETPatientDetail({
                         value={p.procedimento}
                         onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
                         placeholder="Nome do Procedimento"
-                        className="h-8 text-sm font-bold text-white placeholder:text-slate-400 placeholder:font-normal bg-slate-900 border-slate-800 focus-visible:ring-amber-500"
+                        disabled={!isAdmin && p.concluido}
+                        className="h-8 text-sm font-bold text-white placeholder:text-slate-400 placeholder:font-normal bg-slate-900 border-slate-800 focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -467,8 +504,9 @@ export function FETPatientDetail({
                         onValueChange={(v) =>
                           handleUpdate(p.id, 'dentista_id', v === 'none' ? null : v)
                         }
+                        disabled={!isAdmin && p.concluido}
                       >
-                        <SelectTrigger className="h-8 text-sm font-bold bg-slate-900 border-slate-800 focus:ring-amber-500 text-white">
+                        <SelectTrigger className="h-8 text-sm font-bold bg-slate-900 border-slate-800 focus:ring-amber-500 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                           <SelectValue placeholder="Dentista Executor" />
                         </SelectTrigger>
                         <SelectContent>
@@ -489,7 +527,8 @@ export function FETPatientDetail({
                         value={p.tempo_execucao || ''}
                         onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
                         placeholder="Tempo Estimado"
-                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500"
+                        disabled={!isAdmin && p.concluido}
+                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -498,7 +537,8 @@ export function FETPatientDetail({
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-8 w-full justify-start px-2 text-xs font-bold bg-slate-900 border-slate-800 text-white hover:text-white hover:bg-slate-800"
+                            disabled={!isAdmin && p.concluido}
+                            className="h-8 w-full justify-start px-2 text-xs font-bold bg-slate-900 border-slate-800 text-white hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Tags className="w-3 h-3 mr-1.5 shrink-0" />
                             Etiquetas
@@ -579,7 +619,8 @@ export function FETPatientDetail({
                       value={p.observacoes || ''}
                       onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
                       placeholder="Observações da consulta..."
-                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y"
+                      disabled={!isAdmin && p.concluido}
+                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -592,16 +633,18 @@ export function FETPatientDetail({
                   )}
                 </div>
 
-                <div className="flex items-start shrink-0 pt-0.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(p.id, p.procedimento)}
-                    className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                {isAdmin && (
+                  <div className="flex items-start shrink-0 pt-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(p.id, p.procedimento)}
+                      className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {index === procedimentos.length - 1 && (
@@ -632,6 +675,50 @@ export function FETPatientDetail({
           )}
         </div>
       </ScrollArea>
+
+      <Dialog
+        open={completionDialog.isOpen}
+        onOpenChange={(open) =>
+          !open && setCompletionDialog({ ...completionDialog, isOpen: false })
+        }
+      >
+        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Data de Execução</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Selecione a data em que este procedimento foi efetivamente executado/concluído.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center p-4">
+            <CalendarComponent
+              mode="single"
+              selected={completionDialog.date}
+              onSelect={(date) => date && setCompletionDialog({ ...completionDialog, date })}
+              locale={ptBR}
+              className="bg-slate-950 border border-slate-800 rounded-lg p-3"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setCompletionDialog({ ...completionDialog, isOpen: false })}
+              className="hover:bg-slate-800 hover:text-white"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (completionDialog.procId && completionDialog.date) {
+                  handleConfirmCheck(completionDialog.procId, true, completionDialog.date)
+                }
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

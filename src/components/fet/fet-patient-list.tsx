@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Search, Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -26,6 +27,8 @@ export function FETPatientList({
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
   const [patients, setPatients] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [newNome, setNewNome] = useState('')
@@ -233,7 +236,7 @@ export function FETPatientList({
                 </button>
               )}
 
-              {editingId !== p.id && (
+              {isAdmin && editingId !== p.id && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/patient:opacity-100 transition-opacity bg-slate-900/80 backdrop-blur-sm p-1 rounded-md">
                   <button
                     onClick={(e) => handleEditStart(p, e)}
