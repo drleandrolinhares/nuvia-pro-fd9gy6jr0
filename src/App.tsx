@@ -26,6 +26,7 @@ import Comunicados from './pages/operacional/Comunicados'
 import SAC from './pages/operacional/SAC'
 import Pedidos from './pages/operacional/pedidos/Pedidos'
 import RotinaDiaria from './pages/operacional/RotinaDiaria'
+import FET from './pages/operacional/FET'
 import ProAgenda from './pages/operacional/ProAgenda'
 import Roteiros from './pages/diretrizes/Roteiros'
 import Performance from './pages/operacional/Performance'
@@ -408,6 +409,17 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_rotina']}>
               <RotinaDiaria />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/fet"
+          element={
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={['operacional_fet', 'Acessar FET']}
+            >
+              <FET />
             </ProtectedRoute>
           }
         />

@@ -1,17 +1,11 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: '14.5'
   }
   public: {
     Tables: {
@@ -51,11 +45,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "auditoria_acesso_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'auditoria_acesso_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -92,25 +86,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "auditoria_tarefas_rotina_tarefa_id_fkey"
-            columns: ["tarefa_id"]
+            foreignKeyName: 'auditoria_tarefas_rotina_tarefa_id_fkey'
+            columns: ['tarefa_id']
             isOneToOne: false
-            referencedRelation: "tarefas_rotina"
-            referencedColumns: ["id"]
+            referencedRelation: 'tarefas_rotina'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "auditoria_tarefas_rotina_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'auditoria_tarefas_rotina_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "auditoria_tarefas_rotina_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'auditoria_tarefas_rotina_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -162,18 +156,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ausencias_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'ausencias_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "ausencias_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'ausencias_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -243,39 +237,39 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "avaliacoes_crc_comercial_id_fkey"
-            columns: ["crc_comercial_id"]
+            foreignKeyName: 'avaliacoes_crc_comercial_id_fkey'
+            columns: ['crc_comercial_id']
             isOneToOne: false
-            referencedRelation: "crc_comercial"
-            referencedColumns: ["id"]
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "avaliacoes_dentista_avaliador_id_fkey"
-            columns: ["dentista_avaliador_id"]
+            foreignKeyName: 'avaliacoes_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
             isOneToOne: false
-            referencedRelation: "dentistas_avaliadores"
-            referencedColumns: ["id"]
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "avaliacoes_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'avaliacoes_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "funil_origens"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "avaliacoes_paciente_id_fkey"
-            columns: ["paciente_id"]
+            foreignKeyName: 'avaliacoes_paciente_id_fkey'
+            columns: ['paciente_id']
             isOneToOne: false
-            referencedRelation: "pacientes"
-            referencedColumns: ["id"]
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "avaliacoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'avaliacoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -306,18 +300,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "caixa_diario_fechamentos_conferido_por_fkey"
-            columns: ["conferido_por"]
+            foreignKeyName: 'caixa_diario_fechamentos_conferido_por_fkey'
+            columns: ['conferido_por']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "caixa_diario_fechamentos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'caixa_diario_fechamentos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -351,25 +345,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "campo_configuracao_campo_id_fkey"
-            columns: ["campo_id"]
+            foreignKeyName: 'campo_configuracao_campo_id_fkey'
+            columns: ['campo_id']
             isOneToOne: false
-            referencedRelation: "campos_personalizados"
-            referencedColumns: ["id"]
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "campo_configuracao_especialidade_id_fkey"
-            columns: ["especialidade_id"]
+            foreignKeyName: 'campo_configuracao_especialidade_id_fkey'
+            columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: "especialidades"
-            referencedColumns: ["id"]
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "campo_configuracao_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'campo_configuracao_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -400,25 +394,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "campo_opcoes_campo_id_fkey"
-            columns: ["campo_id"]
+            foreignKeyName: 'campo_opcoes_campo_id_fkey'
+            columns: ['campo_id']
             isOneToOne: false
-            referencedRelation: "campos_personalizados"
-            referencedColumns: ["id"]
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "campo_opcoes_especialidade_id_fkey"
-            columns: ["especialidade_id"]
+            foreignKeyName: 'campo_opcoes_especialidade_id_fkey'
+            columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: "especialidades"
-            referencedColumns: ["id"]
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "campo_opcoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'campo_opcoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -452,11 +446,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "campos_personalizados_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'campos_personalizados_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -478,25 +472,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cargo_permissoes_cargo_id_fkey"
-            columns: ["cargo_id"]
+            foreignKeyName: 'cargo_permissoes_cargo_id_fkey'
+            columns: ['cargo_id']
             isOneToOne: false
-            referencedRelation: "cargos"
-            referencedColumns: ["id"]
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "cargo_permissoes_permissao_id_fkey"
-            columns: ["permissao_id"]
+            foreignKeyName: 'cargo_permissoes_permissao_id_fkey'
+            columns: ['permissao_id']
             isOneToOne: false
-            referencedRelation: "permissoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'permissoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "cargo_permissoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'cargo_permissoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -524,11 +518,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cargos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'cargos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -571,32 +565,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "carteira_transacoes_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'carteira_transacoes_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "performance_bonificacao"
-            referencedColumns: ["id"]
+            referencedRelation: 'performance_bonificacao'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "carteira_transacoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'carteira_transacoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "carteira_transacoes_transacao_original_id_fkey"
-            columns: ["transacao_original_id"]
+            foreignKeyName: 'carteira_transacoes_transacao_original_id_fkey'
+            columns: ['transacao_original_id']
             isOneToOne: false
-            referencedRelation: "carteira_transacoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'carteira_transacoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "carteira_transacoes_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'carteira_transacoes_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -627,18 +621,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "chat_conversas_criado_por_fkey"
-            columns: ["criado_por"]
+            foreignKeyName: 'chat_conversas_criado_por_fkey'
+            columns: ['criado_por']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "chat_conversas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'chat_conversas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -669,25 +663,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "chat_mensagens_conversa_id_fkey"
-            columns: ["conversa_id"]
+            foreignKeyName: 'chat_mensagens_conversa_id_fkey'
+            columns: ['conversa_id']
             isOneToOne: false
-            referencedRelation: "chat_conversas"
-            referencedColumns: ["id"]
+            referencedRelation: 'chat_conversas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "chat_mensagens_remetente_id_fkey"
-            columns: ["remetente_id"]
+            foreignKeyName: 'chat_mensagens_remetente_id_fkey'
+            columns: ['remetente_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "chat_mensagens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'chat_mensagens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -715,25 +709,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "chat_participantes_conversa_id_fkey"
-            columns: ["conversa_id"]
+            foreignKeyName: 'chat_participantes_conversa_id_fkey'
+            columns: ['conversa_id']
             isOneToOne: false
-            referencedRelation: "chat_conversas"
-            referencedColumns: ["id"]
+            referencedRelation: 'chat_conversas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "chat_participantes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'chat_participantes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "chat_participantes_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'chat_participantes_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -776,18 +770,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "colaboradores_detalhes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'colaboradores_detalhes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "colaboradores_detalhes_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'colaboradores_detalhes_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: true
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -845,32 +839,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "compra_itens_compra_id_fkey"
-            columns: ["compra_id"]
+            foreignKeyName: 'compra_itens_compra_id_fkey'
+            columns: ['compra_id']
             isOneToOne: false
-            referencedRelation: "compras"
-            referencedColumns: ["id"]
+            referencedRelation: 'compras'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compra_itens_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'compra_itens_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compra_itens_sala_id_fkey"
-            columns: ["sala_id"]
+            foreignKeyName: 'compra_itens_sala_id_fkey'
+            columns: ['sala_id']
             isOneToOne: false
-            referencedRelation: "salas"
-            referencedColumns: ["id"]
+            referencedRelation: 'salas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compra_itens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'compra_itens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -910,25 +904,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "compras_fornecedor_id_fkey"
-            columns: ["fornecedor_id"]
+            foreignKeyName: 'compras_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
             isOneToOne: false
-            referencedRelation: "fornecedores"
-            referencedColumns: ["id"]
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compras_sala_id_fkey"
-            columns: ["sala_id"]
+            foreignKeyName: 'compras_sala_id_fkey'
+            columns: ['sala_id']
             isOneToOne: false
-            referencedRelation: "salas"
-            referencedColumns: ["id"]
+            referencedRelation: 'salas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compras_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'compras_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -945,7 +939,7 @@ export type Database = {
           hora_inicio: string | null
           id: string
           tenant_id: string | null
-          tipo_compromisso: Database["public"]["Enums"]["tipo_compromisso_enum"]
+          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
           usuario_id: string
         }
         Insert: {
@@ -960,7 +954,7 @@ export type Database = {
           hora_inicio?: string | null
           id?: string
           tenant_id?: string | null
-          tipo_compromisso: Database["public"]["Enums"]["tipo_compromisso_enum"]
+          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
           usuario_id: string
         }
         Update: {
@@ -975,23 +969,23 @@ export type Database = {
           hora_inicio?: string | null
           id?: string
           tenant_id?: string | null
-          tipo_compromisso?: Database["public"]["Enums"]["tipo_compromisso_enum"]
+          tipo_compromisso?: Database['public']['Enums']['tipo_compromisso_enum']
           usuario_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "compromissos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'compromissos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "compromissos_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'compromissos_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1049,11 +1043,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "configuracoes_acesso_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'configuracoes_acesso_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1081,11 +1075,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "configuracoes_negociacao_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'configuracoes_negociacao_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1128,25 +1122,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "contatos_follow_up_avaliacao_id_fkey"
-            columns: ["avaliacao_id"]
+            foreignKeyName: 'contatos_follow_up_avaliacao_id_fkey'
+            columns: ['avaliacao_id']
             isOneToOne: false
-            referencedRelation: "avaliacoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "contatos_follow_up_responsavel_id_fkey"
-            columns: ["responsavel_id"]
+            foreignKeyName: 'contatos_follow_up_responsavel_id_fkey'
+            columns: ['responsavel_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "contatos_follow_up_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'contatos_follow_up_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1183,18 +1177,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "crc_comercial_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'crc_comercial_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "crc_comercial_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'crc_comercial_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1228,18 +1222,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "criativos_gerados_dentista_avaliador_id_fkey"
-            columns: ["dentista_avaliador_id"]
+            foreignKeyName: 'criativos_gerados_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
             isOneToOne: false
-            referencedRelation: "dentistas_avaliadores"
-            referencedColumns: ["id"]
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "criativos_gerados_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'criativos_gerados_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1279,18 +1273,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "dentistas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'dentistas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "dentistas_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'dentistas_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1333,18 +1327,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "dentistas_avaliadores_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'dentistas_avaliadores_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "dentistas_avaliadores_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'dentistas_avaliadores_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1375,11 +1369,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "descontos_por_prazo_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'descontos_por_prazo_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1404,11 +1398,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "diametros_implante_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'diametros_implante_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1433,11 +1427,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "embalagens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'embalagens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1495,25 +1489,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "entrada_produtos_fornecedor_id_fkey"
-            columns: ["fornecedor_id"]
+            foreignKeyName: 'entrada_produtos_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
             isOneToOne: false
-            referencedRelation: "fornecedores"
-            referencedColumns: ["id"]
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "entrada_produtos_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'entrada_produtos_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "entrada_produtos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'entrada_produtos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1547,25 +1541,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "especialidade_campos_campo_id_fkey"
-            columns: ["campo_id"]
+            foreignKeyName: 'especialidade_campos_campo_id_fkey'
+            columns: ['campo_id']
             isOneToOne: false
-            referencedRelation: "campos_personalizados"
-            referencedColumns: ["id"]
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "especialidade_campos_especialidade_id_fkey"
-            columns: ["especialidade_id"]
+            foreignKeyName: 'especialidade_campos_especialidade_id_fkey'
+            columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: "especialidades"
-            referencedColumns: ["id"]
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "especialidade_campos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'especialidade_campos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1590,11 +1584,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "especialidades_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'especialidades_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1607,9 +1601,7 @@ export type Database = {
           fechamento_confirmado: boolean
           id: string
           minutos_atrasado: number
-          nivel_criticidade:
-            | Database["public"]["Enums"]["nivel_criticidade_enum"]
-            | null
+          nivel_criticidade: Database['public']['Enums']['nivel_criticidade_enum'] | null
           tarefa_id: string
           tenant_id: string | null
           timestamp_conclusao: string | null
@@ -1623,9 +1615,7 @@ export type Database = {
           fechamento_confirmado?: boolean
           id?: string
           minutos_atrasado?: number
-          nivel_criticidade?:
-            | Database["public"]["Enums"]["nivel_criticidade_enum"]
-            | null
+          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
           tarefa_id: string
           tenant_id?: string | null
           timestamp_conclusao?: string | null
@@ -1639,9 +1629,7 @@ export type Database = {
           fechamento_confirmado?: boolean
           id?: string
           minutos_atrasado?: number
-          nivel_criticidade?:
-            | Database["public"]["Enums"]["nivel_criticidade_enum"]
-            | null
+          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
           tarefa_id?: string
           tenant_id?: string | null
           timestamp_conclusao?: string | null
@@ -1649,25 +1637,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "execucoes_rotina_tarefa_id_fkey"
-            columns: ["tarefa_id"]
+            foreignKeyName: 'execucoes_rotina_tarefa_id_fkey'
+            columns: ['tarefa_id']
             isOneToOne: false
-            referencedRelation: "tarefas_rotina"
-            referencedColumns: ["id"]
+            referencedRelation: 'tarefas_rotina'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "execucoes_rotina_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'execucoes_rotina_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "execucoes_rotina_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'execucoes_rotina_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1701,11 +1689,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "faixas_valores_parcelas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'faixas_valores_parcelas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1739,11 +1727,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "faturamento_comissoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'faturamento_comissoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1792,25 +1780,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "faturas_comissoes_faturamento_id_fkey"
-            columns: ["faturamento_id"]
+            foreignKeyName: 'faturas_comissoes_faturamento_id_fkey'
+            columns: ['faturamento_id']
             isOneToOne: false
-            referencedRelation: "faturamento_comissoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'faturamento_comissoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "faturas_comissoes_profissional_id_fkey"
-            columns: ["profissional_id"]
+            foreignKeyName: 'faturas_comissoes_profissional_id_fkey'
+            columns: ['profissional_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "faturas_comissoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'faturas_comissoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1835,11 +1823,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fluxo_caixa_categorias_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'fluxo_caixa_categorias_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1876,11 +1864,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fluxo_caixa_despesas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'fluxo_caixa_despesas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1926,11 +1914,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fluxo_caixa_parceiros_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'fluxo_caixa_parceiros_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1964,11 +1952,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fluxo_caixa_receitas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'fluxo_caixa_receitas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2023,11 +2011,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fornecedores_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'fornecedores_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2103,18 +2091,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_dados_mensais_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'funil_dados_mensais_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "funil_origens"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_dados_mensais_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_dados_mensais_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2151,11 +2139,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_etapas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_etapas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2219,18 +2207,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_leads_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'funil_leads_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "funil_origens"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_leads_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_leads_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2264,25 +2252,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_leads_historico_lead_id_fkey"
-            columns: ["lead_id"]
+            foreignKeyName: 'funil_leads_historico_lead_id_fkey'
+            columns: ['lead_id']
             isOneToOne: false
-            referencedRelation: "funil_leads"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_leads'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_leads_historico_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_leads_historico_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_leads_historico_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'funil_leads_historico_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2313,25 +2301,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_leads_notas_lead_id_fkey"
-            columns: ["lead_id"]
+            foreignKeyName: 'funil_leads_notas_lead_id_fkey'
+            columns: ['lead_id']
             isOneToOne: false
-            referencedRelation: "funil_leads"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_leads'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_leads_notas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_leads_notas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "funil_leads_notas_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'funil_leads_notas_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2365,11 +2353,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_origens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_origens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2406,11 +2394,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "funil_temperaturas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'funil_temperaturas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2465,11 +2453,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "gestao_fiscal_config_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'gestao_fiscal_config_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2503,25 +2491,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "historico_compras_fornecedor_id_fkey"
-            columns: ["fornecedor_id"]
+            foreignKeyName: 'historico_compras_fornecedor_id_fkey'
+            columns: ['fornecedor_id']
             isOneToOne: false
-            referencedRelation: "fornecedores"
-            referencedColumns: ["id"]
+            referencedRelation: 'fornecedores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "historico_compras_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'historico_compras_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "historico_compras_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'historico_compras_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2546,11 +2534,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "marcas_implante_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'marcas_implante_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2578,25 +2566,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "normas_aceites_norma_id_fkey"
-            columns: ["norma_id"]
+            foreignKeyName: 'normas_aceites_norma_id_fkey'
+            columns: ['norma_id']
             isOneToOne: false
-            referencedRelation: "normas_internas"
-            referencedColumns: ["id"]
+            referencedRelation: 'normas_internas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "normas_aceites_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'normas_aceites_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "normas_aceites_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'normas_aceites_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2639,18 +2627,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "normas_internas_criado_por_fkey"
-            columns: ["criado_por"]
+            foreignKeyName: 'normas_internas_criado_por_fkey'
+            columns: ['criado_por']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "normas_internas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'normas_internas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2687,18 +2675,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "orcamentos_avaliacao_id_fkey"
-            columns: ["avaliacao_id"]
+            foreignKeyName: 'orcamentos_avaliacao_id_fkey'
+            columns: ['avaliacao_id']
             isOneToOne: false
-            referencedRelation: "avaliacoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "orcamentos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'orcamentos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2735,11 +2723,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pacientes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pacientes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2779,25 +2767,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pedido_itens_pedido_id_fkey"
-            columns: ["pedido_id"]
+            foreignKeyName: 'pedido_itens_pedido_id_fkey'
+            columns: ['pedido_id']
             isOneToOne: false
-            referencedRelation: "pedidos_materiais"
-            referencedColumns: ["id"]
+            referencedRelation: 'pedidos_materiais'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pedido_itens_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'pedido_itens_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pedido_itens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pedido_itens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2843,32 +2831,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pedidos_materiais_entregue_por_fkey"
-            columns: ["entregue_por"]
+            foreignKeyName: 'pedidos_materiais_entregue_por_fkey'
+            columns: ['entregue_por']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pedidos_materiais_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pedidos_materiais_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pedidos_materiais_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'pedidos_materiais_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pedidos_materiais_usuario_id_usuarios_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'pedidos_materiais_usuario_id_usuarios_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2908,18 +2896,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "performance_bonificacao_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'performance_bonificacao_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "performance_bonificacao_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'performance_bonificacao_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2953,11 +2941,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "performance_bonificacao_itens_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'performance_bonificacao_itens_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3000,18 +2988,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "performance_google_reviews_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'performance_google_reviews_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "performance_google_reviews_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'performance_google_reviews_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3069,18 +3057,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "performance_pp_pdm_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'performance_pp_pdm_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "performance_pp_pdm_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'performance_pp_pdm_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3108,11 +3096,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "permissoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'permissoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3149,11 +3137,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_custos_fixos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_custos_fixos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3190,18 +3178,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_custos_fixos_detalhes_custo_fixo_id_fkey"
-            columns: ["custo_fixo_id"]
+            foreignKeyName: 'precificacao_custos_fixos_detalhes_custo_fixo_id_fkey'
+            columns: ['custo_fixo_id']
             isOneToOne: false
-            referencedRelation: "precificacao_custos_fixos"
-            referencedColumns: ["id"]
+            referencedRelation: 'precificacao_custos_fixos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "precificacao_custos_fixos_detalhes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_custos_fixos_detalhes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3226,11 +3214,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_especialidades_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_especialidades_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3264,11 +3252,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_globais_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_globais_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3320,11 +3308,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_ocupacao_cadeiras_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_ocupacao_cadeiras_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3352,11 +3340,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_ocupacao_config_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_ocupacao_config_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3402,18 +3390,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "precificacao_procedimentos_especialidade_id_fkey"
-            columns: ["especialidade_id"]
+            foreignKeyName: 'precificacao_procedimentos_especialidade_id_fkey'
+            columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: "precificacao_especialidades"
-            referencedColumns: ["id"]
+            referencedRelation: 'precificacao_especialidades'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "precificacao_procedimentos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'precificacao_procedimentos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3444,11 +3432,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pro_agenda_dentistas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pro_agenda_dentistas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3479,11 +3467,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pro_agenda_procedimentos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pro_agenda_procedimentos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3514,25 +3502,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pro_agenda_tempos_dentista_id_fkey"
-            columns: ["dentista_id"]
+            foreignKeyName: 'pro_agenda_tempos_dentista_id_fkey'
+            columns: ['dentista_id']
             isOneToOne: false
-            referencedRelation: "pro_agenda_dentistas"
-            referencedColumns: ["id"]
+            referencedRelation: 'pro_agenda_dentistas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pro_agenda_tempos_procedimento_id_fkey"
-            columns: ["procedimento_id"]
+            foreignKeyName: 'pro_agenda_tempos_procedimento_id_fkey'
+            columns: ['procedimento_id']
             isOneToOne: false
-            referencedRelation: "pro_agenda_procedimentos"
-            referencedColumns: ["id"]
+            referencedRelation: 'pro_agenda_procedimentos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pro_agenda_tempos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'pro_agenda_tempos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3566,25 +3554,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "produto_campos_valores_campo_id_fkey"
-            columns: ["campo_id"]
+            foreignKeyName: 'produto_campos_valores_campo_id_fkey'
+            columns: ['campo_id']
             isOneToOne: false
-            referencedRelation: "campos_personalizados"
-            referencedColumns: ["id"]
+            referencedRelation: 'campos_personalizados'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "produto_campos_valores_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'produto_campos_valores_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "produto_campos_valores_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'produto_campos_valores_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3609,9 +3597,7 @@ export type Database = {
           observacoes: string | null
           quantidade_estoque: number | null
           quantidade_minima: number | null
-          referencia_consumo:
-            | Database["public"]["Enums"]["referencia_consumo_enum"]
-            | null
+          referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala: string | null
           sala_id: string | null
           tenant_id: string | null
@@ -3638,9 +3624,7 @@ export type Database = {
           observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
-          referencia_consumo?:
-            | Database["public"]["Enums"]["referencia_consumo_enum"]
-            | null
+          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala?: string | null
           sala_id?: string | null
           tenant_id?: string | null
@@ -3667,9 +3651,7 @@ export type Database = {
           observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
-          referencia_consumo?:
-            | Database["public"]["Enums"]["referencia_consumo_enum"]
-            | null
+          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
           sala?: string | null
           sala_id?: string | null
           tenant_id?: string | null
@@ -3678,32 +3660,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "produtos_embalagem_id_fkey"
-            columns: ["embalagem_id"]
+            foreignKeyName: 'produtos_embalagem_id_fkey'
+            columns: ['embalagem_id']
             isOneToOne: false
-            referencedRelation: "embalagens"
-            referencedColumns: ["id"]
+            referencedRelation: 'embalagens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "produtos_especialidade_id_fkey"
-            columns: ["especialidade_id"]
+            foreignKeyName: 'produtos_especialidade_id_fkey'
+            columns: ['especialidade_id']
             isOneToOne: false
-            referencedRelation: "especialidades"
-            referencedColumns: ["id"]
+            referencedRelation: 'especialidades'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "produtos_sala_id_fkey"
-            columns: ["sala_id"]
+            foreignKeyName: 'produtos_sala_id_fkey'
+            columns: ['sala_id']
             isOneToOne: false
-            referencedRelation: "salas"
-            referencedColumns: ["id"]
+            referencedRelation: 'salas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "produtos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'produtos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3740,11 +3722,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "referencias_comissao_crc_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'referencias_comissao_crc_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3781,11 +3763,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "referencias_comissao_dentista_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'referencias_comissao_dentista_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3834,18 +3816,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "rh_ferias_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'rh_ferias_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "rh_ferias_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'rh_ferias_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3891,18 +3873,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "roteiros_setor_id_fkey"
-            columns: ["setor_id"]
+            foreignKeyName: 'roteiros_setor_id_fkey'
+            columns: ['setor_id']
             isOneToOne: false
-            referencedRelation: "roteiros_setores"
-            referencedColumns: ["id"]
+            referencedRelation: 'roteiros_setores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "roteiros_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'roteiros_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3933,11 +3915,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "roteiros_setores_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'roteiros_setores_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -3971,25 +3953,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "rotinas_usuarios_cargo_id_fkey"
-            columns: ["cargo_id"]
+            foreignKeyName: 'rotinas_usuarios_cargo_id_fkey'
+            columns: ['cargo_id']
             isOneToOne: false
-            referencedRelation: "cargos"
-            referencedColumns: ["id"]
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "rotinas_usuarios_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'rotinas_usuarios_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "rotinas_usuarios_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'rotinas_usuarios_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4023,25 +4005,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sac_acoes_solucao_demanda_id_fkey"
-            columns: ["demanda_id"]
+            foreignKeyName: 'sac_acoes_solucao_demanda_id_fkey'
+            columns: ['demanda_id']
             isOneToOne: false
-            referencedRelation: "sac_demandas"
-            referencedColumns: ["id"]
+            referencedRelation: 'sac_demandas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_acoes_solucao_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sac_acoes_solucao_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_acoes_solucao_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'sac_acoes_solucao_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4069,11 +4051,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sac_configuracoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sac_configuracoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4131,25 +4113,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sac_demandas_quem_recebeu_id_fkey"
-            columns: ["quem_recebeu_id"]
+            foreignKeyName: 'sac_demandas_quem_recebeu_id_fkey'
+            columns: ['quem_recebeu_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_demandas_quem_resolve_id_fkey"
-            columns: ["quem_resolve_id"]
+            foreignKeyName: 'sac_demandas_quem_resolve_id_fkey'
+            columns: ['quem_resolve_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_demandas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sac_demandas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4183,25 +4165,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sac_historico_demanda_id_fkey"
-            columns: ["demanda_id"]
+            foreignKeyName: 'sac_historico_demanda_id_fkey'
+            columns: ['demanda_id']
             isOneToOne: false
-            referencedRelation: "sac_demandas"
-            referencedColumns: ["id"]
+            referencedRelation: 'sac_demandas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_historico_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sac_historico_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sac_historico_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'sac_historico_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4247,25 +4229,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "saida_produtos_produto_id_fkey"
-            columns: ["produto_id"]
+            foreignKeyName: 'saida_produtos_produto_id_fkey'
+            columns: ['produto_id']
             isOneToOne: false
-            referencedRelation: "produtos"
-            referencedColumns: ["id"]
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "saida_produtos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'saida_produtos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "saida_produtos_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'saida_produtos_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4290,11 +4272,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "salas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'salas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4325,11 +4307,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sorriso_dos_sonhos_config_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sorriso_dos_sonhos_config_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4375,25 +4357,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sorriso_dos_sonhos_indicacoes_colaborador_id_fkey"
-            columns: ["colaborador_id"]
+            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_colaborador_id_fkey'
+            columns: ['colaborador_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey"
-            columns: ["paciente_indicador_id"]
+            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey'
+            columns: ['paciente_indicador_id']
             isOneToOne: false
-            referencedRelation: "pacientes"
-            referencedColumns: ["id"]
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "sorriso_dos_sonhos_indicacoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4418,11 +4400,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tamanhos_implante_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'tamanhos_implante_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4480,18 +4462,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tarefas_rotina_rotina_id_fkey"
-            columns: ["rotina_id"]
+            foreignKeyName: 'tarefas_rotina_rotina_id_fkey'
+            columns: ['rotina_id']
             isOneToOne: false
-            referencedRelation: "rotinas_usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'rotinas_usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "tarefas_rotina_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'tarefas_rotina_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4570,11 +4552,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "terceiros_categorias_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'terceiros_categorias_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4608,18 +4590,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "terceiros_colunas_categoria_slug_tenant_fkey"
-            columns: ["categoria_slug", "tenant_id"]
+            foreignKeyName: 'terceiros_colunas_categoria_slug_tenant_fkey'
+            columns: ['categoria_slug', 'tenant_id']
             isOneToOne: false
-            referencedRelation: "terceiros_categorias"
-            referencedColumns: ["slug", "tenant_id"]
+            referencedRelation: 'terceiros_categorias'
+            referencedColumns: ['slug', 'tenant_id']
           },
           {
-            foreignKeyName: "terceiros_colunas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'terceiros_colunas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4647,11 +4629,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "terceiros_etiquetas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'terceiros_etiquetas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4685,25 +4667,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "terceiros_historico_tarefa_id_fkey"
-            columns: ["tarefa_id"]
+            foreignKeyName: 'terceiros_historico_tarefa_id_fkey'
+            columns: ['tarefa_id']
             isOneToOne: false
-            referencedRelation: "terceiros_tarefas"
-            referencedColumns: ["id"]
+            referencedRelation: 'terceiros_tarefas'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "terceiros_historico_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'terceiros_historico_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "terceiros_historico_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'terceiros_historico_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4761,25 +4743,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "terceiros_tarefas_categoria_slug_tenant_fkey"
-            columns: ["categoria_slug", "tenant_id"]
+            foreignKeyName: 'terceiros_tarefas_categoria_slug_tenant_fkey'
+            columns: ['categoria_slug', 'tenant_id']
             isOneToOne: false
-            referencedRelation: "terceiros_categorias"
-            referencedColumns: ["slug", "tenant_id"]
+            referencedRelation: 'terceiros_categorias'
+            referencedColumns: ['slug', 'tenant_id']
           },
           {
-            foreignKeyName: "terceiros_tarefas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'terceiros_tarefas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "terceiros_tarefas_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'terceiros_tarefas_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4801,25 +4783,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "usuario_permissoes_permissao_id_fkey"
-            columns: ["permissao_id"]
+            foreignKeyName: 'usuario_permissoes_permissao_id_fkey'
+            columns: ['permissao_id']
             isOneToOne: false
-            referencedRelation: "permissoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'permissoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuario_permissoes_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'usuario_permissoes_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuario_permissoes_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'usuario_permissoes_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4931,25 +4913,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "usuarios_cargo_id_fkey"
-            columns: ["cargo_id"]
+            foreignKeyName: 'usuarios_cargo_id_fkey'
+            columns: ['cargo_id']
             isOneToOne: false
-            referencedRelation: "cargos"
-            referencedColumns: ["id"]
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuarios_cargo_secundario_id_fkey"
-            columns: ["cargo_secundario_id"]
+            foreignKeyName: 'usuarios_cargo_secundario_id_fkey'
+            columns: ['cargo_secundario_id']
             isOneToOne: false
-            referencedRelation: "cargos"
-            referencedColumns: ["id"]
+            referencedRelation: 'cargos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuarios_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'usuarios_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4958,7 +4940,7 @@ export type Database = {
           compromisso_id: string
           criado_em: string
           id: string
-          permissao: Database["public"]["Enums"]["permissao_compromisso_enum"]
+          permissao: Database['public']['Enums']['permissao_compromisso_enum']
           tenant_id: string | null
           usuario_criador_id: string
           usuario_destinatario_id: string
@@ -4967,7 +4949,7 @@ export type Database = {
           compromisso_id: string
           criado_em?: string
           id?: string
-          permissao?: Database["public"]["Enums"]["permissao_compromisso_enum"]
+          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
           tenant_id?: string | null
           usuario_criador_id: string
           usuario_destinatario_id: string
@@ -4976,39 +4958,39 @@ export type Database = {
           compromisso_id?: string
           criado_em?: string
           id?: string
-          permissao?: Database["public"]["Enums"]["permissao_compromisso_enum"]
+          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
           tenant_id?: string | null
           usuario_criador_id?: string
           usuario_destinatario_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "usuarios_compromissos_compromisso_id_fkey"
-            columns: ["compromisso_id"]
+            foreignKeyName: 'usuarios_compromissos_compromisso_id_fkey'
+            columns: ['compromisso_id']
             isOneToOne: false
-            referencedRelation: "compromissos"
-            referencedColumns: ["id"]
+            referencedRelation: 'compromissos'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuarios_compromissos_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'usuarios_compromissos_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuarios_compromissos_usuario_criador_id_fkey"
-            columns: ["usuario_criador_id"]
+            foreignKeyName: 'usuarios_compromissos_usuario_criador_id_fkey'
+            columns: ['usuario_criador_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "usuarios_compromissos_usuario_destinatario_id_fkey"
-            columns: ["usuario_destinatario_id"]
+            foreignKeyName: 'usuarios_compromissos_usuario_destinatario_id_fkey'
+            columns: ['usuario_destinatario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -5096,46 +5078,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vendas_confirmadas_crc_fkey"
-            columns: ["crc"]
+            foreignKeyName: 'vendas_confirmadas_crc_fkey'
+            columns: ['crc']
             isOneToOne: false
-            referencedRelation: "crc_comercial"
-            referencedColumns: ["id"]
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_confirmadas_dentista_avaliador_fkey"
-            columns: ["dentista_avaliador"]
+            foreignKeyName: 'vendas_confirmadas_dentista_avaliador_fkey'
+            columns: ['dentista_avaliador']
             isOneToOne: false
-            referencedRelation: "dentistas_avaliadores"
-            referencedColumns: ["id"]
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_confirmadas_fatura_comissao_id_fkey"
-            columns: ["fatura_comissao_id"]
+            foreignKeyName: 'vendas_confirmadas_fatura_comissao_id_fkey'
+            columns: ['fatura_comissao_id']
             isOneToOne: false
-            referencedRelation: "faturas_comissoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'faturas_comissoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_confirmadas_oportunidade_id_fkey"
-            columns: ["oportunidade_id"]
+            foreignKeyName: 'vendas_confirmadas_oportunidade_id_fkey'
+            columns: ['oportunidade_id']
             isOneToOne: false
-            referencedRelation: "avaliacoes"
-            referencedColumns: ["id"]
+            referencedRelation: 'avaliacoes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_confirmadas_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'vendas_confirmadas_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "funil_origens"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_confirmadas_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'vendas_confirmadas_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -5190,39 +5172,39 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vendas_diarias_crc_comercial_id_fkey"
-            columns: ["crc_comercial_id"]
+            foreignKeyName: 'vendas_diarias_crc_comercial_id_fkey'
+            columns: ['crc_comercial_id']
             isOneToOne: false
-            referencedRelation: "crc_comercial"
-            referencedColumns: ["id"]
+            referencedRelation: 'crc_comercial'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_diarias_dentista_avaliador_id_fkey"
-            columns: ["dentista_avaliador_id"]
+            foreignKeyName: 'vendas_diarias_dentista_avaliador_id_fkey'
+            columns: ['dentista_avaliador_id']
             isOneToOne: false
-            referencedRelation: "dentistas_avaliadores"
-            referencedColumns: ["id"]
+            referencedRelation: 'dentistas_avaliadores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_diarias_origem_id_fkey"
-            columns: ["origem_id"]
+            foreignKeyName: 'vendas_diarias_origem_id_fkey'
+            columns: ['origem_id']
             isOneToOne: false
-            referencedRelation: "funil_origens"
-            referencedColumns: ["id"]
+            referencedRelation: 'funil_origens'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_diarias_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: 'vendas_diarias_tenant_id_fkey'
+            columns: ['tenant_id']
             isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "vendas_diarias_usuario_id_fkey"
-            columns: ["usuario_id"]
+            foreignKeyName: 'vendas_diarias_usuario_id_fkey'
+            columns: ['usuario_id']
             isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -5305,22 +5287,18 @@ export type Database = {
       }
     }
     Enums: {
-      nivel_criticidade_enum:
-        | "no_horario"
-        | "tolerancia"
-        | "critico"
-        | "nao_concluida"
-      permissao_compromisso_enum: "visualizar" | "editar" | "deletar"
-      referencia_consumo_enum: "qtd_comprada" | "itens_embalagem"
+      nivel_criticidade_enum: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida'
+      permissao_compromisso_enum: 'visualizar' | 'editar' | 'deletar'
+      referencia_consumo_enum: 'qtd_comprada' | 'itens_embalagem'
       tipo_compromisso_enum:
-        | "consulta"
-        | "viagem_pessoal"
-        | "viagem_trabalho"
-        | "reuniao"
-        | "congresso"
-        | "folga_ferias"
-        | "treinamento"
-        | "atendimento_externo"
+        | 'consulta'
+        | 'viagem_pessoal'
+        | 'viagem_trabalho'
+        | 'reuniao'
+        | 'congresso'
+        | 'folga_ferias'
+        | 'treinamento'
+        | 'atendimento_externo'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5328,33 +5306,31 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -5363,23 +5339,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -5388,23 +5364,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -5413,63 +5389,57 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
+    | keyof DefaultSchema['Enums']
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      nivel_criticidade_enum: [
-        "no_horario",
-        "tolerancia",
-        "critico",
-        "nao_concluida",
-      ],
-      permissao_compromisso_enum: ["visualizar", "editar", "deletar"],
-      referencia_consumo_enum: ["qtd_comprada", "itens_embalagem"],
+      nivel_criticidade_enum: ['no_horario', 'tolerancia', 'critico', 'nao_concluida'],
+      permissao_compromisso_enum: ['visualizar', 'editar', 'deletar'],
+      referencia_consumo_enum: ['qtd_comprada', 'itens_embalagem'],
       tipo_compromisso_enum: [
-        "consulta",
-        "viagem_pessoal",
-        "viagem_trabalho",
-        "reuniao",
-        "congresso",
-        "folga_ferias",
-        "treinamento",
-        "atendimento_externo",
+        'consulta',
+        'viagem_pessoal',
+        'viagem_trabalho',
+        'reuniao',
+        'congresso',
+        'folga_ferias',
+        'treinamento',
+        'atendimento_externo',
       ],
     },
   },
 } as const
-
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -7949,48 +7919,48 @@ export const Constants = {
 //     IF NEW.cargo_id IS NOT NULL THEN
 //       SELECT nome INTO v_cargo_nome FROM public.cargos WHERE id = NEW.cargo_id;
 //     END IF;
-//   
+//
 //     IF NEW.cargo_secundario_id IS NOT NULL THEN
 //       SELECT nome INTO v_cargo_secundario_nome FROM public.cargos WHERE id = NEW.cargo_secundario_id;
 //     END IF;
-//     
+//
 //     IF v_cargo_nome = 'Dentista Avaliador' OR v_cargo_secundario_nome = 'Dentista Avaliador' THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.dentistas_avaliadores WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.dentistas_avaliadores (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.dentistas_avaliadores 
+//         UPDATE public.dentistas_avaliadores
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//     
+//
 //     IF v_cargo_nome = 'Dentista' OR v_cargo_secundario_nome = 'Dentista' THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.dentistas WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.dentistas (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.dentistas 
+//         UPDATE public.dentistas
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//     
+//
 //     IF v_cargo_nome IN ('CRC', 'CRC Comercial') OR v_cargo_secundario_nome IN ('CRC', 'CRC Comercial') THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.crc_comercial (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.crc_comercial 
+//         UPDATE public.crc_comercial
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//   
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION atualizar_funil_dados_mensais(uuid, text)
 //   CREATE OR REPLACE FUNCTION public.atualizar_funil_dados_mensais(p_origem_id uuid, p_mes_referencia text)
 //    RETURNS void
@@ -8005,43 +7975,43 @@ export const Constants = {
 //       v_valor_fechado NUMERIC;
 //     BEGIN
 //       -- Contagem exclusiva de Leads usando COUNT(id) (Sem DISTINCT)
-//       SELECT COUNT(id) INTO v_total_leads FROM public.funil_leads 
-//       WHERE origem_id = p_origem_id 
+//       SELECT COUNT(id) INTO v_total_leads FROM public.funil_leads
+//       WHERE origem_id = p_origem_id
 //       AND mes_referencia = p_mes_referencia
 //       AND lower(status) NOT IN ('lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho');
-//       
+//
 //       -- Agendamentos
-//       SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads 
-//       WHERE origem_id = p_origem_id 
-//       AND mes_referencia = p_mes_referencia 
+//       SELECT COALESCE(SUM(COALESCE(qtd_agendamentos, 1)), 0) INTO v_agendamentos FROM public.funil_leads
+//       WHERE origem_id = p_origem_id
+//       AND mes_referencia = p_mes_referencia
 //       AND lower(status) IN ('agendado', 'reagendado', 'atendido', 'faltou', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
-//   
+//
 //       -- Comparecimentos (Sem DISTINCT)
-//       SELECT COUNT(id) INTO v_comparecimentos FROM public.funil_leads 
-//       WHERE origem_id = p_origem_id 
-//       AND mes_referencia = p_mes_referencia 
+//       SELECT COUNT(id) INTO v_comparecimentos FROM public.funil_leads
+//       WHERE origem_id = p_origem_id
+//       AND mes_referencia = p_mes_referencia
 //       AND lower(status) IN ('atendido', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up');
-//   
+//
 //       -- Fechamentos (Sem DISTINCT)
-//       SELECT COUNT(id) INTO v_fechamentos FROM public.funil_leads 
-//       WHERE origem_id = p_origem_id 
-//       AND mes_referencia = p_mes_referencia 
+//       SELECT COUNT(id) INTO v_fechamentos FROM public.funil_leads
+//       WHERE origem_id = p_origem_id
+//       AND mes_referencia = p_mes_referencia
 //       AND lower(status) IN ('fechamento', 'venda-fechada', 'venda_concretizada');
-//       
+//
 //       -- Faltas
-//       SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads 
+//       SELECT COALESCE(SUM(COALESCE(qtd_faltas, 0)), 0) INTO v_faltas FROM public.funil_leads
 //       WHERE origem_id = p_origem_id AND mes_referencia = p_mes_referencia;
-//   
+//
 //       -- Valor Fechado
 //       SELECT COALESCE(SUM(valor_tratamento), 0) INTO v_valor_fechado FROM public.vendas_confirmadas
-//       WHERE origem_id = p_origem_id 
+//       WHERE origem_id = p_origem_id
 //       AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes_referencia;
-//   
+//
 //       INSERT INTO public.funil_dados_mensais (
-//         origem_id, 
-//         mes_referencia, 
-//         leads_realizado, 
-//         agendamentos_realizado, 
+//         origem_id,
+//         mes_referencia,
+//         leads_realizado,
+//         agendamentos_realizado,
 //         comparecimentos_realizado,
 //         fechamentos_qtde_realizado,
 //         fechamentos_valor_realizado,
@@ -8056,17 +8026,17 @@ export const Constants = {
 //         ticket_medio_esperado
 //       )
 //       VALUES (
-//         p_origem_id, 
-//         p_mes_referencia, 
-//         v_total_leads, 
-//         v_agendamentos, 
+//         p_origem_id,
+//         p_mes_referencia,
+//         v_total_leads,
+//         v_agendamentos,
 //         v_comparecimentos,
 //         v_fechamentos,
 //         v_valor_fechado,
 //         v_faltas,
 //         0, 0, 0, 0, 0, 0, 0, 0
 //       )
-//       ON CONFLICT (origem_id, mes_referencia) 
+//       ON CONFLICT (origem_id, mes_referencia)
 //       DO UPDATE SET
 //         leads_realizado = EXCLUDED.leads_realizado,
 //         agendamentos_realizado = EXCLUDED.agendamentos_realizado,
@@ -8077,7 +8047,7 @@ export const Constants = {
 //         atualizado_em = NOW();
 //     END;
 //   $function$
-//   
+//
 // FUNCTION gerar_adiantamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)
 //    RETURNS void
@@ -8089,17 +8059,17 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
-//         WHERE usuario_id = v_user.id 
-//         AND mes_referencia = p_mes 
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
 //       ) THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //         VALUES (
-//           v_user.id, 
-//           'credito', 
-//           100, 
-//           'Adiantamento Google Avaliações (Meta 5)', 
+//           v_user.id,
+//           'credito',
+//           100,
+//           'Adiantamento Google Avaliações (Meta 5)',
 //           p_mes,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -8107,7 +8077,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION gerar_adiantamento_mes_inovacao(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_inovacao(p_mes text)
 //    RETURNS void
@@ -8119,17 +8089,17 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
-//         WHERE usuario_id = v_user.id 
-//         AND mes_referencia = p_mes 
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento de Inovação'
 //       ) THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //         VALUES (
-//           v_user.id, 
-//           'credito', 
-//           100, 
-//           'Adiantamento de Inovação', 
+//           v_user.id,
+//           'credito',
+//           100,
+//           'Adiantamento de Inovação',
 //           p_mes,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -8137,7 +8107,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION gerar_adiantamento_mes_sorriso(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_sorriso(p_mes text)
 //    RETURNS void
@@ -8149,21 +8119,21 @@ export const Constants = {
 //     v_config RECORD;
 //   BEGIN
 //     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
-//     
+//
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes 
-//           WHERE usuario_id = v_user.id 
-//           AND mes_referencia = p_mes 
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
 //           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
 //         ) THEN
 //           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //           VALUES (
-//             v_user.id, 
-//             'credito', 
-//             200, 
-//             'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)', 
+//             v_user.id,
+//             'credito',
+//             200,
+//             'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)',
 //             p_mes,
 //             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //           );
@@ -8172,7 +8142,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION gerar_todos_adiantamentos_mensais()
 //   CREATE OR REPLACE FUNCTION public.gerar_todos_adiantamentos_mensais()
 //    RETURNS void
@@ -8188,18 +8158,18 @@ export const Constants = {
 //     IF v_data_atual < '2026-05-01'::date THEN
 //       RETURN;
 //     END IF;
-//   
+//
 //     v_mes_atual := to_char(v_data_atual, 'YYYY-MM');
-//   
+//
 //     -- 1. Gerar Adiantamentos Específicos usando funções existentes
 //     PERFORM public.gerar_adiantamento_mes_google(v_mes_atual);
 //     PERFORM public.gerar_adiantamento_mes_inovacao(v_mes_atual);
 //     PERFORM public.gerar_adiantamento_mes_sorriso(v_mes_atual);
-//   
+//
 //     -- 2. Gerar registros base de Bonificação Feijão com Arroz para acionar o trigger de adiantamento
 //     FOR v_user IN SELECT id FROM public.usuarios WHERE status = 'ativo' AND possui_carteira = true LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.performance_bonificacao 
+//         SELECT 1 FROM public.performance_bonificacao
 //         WHERE usuario_id = v_user.id AND mes_referencia = v_mes_atual
 //       ) THEN
 //         INSERT INTO public.performance_bonificacao (usuario_id, mes_referencia, itens_marcados, pontuacao_total, atingiu_meta)
@@ -8208,7 +8178,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION get_my_tenant_id()
 //   CREATE OR REPLACE FUNCTION public.get_my_tenant_id()
 //    RETURNS uuid
@@ -8217,7 +8187,7 @@ export const Constants = {
 //   AS $function$
 //       SELECT (auth.jwt() -> 'app_metadata' ->> 'tenant_id')::uuid;
 //   $function$
-//   
+//
 // FUNCTION get_oportunidades_geradas(text)
 //   CREATE OR REPLACE FUNCTION public.get_oportunidades_geradas(p_mes_referencia text)
 //    RETURNS TABLE(origem_id uuid, origem_nome text, qtd_oportunidades bigint, valor_oportunidades numeric)
@@ -8226,20 +8196,20 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT 
+//       SELECT
 //           o.id as origem_id,
 //           o.nome as origem_nome,
 //           COUNT(a.id) as qtd_oportunidades,
 //           COALESCE(SUM(a.valor_orcamento), 0) as valor_oportunidades
 //       FROM public.funil_origens o
-//       LEFT JOIN public.avaliacoes a 
-//           ON a.origem_id = o.id 
+//       LEFT JOIN public.avaliacoes a
+//           ON a.origem_id = o.id
 //           AND to_char(COALESCE(a.data_avaliacao, a.criado_em::date), 'YYYY-MM') = p_mes_referencia
 //       GROUP BY o.id, o.nome
 //       ORDER BY o.ordem;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION get_or_create_direct_chat(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_or_create_direct_chat(target_user_id uuid)
 //    RETURNS uuid
@@ -8253,7 +8223,7 @@ export const Constants = {
 //     IF v_current_user IS NULL THEN
 //       RAISE EXCEPTION 'Not authenticated';
 //     END IF;
-//   
+//
 //     -- Tenta encontrar uma conversa individual existente entre os dois usuários
 //     SELECT c.id INTO v_chat_id
 //     FROM public.chat_conversas c
@@ -8261,23 +8231,23 @@ export const Constants = {
 //     JOIN public.chat_participantes p2 ON p2.conversa_id = c.id AND p2.usuario_id = target_user_id
 //     WHERE c.tipo = 'individual'
 //     LIMIT 1;
-//   
+//
 //     -- Se não encontrou, cria uma nova
 //     IF v_chat_id IS NULL THEN
 //       INSERT INTO public.chat_conversas (tipo, criado_por)
 //       VALUES ('individual', v_current_user)
 //       RETURNING id INTO v_chat_id;
-//   
+//
 //       INSERT INTO public.chat_participantes (conversa_id, usuario_id)
-//       VALUES 
+//       VALUES
 //         (v_chat_id, v_current_user),
 //         (v_chat_id, target_user_id);
 //     END IF;
-//   
+//
 //     RETURN v_chat_id;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION get_unread_chat_count(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_unread_chat_count(p_usuario_id uuid)
 //    RETURNS integer
@@ -8294,11 +8264,11 @@ export const Constants = {
 //     WHERE p.usuario_id = p_usuario_id
 //       AND m.remetente_id != p_usuario_id
 //       AND m.criado_em > p.ultima_leitura;
-//       
+//
 //     RETURN v_count;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION get_unread_counts_per_conversation(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_unread_counts_per_conversation(p_usuario_id uuid)
 //    RETURNS TABLE(conversa_id uuid, unread_count bigint)
@@ -8316,7 +8286,7 @@ export const Constants = {
 //     GROUP BY m.conversa_id;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION get_vendas_por_origem(text)
 //   CREATE OR REPLACE FUNCTION public.get_vendas_por_origem(p_mes_referencia text)
 //    RETURNS TABLE(origem_id uuid, origem_nome text, qtd_vendas bigint, valor_vendas numeric)
@@ -8325,20 +8295,20 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT 
+//       SELECT
 //           o.id as origem_id,
 //           o.nome as origem_nome,
 //           COUNT(v.id) as qtd_vendas,
 //           COALESCE(SUM(v.valor_tratamento), 0) as valor_vendas
 //       FROM public.funil_origens o
-//       LEFT JOIN public.vendas_confirmadas v 
-//           ON v.origem_id = o.id 
+//       LEFT JOIN public.vendas_confirmadas v
+//           ON v.origem_id = o.id
 //           AND to_char(v.data_fechamento::date, 'YYYY-MM') = p_mes_referencia
 //       GROUP BY o.id, o.nome
 //       ORDER BY o.ordem;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION has_permission(text)
 //   CREATE OR REPLACE FUNCTION public.has_permission(permission_name text)
 //    RETURNS boolean
@@ -8353,7 +8323,7 @@ export const Constants = {
 //       IF public.is_tenant_admin() THEN RETURN true; END IF;
 //       v_tenant_id := public.get_my_tenant_id();
 //       IF v_tenant_id IS NULL THEN RETURN false; END IF;
-//   
+//
 //       SELECT EXISTS (
 //           SELECT 1 FROM public.usuario_permissoes up
 //           JOIN public.permissoes p ON p.id = up.permissao_id
@@ -8361,10 +8331,10 @@ export const Constants = {
 //             AND p.nome = permission_name AND p.tenant_id = v_tenant_id
 //       ) INTO v_has_perm;
 //       IF v_has_perm THEN RETURN true; END IF;
-//   
+//
 //       SELECT cargo_id INTO v_cargo_id
 //       FROM public.usuarios WHERE id = auth.uid() AND tenant_id = v_tenant_id;
-//   
+//
 //       IF v_cargo_id IS NOT NULL THEN
 //           SELECT EXISTS (
 //               SELECT 1 FROM public.cargo_permissoes cp
@@ -8376,7 +8346,7 @@ export const Constants = {
 //       RETURN v_has_perm;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean
@@ -8385,7 +8355,7 @@ export const Constants = {
 //   AS $function$
 //       SELECT public.is_tenant_admin();
 //   $function$
-//   
+//
 // FUNCTION is_super_admin()
 //   CREATE OR REPLACE FUNCTION public.is_super_admin()
 //    RETURNS boolean
@@ -8394,7 +8364,7 @@ export const Constants = {
 //   AS $function$
 //       SELECT COALESCE((auth.jwt() -> 'app_metadata' ->> 'is_super_admin')::boolean, false);
 //   $function$
-//   
+//
 // FUNCTION is_tenant_admin()
 //   CREATE OR REPLACE FUNCTION public.is_tenant_admin()
 //    RETURNS boolean
@@ -8413,7 +8383,7 @@ export const Constants = {
 //       RETURN v_role = 'admin';
 //   END;
 //   $function$
-//   
+//
 // FUNCTION processar_fechamento_mes_feijao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_feijao(p_mes text)
 //    RETURNS void
@@ -8424,23 +8394,23 @@ export const Constants = {
 //     v_bonificacao RECORD;
 //     v_debito_existente boolean;
 //   BEGIN
-//     FOR v_bonificacao IN 
-//       SELECT * FROM public.performance_bonificacao 
+//     FOR v_bonificacao IN
+//       SELECT * FROM public.performance_bonificacao
 //       WHERE mes_referencia = p_mes AND atingiu_meta = false
 //     LOOP
 //       SELECT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
+//         SELECT 1 FROM public.carteira_transacoes
 //         WHERE origem_id = v_bonificacao.id AND tipo = 'debito'
 //       ) INTO v_debito_existente;
-//   
+//
 //       IF NOT v_debito_existente THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //         VALUES (
-//           v_bonificacao.usuario_id, 
-//           'debito', 
-//           350, 
-//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto', 
-//           p_mes, 
+//           v_bonificacao.usuario_id,
+//           'debito',
+//           350,
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
+//           p_mes,
 //           v_bonificacao.id,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -8448,7 +8418,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION processar_fechamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_google(p_mes text)
 //    RETURNS void
@@ -8461,23 +8431,23 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
-//         WHERE usuario_id = v_user.id 
-//         AND mes_referencia = p_mes 
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
 //       ) THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes 
-//           WHERE usuario_id = v_user.id 
-//           AND mes_referencia = p_mes 
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
 //           AND descricao = 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto'
 //         ) THEN
-//           SELECT COUNT(*) INTO v_count 
-//           FROM public.performance_google_reviews 
-//           WHERE usuario_id = v_user.id 
-//             AND status = 'validado' 
+//           SELECT COUNT(*) INTO v_count
+//           FROM public.performance_google_reviews
+//           WHERE usuario_id = v_user.id
+//             AND status = 'validado'
 //             AND mes_referencia = p_mes;
-//             
+//
 //           IF v_count < 5 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto', p_mes);
@@ -8487,7 +8457,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION processar_fechamento_mes_inovacao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_inovacao(p_mes text)
 //    RETURNS void
@@ -8500,23 +8470,23 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
-//         WHERE usuario_id = v_user.id 
-//         AND mes_referencia = p_mes 
+//         SELECT 1 FROM public.carteira_transacoes
+//         WHERE usuario_id = v_user.id
+//         AND mes_referencia = p_mes
 //         AND descricao = 'Adiantamento de Inovação'
 //       ) THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes 
-//           WHERE usuario_id = v_user.id 
-//           AND mes_referencia = p_mes 
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
 //           AND descricao = 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto'
 //         ) THEN
-//           SELECT COUNT(*) INTO v_count 
-//           FROM public.performance_pp_pdm 
-//           WHERE usuario_id = v_user.id 
-//             AND inovacao_validada = true 
+//           SELECT COUNT(*) INTO v_count
+//           FROM public.performance_pp_pdm
+//           WHERE usuario_id = v_user.id
+//             AND inovacao_validada = true
 //             AND to_char(data_registro::date, 'YYYY-MM') = p_mes;
-//             
+//
 //           IF v_count = 0 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto', p_mes);
@@ -8526,7 +8496,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION processar_fechamento_mes_sorriso(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_sorriso(p_mes text)
 //    RETURNS void
@@ -8543,31 +8513,31 @@ export const Constants = {
 //   BEGIN
 //     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
 //     v_valor_por_indicacao := COALESCE(v_config.valor_bonus, 100) / COALESCE(v_config.meta_indicacoes, 2);
-//   
+//
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
 //         IF EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes 
-//           WHERE usuario_id = v_user.id 
-//           AND mes_referencia = p_mes 
+//           SELECT 1 FROM public.carteira_transacoes
+//           WHERE usuario_id = v_user.id
+//           AND mes_referencia = p_mes
 //           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
 //         ) THEN
 //           IF NOT EXISTS (
-//             SELECT 1 FROM public.carteira_transacoes 
-//             WHERE usuario_id = v_user.id 
-//             AND mes_referencia = p_mes 
+//             SELECT 1 FROM public.carteira_transacoes
+//             WHERE usuario_id = v_user.id
+//             AND mes_referencia = p_mes
 //             AND descricao = 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto'
 //           ) THEN
-//             SELECT COUNT(*) INTO v_count 
-//             FROM public.sorriso_dos_sonhos_indicacoes 
-//             WHERE colaborador_id = v_user.id 
-//               AND status = 'fechado' 
+//             SELECT COUNT(*) INTO v_count
+//             FROM public.sorriso_dos_sonhos_indicacoes
+//             WHERE colaborador_id = v_user.id
+//               AND status = 'fechado'
 //               AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes;
-//               
+//
 //             IF v_count < 4 THEN
 //               v_falta := 4 - v_count;
 //               v_valor_debito := v_falta * v_valor_por_indicacao;
-//               
+//
 //               INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //               VALUES (v_user.id, 'debito', v_valor_debito, 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto', p_mes);
 //             END IF;
@@ -8577,7 +8547,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION seed_tenant_defaults(uuid)
 //   CREATE OR REPLACE FUNCTION public.seed_tenant_defaults(p_tenant_id uuid)
 //    RETURNS void
@@ -8605,7 +8575,7 @@ export const Constants = {
 //           ON CONFLICT DO NOTHING;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_ao_finalizar_compra()
 //    RETURNS trigger
@@ -8623,12 +8593,12 @@ export const Constants = {
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
-//         
+//
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
-//       
+//
 //     -- From Finalizada to anything -> Revert stock
 //     ELSIF OLD.status = 'Finalizada' AND NEW.status IS DISTINCT FROM 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
@@ -8637,17 +8607,17 @@ export const Constants = {
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
-//         
+//
 //         UPDATE public.produtos
 //         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd)
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
 //     END IF;
-//     
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_atualiza_estoque_compra_item()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_compra_item()
 //    RETURNS trigger
@@ -8667,7 +8637,7 @@ export const Constants = {
 //         v_qtd_adicionar_new := COALESCE(NEW.qtd_comprada, 0);
 //       END IF;
 //     END IF;
-//   
+//
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
 //       SELECT status INTO v_status FROM public.compras WHERE id = OLD.compra_id;
 //       IF OLD.referencia_consumo = 'itens_embalagem' THEN
@@ -8676,12 +8646,12 @@ export const Constants = {
 //         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0);
 //       END IF;
 //     END IF;
-//   
+//
 //     -- If status is not Finalizada, we don't touch the stock
 //     IF v_status IS DISTINCT FROM 'Finalizada' THEN
 //       IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 //     END IF;
-//   
+//
 //     -- If Finalizada, apply changes
 //     IF TG_OP = 'INSERT' THEN
 //       UPDATE public.produtos
@@ -8697,7 +8667,7 @@ export const Constants = {
 //         UPDATE public.produtos
 //         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old)
 //         WHERE id = OLD.produto_id;
-//         
+//
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar_new
 //         WHERE id = NEW.produto_id;
@@ -8709,11 +8679,11 @@ export const Constants = {
 //       WHERE id = OLD.produto_id;
 //       RETURN OLD;
 //     END IF;
-//     
+//
 //     RETURN NULL;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_atualiza_estoque_entrada()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_entrada()
 //    RETURNS trigger
@@ -8723,7 +8693,7 @@ export const Constants = {
 //     v_ref text;
 //   BEGIN
 //     SELECT referencia_consumo::text INTO v_ref FROM public.produtos WHERE id = NEW.produto_id;
-//     
+//
 //     IF v_ref = 'itens_embalagem' THEN
 //       UPDATE public.produtos
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + (COALESCE(NEW.quantidade_comprada, 0) * COALESCE(NEW.quantidade_embalagem, 1))
@@ -8733,11 +8703,11 @@ export const Constants = {
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + COALESCE(NEW.quantidade_comprada, 0)
 //       WHERE id = NEW.produto_id;
 //     END IF;
-//     
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_atualiza_estoque_saida()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_saida()
 //    RETURNS trigger
@@ -8750,11 +8720,11 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       v_qtd_new := COALESCE(NEW.quantidade, 0);
 //     END IF;
-//   
+//
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
 //       v_qtd_old := COALESCE(OLD.quantidade, 0);
 //     END IF;
-//   
+//
 //     IF TG_OP = 'INSERT' THEN
 //       UPDATE public.produtos
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
@@ -8769,7 +8739,7 @@ export const Constants = {
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_old
 //         WHERE id = OLD.produto_id;
-//         
+//
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
 //         WHERE id = NEW.produto_id;
@@ -8781,11 +8751,11 @@ export const Constants = {
 //       WHERE id = OLD.produto_id;
 //       RETURN OLD;
 //     END IF;
-//     
+//
 //     RETURN NULL;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_garantir_avaliacao_para_venda()
 //   CREATE OR REPLACE FUNCTION public.trg_garantir_avaliacao_para_venda()
 //    RETURNS trigger
@@ -8798,27 +8768,27 @@ export const Constants = {
 //     IF NEW.oportunidade_id IS NULL THEN
 //       -- Try to find patient by name
 //       SELECT id INTO v_paciente_id FROM public.pacientes WHERE nome ILIKE NEW.paciente_nome LIMIT 1;
-//       
+//
 //       -- If not found, create one
 //       IF v_paciente_id IS NULL THEN
 //         v_paciente_id := gen_random_uuid();
 //         INSERT INTO public.pacientes (id, nome, telefone) VALUES (v_paciente_id, NEW.paciente_nome, NEW.telefone);
 //       ELSE
 //         -- Patient found, let's see if there's an evaluation to link to, to avoid duplicates
-//         SELECT id INTO v_oportunidade_id 
-//         FROM public.avaliacoes 
-//         WHERE paciente_id = v_paciente_id 
+//         SELECT id INTO v_oportunidade_id
+//         FROM public.avaliacoes
+//         WHERE paciente_id = v_paciente_id
 //         ORDER BY criado_em DESC LIMIT 1;
 //       END IF;
-//       
+//
 //       IF v_oportunidade_id IS NOT NULL THEN
 //         NEW.oportunidade_id := v_oportunidade_id;
 //       ELSE
 //         -- Create evaluation
 //         NEW.oportunidade_id := gen_random_uuid();
 //         INSERT INTO public.avaliacoes (
-//           id, paciente_id, dentista_avaliador_id, crc_comercial_id, 
-//           data_avaliacao, data_fechamento, valor_orcamento, valor_entrada, 
+//           id, paciente_id, dentista_avaliador_id, crc_comercial_id,
+//           data_avaliacao, data_fechamento, valor_orcamento, valor_entrada,
 //           status, temperatura_lead, origem_id, destino_fiscal
 //         ) VALUES (
 //           NEW.oportunidade_id, v_paciente_id, NEW.dentista_avaliador, NEW.crc,
@@ -8830,7 +8800,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_incrementa_status_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_incrementa_status_funil()
 //    RETURNS trigger
@@ -8841,22 +8811,22 @@ export const Constants = {
 //       IF OLD.status = 'faltou' AND NEW.status IN ('agendado', 'reagendado') THEN
 //         NEW.qtd_agendamentos := COALESCE(OLD.qtd_agendamentos, 1) + 1;
 //       END IF;
-//       
+//
 //       IF OLD.status != 'faltou' AND NEW.status = 'faltou' THEN
 //         NEW.qtd_faltas := COALESCE(OLD.qtd_faltas, 0) + 1;
 //       END IF;
 //     END IF;
-//     
+//
 //     IF TG_OP = 'INSERT' THEN
 //       IF NEW.status = 'faltou' THEN
 //         NEW.qtd_faltas := COALESCE(NEW.qtd_faltas, 0) + 1;
 //       END IF;
 //     END IF;
-//   
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sorriso_fechamento()
 //   CREATE OR REPLACE FUNCTION public.trg_sorriso_fechamento()
 //    RETURNS trigger
@@ -8873,27 +8843,27 @@ export const Constants = {
 //       IF NEW.data_fechamento IS NULL THEN
 //         NEW.data_fechamento := CURRENT_DATE;
 //       END IF;
-//       
+//
 //       v_mes := to_char(NEW.data_fechamento::date, 'YYYY-MM');
-//       
-//       SELECT COUNT(*) INTO v_count 
-//       FROM public.sorriso_dos_sonhos_indicacoes 
-//       WHERE colaborador_id = NEW.colaborador_id 
-//         AND status = 'fechado' 
+//
+//       SELECT COUNT(*) INTO v_count
+//       FROM public.sorriso_dos_sonhos_indicacoes
+//       WHERE colaborador_id = NEW.colaborador_id
+//         AND status = 'fechado'
 //         AND to_char(data_fechamento::date, 'YYYY-MM') = v_mes;
-//         
+//
 //       SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
 //       v_meta := COALESCE(v_config.meta_indicacoes, 2);
 //       v_valor := COALESCE(v_config.valor_bonus, 100);
-//       
+//
 //       IF v_count > 4 AND MOD(v_count - 4, v_meta) = 0 THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
 //         VALUES (
-//           NEW.colaborador_id, 
-//           'credito', 
-//           v_valor, 
-//           'Bônus Adicional: ' || v_count || 'ª Indicação (Programa Sorriso dos Sonhos)', 
-//           v_mes, 
+//           NEW.colaborador_id,
+//           'credito',
+//           v_valor,
+//           'Bônus Adicional: ' || v_count || 'ª Indicação (Programa Sorriso dos Sonhos)',
+//           v_mes,
 //           NULL
 //         );
 //       END IF;
@@ -8901,7 +8871,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sync_avaliacoes_to_vendas()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_avaliacoes_to_vendas()
 //    RETURNS trigger
@@ -8911,17 +8881,17 @@ export const Constants = {
 //     IF pg_trigger_depth() > 1 THEN
 //       RETURN NEW;
 //     END IF;
-//   
+//
 //     IF TG_OP = 'UPDATE' THEN
 //       UPDATE public.vendas_confirmadas SET
 //         data_original = NEW.data_avaliacao,
 //         data_fechamento = COALESCE(NEW.data_fechamento, data_fechamento),
 //         valor_tratamento = COALESCE(NEW.valor_orcamento, valor_tratamento),
 //         valor_entrada = COALESCE(NEW.valor_entrada, valor_entrada),
-//         percentual_entrada = CASE 
-//           WHEN COALESCE(NEW.valor_orcamento, valor_tratamento) > 0 
-//           THEN (COALESCE(NEW.valor_entrada, valor_entrada) / COALESCE(NEW.valor_orcamento, valor_tratamento)) * 100 
-//           ELSE 0 
+//         percentual_entrada = CASE
+//           WHEN COALESCE(NEW.valor_orcamento, valor_tratamento) > 0
+//           THEN (COALESCE(NEW.valor_entrada, valor_entrada) / COALESCE(NEW.valor_orcamento, valor_tratamento)) * 100
+//           ELSE 0
 //         END,
 //         dentista_avaliador = NEW.dentista_avaliador_id,
 //         crc = NEW.crc_comercial_id,
@@ -8929,11 +8899,11 @@ export const Constants = {
 //         origem_id = COALESCE(NEW.origem_id, origem_id)
 //       WHERE oportunidade_id = NEW.id;
 //     END IF;
-//   
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sync_carteira_bonificacao()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_carteira_bonificacao()
 //    RETURNS trigger
@@ -8947,61 +8917,61 @@ export const Constants = {
 //   BEGIN
 //     -- Verifica se o usuário possui carteira
 //     SELECT possui_carteira INTO v_possui_carteira FROM public.usuarios WHERE id = NEW.usuario_id;
-//     
+//
 //     IF COALESCE(v_possui_carteira, true) = false THEN
 //       RETURN NEW;
 //     END IF;
-//   
+//
 //     -- Verifica se o crédito já existe
 //     SELECT EXISTS (
-//       SELECT 1 FROM public.carteira_transacoes 
+//       SELECT 1 FROM public.carteira_transacoes
 //       WHERE origem_id = NEW.id AND tipo = 'credito'
 //     ) INTO v_credito_existente;
-//   
+//
 //     -- Insere o crédito apenas se não existir, evitando sobrescrever histórico
 //     IF NOT v_credito_existente THEN
 //       INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //       VALUES (
-//         NEW.usuario_id, 
-//         'credito', 
-//         350, 
-//         'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia, 
-//         NEW.mes_referencia, 
+//         NEW.usuario_id,
+//         'credito',
+//         350,
+//         'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia,
+//         NEW.mes_referencia,
 //         NEW.id,
 //         CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //       );
 //     END IF;
-//   
+//
 //     -- Gerencia o Débito
 //     IF NEW.atingiu_meta THEN
 //       -- Se atingiu a meta, remove qualquer débito existente (caso tenha sido gerado antes)
-//       DELETE FROM public.carteira_transacoes 
+//       DELETE FROM public.carteira_transacoes
 //       WHERE origem_id = NEW.id AND tipo = 'debito';
 //     ELSE
 //       -- Adiciona o débito imediatamente
 //       SELECT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes 
+//         SELECT 1 FROM public.carteira_transacoes
 //         WHERE origem_id = NEW.id AND tipo = 'debito'
 //       ) INTO v_debito_existente;
-//   
+//
 //       IF NOT v_debito_existente THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //         VALUES (
-//           NEW.usuario_id, 
-//           'debito', 
-//           350, 
-//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto', 
-//           NEW.mes_referencia, 
+//           NEW.usuario_id,
+//           'debito',
+//           350,
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
+//           NEW.mes_referencia,
 //           NEW.id,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
 //       END IF;
 //     END IF;
-//   
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sync_confirmadas_to_vendas_diarias()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_confirmadas_to_vendas_diarias()
 //    RETURNS trigger
@@ -9011,7 +8981,7 @@ export const Constants = {
 //       IF pg_trigger_depth() > 1 THEN
 //           RETURN NEW;
 //       END IF;
-//   
+//
 //       IF TG_OP = 'UPDATE' THEN
 //           UPDATE public.vendas_diarias SET
 //               paciente_nome = NEW.paciente_nome,
@@ -9032,7 +9002,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_diarias_to_confirmadas()
 //    RETURNS trigger
@@ -9042,7 +9012,7 @@ export const Constants = {
 //       IF pg_trigger_depth() > 1 THEN
 //           RETURN NEW;
 //       END IF;
-//       
+//
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.vendas_confirmadas (
 //               id,
@@ -9093,7 +9063,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_sync_vendas_to_avaliacoes()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_to_avaliacoes()
 //    RETURNS trigger
@@ -9103,7 +9073,7 @@ export const Constants = {
 //     IF pg_trigger_depth() > 1 THEN
 //       RETURN NEW;
 //     END IF;
-//   
+//
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       IF NEW.oportunidade_id IS NOT NULL THEN
 //         UPDATE public.avaliacoes SET
@@ -9119,11 +9089,11 @@ export const Constants = {
 //         WHERE id = NEW.oportunidade_id;
 //       END IF;
 //     END IF;
-//   
+//
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_update_funil_dados_mensais_from_leads()
 //   CREATE OR REPLACE FUNCTION public.trg_update_funil_dados_mensais_from_leads()
 //    RETURNS trigger
@@ -9137,7 +9107,7 @@ export const Constants = {
 //       IF TG_OP = 'UPDATE' AND (OLD.origem_id IS DISTINCT FROM NEW.origem_id OR OLD.mes_referencia IS DISTINCT FROM NEW.mes_referencia) THEN
 //         PERFORM public.atualizar_funil_dados_mensais(OLD.origem_id, OLD.mes_referencia);
 //       END IF;
-//   
+//
 //       IF TG_OP = 'DELETE' THEN
 //         v_origem_id := OLD.origem_id;
 //         v_mes_referencia := OLD.mes_referencia;
@@ -9145,13 +9115,13 @@ export const Constants = {
 //         v_origem_id := NEW.origem_id;
 //         v_mes_referencia := NEW.mes_referencia;
 //       END IF;
-//   
+//
 //       PERFORM public.atualizar_funil_dados_mensais(v_origem_id, v_mes_referencia);
-//   
+//
 //       RETURN NULL;
 //     END;
 //     $function$
-//   
+//
 // FUNCTION trg_vendas_confirmadas_to_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_to_funil()
 //    RETURNS trigger
@@ -9163,15 +9133,15 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       IF NEW.origem_id IS NOT NULL THEN
 //         IF NEW.oportunidade_id IS NOT NULL THEN
-//           SELECT to_char(data_avaliacao::date, 'YYYY-MM') INTO v_mes_referencia 
-//           FROM public.avaliacoes 
+//           SELECT to_char(data_avaliacao::date, 'YYYY-MM') INTO v_mes_referencia
+//           FROM public.avaliacoes
 //           WHERE id = NEW.oportunidade_id;
 //         END IF;
-//   
+//
 //         IF v_mes_referencia IS NULL THEN
 //           v_mes_referencia := to_char(NEW.data_fechamento::date, 'YYYY-MM');
 //         END IF;
-//         
+//
 //         IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.funil_leads (
 //             nome, telefone, origem_id, mes_referencia, status, temperatura, qtd_agendamentos, qtd_faltas
@@ -9179,13 +9149,13 @@ export const Constants = {
 //             NEW.paciente_nome, NEW.telefone, NEW.origem_id, v_mes_referencia, 'venda_concretizada', 'quente', 1, 0
 //           );
 //         END IF;
-//   
+//
 //       END IF;
 //     END IF;
 //     RETURN NEW;
 //   END;
 //   $function$
-//   
+//
 // FUNCTION trg_vendas_confirmadas_update_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_update_funil()
 //    RETURNS trigger
@@ -9225,7 +9195,7 @@ export const Constants = {
 //     RETURN NULL;
 //   END;
 //   $function$
-//   
+//
 
 // --- TRIGGERS ---
 // Table: avaliacoes
@@ -9352,4 +9322,3 @@ export const Constants = {
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas
 //   CREATE INDEX vendas_confirmadas_oportunidade_id_idx ON public.vendas_confirmadas USING btree (oportunidade_id)
-

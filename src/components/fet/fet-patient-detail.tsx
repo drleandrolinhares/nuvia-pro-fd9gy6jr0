@@ -1,0 +1,271 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { Plus, GripVertical, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Progress } from '@/components/ui/progress'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+
+export function FETPatientDetail({ patientId }: { patientId: string }) {
+  const [patient, setPatient] = useState<any>(null)
+  const [procedimentos, setProcedimentos] = useState<any[]>([])
+  const [dentistas, setDentistas] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchData()
+  }, [patientId])
+
+  const fetchData = async () => {
+    setLoading(true)
+    const [patRes, procRes, dentRes] = await Promise.all([
+      supabase.from('fet_pacientes').select('*').eq('id', patientId).single(),
+      supabase
+        .from('fet_procedimentos')
+        .select('*')
+        .eq('paciente_id', patientId)
+        .order('ordem')
+        .order('criado_em'),
+      supabase.from('pro_agenda_dentistas').select('id, nome').eq('status', 'ativo').order('nome'),
+    ])
+
+    if (patRes.data) setPatient(patRes.data)
+    if (procRes.data) setProcedimentos(procRes.data)
+    if (dentRes.data) setDentistas(dentRes.data)
+    setLoading(false)
+  }
+
+  const handleAddProc = async (targetOrder: number) => {
+    const toUpdate = procedimentos.filter((p) => p.ordem >= targetOrder)
+    for (const p of toUpdate) {
+      await supabase
+        .from('fet_procedimentos')
+        .update({ ordem: p.ordem + 1 })
+        .eq('id', p.id)
+    }
+
+    const newProc = {
+      paciente_id: patientId,
+      procedimento: 'Novo Procedimento',
+      ordem: targetOrder,
+      concluido: false,
+    }
+
+    const { error } = await supabase.from('fet_procedimentos').insert([newProc])
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
+
+    fetchData()
+  }
+
+  const handleUpdate = async (id: string, field: string, value: any) => {
+    setProcedimentos((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)))
+    await supabase
+      .from('fet_procedimentos')
+      .update({ [field]: value })
+      .eq('id', id)
+  }
+
+  const handleDelete = async (id: string) => {
+    await supabase.from('fet_procedimentos').delete().eq('id', id)
+    setProcedimentos((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+
+  const handleDragStart = (id: string) => setDraggedId(id)
+
+  const handleDrop = async (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return
+
+    const oldIndex = procedimentos.findIndex((p) => p.id === draggedId)
+    const newIndex = procedimentos.findIndex((p) => p.id === targetId)
+
+    const newProcs = [...procedimentos]
+    const [moved] = newProcs.splice(oldIndex, 1)
+    newProcs.splice(newIndex, 0, moved)
+
+    const reordered = newProcs.map((p, i) => ({ ...p, ordem: i }))
+    setProcedimentos(reordered)
+    setDraggedId(null)
+
+    for (const p of reordered) {
+      await supabase.from('fet_procedimentos').update({ ordem: p.ordem }).eq('id', p.id)
+    }
+  }
+
+  if (loading)
+    return (
+      <div className="p-8 text-center text-slate-400 flex-1 flex items-center justify-center">
+        Carregando...
+      </div>
+    )
+  if (!patient) return null
+
+  const concluidos = procedimentos.filter((p) => p.concluido).length
+  const total = procedimentos.length
+  const progress = total === 0 ? 0 : Math.round((concluidos / total) * 100)
+
+  return (
+    <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+      <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex flex-col gap-4">
+        <h2 className="text-2xl font-bold text-white">Evolução: {patient.nome}</h2>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">Progresso do Tratamento</span>
+            <span className="text-amber-500 font-bold">
+              {progress}% ({concluidos}/{total})
+            </span>
+          </div>
+          <Progress value={progress} className="h-3 bg-slate-800 [&>div]:bg-amber-500" />
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1 p-6">
+        <div className="space-y-4 pb-20">
+          {procedimentos.map((p, index) => (
+            <div key={p.id} className="relative group/item pt-3">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-6 rounded-full text-xs shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                  onClick={() => handleAddProc(p.ordem)}
+                >
+                  <Plus className="w-3 h-3 mr-1" /> Inserir Acima
+                </Button>
+              </div>
+
+              <div
+                draggable
+                onDragStart={() => handleDragStart(p.id)}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  handleDrop(p.id)
+                }}
+                className={cn(
+                  'bg-slate-950 border border-slate-800 rounded-xl p-4 flex gap-4 transition-all hover:border-slate-700',
+                  p.concluido && 'opacity-60 bg-slate-950/50',
+                )}
+              >
+                <div className="flex flex-col items-center gap-3 pt-1 cursor-grab active:cursor-grabbing">
+                  <GripVertical className="text-slate-600 w-5 h-5 hover:text-white" />
+                  <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300">
+                    {index + 1}
+                  </div>
+                  <Checkbox
+                    checked={p.concluido}
+                    onCheckedChange={(c) => handleUpdate(p.id, 'concluido', c)}
+                    className="w-5 h-5 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950"
+                  />
+                </div>
+
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="md:col-span-12">
+                    <Input
+                      value={p.procedimento}
+                      onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
+                      placeholder="Nome do Procedimento"
+                      className="font-bold text-white bg-slate-900 border-slate-800 focus-visible:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <Select
+                      value={p.dentista_id || 'none'}
+                      onValueChange={(v) =>
+                        handleUpdate(p.id, 'dentista_id', v === 'none' ? null : v)
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-900 border-slate-800 focus:ring-amber-500 text-white">
+                        <SelectValue placeholder="Selecione o Dentista" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Não definido</SelectItem>
+                        {dentistas.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <Input
+                      value={p.tempo_execucao || ''}
+                      onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
+                      placeholder="Tempo Estimado (ex: 30 min)"
+                      className="bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-12">
+                    <Textarea
+                      value={p.observacoes || ''}
+                      onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
+                      placeholder="Observações da consulta..."
+                      className="bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 min-h-[60px] resize-y"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(p.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {index === procedimentos.length - 1 && (
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-6 rounded-full text-xs shadow-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                    onClick={() => handleAddProc(p.ordem + 1)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Inserir Abaixo
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {procedimentos.length === 0 && (
+            <div className="text-center py-10 bg-slate-950 rounded-xl border border-dashed border-slate-800">
+              <p className="text-slate-500 mb-4">Nenhum procedimento cadastrado.</p>
+              <Button
+                onClick={() => handleAddProc(0)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Iniciar Plano de Tratamento
+              </Button>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  )
+}

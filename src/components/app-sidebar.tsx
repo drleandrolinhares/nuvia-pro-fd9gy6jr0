@@ -106,6 +106,12 @@ const navData = [
         permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
       },
       {
+        title: 'FET',
+        url: '/operacional/fet',
+        icon: FileText,
+        permission: ['operacional_fet', 'Acessar FET'],
+      },
+      {
         title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
