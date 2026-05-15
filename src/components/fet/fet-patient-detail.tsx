@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Plus, GripVertical, Trash2, Tags } from 'lucide-react'
+import { Plus, GripVertical, Trash2, Tags, Info, Clock, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,8 +16,12 @@ import {
 } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { format, differenceInDays } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { useAuth } from '@/hooks/use-auth'
 
 const TAG_COLORS = [
   '#ef4444',
@@ -36,7 +40,14 @@ const TAG_COLORS = [
   '#f43f5e',
 ]
 
-export function FETPatientDetail({ patientId }: { patientId: string }) {
+export function FETPatientDetail({
+  patientId,
+  onStatusChange,
+}: {
+  patientId: string
+  onStatusChange?: () => void
+}) {
+  const { user } = useAuth()
   const [patient, setPatient] = useState<any>(null)
   const [procedimentos, setProcedimentos] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
@@ -54,7 +65,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       supabase.from('fet_pacientes').select('*').eq('id', patientId).single(),
       supabase
         .from('fet_procedimentos')
-        .select('*')
+        .select(`*, concluido_por:usuarios(nome)`)
         .eq('paciente_id', patientId)
         .order('ordem')
         .order('criado_em'),
@@ -67,6 +78,23 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
     if (dentRes.data) setDentistas(dentRes.data)
     if (etiqRes.data) setEtiquetasGerais(etiqRes.data)
     setLoading(false)
+  }
+
+  const logFetAction = async (acao: string, detalhes: string) => {
+    if (!user) return
+    const { data: profile } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+    if (profile) {
+      await supabase.from('fet_historico').insert({
+        paciente_id: patientId,
+        usuario_id: profile.id,
+        acao,
+        detalhes,
+      })
+    }
   }
 
   const handleAddProc = async (targetOrder: number) => {
@@ -86,9 +114,80 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       etiquetas: [],
     }
 
-    const { error } = await supabase.from('fet_procedimentos').insert([newProc])
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    fetchData()
+    const { data, error } = await supabase
+      .from('fet_procedimentos')
+      .insert([newProc])
+      .select()
+      .single()
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } else {
+      await logFetAction('Novo Procedimento', `Adicionado: Novo Procedimento`)
+      fetchData()
+    }
+  }
+
+  const checkFinalizacao = async (updatedProcs: any[]) => {
+    if (updatedProcs.length === 0) return
+    const allConcluidos = updatedProcs.every((p) => p.concluido)
+
+    if (allConcluidos && patient?.status !== 'finalizado') {
+      await supabase.from('fet_pacientes').update({ status: 'finalizado' }).eq('id', patientId)
+      await logFetAction('Tratamento Finalizado', `Todos os procedimentos foram concluídos`)
+      toast({
+        title: 'Tratamento Finalizado',
+        description: 'Paciente movido para a aba de finalizados.',
+      })
+      if (onStatusChange) onStatusChange()
+    } else if (!allConcluidos && patient?.status === 'finalizado') {
+      await supabase.from('fet_pacientes').update({ status: 'ativo' }).eq('id', patientId)
+      await logFetAction('Tratamento Reativado', `Tratamento voltou para status ativo`)
+      if (onStatusChange) onStatusChange()
+    }
+  }
+
+  const handleCheck = async (id: string, checked: boolean) => {
+    let concluido_em = null
+    let concluido_por = null
+
+    if (checked && user) {
+      concluido_em = new Date().toISOString()
+      const { data: profile } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('id', user.id)
+        .single()
+      concluido_por = profile?.id
+    }
+
+    const procAtual = procedimentos.find((p) => p.id === id)
+
+    setProcedimentos((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              concluido: checked,
+              concluido_em,
+              concluido_por: checked && user ? { nome: 'Você' } : null,
+            }
+          : p,
+      ),
+    )
+
+    const { error } = await supabase
+      .from('fet_procedimentos')
+      .update({ concluido: checked, concluido_em, concluido_por })
+      .eq('id', id)
+
+    if (!error) {
+      await logFetAction(
+        checked ? 'Procedimento Concluído' : 'Procedimento Reaberto',
+        `Procedimento: ${procAtual?.procedimento}`,
+      )
+      const newProcs = procedimentos.map((p) => (p.id === id ? { ...p, concluido: checked } : p))
+      checkFinalizacao(newProcs)
+    }
   }
 
   const handleUpdate = async (id: string, field: string, value: any) => {
@@ -99,9 +198,12 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       .eq('id', id)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, nomeProc: string) => {
     await supabase.from('fet_procedimentos').delete().eq('id', id)
-    setProcedimentos((prev) => prev.filter((p) => p.id !== id))
+    const newProcs = procedimentos.filter((p) => p.id !== id)
+    setProcedimentos(newProcs)
+    await logFetAction('Procedimento Removido', `Procedimento excluído: ${nomeProc}`)
+    checkFinalizacao(newProcs)
   }
 
   const handleCreateTag = async (nome: string, cor: string) => {
@@ -193,10 +295,14 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
       ? `${totalHours}h${remainingMins > 0 ? ` ${remainingMins}m` : ''}`
       : `${remainingMins}m`
 
+  const diasDecorridos = patient.criado_em
+    ? differenceInDays(new Date(), new Date(patient.criado_em))
+    : 0
+
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
       <div className="p-3 border-b border-slate-800 bg-slate-950/50 flex flex-col gap-2 shrink-0">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-white truncate pr-2">Evolução: {patient.nome}</h2>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm font-bold bg-slate-900/80 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 border border-slate-700/50 shadow-lg shrink-0">
@@ -207,14 +313,48 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
               <span className="text-white text-base md:text-xl leading-none">{total}</span>
             </div>
             <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
-            <div className="flex flex-col px-2 sm:px-3 items-center">
-              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
-                Total Horas
-              </span>
-              <span className="text-white text-base md:text-xl leading-none">
-                {totalTimeFormatted}
-              </span>
-            </div>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex flex-col px-2 sm:px-3 items-center cursor-help">
+                    <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                      Tempo em Cadeira <Info className="w-3 h-3" />
+                    </span>
+                    <span className="text-white text-base md:text-xl leading-none">
+                      {totalTimeFormatted}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[200px] text-center bg-slate-800 border-slate-700">
+                  <p>
+                    Total de horas de procedimentos (tempo que o paciente de fato ficará na cadeira
+                    do dentista).
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex flex-col px-2 sm:px-3 items-center cursor-help">
+                    <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                      Tempo Decorrido <Clock className="w-3 h-3" />
+                    </span>
+                    <span className="text-sky-400 text-base md:text-xl leading-none">
+                      {diasDecorridos} {diasDecorridos === 1 ? 'dia' : 'dias'}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-slate-800 border-slate-700">
+                  <p>Dias corridos desde o início do tratamento.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
             <div className="flex flex-col px-2 sm:px-3 items-center">
               <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
@@ -276,13 +416,13 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                   </div>
                   <Checkbox
                     checked={p.concluido}
-                    onCheckedChange={(c) => handleUpdate(p.id, 'concluido', c)}
+                    onCheckedChange={(c) => handleCheck(p.id, !!c)}
                     className="w-4 h-4 border-slate-600 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-950"
                   />
                 </div>
 
                 <div className="flex-1 flex flex-col gap-2 min-w-0">
-                  {(p.etiquetas || []).length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-1.5">
                       {(p.etiquetas || []).map((tagId: string) => {
                         const tag = etiquetasGerais.find((t) => t.id === tagId)
@@ -303,7 +443,13 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                         )
                       })}
                     </div>
-                  )}
+                    {p.criado_em && (
+                      <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                        <Calendar className="w-3 h-3" /> Adicionado em:{' '}
+                        {format(new Date(p.criado_em), 'dd/MM/yyyy')}
+                      </span>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
                     <div className="lg:col-span-5">
@@ -436,13 +582,21 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                       className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y"
                     />
                   </div>
+
+                  {p.concluido && p.concluido_em && (
+                    <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-400 bg-emerald-400/10 w-fit px-2 py-1 rounded border border-emerald-400/20 font-medium">
+                      Concluído em{' '}
+                      {format(new Date(p.concluido_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      {p.concluido_por?.nome && ` por ${p.concluido_por.nome}`}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-start shrink-0 pt-0.5">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => handleDelete(p.id, p.procedimento)}
                     className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
                   >
                     <Trash2 className="w-4 h-4" />

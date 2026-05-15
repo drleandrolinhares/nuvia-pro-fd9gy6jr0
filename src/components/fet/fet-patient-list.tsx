@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function FETPatientList({
+  status,
   selectedId,
   onSelect,
 }: {
+  status: string
   selectedId: string | null
   onSelect: (id: string) => void
 }) {
@@ -31,9 +33,29 @@ export function FETPatientList({
   const [editName, setEditName] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const fetchPatients = async () => {
+    const { data } = await supabase
+      .from('fet_pacientes')
+      .select('*')
+      .eq('status', status)
+      .order('nome')
+    if (data) setPatients(data)
+  }
+
   useEffect(() => {
     fetchPatients()
-  }, [])
+
+    const channel = supabase
+      .channel(`fet_pacientes_changes_${status}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fet_pacientes' }, () => {
+        fetchPatients()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [status])
 
   const handleEditStart = (p: any, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -55,6 +77,25 @@ export function FETPatientList({
           .sort((a, b) => a.nome.localeCompare(b.nome)),
       )
       setEditingId(null)
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+        if (profile) {
+          await supabase.from('fet_historico').insert({
+            paciente_id: id,
+            usuario_id: profile.id,
+            acao: 'Edição de Paciente',
+            detalhes: `Nome alterado para ${editName}`,
+          })
+        }
+      }
     }
   }
 
@@ -75,23 +116,39 @@ export function FETPatientList({
     setDeletingId(null)
   }
 
-  const fetchPatients = async () => {
-    const { data } = await supabase.from('fet_pacientes').select('*').order('nome')
-    if (data) setPatients(data)
-  }
-
   const handleAdd = async () => {
     if (!newNome.trim()) return
     const { data, error } = await supabase
       .from('fet_pacientes')
-      .insert([{ nome: newNome }])
+      .insert([{ nome: newNome, status: 'ativo' }])
       .select()
     if (error) {
       toast({ title: 'Erro ao criar paciente', description: error.message, variant: 'destructive' })
     } else if (data) {
-      setPatients([...patients, data[0]].sort((a, b) => a.nome.localeCompare(b.nome)))
+      if (status === 'ativo') {
+        setPatients([...patients, data[0]].sort((a, b) => a.nome.localeCompare(b.nome)))
+      }
       setNewNome('')
       onSelect(data[0].id)
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+        if (profile) {
+          await supabase.from('fet_historico').insert({
+            paciente_id: data[0].id,
+            usuario_id: profile.id,
+            acao: 'Criação de Ficha',
+            detalhes: `Ficha criada para o paciente ${newNome}`,
+          })
+        }
+      }
     }
   }
 
@@ -100,23 +157,27 @@ export function FETPatientList({
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
       <div className="p-4 border-b border-slate-800 bg-slate-950/50 space-y-3">
-        <h2 className="text-lg font-bold text-white">Pacientes FET</h2>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Novo paciente..."
-            value={newNome}
-            onChange={(e) => setNewNome(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            className="h-9 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 text-sm"
-          />
-          <Button
-            onClick={handleAdd}
-            size="icon"
-            className="h-9 w-9 bg-amber-500 hover:bg-amber-600 text-slate-950 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
+        <h2 className="text-lg font-bold text-white">
+          {status === 'ativo' ? 'Tratamentos Ativos' : 'Tratamentos Finalizados'}
+        </h2>
+        {status === 'ativo' && (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Novo paciente..."
+              value={newNome}
+              onChange={(e) => setNewNome(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              className="h-9 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 text-sm"
+            />
+            <Button
+              onClick={handleAdd}
+              size="icon"
+              className="h-9 w-9 bg-amber-500 hover:bg-amber-600 text-slate-950 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
           <Input
