@@ -435,24 +435,44 @@ export function FETPatientDetail({
         <button
           onClick={() => setActiveTab('a_executar')}
           className={cn(
-            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border',
+            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border flex items-center justify-center gap-2 group',
             activeTab === 'a_executar'
               ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-sm'
               : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-300',
           )}
         >
           A EXECUTAR
+          <span
+            className={cn(
+              'px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors',
+              activeTab === 'a_executar'
+                ? 'bg-amber-500/20 text-amber-500'
+                : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-300',
+            )}
+          >
+            {total - concluidos}
+          </span>
         </button>
         <button
           onClick={() => setActiveTab('executados')}
           className={cn(
-            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border',
+            'flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-colors border flex items-center justify-center gap-2 group',
             activeTab === 'executados'
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-sm'
               : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-300',
           )}
         >
           EXECUTADOS
+          <span
+            className={cn(
+              'px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors',
+              activeTab === 'executados'
+                ? 'bg-emerald-500/20 text-emerald-500'
+                : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-300',
+            )}
+          >
+            {concluidos}
+          </span>
         </button>
       </div>
 
