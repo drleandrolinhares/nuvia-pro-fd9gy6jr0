@@ -199,25 +199,37 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-white truncate pr-2">Evolução: {patient.nome}</h2>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-bold bg-slate-900 rounded-lg p-1.5 border border-slate-800 shrink-0">
-            <div className="flex flex-col px-1 sm:px-2">
-              <span className="text-slate-500 text-[9px] uppercase leading-tight">Consultas</span>
-              <span className="text-white leading-tight">{total}</span>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm font-bold bg-slate-900/80 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 border border-slate-700/50 shadow-lg shrink-0">
+            <div className="flex flex-col px-2 sm:px-3 items-center">
+              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
+                Consultas
+              </span>
+              <span className="text-white text-base md:text-xl leading-none">{total}</span>
             </div>
-            <div className="w-px h-5 bg-slate-800"></div>
-            <div className="flex flex-col px-1 sm:px-2">
-              <span className="text-slate-500 text-[9px] uppercase leading-tight">Total Horas</span>
-              <span className="text-white leading-tight">{totalTimeFormatted}</span>
+            <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
+            <div className="flex flex-col px-2 sm:px-3 items-center">
+              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
+                Total Horas
+              </span>
+              <span className="text-white text-base md:text-xl leading-none">
+                {totalTimeFormatted}
+              </span>
             </div>
-            <div className="w-px h-5 bg-slate-800"></div>
-            <div className="flex flex-col px-1 sm:px-2">
-              <span className="text-slate-500 text-[9px] uppercase leading-tight">Executado</span>
-              <span className="text-emerald-500 leading-tight">{progress}%</span>
+            <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
+            <div className="flex flex-col px-2 sm:px-3 items-center">
+              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
+                Executado
+              </span>
+              <span className="text-emerald-400 text-base md:text-xl leading-none">
+                {progress}%
+              </span>
             </div>
-            <div className="w-px h-5 bg-slate-800"></div>
-            <div className="flex flex-col px-1 sm:px-2">
-              <span className="text-slate-500 text-[9px] uppercase leading-tight">A Executar</span>
-              <span className="text-amber-500 leading-tight">
+            <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
+            <div className="flex flex-col px-2 sm:px-3 items-center">
+              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5">
+                A Executar
+              </span>
+              <span className="text-amber-400 text-base md:text-xl leading-none">
                 {total === 0 ? 0 : 100 - progress}%
               </span>
             </div>
@@ -299,7 +311,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                         value={p.procedimento}
                         onChange={(e) => handleUpdate(p.id, 'procedimento', e.target.value)}
                         placeholder="Nome do Procedimento"
-                        className="h-8 text-sm font-bold text-white bg-slate-900 border-slate-800 focus-visible:ring-amber-500"
+                        className="h-8 text-sm font-bold text-white placeholder:text-slate-400 placeholder:font-normal bg-slate-900 border-slate-800 focus-visible:ring-amber-500"
                       />
                     </div>
 
@@ -331,7 +343,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                         value={p.tempo_execucao || ''}
                         onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
                         placeholder="Tempo Estimado"
-                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
+                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500"
                       />
                     </div>
 
@@ -421,7 +433,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                       value={p.observacoes || ''}
                       onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
                       placeholder="Observações da consulta..."
-                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 resize-y"
+                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-amber-500 resize-y"
                     />
                   </div>
                 </div>

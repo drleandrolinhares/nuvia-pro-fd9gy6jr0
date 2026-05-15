@@ -7,8 +7,8 @@ export default function FET() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30">
+    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-full bg-slate-950 overflow-hidden rounded-xl border border-slate-800 shadow-2xl -mx-2 sm:-mx-4 md:-mx-8 lg:-mx-16 w-[calc(100%+1rem)] sm:w-[calc(100%+2rem)] md:w-[calc(100%+4rem)] lg:w-[calc(100%+8rem)] max-w-none">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30 shrink-0">
         <div className="p-2 bg-amber-500/10 rounded-lg shrink-0">
           <Activity className="w-5 h-5 text-amber-500" />
         </div>
