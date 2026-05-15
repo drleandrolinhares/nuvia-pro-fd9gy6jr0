@@ -265,6 +265,24 @@ export function SorrisoDosSonhosTab() {
           i.paciente?.nome?.toLowerCase().includes(search.toLowerCase()),
       )
     }
+
+    // Deduplication Logic to prevent duplicate leads/sales visually
+    const uniqueMap = new Map()
+    data.forEach((item) => {
+      const key = item.nome_indicado?.toLowerCase().trim()
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item)
+      } else {
+        const existing = uniqueMap.get(key)
+        if (existing.status !== 'fechado' && item.status === 'fechado') {
+          uniqueMap.set(key, item) // Prefer 'fechado' over 'pendente'
+        }
+      }
+    })
+
+    data = Array.from(uniqueMap.values())
+    data.sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
+
     return data
   }, [indicacoes, periodFilter, colaboradorFilter, search])
 
@@ -292,11 +310,26 @@ export function SorrisoDosSonhosTab() {
       ? usuarios
       : usuarios.filter((u) => config.usuarios_elegiveis?.includes(u.id))
 
+    // Deduplicate all indicacoes first before counting for charts
+    const uniqueIndicacoesMap = new Map()
+    indicacoes.forEach((item) => {
+      const key = item.nome_indicado?.toLowerCase().trim()
+      if (!uniqueIndicacoesMap.has(key)) {
+        uniqueIndicacoesMap.set(key, item)
+      } else {
+        const existing = uniqueIndicacoesMap.get(key)
+        if (existing.status !== 'fechado' && item.status === 'fechado') {
+          uniqueIndicacoesMap.set(key, item)
+        }
+      }
+    })
+    const deduplicatedIndicacoes = Array.from(uniqueIndicacoesMap.values())
+
     return elegiveis
       .map((u) => {
         const userInds = (
           periodFilter !== 'todos'
-            ? indicacoes.filter((i) => {
+            ? deduplicatedIndicacoes.filter((i) => {
                 const d = parseISO(i.criado_em)
                 const s =
                   periodFilter === 'este_mes'
@@ -308,7 +341,7 @@ export function SorrisoDosSonhosTab() {
                     : endOfMonth(subMonths(new Date(), 1))
                 return isWithinInterval(d, { start: s, end: e })
               })
-            : indicacoes
+            : deduplicatedIndicacoes
         ).filter((i) => i.colaborador_id === u.id)
 
         const indicadas = userInds.length
@@ -317,7 +350,7 @@ export function SorrisoDosSonhosTab() {
       })
       .filter((d) => d.indicadas > 0)
       .sort((a, b) => b.fechadas - a.fechadas)
-  }, [usuarios, indicacoes, periodFilter])
+  }, [usuarios, indicacoes, periodFilter, config])
 
   return (
     <div className="space-y-6">
