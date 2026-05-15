@@ -8,17 +8,19 @@ export default function FET() {
 
   return (
     <div className="flex flex-col h-full bg-slate-950 overflow-hidden">
-      <div className="flex items-center gap-3 p-4 pb-2">
-        <div className="p-2 bg-amber-500/10 rounded-lg">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30">
+        <div className="p-2 bg-amber-500/10 rounded-lg shrink-0">
           <Activity className="w-5 h-5 text-amber-500" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Ficha de Evolução (FET)</h1>
-          <p className="text-sm text-slate-400">Controle de execução e evolução de tratamentos</p>
+          <h1 className="text-xl font-bold text-white tracking-tight leading-tight">
+            Ficha de Evolução (FET)
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">Controle de execução e evolução</p>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row flex-1 gap-3 p-4 pt-2 min-h-0 w-full">
+      <div className="flex flex-col md:flex-row flex-1 gap-3 p-2 md:p-3 min-h-0 w-full max-w-full">
         <div className="w-full md:w-64 lg:w-72 h-full flex flex-col min-h-0 shrink-0">
           <FETPatientList selectedId={selectedPatientId} onSelect={setSelectedPatientId} />
         </div>

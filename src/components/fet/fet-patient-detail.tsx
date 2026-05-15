@@ -154,23 +154,76 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
     )
   if (!patient) return null
 
+  const parseTime = (timeStr: string | null) => {
+    if (!timeStr) return 0
+    const lower = timeStr.toLowerCase()
+    let mins = 0
+
+    if (lower.includes(':')) {
+      const [h, m] = lower.split(':')
+      mins += (parseInt(h) || 0) * 60 + (parseInt(m) || 0)
+      return mins
+    }
+
+    const hMatch = lower.match(/(\d+)\s*h/)
+    const mMatch = lower.match(/(\d+)\s*m/)
+
+    if (hMatch || mMatch) {
+      if (hMatch) mins += parseInt(hMatch[1]) * 60
+      if (mMatch) mins += parseInt(mMatch[1])
+      return mins
+    }
+
+    const num = parseInt(lower.replace(/\D/g, ''))
+    if (!isNaN(num)) {
+      return num
+    }
+    return 0
+  }
+
   const concluidos = procedimentos.filter((p) => p.concluido).length
   const total = procedimentos.length
   const progress = total === 0 ? 0 : Math.round((concluidos / total) * 100)
 
+  const totalMins = procedimentos.reduce((acc, p) => acc + parseTime(p.tempo_execucao), 0)
+  const totalHours = Math.floor(totalMins / 60)
+  const remainingMins = totalMins % 60
+  const totalTimeFormatted =
+    totalHours > 0
+      ? `${totalHours}h${remainingMins > 0 ? ` ${remainingMins}m` : ''}`
+      : `${remainingMins}m`
+
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-slate-800 bg-slate-950/50 flex flex-col gap-3">
-        <h2 className="text-xl font-bold text-white">Evolução: {patient.nome}</h2>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Progresso do Tratamento</span>
-            <span className="text-amber-500 font-bold">
-              {progress}% ({concluidos}/{total})
-            </span>
+      <div className="p-3 border-b border-slate-800 bg-slate-950/50 flex flex-col gap-2 shrink-0">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-white truncate pr-2">Evolução: {patient.nome}</h2>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-bold bg-slate-900 rounded-lg p-1.5 border border-slate-800 shrink-0">
+            <div className="flex flex-col px-1 sm:px-2">
+              <span className="text-slate-500 text-[9px] uppercase leading-tight">Consultas</span>
+              <span className="text-white leading-tight">{total}</span>
+            </div>
+            <div className="w-px h-5 bg-slate-800"></div>
+            <div className="flex flex-col px-1 sm:px-2">
+              <span className="text-slate-500 text-[9px] uppercase leading-tight">Total Horas</span>
+              <span className="text-white leading-tight">{totalTimeFormatted}</span>
+            </div>
+            <div className="w-px h-5 bg-slate-800"></div>
+            <div className="flex flex-col px-1 sm:px-2">
+              <span className="text-slate-500 text-[9px] uppercase leading-tight">Executado</span>
+              <span className="text-emerald-500 leading-tight">{progress}%</span>
+            </div>
+            <div className="w-px h-5 bg-slate-800"></div>
+            <div className="flex flex-col px-1 sm:px-2">
+              <span className="text-slate-500 text-[9px] uppercase leading-tight">A Executar</span>
+              <span className="text-amber-500 leading-tight">
+                {total === 0 ? 0 : 100 - progress}%
+              </span>
+            </div>
           </div>
-          <Progress value={progress} className="h-2 bg-slate-800 [&>div]:bg-amber-500" />
         </div>
+        <Progress value={progress} className="h-1.5 bg-slate-800 [&>div]:bg-amber-500" />
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -200,7 +253,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                   handleDrop(p.id)
                 }}
                 className={cn(
-                  'bg-slate-950 border border-slate-800 rounded-lg p-3 flex gap-3 transition-all hover:border-slate-700',
+                  'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex gap-2.5 transition-all hover:border-slate-700',
                   p.concluido && 'opacity-60 bg-slate-950/50',
                 )}
               >
@@ -257,13 +310,15 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                           handleUpdate(p.id, 'dentista_id', v === 'none' ? null : v)
                         }
                       >
-                        <SelectTrigger className="h-8 text-sm bg-slate-900 border-slate-800 focus:ring-amber-500 text-white">
+                        <SelectTrigger className="h-8 text-sm font-bold bg-slate-900 border-slate-800 focus:ring-amber-500 text-white">
                           <SelectValue placeholder="Dentista Executor" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">Não definido</SelectItem>
+                          <SelectItem value="none" className="font-bold">
+                            Não definido
+                          </SelectItem>
                           {dentistas.map((d) => (
-                            <SelectItem key={d.id} value={d.id}>
+                            <SelectItem key={d.id} value={d.id} className="font-bold">
                               {d.nome}
                             </SelectItem>
                           ))}
@@ -276,7 +331,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                         value={p.tempo_execucao || ''}
                         onChange={(e) => handleUpdate(p.id, 'tempo_execucao', e.target.value)}
                         placeholder="Tempo Estimado"
-                        className="h-8 text-sm bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
+                        className="h-8 text-sm font-bold bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500"
                       />
                     </div>
 
@@ -285,7 +340,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-8 w-full justify-start px-2 text-xs bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+                            className="h-8 w-full justify-start px-2 text-xs font-bold bg-slate-900 border-slate-800 text-white hover:text-white hover:bg-slate-800"
                           >
                             <Tags className="w-3 h-3 mr-1.5 shrink-0" />
                             Etiquetas
@@ -366,7 +421,7 @@ export function FETPatientDetail({ patientId }: { patientId: string }) {
                       value={p.observacoes || ''}
                       onChange={(e) => handleUpdate(p.id, 'observacoes', e.target.value)}
                       placeholder="Observações da consulta..."
-                      className="min-h-[32px] h-[36px] text-sm py-1.5 px-3 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 resize-y"
+                      className="min-h-[32px] h-[36px] text-sm font-bold py-1.5 px-3 bg-slate-900 border-slate-800 text-white focus-visible:ring-amber-500 resize-y"
                     />
                   </div>
                 </div>
