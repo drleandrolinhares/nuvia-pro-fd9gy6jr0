@@ -383,7 +383,7 @@ export function AppSidebar() {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchChatCountStandalone()
-    }, 5000) // Diminuido para 5s para sincronizar agressivamente
+    }, 30000) // Ajustado para não sobrecarregar
     return () => clearInterval(interval)
   }, [user?.id])
 

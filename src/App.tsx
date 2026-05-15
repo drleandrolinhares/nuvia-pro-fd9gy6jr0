@@ -239,7 +239,12 @@ const ProtectedRoute = ({
     return <Navigate to="/" replace />
 
   if (allowedPermissions && allowedPermissions.length > 0) {
-    const hasAccess = allowedPermissions.some((p) => permissions.includes(p))
+    let hasAccess = allowedPermissions.some((p) => permissions.includes(p))
+
+    if (allowedPermissions.includes('operacional_rotina') && profile?.exigir_rotina) {
+      hasAccess = true
+    }
+
     const isSaturdayPerformance =
       new Date().getDay() === 6 && location.pathname.startsWith('/operacional/performance')
     if (!hasAccess && !isSaturdayPerformance) return <Navigate to="/" replace />

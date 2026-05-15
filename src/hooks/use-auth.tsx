@@ -25,6 +25,10 @@ const normalizePermissionToKey = (name: string): string => {
   if (lowerName.includes('pacientes')) return 'comercial_pacientes'
   if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
     return 'comercial_negociacao'
+  if (lowerName.includes('fet')) return 'operacional_fet'
+  if (lowerName.includes('funil')) return 'comercial_funil'
+  if (lowerName.includes('parceiro') || lowerName.includes('terceiro'))
+    return 'operacional_terceiros'
   return lowerName.replace(/\s+/g, '_')
 }
 
