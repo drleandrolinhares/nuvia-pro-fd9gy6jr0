@@ -79,6 +79,8 @@ const getLocalDateString = (d: Date = getBrtDate()) => {
 }
 
 const appliesToDate = (absence: any, dateStr: string, dateObj: Date) => {
+  if (!absence) return false
+
   if (absence.recorrencia === 'nenhuma' || !absence.recorrencia) {
     return absence.data === dateStr
   }
@@ -101,7 +103,7 @@ const appliesToDate = (absence: any, dateStr: string, dateObj: Date) => {
 
 const isWorkingDay = (date: Date, diasTrabalho: number[], ausencias: any[], userId: string) => {
   const dayOfWeek = date.getDay()
-  if (!diasTrabalho.includes(dayOfWeek)) return false
+  if (!Array.isArray(diasTrabalho) || !diasTrabalho.includes(dayOfWeek)) return false
 
   const dateStr = getLocalDateString(date)
   const todayAbsences = ausencias?.filter((a: any) => appliesToDate(a, dateStr, date)) || []
@@ -715,7 +717,8 @@ export default function RotinaDiaria() {
         setHorarioEntrada(usuario.horario_entrada)
       }
 
-      const diasTrabalho = (usuario as any)?.dias_trabalho || [1, 2, 3, 4, 5]
+      let diasTrabalho = (usuario as any)?.dias_trabalho
+      if (!Array.isArray(diasTrabalho)) diasTrabalho = [1, 2, 3, 4, 5]
 
       const realToday = new Date()
       const today = getBrtDate(realToday)

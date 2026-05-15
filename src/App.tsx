@@ -146,7 +146,13 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
     }
   }, [loading, user, profile])
 
-  if (loading || checking) return null
+  if (loading || checking) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      </div>
+    )
+  }
 
   const userRole = profile?.role || 'visualizacao'
   const isAdmin = userRole === 'admin'
@@ -229,7 +235,13 @@ const ProtectedRoute = ({
   const { profile, permissions, loading } = useAuth()
   const location = useLocation()
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      </div>
+    )
+  }
 
   const userRole = profile?.role || 'visualizacao'
 
