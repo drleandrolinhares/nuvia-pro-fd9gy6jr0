@@ -347,9 +347,20 @@ export function FETPatientDetail({
               </span>
               <span className="text-white text-base md:text-xl leading-none">{total}</span>
             </div>
+
+            <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
+            <div className="flex flex-col px-2 sm:px-3 items-center">
+              <span className="text-slate-400 text-[10px] md:text-xs uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                Início <Calendar className="w-3 h-3" />
+              </span>
+              <span className="text-white text-base md:text-xl leading-none">
+                {patient.criado_em ? format(new Date(patient.criado_em), 'dd/MM/yy') : '-'}
+              </span>
+            </div>
+
             <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
 
-            <TooltipProvider>
+            <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex flex-col px-2 sm:px-3 items-center cursor-help">
@@ -361,7 +372,10 @@ export function FETPatientDetail({
                     </span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-[200px] text-center bg-slate-800 border-slate-700">
+                <TooltipContent
+                  side="bottom"
+                  className="max-w-[200px] text-center bg-slate-800 text-slate-200 border-slate-700 shadow-xl z-[100]"
+                >
                   <p>
                     Total de horas de procedimentos (tempo que o paciente de fato ficará na cadeira
                     do dentista).
@@ -372,7 +386,7 @@ export function FETPatientDetail({
 
             <div className="w-px h-8 md:h-10 bg-slate-700/50"></div>
 
-            <TooltipProvider>
+            <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex flex-col px-2 sm:px-3 items-center cursor-help">
@@ -384,7 +398,10 @@ export function FETPatientDetail({
                     </span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="bg-slate-800 border-slate-700">
+                <TooltipContent
+                  side="bottom"
+                  className="bg-slate-800 text-slate-200 border-slate-700 shadow-xl z-[100]"
+                >
                   <p>Dias corridos desde o início do tratamento.</p>
                 </TooltipContent>
               </Tooltip>

@@ -42,7 +42,7 @@ export function FETPatientList({
       .select('*')
       .eq('status', status)
       .order('nome')
-    if (data) setPatients(data)
+    if (data) setPatients(data.sort((a, b) => a.nome.localeCompare(b.nome)))
   }
 
   useEffect(() => {

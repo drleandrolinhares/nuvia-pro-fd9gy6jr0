@@ -13,6 +13,7 @@ import {
   Users,
   CalendarIcon,
   Clock,
+  Search,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -43,6 +44,7 @@ export function GestaoLeadsKanban({
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const [leadDialogLead, setLeadDialogLead] = useState<any>(null)
   const [vendasModalOpen, setVendasModalOpen] = useState(false)
@@ -212,7 +214,7 @@ export function GestaoLeadsKanban({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-4 mb-2">
+      <div className="flex flex-wrap items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm gap-4 mb-2">
         <Button
           onClick={openNew}
           className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold px-6 shadow-md"
@@ -228,6 +230,16 @@ export function GestaoLeadsKanban({
           <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
           Agenda
         </Button>
+        <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg border border-slate-700 w-full max-w-xs transition-colors focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou telefone..."
+            className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-slate-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         <div className="hidden sm:flex items-center gap-4 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 shadow-inner">
           <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
             Leads Totais:
@@ -251,7 +263,15 @@ export function GestaoLeadsKanban({
           {etapas
             .filter((e: any) => e.ativo)
             .map((col: any) => {
-              const colLeads = leads.filter((l) => l.status === col.slug)
+              const colLeads = leads
+                .filter((l) => l.status === col.slug)
+                .filter((l) => {
+                  if (!searchTerm) return true
+                  const term = searchTerm.toLowerCase()
+                  const nameMatch = l.nome && l.nome.toLowerCase().includes(term)
+                  const phoneMatch = l.telefone && l.telefone.toLowerCase().includes(term)
+                  return nameMatch || phoneMatch
+                })
               return (
                 <div
                   key={col.slug}
