@@ -56,23 +56,12 @@ export function FunilDashboard({
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
-      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
-      let leads = Number(d.leads_realizado || 0)
-      let agendamentos = Number(d.agendamentos_realizado || 0)
-      let comparecimentos = Number(d.comparecimentos_realizado || 0)
-      let faltas = Number(d.faltas_realizado || 0)
-
-      leads = Math.max(leads, fechamentos)
-      agendamentos = Math.min(Math.max(agendamentos, fechamentos), leads)
-      comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
-      faltas = Math.min(faltas, agendamentos)
-
       return {
         ...d,
-        leads_realizado: leads,
-        agendamentos_realizado: agendamentos,
-        comparecimentos_realizado: comparecimentos,
-        faltas_realizado: faltas,
+        leads_realizado: Number(d.leads_realizado || 0),
+        agendamentos_realizado: Number(d.agendamentos_realizado || 0),
+        comparecimentos_realizado: Number(d.comparecimentos_realizado || 0),
+        faltas_realizado: Number(d.faltas_realizado || 0),
       }
     })
   }, [dados])
