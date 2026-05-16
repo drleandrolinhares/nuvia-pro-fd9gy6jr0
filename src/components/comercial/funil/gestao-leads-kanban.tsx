@@ -140,7 +140,7 @@ export function GestaoLeadsKanban({
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.status === statusId) return
 
-    if (statusId === 'fechamento') {
+    if (statusId === 'fechamento' || statusId === 'venda_concretizada') {
       setSelectedLeadForVenda(lead)
       setVendasModalOpen(true)
       return

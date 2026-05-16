@@ -86,38 +86,46 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
       const dentista = formData.dentista_avaliador !== 'nenhum' ? formData.dentista_avaliador : null
       const crc = formData.crc !== 'nenhum' ? formData.crc : null
 
-      const { error: err1 } = await supabase.from('vendas_diarias').insert({
-        data_venda: formData.data_venda,
-        valor: valor_entrada,
-        valor_tratamento: valor_tratamento,
-        paciente_nome: paciente_nome,
-        forma_pagamento: formData.forma_pagamento,
-        destino_fiscal: formData.destino_fiscal,
-        dentista_avaliador_id: dentista,
-        crc_comercial_id: crc,
-        origem_id: avaliacao.origem_id,
-      })
-      if (err1) throw err1
+      const { data: vd, error: err1 } = await supabase
+        .from('vendas_diarias')
+        .insert({
+          data_venda: formData.data_venda,
+          valor: valor_entrada,
+          valor_tratamento: valor_tratamento,
+          paciente_nome: paciente_nome,
+          forma_pagamento: formData.forma_pagamento,
+          destino_fiscal: formData.destino_fiscal,
+          dentista_avaliador_id: dentista,
+          crc_comercial_id: crc,
+          origem_id: avaliacao.origem_id,
+        })
+        .select('id')
+        .single()
+
+      if (err1) {
+        if (err1.code === '23505') {
+          throw new Error(
+            'Já existe uma venda registrada para este paciente nesta mesma data e origem.',
+          )
+        }
+        throw err1
+      }
 
       const percentual_entrada =
         valor_tratamento > 0 ? (valor_entrada / valor_tratamento) * 100 : 100
 
-      const { error: err2 } = await supabase.from('vendas_confirmadas').insert({
-        oportunidade_id: avaliacao.id,
-        paciente_nome: paciente_nome,
-        dentista_avaliador: dentista,
-        crc: crc,
-        valor_tratamento: valor_tratamento,
-        valor_entrada: valor_entrada,
-        percentual_entrada: percentual_entrada,
-        data_fechamento: formData.data_venda,
-        tratamento: formData.tratamento,
-        forma_pagamento: formData.forma_pagamento,
-        destino_fiscal: formData.destino_fiscal,
-        origem_id: avaliacao.origem_id,
-        observacoes: 'Venda Fechada via Oportunidade',
-      })
-      if (err2) throw err2
+      if (vd) {
+        const { error: err2 } = await supabase
+          .from('vendas_confirmadas')
+          .update({
+            oportunidade_id: avaliacao.id,
+            percentual_entrada: percentual_entrada,
+            tratamento: formData.tratamento,
+            observacoes: 'Venda Fechada via Oportunidade',
+          })
+          .eq('id', vd.id)
+        if (err2) throw err2
+      }
 
       const { error: err3 } = await supabase
         .from('avaliacoes')

@@ -313,7 +313,16 @@ export function VendasModal({
           .select('id')
           .single()
 
-        if (!vdError && vd) {
+        if (vdError) {
+          if (vdError.code === '23505') {
+            throw new Error(
+              'Já existe uma venda registrada para este paciente nesta mesma data e origem.',
+            )
+          }
+          throw vdError
+        }
+
+        if (vd) {
           await supabase
             .from('vendas_confirmadas')
             .update({
@@ -322,37 +331,6 @@ export function VendasModal({
             })
             .eq('id', vd.id)
         }
-      }
-
-      const { data: existingLead } = await supabase
-        .from('funil_leads')
-        .select('id')
-        .eq('telefone', formData.telefone)
-        .order('criado_em', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      const leadStatus =
-        formData.tipo_lancamento === 'venda_concretizada' ? 'fechamento' : 'atendido'
-
-      if (existingLead) {
-        await supabase
-          .from('funil_leads')
-          .update({
-            status: leadStatus,
-            origem_id: formData.origem_id,
-            nome: formData.novo_paciente_nome,
-          })
-          .eq('id', existingLead.id)
-      } else {
-        await supabase.from('funil_leads').insert({
-          nome: formData.novo_paciente_nome,
-          telefone: formData.telefone,
-          origem_id: formData.origem_id,
-          mes_referencia: format(new Date(), 'yyyy-MM'),
-          status: leadStatus,
-          temperatura: formData.temperatura_lead,
-        })
       }
 
       toast({
