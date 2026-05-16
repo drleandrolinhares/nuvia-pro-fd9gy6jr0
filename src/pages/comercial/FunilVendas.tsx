@@ -240,10 +240,7 @@ export default function FunilVendas() {
       const dateCriacao = av.data_avaliacao || av.criado_em || ''
       const isCriadoNoMes = dateCriacao && dateCriacao.substring(0, 7) === mesReferencia
 
-      const dateFechamento = av.data_fechamento || ''
-      const isFechadoNoMes = dateFechamento && dateFechamento.substring(0, 7) === mesReferencia
-
-      if (!isCriadoNoMes && !isFechadoNoMes) return false
+      if (!isCriadoNoMes) return false
 
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
 

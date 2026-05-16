@@ -75,7 +75,32 @@ export function DashboardLeadsModal({
   const fetchData = async () => {
     setLoading(true)
     try {
-      if (type === 'oportunidades' || type === 'fechamentos') {
+      if (type === 'fechamentos') {
+        const [ano, mes] = mesReferencia.split('-')
+        const dataInicio = `${mesReferencia}-01`
+        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+        const dataFim = `${mesReferencia}-${ultimoDia}`
+
+        const { data: vendas } = await supabase
+          .from('vendas_confirmadas')
+          .select('*, avaliacoes(*, pacientes(nome))')
+          .gte('data_fechamento', dataInicio)
+          .lte('data_fechamento', dataFim)
+
+        const filtered = (vendas || []).filter((v: any) => {
+          if (origens && origens.length > 0) {
+            const oId = v.origem_id || v.avaliacoes?.origem_id
+            if (!origens.includes(oId)) return false
+          }
+          return true
+        })
+
+        filtered.sort(
+          (a: any, b: any) =>
+            new Date(b.data_fechamento || 0).getTime() - new Date(a.data_fechamento || 0).getTime(),
+        )
+        setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
+      } else if (type === 'oportunidades') {
         const query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
@@ -90,13 +115,9 @@ export function DashboardLeadsModal({
             return a
           })
           .filter((a: any) => {
-            const dateStr = a.data_avaliacao || a.criado_em || a.data_fechamento || ''
+            const dateStr = a.data_avaliacao || a.criado_em || ''
             const itemDate = dateStr.substring(0, 7)
             if (dateStr && itemDate !== mesReferencia) return false
-
-            if (type === 'fechamentos') {
-              if (!a.data_fechamento) return false
-            }
 
             if (origens && origens.length > 0) {
               if (!origens.includes(a.origem_id)) return false
@@ -106,12 +127,12 @@ export function DashboardLeadsModal({
           })
 
         filtered.sort((a: any, b: any) => {
-          const dA = type === 'fechamentos' ? a.data_fechamento : a.data_avaliacao || a.criado_em
-          const dB = type === 'fechamentos' ? b.data_fechamento : b.data_avaliacao || b.criado_em
+          const dA = a.data_avaliacao || a.criado_em
+          const dB = b.data_avaliacao || b.criado_em
           return new Date(dB || 0).getTime() - new Date(dA || 0).getTime()
         })
 
-        setData(filtered)
+        setData(filtered.map((a: any) => ({ ...a, _isAvaliacao: true })))
       } else {
         const { data: leads } = await supabase
           .from('funil_leads')
@@ -175,7 +196,7 @@ export function DashboardLeadsModal({
     }
   }
 
-  const handleDelete = async (id: string, isOportunidade: boolean) => {
+  const handleDelete = async (id: string, itemType: string) => {
     if (
       !confirm(
         'ATENÇÃO: Deseja realmente excluir este registro? Esta ação removerá os dados do banco.',
@@ -185,7 +206,9 @@ export function DashboardLeadsModal({
 
     setLoading(true)
     try {
-      if (isOportunidade) {
+      if (itemType === 'venda') {
+        await supabase.from('vendas_confirmadas').delete().eq('id', id)
+      } else if (itemType === 'oportunidade') {
         await supabase.from('avaliacoes').delete().eq('id', id)
       } else {
         await supabase.from('funil_leads').delete().eq('id', id)
@@ -218,8 +241,9 @@ export function DashboardLeadsModal({
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
     return data.filter((item: any) => {
-      const nome =
-        type === 'oportunidades' || type === 'fechamentos'
+      const nome = item._isVenda
+        ? item.paciente_nome
+        : item._isAvaliacao
           ? item.pacientes?.nome || 'Paciente não identificado'
           : item.nome || ''
       return nome.toLowerCase().includes(term)
@@ -287,7 +311,9 @@ export function DashboardLeadsModal({
                   </TableHeader>
                   <TableBody>
                     {filteredData.map((row: any) => {
-                      const isOportunidade = type === 'oportunidades' || type === 'fechamentos'
+                      const isVenda = row._isVenda
+                      const isOportunidade = row._isAvaliacao
+                      const isLead = !isVenda && !isOportunidade
                       const hasVenda =
                         isOportunidade &&
                         row.vendas_confirmadas &&
@@ -300,22 +326,24 @@ export function DashboardLeadsModal({
                           onClick={() => {
                             if (isOportunidade) {
                               setSelectedAvaliacao(row)
+                            } else if (isVenda && row.avaliacoes) {
+                              setSelectedAvaliacao(row.avaliacoes)
                             }
                           }}
                         >
                           <TableCell className="text-slate-300 font-medium">
                             {formatDate(
-                              type === 'fechamentos'
-                                ? row.data_fechamento
-                                : row.data_avaliacao || row.criado_em,
+                              isVenda ? row.data_fechamento : row.data_avaliacao || row.criado_em,
                             )}
                           </TableCell>
                           <TableCell className="text-white font-medium">
                             <div className="flex items-center gap-2">
-                              {isOportunidade
-                                ? row.pacientes?.nome || 'Paciente não identificado'
-                                : row.nome}
-                              {isOportunidade && (
+                              {isVenda
+                                ? row.paciente_nome
+                                : isOportunidade
+                                  ? row.pacientes?.nome || 'Paciente não identificado'
+                                  : row.nome}
+                              {(isOportunidade || (isVenda && row.avaliacoes)) && (
                                 <span className="opacity-0 group-hover:opacity-100 text-[10px] text-amber-500 uppercase tracking-wider font-bold transition-opacity">
                                   Editar
                                 </span>
@@ -328,7 +356,9 @@ export function DashboardLeadsModal({
                           <TableCell>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-slate-800 text-slate-300">
-                                {(row.status || 'Pendente').replace(/_/g, ' ')}
+                                {isVenda
+                                  ? 'Venda Confirmada'
+                                  : (row.status || 'Pendente').replace(/_/g, ' ')}
                               </span>
                               {isOportunidade && hasVenda && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -343,11 +373,9 @@ export function DashboardLeadsModal({
                               )}
                             </div>
                           </TableCell>
-                          {isOportunidade ? (
+                          {isOportunidade || isVenda ? (
                             <TableCell className="text-right text-emerald-400 font-semibold">
-                              {formatCurrency(
-                                type === 'fechamentos' ? row.valor_entrada : row.valor_orcamento,
-                              )}
+                              {formatCurrency(isVenda ? row.valor_entrada : row.valor_orcamento)}
                             </TableCell>
                           ) : null}
                           <TableCell className="text-center">
@@ -357,7 +385,10 @@ export function DashboardLeadsModal({
                               className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/20 opacity-70 hover:opacity-100"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleDelete(row.id, isOportunidade)
+                                handleDelete(
+                                  row.id,
+                                  isVenda ? 'venda' : isOportunidade ? 'oportunidade' : 'lead',
+                                )
                               }}
                               title="Excluir Registro"
                             >
