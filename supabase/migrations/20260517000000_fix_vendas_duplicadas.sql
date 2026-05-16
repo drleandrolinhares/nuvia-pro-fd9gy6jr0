@@ -2,7 +2,7 @@
 DO $$
 BEGIN
   DELETE FROM public.vendas_confirmadas a USING (
-    SELECT MIN(id) as keep_id, lower(trim(paciente_nome)) as p_nome, data_fechamento, origem_id
+    SELECT MIN(id::text)::uuid as keep_id, lower(trim(paciente_nome)) as p_nome, data_fechamento, origem_id
     FROM public.vendas_confirmadas
     GROUP BY lower(trim(paciente_nome)), data_fechamento, origem_id
     HAVING COUNT(*) > 1
@@ -17,7 +17,7 @@ END $$;
 DO $$
 BEGIN
   DELETE FROM public.vendas_diarias a USING (
-    SELECT MIN(id) as keep_id, lower(trim(paciente_nome)) as p_nome, data_venda, origem_id
+    SELECT MIN(id::text)::uuid as keep_id, lower(trim(paciente_nome)) as p_nome, data_venda, origem_id
     FROM public.vendas_diarias
     GROUP BY lower(trim(paciente_nome)), data_venda, origem_id
     HAVING COUNT(*) > 1
@@ -37,7 +37,7 @@ BEGIN
   WHERE status IN ('fechamento', 'venda-fechada');
 
   DELETE FROM public.funil_leads a USING (
-    SELECT MIN(id) as keep_id, lower(trim(nome)) as l_nome, origem_id, (criado_em AT TIME ZONE 'America/Sao_Paulo')::date as data_c
+    SELECT MIN(id::text)::uuid as keep_id, lower(trim(nome)) as l_nome, origem_id, (criado_em AT TIME ZONE 'America/Sao_Paulo')::date as data_c
     FROM public.funil_leads
     GROUP BY lower(trim(nome)), origem_id, (criado_em AT TIME ZONE 'America/Sao_Paulo')::date
     HAVING COUNT(*) > 1
