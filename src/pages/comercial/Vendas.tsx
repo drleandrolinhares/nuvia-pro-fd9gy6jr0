@@ -61,6 +61,7 @@ export default function Vendas() {
   const [totalCount, setTotalCount] = useState(0)
   const [sortColumn, setSortColumn] = useState('data_avaliacao')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValorRange(filters.valorRange), 500)
@@ -226,6 +227,11 @@ export default function Vendas() {
     return options
   }, [])
 
+  const handleSuccess = useCallback(() => {
+    fetchAvaliacoes()
+    setRefreshKey((prev) => prev + 1)
+  }, [fetchAvaliacoes])
+
   const updateGlobalFilter = (key: keyof VendasFiltersState, value: any) => {
     setFilters((prev) => {
       const updated = { ...prev, [key]: value }
@@ -271,18 +277,21 @@ export default function Vendas() {
             periodo={filters.periodo}
             dataInicio={filters.dataInicio}
             dataFim={filters.dataFim}
+            refreshKey={refreshKey}
           />
           <QuantidadeVendasWidget
             periodo={filters.periodo}
             dataInicio={filters.dataInicio}
             dataFim={filters.dataFim}
+            refreshKey={refreshKey}
           />
           <VendasAtuaisWidget
             periodo={filters.periodo}
             dataInicio={filters.dataInicio}
             dataFim={filters.dataFim}
+            refreshKey={refreshKey}
           />
-          {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={fetchAvaliacoes} />}
+          {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={handleSuccess} />}
         </div>
       </div>
 
@@ -385,7 +394,7 @@ export default function Vendas() {
                 setPage={setPage}
                 dentistas={dentistas}
                 crcs={crcs}
-                onSuccess={fetchAvaliacoes}
+                onSuccess={handleSuccess}
                 isAdmin={profile?.role === 'admin'}
               />
             </CardContent>
@@ -394,10 +403,11 @@ export default function Vendas() {
 
         <TabsContent value="concretizadas" className="space-y-4 outline-none">
           <VendasConcretizadasLista
-            onRevertSuccess={fetchAvaliacoes}
+            onRevertSuccess={handleSuccess}
             periodo={filters.periodo}
             dataInicio={filters.dataInicio}
             dataFim={filters.dataFim}
+            refreshKey={refreshKey}
           />
         </TabsContent>
 

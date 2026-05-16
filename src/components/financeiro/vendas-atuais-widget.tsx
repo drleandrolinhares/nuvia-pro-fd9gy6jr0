@@ -10,9 +10,15 @@ interface Props {
   periodo?: string
   dataInicio?: string
   dataFim?: string
+  refreshKey?: number
 }
 
-export function VendasAtuaisWidget({ periodo = 'mes_atual', dataInicio, dataFim }: Props = {}) {
+export function VendasAtuaisWidget({
+  periodo = 'mes_atual',
+  dataInicio,
+  dataFim,
+  refreshKey,
+}: Props = {}) {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [totalVendasMes, setTotalVendasMes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -95,7 +101,7 @@ export function VendasAtuaisWidget({ periodo = 'mes_atual', dataInicio, dataFim 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [dataVersion, periodo, dataInicio, dataFim])
+  }, [dataVersion, periodo, dataInicio, dataFim, refreshKey])
 
   return (
     <>

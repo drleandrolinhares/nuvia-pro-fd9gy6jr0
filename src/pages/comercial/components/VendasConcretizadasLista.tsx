@@ -35,11 +35,13 @@ export function VendasConcretizadasLista({
   periodo,
   dataInicio,
   dataFim,
+  refreshKey,
 }: {
   onRevertSuccess: () => void
   periodo: string
   dataInicio: string
   dataFim: string
+  refreshKey?: number
 }) {
   const { toast } = useToast()
   const [vendas, setVendas] = useState<any[]>([])
@@ -120,7 +122,7 @@ export function VendasConcretizadasLista({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [periodo, dataInicio, dataFim])
+  }, [periodo, dataInicio, dataFim, refreshKey])
 
   useEffect(() => {
     supabase

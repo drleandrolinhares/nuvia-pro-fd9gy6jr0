@@ -7,9 +7,15 @@ interface Props {
   periodo?: string
   dataInicio?: string
   dataFim?: string
+  refreshKey?: number
 }
 
-export function OportunidadesWidget({ periodo = 'mes_atual', dataInicio, dataFim }: Props = {}) {
+export function OportunidadesWidget({
+  periodo = 'mes_atual',
+  dataInicio,
+  dataFim,
+  refreshKey,
+}: Props = {}) {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -101,7 +107,7 @@ export function OportunidadesWidget({ periodo = 'mes_atual', dataInicio, dataFim
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [periodo, dataInicio, dataFim])
+  }, [periodo, dataInicio, dataFim, refreshKey])
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col justify-center min-w-[160px] shadow-sm relative group">

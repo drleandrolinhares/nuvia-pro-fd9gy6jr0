@@ -7,9 +7,15 @@ interface Props {
   periodo?: string
   dataInicio?: string
   dataFim?: string
+  refreshKey?: number
 }
 
-export function QuantidadeVendasWidget({ periodo = 'mes_atual', dataInicio, dataFim }: Props = {}) {
+export function QuantidadeVendasWidget({
+  periodo = 'mes_atual',
+  dataInicio,
+  dataFim,
+  refreshKey,
+}: Props = {}) {
   const [totalVendas, setTotalVendas] = useState(0)
   const [loading, setLoading] = useState(true)
   const { dataVersion } = useCache()
@@ -86,7 +92,7 @@ export function QuantidadeVendasWidget({ periodo = 'mes_atual', dataInicio, data
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [dataVersion, periodo, dataInicio, dataFim])
+  }, [dataVersion, periodo, dataInicio, dataFim, refreshKey])
 
   return (
     <div className="bg-slate-950 p-4 py-3 rounded-lg border border-slate-800 flex flex-col justify-center min-w-[160px] sm:min-w-[180px]">
