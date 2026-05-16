@@ -120,17 +120,17 @@ export default function FunilVendas() {
       aggregatedLeads[oId].leads++
 
       const status = (lead.status || '').toLowerCase()
-      const isAgendado =
-        [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'venda-fechada',
-          'venda_concretizada',
-          'avaliacao',
-          'fechamento',
-        ].includes(status) || (lead.qtd_agendamentos || 0) > 0
+
+      const isAgendado = [
+        'agendado',
+        'reagendado',
+        'atendido',
+        'faltou',
+        'venda-fechada',
+        'venda_concretizada',
+        'avaliacao',
+        'fechamento',
+      ].includes(status)
 
       const isCompareceu = [
         'atendido',

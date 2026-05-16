@@ -125,7 +125,10 @@ export function FunilDashboard({
     return avaliacoes
   }, [avaliacoes])
 
-  const totalAvaliacoes = avaliacoesAtuais.length
+  const totalAvaliacoes = useMemo(
+    () => totaisClassico.comparecimentos + totaisSecundario.comparecimentos,
+    [totaisClassico.comparecimentos, totaisSecundario.comparecimentos],
+  )
 
   const calcValorOportunidades = (avs: any[]) => {
     return avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
@@ -533,9 +536,9 @@ export function FunilDashboard({
           onClick={() =>
             setModalConfig({
               isOpen: true,
-              type: 'oportunidades',
+              type: 'comparecimentos',
               origens: origens.map((o: any) => o.id),
-              title: 'Avaliações Realizadas (Global)',
+              title: 'Avaliações Realizadas (Comparecimentos)',
             })
           }
         >
@@ -547,7 +550,7 @@ export function FunilDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{totalAvaliacoes}</div>
-            <p className="text-xs text-slate-400 mt-1">Total de avaliações e vendas</p>
+            <p className="text-xs text-slate-400 mt-1">Total de comparecimentos nos funis</p>
           </CardContent>
         </Card>
       </div>
