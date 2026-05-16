@@ -81,7 +81,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$$;
 
 -- Update avaliacao trigger
 CREATE OR REPLACE FUNCTION public.trg_garantir_avaliacao_para_venda()
@@ -129,7 +129,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$;
+$$;
 
 -- Recalculate funil_dados_mensais
 DO $$
