@@ -126,24 +126,18 @@ export default function FunilVendas() {
           'reagendado',
           'atendido',
           'faltou',
-          'negociacao',
           'venda-fechada',
           'venda_concretizada',
-          'venda-perdida',
           'avaliacao',
           'fechamento',
-          'em_follow_up',
         ].includes(status) || (lead.qtd_agendamentos || 0) > 0
 
       const isCompareceu = [
         'atendido',
-        'negociacao',
         'venda-fechada',
         'venda_concretizada',
-        'venda-perdida',
         'avaliacao',
         'fechamento',
-        'em_follow_up',
       ].includes(status)
 
       const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0

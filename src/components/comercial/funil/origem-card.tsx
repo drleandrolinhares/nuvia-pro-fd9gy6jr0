@@ -116,24 +116,18 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
             'reagendado',
             'atendido',
             'faltou',
-            'negociacao',
             'venda-fechada',
             'venda_concretizada',
-            'venda-perdida',
             'avaliacao',
             'fechamento',
-            'em_follow_up',
           ].includes(status) || (lead.qtd_agendamentos || 0) > 0
 
         const isCompareceu = [
           'atendido',
-          'negociacao',
           'venda-fechada',
           'venda_concretizada',
-          'venda-perdida',
           'avaliacao',
           'fechamento',
-          'em_follow_up',
         ].includes(status)
 
         const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
@@ -171,15 +165,12 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
           'reagendado',
           'atendido',
           'faltou',
-          'negociacao',
           'venda-fechada',
           'venda_concretizada',
-          'venda-perdida',
           'avaliacao',
           'fechamento',
-          'em_follow_up',
         ].includes(l.status?.toLowerCase() || '')
-        return isAgendado || l.qtd_agendamentos > 0
+        return isAgendado || (l.qtd_agendamentos || 0) > 0
       })
     }
     if (modalType === 'comparecimentos') {
@@ -187,13 +178,10 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         if (l._isCompareceu !== undefined) return l._isCompareceu
         return [
           'atendido',
-          'negociacao',
           'venda-fechada',
           'venda_concretizada',
-          'venda-perdida',
           'avaliacao',
           'fechamento',
-          'em_follow_up',
         ].includes(l.status?.toLowerCase() || '')
       })
     }
