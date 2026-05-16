@@ -65,6 +65,7 @@ export default function FunilVendas() {
       .from('funil_leads')
       .select('*')
       .eq('mes_referencia', mesReferencia)
+      .limit(10000)
 
     const { data: vendasData } = await supabase
       .from('vendas_confirmadas')
@@ -73,12 +74,14 @@ export default function FunilVendas() {
       )
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
+      .limit(10000)
 
     const { data: avaliacoesData } = await supabase
       .from('avaliacoes')
       .select(
         'id, origem_id, valor_orcamento, status, data_avaliacao, criado_em, data_fechamento, pacientes(nome)',
       )
+      .limit(10000)
 
     const validOrigensSet = new Set(
       (origensData || []).filter((o: any) => o.ativo !== false).map((o: any) => o.id),
@@ -102,8 +105,7 @@ export default function FunilVendas() {
       if (!lead.nome || String(lead.nome).trim() === '') return false
 
       const status = (lead.status || '').toLowerCase()
-      if (['lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho'].includes(status))
-        return false
+      if (['lixo', 'teste', 'rascunho', 'erro'].includes(status)) return false
 
       return true
     })
@@ -185,13 +187,18 @@ export default function FunilVendas() {
           faltas: 0,
         }
 
+        const leadsRealizado = aggLeads.leads
+        const agendamentosRealizado = Math.min(aggLeads.agendamentos, leadsRealizado)
+        const comparecimentosRealizado = Math.min(aggLeads.comparecimentos, agendamentosRealizado)
+        const faltasRealizado = Math.min(aggLeads.faltas, agendamentosRealizado)
+
         if (existing) {
           return {
             ...existing,
-            leads_realizado: aggLeads.leads,
-            agendamentos_realizado: aggLeads.agendamentos,
-            comparecimentos_realizado: aggLeads.comparecimentos,
-            faltas_realizado: aggLeads.faltas,
+            leads_realizado: leadsRealizado,
+            agendamentos_realizado: agendamentosRealizado,
+            comparecimentos_realizado: comparecimentosRealizado,
+            faltas_realizado: faltasRealizado,
             fechamentos_qtde_realizado: qtdeVendas,
             fechamentos_valor_realizado: valorVendas,
           }
@@ -202,14 +209,14 @@ export default function FunilVendas() {
           mes_referencia: mesReferencia,
           investimento: 0,
           meta_leads: 0,
-          leads_realizado: aggLeads.leads,
+          leads_realizado: leadsRealizado,
           meta_agendamentos_qtde: 0,
           meta_agendamentos_perc: 0,
-          agendamentos_realizado: aggLeads.agendamentos,
+          agendamentos_realizado: agendamentosRealizado,
           meta_comparecimentos_qtde: 0,
           meta_comparecimentos_perc: 0,
-          comparecimentos_realizado: aggLeads.comparecimentos,
-          faltas_realizado: aggLeads.faltas,
+          comparecimentos_realizado: comparecimentosRealizado,
+          faltas_realizado: faltasRealizado,
           meta_fechamento_valor: 0,
           ticket_medio_esperado: 0,
           fechamentos_qtde_realizado: qtdeVendas,

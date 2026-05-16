@@ -61,12 +61,17 @@ export function FunilDashboard({
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
       (acc: any, curr: any) => {
+        const leads = Number(curr.leads_realizado || 0)
+        const agendamentos = Math.min(Number(curr.agendamentos_realizado || 0), leads)
+        const comparecimentos = Math.min(Number(curr.comparecimentos_realizado || 0), agendamentos)
+        const faltas = Math.min(Number(curr.faltas_realizado || 0), agendamentos)
+
         return {
           investimento: acc.investimento + Number(curr.investimento || 0),
-          leads: acc.leads + Number(curr.leads_realizado || 0),
-          agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
-          comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
-          faltas: acc.faltas + Number(curr.faltas_realizado || 0),
+          leads: acc.leads + leads,
+          agendamentos: acc.agendamentos + agendamentos,
+          comparecimentos: acc.comparecimentos + comparecimentos,
+          faltas: acc.faltas + faltas,
           fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado || 0),
           valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado || 0),
         }
