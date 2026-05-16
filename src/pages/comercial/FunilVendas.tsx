@@ -237,9 +237,13 @@ export default function FunilVendas() {
       const oId = av.origem_id
       if (!oId || !validOrigensSet.has(oId)) return false
 
-      const dateStr = av.data_avaliacao || av.criado_em || av.data_fechamento || ''
-      const itemDate = dateStr.substring(0, 7)
-      if (dateStr && itemDate !== mesReferencia) return false
+      const dateCriacao = av.data_avaliacao || av.criado_em || ''
+      const isCriadoNoMes = dateCriacao && dateCriacao.substring(0, 7) === mesReferencia
+
+      const dateFechamento = av.data_fechamento || ''
+      const isFechadoNoMes = dateFechamento && dateFechamento.substring(0, 7) === mesReferencia
+
+      if (!isCriadoNoMes && !isFechadoNoMes) return false
 
       if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return false
 

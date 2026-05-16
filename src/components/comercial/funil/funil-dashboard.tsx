@@ -49,6 +49,8 @@ export function FunilDashboard({
     const origem = origens.find((o: any) => o.id === origemId)
     if (!origem || origem.ativo === false) return false
     const nome = origem.nome?.toLowerCase() || ''
+    // Exclui Tráfego Pago (Clássico) e Recorrência, mantendo o restante como Secundário
+    // (Indicações, Google, Sorriso dos Sonhos, Espontâneos, Campanhas)
     return !nome.includes('facebook') && !nome.includes('instagram') && !nome.includes('recorrente')
   }
 
@@ -126,8 +128,8 @@ export function FunilDashboard({
   }, [avaliacoes])
 
   const totalAvaliacoes = useMemo(
-    () => totaisClassico.comparecimentos + totaisSecundario.comparecimentos,
-    [totaisClassico.comparecimentos, totaisSecundario.comparecimentos],
+    () => totaisGerais.comparecimentos,
+    [totaisGerais.comparecimentos],
   )
 
   const calcValorOportunidades = (avs: any[]) => {
@@ -538,7 +540,7 @@ export function FunilDashboard({
               isOpen: true,
               type: 'comparecimentos',
               origens: origens.map((o: any) => o.id),
-              title: 'Avaliações Realizadas (Comparecimentos)',
+              title: 'Avaliações Realizadas (Comparecimentos Globais)',
             })
           }
         >
@@ -618,7 +620,7 @@ export function FunilDashboard({
                 Funil Secundário (Orgânico e Outros)
               </CardTitle>
               <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                Indicações, Google, Sorriso dos Sonhos e Campanhas
+                Indicações, Google, Sorriso dos Sonhos, Espontâneos e Campanhas
               </p>
             </CardHeader>
             <CardContent className="pt-6">
