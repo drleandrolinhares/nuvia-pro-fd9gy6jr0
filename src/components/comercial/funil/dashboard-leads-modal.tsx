@@ -98,8 +98,8 @@ export function DashboardLeadsModal({
               if (!a.data_fechamento) return false
             }
 
-            if (origens && origens.length > 0 && origens.length < 5) {
-              if (a.origem_id && !origens.includes(a.origem_id)) return false
+            if (origens && origens.length > 0) {
+              if (!origens.includes(a.origem_id)) return false
             }
 
             return true
@@ -125,8 +125,8 @@ export function DashboardLeadsModal({
             lead.nome = 'Lead sem nome'
           }
 
-          if (origens && origens.length > 0 && origens.length < 5) {
-            if (lead.origem_id && !origens.includes(lead.origem_id)) return false
+          if (origens && origens.length > 0) {
+            if (!origens.includes(lead.origem_id)) return false
           }
 
           if (type === 'leads') return true
