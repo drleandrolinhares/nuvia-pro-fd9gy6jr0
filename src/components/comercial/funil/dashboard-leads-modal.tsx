@@ -129,6 +129,10 @@ export function DashboardLeadsModal({
             if (!origens.includes(lead.origem_id)) return false
           }
 
+          if (['lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho'].includes(status)) {
+            return false
+          }
+
           if (type === 'leads') return true
 
           const isAgendado =

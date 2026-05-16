@@ -101,6 +101,10 @@ export default function FunilVendas() {
 
       if (!lead.nome || String(lead.nome).trim() === '') return false
 
+      const status = (lead.status || '').toLowerCase()
+      if (['lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho'].includes(status))
+        return false
+
       return true
     })
 
