@@ -187,10 +187,21 @@ export default function FunilVendas() {
           faltas: 0,
         }
 
-        const leadsRealizado = aggLeads.leads
-        const agendamentosRealizado = Math.min(aggLeads.agendamentos, leadsRealizado)
-        const comparecimentosRealizado = Math.min(aggLeads.comparecimentos, agendamentosRealizado)
-        const faltasRealizado = Math.min(aggLeads.faltas, agendamentosRealizado)
+        let leadsRealizado = aggLeads.leads
+        let agendamentosRealizado = aggLeads.agendamentos
+        let comparecimentosRealizado = aggLeads.comparecimentos
+        let faltasRealizado = aggLeads.faltas
+
+        leadsRealizado = Math.max(leadsRealizado, qtdeVendas)
+        agendamentosRealizado = Math.min(
+          Math.max(agendamentosRealizado, qtdeVendas),
+          leadsRealizado,
+        )
+        comparecimentosRealizado = Math.min(
+          Math.max(comparecimentosRealizado, qtdeVendas),
+          agendamentosRealizado,
+        )
+        faltasRealizado = Math.min(faltasRealizado, agendamentosRealizado)
 
         if (existing) {
           return {

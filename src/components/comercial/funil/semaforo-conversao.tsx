@@ -70,18 +70,30 @@ export function SemaforoConversao({
       const isRecorrente = origemNome.includes('recorrente')
       const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
 
+      let leads = Number(d.leads_realizado || 0)
+      let agendamentos = Number(d.agendamentos_realizado || 0)
+      let comparecimentos = Number(d.comparecimentos_realizado || 0)
+      let faltas = Number(d.faltas_realizado || 0)
+
       if (isRecorrente) {
-        return {
-          ...d,
-          leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
-          agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
-          comparecimentos_realizado: Math.max(
-            Number(d.comparecimentos_realizado || 0),
-            fechamentos,
-          ),
-        }
+        leads = Math.max(leads, fechamentos)
+        agendamentos = Math.max(agendamentos, fechamentos)
+        comparecimentos = Math.max(comparecimentos, fechamentos)
       }
-      return { ...d }
+
+      // Hard ceiling rule: Leads >= Agendamentos >= Comparecimentos (and Faltas <= Agendamentos)
+      leads = Math.max(leads, fechamentos)
+      agendamentos = Math.min(Math.max(agendamentos, fechamentos), leads)
+      comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
+      faltas = Math.min(faltas, agendamentos)
+
+      return {
+        ...d,
+        leads_realizado: leads,
+        agendamentos_realizado: agendamentos,
+        comparecimentos_realizado: comparecimentos,
+        faltas_realizado: faltas,
+      }
     })
   }, [dados, origens])
 
@@ -132,91 +144,7 @@ export function SemaforoConversao({
 
     const globalMetrics = calcGroup(() => true)
     const classicoMetrics = calcGroup(isClassico)
-    let secundarioMetrics = calcGroup(isSecundario)
-
-    if (leads && avaliacoes && vendas) {
-      let agendadosSec = 0
-      let compareceramSec = 0
-      let faltantesSec = 0
-
-      leads.forEach((lead: any) => {
-        const oId = lead.origem_id
-        if (!isSecundario(oId)) return
-
-        const status = (lead.status || '').toLowerCase()
-        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
-
-        if (!lead.nome || String(lead.nome).trim() === '') return
-        const nome = String(lead.nome).trim().toLowerCase()
-        if (nome.includes('teste') || nome.includes('duplicado')) return
-
-        const isAgendado =
-          [
-            'agendado',
-            'reagendado',
-            'atendido',
-            'faltou',
-            'negociacao',
-            'venda-fechada',
-            'venda_concretizada',
-            'venda-perdida',
-            'avaliacao',
-            'fechamento',
-            'em_follow_up',
-          ].includes(status) || (lead.qtd_agendamentos || 0) > 0
-
-        const isCompareceu = [
-          'atendido',
-          'negociacao',
-          'venda-fechada',
-          'venda_concretizada',
-          'venda-perdida',
-          'avaliacao',
-          'fechamento',
-          'em_follow_up',
-        ].includes(status)
-        const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
-
-        if (isAgendado) agendadosSec++
-        if (isCompareceu) compareceramSec++
-        if (isFaltante) faltantesSec++
-      })
-
-      avaliacoes.forEach((av: any) => {
-        const oId = av.origem_id
-        if (!isSecundario(oId)) return
-
-        const status = (av.status || '').toLowerCase()
-        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status)) return
-
-        if (!av.pacientes?.nome || String(av.pacientes.nome).trim() === '') return
-        const nome = String(av.pacientes.nome).trim().toLowerCase()
-        if (nome.includes('teste') || nome.includes('duplicado')) return
-
-        agendadosSec++
-        compareceramSec++
-      })
-
-      vendas.forEach((v: any) => {
-        const oId = v.origem_id || v.avaliacoes?.origem_id
-        if (!isSecundario(oId)) return
-
-        if (!v.paciente_nome || String(v.paciente_nome).trim() === '') return
-        const nome = String(v.paciente_nome).trim().toLowerCase()
-        if (nome.includes('teste') || nome.includes('duplicado')) return
-
-        agendadosSec++
-        compareceramSec++
-      })
-
-      secundarioMetrics = {
-        ...secundarioMetrics,
-        total: secundarioMetrics.total,
-        agendados: agendadosSec,
-        compareceram: compareceramSec,
-        faltantes: faltantesSec,
-      }
-    }
+    const secundarioMetrics = calcGroup(isSecundario)
 
     const valorOportunidadesBruto = avaliacoes.reduce(
       (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),

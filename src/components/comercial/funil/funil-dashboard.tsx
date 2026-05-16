@@ -54,24 +54,36 @@ export function FunilDashboard({
 
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
-      return { ...d }
+      const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
+      let leads = Number(d.leads_realizado || 0)
+      let agendamentos = Number(d.agendamentos_realizado || 0)
+      let comparecimentos = Number(d.comparecimentos_realizado || 0)
+      let faltas = Number(d.faltas_realizado || 0)
+
+      leads = Math.max(leads, fechamentos)
+      agendamentos = Math.min(Math.max(agendamentos, fechamentos), leads)
+      comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
+      faltas = Math.min(faltas, agendamentos)
+
+      return {
+        ...d,
+        leads_realizado: leads,
+        agendamentos_realizado: agendamentos,
+        comparecimentos_realizado: comparecimentos,
+        faltas_realizado: faltas,
+      }
     })
   }, [dados])
 
   const calcTotais = (dadosList: any[]) => {
     return dadosList.reduce(
       (acc: any, curr: any) => {
-        const leads = Number(curr.leads_realizado || 0)
-        const agendamentos = Math.min(Number(curr.agendamentos_realizado || 0), leads)
-        const comparecimentos = Math.min(Number(curr.comparecimentos_realizado || 0), agendamentos)
-        const faltas = Math.min(Number(curr.faltas_realizado || 0), agendamentos)
-
         return {
           investimento: acc.investimento + Number(curr.investimento || 0),
-          leads: acc.leads + leads,
-          agendamentos: acc.agendamentos + agendamentos,
-          comparecimentos: acc.comparecimentos + comparecimentos,
-          faltas: acc.faltas + faltas,
+          leads: acc.leads + Number(curr.leads_realizado || 0),
+          agendamentos: acc.agendamentos + Number(curr.agendamentos_realizado || 0),
+          comparecimentos: acc.comparecimentos + Number(curr.comparecimentos_realizado || 0),
+          faltas: acc.faltas + Number(curr.faltas_realizado || 0),
           fechamentos: acc.fechamentos + Number(curr.fechamentos_qtde_realizado || 0),
           valor_fechado: acc.valor_fechado + Number(curr.fechamentos_valor_realizado || 0),
         }

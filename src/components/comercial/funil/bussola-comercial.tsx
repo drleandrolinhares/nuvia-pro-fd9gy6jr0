@@ -35,11 +35,19 @@ export function BussolaComercial({
   const dadosAjustados = useMemo(() => {
     return (dados || []).map((d: any) => {
       const fechamentos = Number(d.fechamentos_qtde_realizado || 0)
+      let leads = Number(d.leads_realizado || 0)
+      let agendamentos = Number(d.agendamentos_realizado || 0)
+      let comparecimentos = Number(d.comparecimentos_realizado || 0)
+
+      leads = Math.max(leads, fechamentos)
+      agendamentos = Math.min(Math.max(agendamentos, fechamentos), leads)
+      comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
+
       return {
         ...d,
-        leads_realizado: Math.max(Number(d.leads_realizado || 0), fechamentos),
-        agendamentos_realizado: Math.max(Number(d.agendamentos_realizado || 0), fechamentos),
-        comparecimentos_realizado: Math.max(Number(d.comparecimentos_realizado || 0), fechamentos),
+        leads_realizado: leads,
+        agendamentos_realizado: agendamentos,
+        comparecimentos_realizado: comparecimentos,
       }
     })
   }, [dados])
