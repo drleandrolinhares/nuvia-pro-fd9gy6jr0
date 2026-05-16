@@ -46,19 +46,19 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
   }
 
   const fechamentos = Number(rawDado.fechamentos_qtde_realizado || 0)
-  let leads = Number(rawDado.leads_realizado || 0)
+  let qtdeLeads = Number(rawDado.leads_realizado || 0)
   let agendamentos = Number(rawDado.agendamentos_realizado || 0)
   let comparecimentos = Number(rawDado.comparecimentos_realizado || 0)
   let faltas = Number(rawDado.faltas_realizado || 0)
 
-  leads = Math.max(leads, fechamentos)
-  agendamentos = Math.min(Math.max(agendamentos, fechamentos), leads)
+  qtdeLeads = Math.max(qtdeLeads, fechamentos)
+  agendamentos = Math.min(Math.max(agendamentos, fechamentos), qtdeLeads)
   comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
   faltas = Math.min(faltas, agendamentos)
 
   const d = {
     ...rawDado,
-    leads_realizado: leads,
+    leads_realizado: qtdeLeads,
     agendamentos_realizado: agendamentos,
     comparecimentos_realizado: comparecimentos,
     faltas_realizado: faltas,
