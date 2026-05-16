@@ -186,17 +186,6 @@ export default function FunilVendas() {
         let comparecimentosRealizado = aggLeads.comparecimentos
         let faltasRealizado = aggLeads.faltas
 
-        leadsRealizado = Math.max(leadsRealizado, qtdeVendas)
-        agendamentosRealizado = Math.min(
-          Math.max(agendamentosRealizado, qtdeVendas),
-          leadsRealizado,
-        )
-        comparecimentosRealizado = Math.min(
-          Math.max(comparecimentosRealizado, qtdeVendas),
-          agendamentosRealizado,
-        )
-        faltasRealizado = Math.min(faltasRealizado, agendamentosRealizado)
-
         if (existing) {
           return {
             ...existing,

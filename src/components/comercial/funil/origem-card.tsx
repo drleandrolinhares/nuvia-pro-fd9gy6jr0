@@ -51,11 +51,6 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
   let comparecimentos = Number(rawDado.comparecimentos_realizado || 0)
   let faltas = Number(rawDado.faltas_realizado || 0)
 
-  qtdeLeads = Math.max(qtdeLeads, fechamentos)
-  agendamentos = Math.min(Math.max(agendamentos, fechamentos), qtdeLeads)
-  comparecimentos = Math.min(Math.max(comparecimentos, fechamentos), agendamentos)
-  faltas = Math.min(faltas, agendamentos)
-
   const d = {
     ...rawDado,
     leads_realizado: qtdeLeads,

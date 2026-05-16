@@ -140,17 +140,6 @@ export function DashboardLeadsModal({
           .eq('mes_referencia', mesReferencia)
           .order('criado_em', { ascending: false })
 
-        const [ano, mes] = mesReferencia.split('-')
-        const dataInicio = `${mesReferencia}-01`
-        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-        const dataFim = `${mesReferencia}-${ultimoDia}`
-
-        const { data: vendasFallback } = await supabase
-          .from('vendas_confirmadas')
-          .select('*')
-          .gte('data_fechamento', dataInicio)
-          .lte('data_fechamento', dataFim)
-
         const filtered = (leads || []).filter((lead: any) => {
           const status = (lead.status || '').toLowerCase()
           if (!lead.nome || String(lead.nome).trim() === '') {
@@ -198,39 +187,6 @@ export function DashboardLeadsModal({
           if (type === 'faltas') return isFaltante
           return true
         })
-
-        if (vendasFallback) {
-          const leadsNomes = new Set(
-            (leads || []).map((l: any) => String(l.nome).trim().toLowerCase()),
-          )
-
-          vendasFallback.forEach((v: any) => {
-            const nomeVenda = String(v.paciente_nome).trim().toLowerCase()
-            const matchOrigem = !origens || origens.length === 0 || origens.includes(v.origem_id)
-
-            if (matchOrigem && !leadsNomes.has(nomeVenda)) {
-              const isAgendado = true
-              const isCompareceu = true
-              const isFaltante = false
-
-              let include = true
-              if (type === 'agendamentos' && !isAgendado) include = false
-              if (type === 'comparecimentos' && !isCompareceu) include = false
-              if (type === 'faltas' && !isFaltante) include = false
-
-              if (include) {
-                filtered.push({
-                  id: `venda-direta-${v.id}`,
-                  nome: v.paciente_nome,
-                  origem_id: v.origem_id,
-                  status: 'venda_concretizada',
-                  criado_em: v.data_fechamento,
-                  _isVendaDireta: true,
-                })
-              }
-            }
-          })
-        }
 
         filtered.sort(
           (a: any, b: any) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime(),
