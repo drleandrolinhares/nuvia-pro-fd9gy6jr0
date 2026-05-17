@@ -39,10 +39,18 @@ export function FETPatientList({
   const fetchPatients = async () => {
     const { data } = await supabase
       .from('fet_pacientes')
-      .select('*')
+      .select('*, fet_procedimentos(id, concluido)')
       .eq('status', status)
       .order('nome')
-    if (data) setPatients(data.sort((a, b) => a.nome.localeCompare(b.nome)))
+    if (data) {
+      const mapped = data.map((p) => {
+        const total = p.fet_procedimentos?.length || 0
+        const concluidos = p.fet_procedimentos?.filter((proc: any) => proc.concluido).length || 0
+        const progress = total === 0 ? 0 : Math.round((concluidos / total) * 100)
+        return { ...p, progress }
+      })
+      setPatients(mapped.sort((a, b) => a.nome.localeCompare(b.nome)))
+    }
   }
 
   useEffect(() => {
@@ -51,6 +59,9 @@ export function FETPatientList({
     const channel = supabase
       .channel(`fet_pacientes_changes_${status}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'fet_pacientes' }, () => {
+        fetchPatients()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fet_procedimentos' }, () => {
         fetchPatients()
       })
       .subscribe()
@@ -129,7 +140,9 @@ export function FETPatientList({
       toast({ title: 'Erro ao criar paciente', description: error.message, variant: 'destructive' })
     } else if (data) {
       if (status === 'ativo') {
-        setPatients([...patients, data[0]].sort((a, b) => a.nome.localeCompare(b.nome)))
+        setPatients(
+          [...patients, { ...data[0], progress: 0 }].sort((a, b) => a.nome.localeCompare(b.nome)),
+        )
       }
       setNewNome('')
       onSelect(data[0].id)
@@ -226,13 +239,23 @@ export function FETPatientList({
                 <button
                   onClick={() => onSelect(p.id)}
                   className={cn(
-                    'w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all border border-transparent pr-16',
+                    'w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all border border-transparent pr-16 flex items-center justify-between gap-2',
                     selectedId === p.id
                       ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 font-bold'
                       : 'text-slate-300 hover:bg-slate-800 hover:border-slate-700',
                   )}
                 >
                   <span className="truncate block font-bold">{p.nome}</span>
+                  <div
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0',
+                      p.progress === 100
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-slate-700 text-slate-300',
+                    )}
+                  >
+                    {p.progress}%
+                  </div>
                 </button>
               )}
 
