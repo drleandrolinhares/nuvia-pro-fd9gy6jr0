@@ -21,6 +21,7 @@ export interface Compromisso {
   eh_dia_inteiro: boolean
   descricao?: string | null
   arquivado: boolean
+  setor?: string | null
   criado_em: string
   atualizado_em: string
   usuario?: {
@@ -29,10 +30,11 @@ export interface Compromisso {
   }
 }
 
-export const getCompromissos = async () => {
+export const getCompromissos = async (setor: string = 'operacional') => {
   const { data, error } = await supabase
     .from('compromissos')
     .select('*, usuario:usuarios(id, nome)')
+    .eq('setor', setor)
     .order('data_inicio', { ascending: true })
 
   if (error) throw error
@@ -40,6 +42,8 @@ export const getCompromissos = async () => {
 }
 
 export const createCompromisso = async (compromisso: Partial<Compromisso>) => {
+  if (!compromisso.setor) compromisso.setor = 'operacional'
+
   const { data, error } = await supabase
     .from('compromissos')
     .insert([compromisso])

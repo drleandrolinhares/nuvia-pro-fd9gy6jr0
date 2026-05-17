@@ -39,7 +39,7 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
         .not('data_proximo_contato', 'is', null)
         .order('data_proximo_contato', { ascending: true })
 
-      const compData = await getCompromissos()
+      const compData = await getCompromissos('comercial')
       const usersData = await getUsuarios()
 
       setLeads(leadsData || [])
@@ -90,11 +90,12 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
 
   const handleSaveEvento = async (evento: any) => {
     try {
+      const eventoComercial = { ...evento, setor: 'comercial' }
       if (editingEvento && editingEvento.id) {
-        await updateCompromisso(editingEvento.id, evento)
+        await updateCompromisso(editingEvento.id, eventoComercial)
         toast({ title: 'Compromisso atualizado com sucesso!' })
       } else {
-        await createCompromisso(evento)
+        await createCompromisso(eventoComercial)
         toast({ title: 'Compromisso criado com sucesso!' })
       }
       setIsEventoModalOpen(false)
