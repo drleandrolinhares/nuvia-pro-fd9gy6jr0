@@ -69,6 +69,7 @@ export function FETPatientDetail({
     procId: null,
     date: new Date(),
   })
+  const [finalizeDialog, setFinalizeDialog] = useState(false)
   const [procedimentos, setProcedimentos] = useState<any[]>([])
   const [dentistas, setDentistas] = useState<any[]>([])
   const [etiquetasGerais, setEtiquetasGerais] = useState<any[]>([])
@@ -153,18 +154,36 @@ export function FETPatientDetail({
     const allConcluidos = updatedProcs.every((p) => p.concluido)
 
     if (allConcluidos && patient?.status !== 'finalizado') {
-      await supabase.from('fet_pacientes').update({ status: 'finalizado' }).eq('id', patientId)
-      await logFetAction('Tratamento Finalizado', `Todos os procedimentos foram concluídos`)
-      toast({
-        title: 'Tratamento Finalizado',
-        description: 'Paciente movido para a aba de finalizados.',
-      })
-      if (onStatusChange) onStatusChange()
+      setFinalizeDialog(true)
     } else if (!allConcluidos && patient?.status === 'finalizado') {
       await supabase.from('fet_pacientes').update({ status: 'ativo' }).eq('id', patientId)
+      setPatient((prev: any) => ({ ...prev, status: 'ativo' }))
       await logFetAction('Tratamento Reativado', `Tratamento voltou para status ativo`)
       if (onStatusChange) onStatusChange()
     }
+  }
+
+  const handleFinalize = async () => {
+    await supabase.from('fet_pacientes').update({ status: 'finalizado' }).eq('id', patientId)
+    setPatient((prev: any) => ({ ...prev, status: 'finalizado' }))
+    await logFetAction('Tratamento Finalizado', `Todos os procedimentos foram concluídos`)
+    toast({
+      title: 'Tratamento Finalizado',
+      description: 'Paciente movido para a aba de finalizados.',
+    })
+    if (onStatusChange) onStatusChange()
+    setFinalizeDialog(false)
+  }
+
+  const handleReopenTreatment = async () => {
+    await supabase.from('fet_pacientes').update({ status: 'ativo' }).eq('id', patientId)
+    setPatient((prev: any) => ({ ...prev, status: 'ativo' }))
+    await logFetAction('Tratamento Reaberto', `Tratamento foi reaberto por um administrador`)
+    toast({
+      title: 'Tratamento Reaberto',
+      description: 'Paciente movido para a aba em andamento.',
+    })
+    if (onStatusChange) onStatusChange()
   }
 
   const handleCheckStart = (id: string, checked: boolean) => {
@@ -339,7 +358,29 @@ export function FETPatientDetail({
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
       <div className="p-3 border-b border-slate-800 bg-slate-950/50 flex flex-col gap-2 shrink-0">
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-white truncate pr-2">Evolução: {patient.nome}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-white truncate pr-2">Evolução: {patient.nome}</h2>
+            {patient.status === 'finalizado' && isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleReopenTreatment}
+                className="h-7 text-xs border-amber-500/50 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+              >
+                Reabrir Tratamento
+              </Button>
+            )}
+            {patient.status !== 'finalizado' && total > 0 && concluidos === total && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setFinalizeDialog(true)}
+                className="h-7 text-xs border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400"
+              >
+                Finalizar Tratamento
+              </Button>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm font-bold bg-slate-900/80 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 border border-slate-700/50 shadow-lg shrink-0">
             <div className="flex flex-col px-2 sm:px-3 items-center">
@@ -769,6 +810,32 @@ export function FETPatientDetail({
           )}
         </div>
       </ScrollArea>
+
+      <Dialog open={finalizeDialog} onOpenChange={setFinalizeDialog}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Finalizar Tratamento</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Todos os procedimentos foram concluídos. Deseja finalizar este tratamento agora?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setFinalizeDialog(false)}
+              className="hover:bg-slate-800 hover:text-white"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleFinalize}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
+            >
+              Confirmar Finalização
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={completionDialog.isOpen}
