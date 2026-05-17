@@ -19,6 +19,7 @@ import { Loader2, Search, Link as LinkIcon, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { EditarOportunidadeModal } from '@/pages/comercial/components/EditarOportunidadeModal'
+import { EditarLeadModal } from './editar-lead-modal'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
@@ -31,8 +32,11 @@ export function DashboardLeadsModal({
   mesReferencia,
   title,
   onUpdate,
+  etapas,
+  temperaturas,
 }: any) {
   const [data, setData] = useState<any[]>([])
+  const [selectedLead, setSelectedLead] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAvaliacao, setSelectedAvaliacao] = useState<any>(null)
@@ -335,6 +339,8 @@ export function DashboardLeadsModal({
                               setSelectedAvaliacao(row)
                             } else if (isVenda && row.avaliacoes) {
                               setSelectedAvaliacao(row.avaliacoes)
+                            } else if (isLead) {
+                              setSelectedLead(row)
                             }
                           }}
                         >
@@ -428,6 +434,21 @@ export function DashboardLeadsModal({
           onSuccess={async () => {
             await fetchData()
             setSelectedAvaliacao(null)
+            if (onUpdate) await onUpdate()
+          }}
+        />
+      )}
+
+      {selectedLead && (
+        <EditarLeadModal
+          open={!!selectedLead}
+          onOpenChange={(isOpen: boolean) => !isOpen && setSelectedLead(null)}
+          lead={selectedLead}
+          etapas={etapas}
+          temperaturas={temperaturas}
+          onSaved={async () => {
+            await fetchData()
+            setSelectedLead(null)
             if (onUpdate) await onUpdate()
           }}
         />

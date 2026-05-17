@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EditarDadosDialog } from './editar-dados-dialog'
+import { DashboardLeadsModal } from './dashboard-leads-modal'
 import {
   ArrowRight,
   Users,
@@ -9,31 +10,17 @@ import {
   DollarSign,
   Target,
   UserMinus,
-  Loader2,
-  Edit,
   BarChart3,
 } from 'lucide-react'
-import { EditarLeadModal } from './editar-lead-modal'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { format } from 'date-fns'
-import { supabase } from '@/lib/supabase/client'
 
 export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, onUpdate }: any) {
-  const [open, setOpen] = useState(false)
   const [openAnalise, setOpenAnalise] = useState(false)
-  const [modalType, setModalType] = useState<string | null>(null)
-  const [leads, setLeads] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [leadEditando, setLeadEditando] = useState<any>(null)
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: string
+    title: string
+  }>({ isOpen: false, type: 'leads', title: '' })
 
   const rawDado = dado || {
     investimento: 0,
@@ -45,18 +32,12 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
     fechamentos_valor_realizado: 0,
   }
 
-  const fechamentos = Number(rawDado.fechamentos_qtde_realizado || 0)
-  let qtdeLeads = Number(rawDado.leads_realizado || 0)
-  let agendamentos = Number(rawDado.agendamentos_realizado || 0)
-  let comparecimentos = Number(rawDado.comparecimentos_realizado || 0)
-  let faltas = Number(rawDado.faltas_realizado || 0)
-
   const d = {
     ...rawDado,
-    leads_realizado: qtdeLeads,
-    agendamentos_realizado: agendamentos,
-    comparecimentos_realizado: comparecimentos,
-    faltas_realizado: faltas,
+    leads_realizado: Number(rawDado.leads_realizado || 0),
+    agendamentos_realizado: Number(rawDado.agendamentos_realizado || 0),
+    comparecimentos_realizado: Number(rawDado.comparecimentos_realizado || 0),
+    faltas_realizado: Number(rawDado.faltas_realizado || 0),
   }
 
   const cpl = d.leads_realizado ? d.investimento / d.leads_realizado : 0
@@ -67,127 +48,27 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  const fetchLeads = async () => {
-    setLoading(true)
-    const [ano, mes] = mesReferencia.split('-')
-    const dataInicio = `${mesReferencia}-01`
-    const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-    const dataFim = `${mesReferencia}-${ultimoDia}`
-
-    const { data: leadsData } = await supabase
-      .from('funil_leads')
-      .select('*')
-      .eq('origem_id', origem.id)
-      .eq('mes_referencia', mesReferencia)
-      .order('criado_em', { ascending: false })
-
-    const normalizeNome = (n: any) => {
-      if (!n) return ''
-      return String(n)
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-    }
-
-    const unifiedLeads = (leadsData || [])
-      .filter((lead: any) => {
-        const status = (lead.status || '').toLowerCase()
-        if (['erro', 'rascunho', 'lixo', 'duplicado', 'teste', 'invalido'].includes(status))
-          return false
-
-        if (!lead.nome || String(lead.nome).trim() === '') return false
-        const nome = normalizeNome(lead.nome)
-        if (nome.includes('teste') || nome.includes('duplicado')) return false
-
-        return true
-      })
-      .map((lead: any) => {
-        const status = (lead.status || '').toLowerCase()
-        const isAgendado =
-          [
-            'agendado',
-            'reagendado',
-            'atendido',
-            'faltou',
-            'venda-fechada',
-            'venda_concretizada',
-            'avaliacao',
-            'fechamento',
-          ].includes(status) || (lead.qtd_agendamentos || 0) > 0
-
-        const isCompareceu = [
-          'atendido',
-          'venda-fechada',
-          'venda_concretizada',
-          'avaliacao',
-          'fechamento',
-        ].includes(status)
-
-        const isFaltante = status === 'faltou' || (lead.qtd_faltas || 0) > 0
-
-        return {
-          ...lead,
-          _isAgendado: isAgendado,
-          _isCompareceu: isCompareceu,
-          _isFaltante: isFaltante,
-        }
-      })
-
-    unifiedLeads.sort(
-      (a: any, b: any) =>
-        new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime(),
-    )
-
-    setLeads(unifiedLeads)
-    setLoading(false)
-  }
-
   const handleOpenLeads = (type: string) => {
-    setModalType(type)
-    setOpen(true)
-    fetchLeads()
+    let title = ''
+    switch (type) {
+      case 'leads':
+        title = `Leads - ${origem.nome}`
+        break
+      case 'agendamentos':
+        title = `Agendamentos - ${origem.nome}`
+        break
+      case 'comparecimentos':
+        title = `Comparecimentos - ${origem.nome}`
+        break
+      case 'faltas':
+        title = `Faltas - ${origem.nome}`
+        break
+      case 'fechamentos':
+        title = `Fechamentos - ${origem.nome}`
+        break
+    }
+    setModalConfig({ isOpen: true, type, title })
   }
-
-  const leadsFiltrados = useMemo(() => {
-    if (modalType === 'leads') return leads
-    if (modalType === 'agendamentos') {
-      return leads.filter((l) => {
-        if (l._isAgendado !== undefined) return l._isAgendado
-        const isAgendado = [
-          'agendado',
-          'reagendado',
-          'atendido',
-          'faltou',
-          'venda-fechada',
-          'venda_concretizada',
-          'avaliacao',
-          'fechamento',
-        ].includes(l.status?.toLowerCase() || '')
-        return isAgendado || (l.qtd_agendamentos || 0) > 0
-      })
-    }
-    if (modalType === 'comparecimentos') {
-      return leads.filter((l) => {
-        if (l._isCompareceu !== undefined) return l._isCompareceu
-        return [
-          'atendido',
-          'venda-fechada',
-          'venda_concretizada',
-          'avaliacao',
-          'fechamento',
-        ].includes(l.status?.toLowerCase() || '')
-      })
-    }
-    if (modalType === 'faltas') {
-      return leads.filter((l) => {
-        if (l._isFaltante !== undefined) return l._isFaltante
-        return l.status === 'faltou' || l.qtd_faltas > 0
-      })
-    }
-    return []
-  }, [leads, modalType])
 
   return (
     <>
@@ -291,7 +172,7 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
 
             <div
               className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-inner relative hover:border-emerald-900/50 hover:bg-slate-900 transition-colors flex flex-col items-center justify-center cursor-pointer"
-              onClick={() => setOpenAnalise(true)}
+              onClick={() => handleOpenLeads('fechamentos')}
             >
               <div className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-6 h-6">
                 <ArrowRight className="w-3 h-3 text-slate-500" />
@@ -350,112 +231,17 @@ export function OrigemCard({ origem, dado, mesReferencia, etapas, temperaturas, 
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900 border-slate-800 text-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-xl">
-              Listagem de Pacientes -{' '}
-              {modalType === 'leads'
-                ? 'Todos os Leads'
-                : modalType === 'agendamentos'
-                  ? 'Agendamentos'
-                  : modalType === 'comparecimentos'
-                    ? 'Comparecimentos'
-                    : 'Faltas'}{' '}
-              - {origem.nome} ({mesReferencia})
-            </DialogTitle>
-          </DialogHeader>
-
-          {loading ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-            </div>
-          ) : (
-            <div className="space-y-6 mt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-slate-300">
-                  Total Encontrado: {leadsFiltrados.length}
-                </h3>
-              </div>
-
-              <div className="border border-slate-800 rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="bg-slate-950 sticky top-0 z-10">
-                    <TableRow className="border-slate-800">
-                      <TableHead className="text-slate-400">Paciente</TableHead>
-                      <TableHead className="text-slate-400">Telefone</TableHead>
-                      <TableHead className="text-slate-400 text-center">Status</TableHead>
-                      <TableHead className="text-slate-400 text-center">Temperatura</TableHead>
-                      <TableHead className="text-slate-400 text-center">Data</TableHead>
-                      <TableHead className="text-slate-400 w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leadsFiltrados.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                          Nenhum paciente encontrado.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      leadsFiltrados.map((l, idx) => (
-                        <TableRow
-                          key={l.id || l._key || idx}
-                          className="border-slate-800 hover:bg-slate-800/50"
-                        >
-                          <TableCell className="font-medium text-slate-200">{l.nome}</TableCell>
-                          <TableCell className="text-slate-400">{l.telefone || '-'}</TableCell>
-                          <TableCell className="text-center">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
-                              {etapas?.find((e: any) => e.slug === l.status)?.nome ||
-                                l.status ||
-                                '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
-                              {temperaturas?.find((t: any) => t.slug === l.temperatura)?.nome ||
-                                l.temperatura ||
-                                '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center text-slate-400">
-                            {l.criado_em ? format(new Date(l.criado_em), 'dd/MM/yyyy') : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setLeadEditando(l)}
-                              className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {leadEditando && (
-        <EditarLeadModal
-          open={!!leadEditando}
-          onOpenChange={(isOpen: boolean) => !isOpen && setLeadEditando(null)}
-          lead={leadEditando}
-          etapas={etapas}
-          temperaturas={temperaturas}
-          onSaved={() => {
-            fetchLeads()
-            onUpdate()
-          }}
-        />
-      )}
+      <DashboardLeadsModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        origens={[origem.id]}
+        mesReferencia={mesReferencia}
+        title={modalConfig.title}
+        onUpdate={onUpdate}
+        etapas={etapas}
+        temperaturas={temperaturas}
+      />
     </>
   )
 }

@@ -778,6 +778,8 @@ export function FunilDashboard({
         mesReferencia={mesReferencia}
         title={modalConfig.title}
         onUpdate={onUpdate}
+        etapas={etapas}
+        temperaturas={temperaturas}
       />
     </div>
   )
