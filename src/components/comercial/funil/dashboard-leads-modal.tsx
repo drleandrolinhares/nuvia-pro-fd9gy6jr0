@@ -138,10 +138,17 @@ export function DashboardLeadsModal({
 
         setData(filtered.map((a: any) => ({ ...a, _isAvaliacao: true })))
       } else {
+        const [ano, mes] = mesReferencia.split('-')
+        const dataInicio = `${mesReferencia}-01`
+        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+        const dataFim = `${mesReferencia}-${ultimoDia}`
+
         const { data: leads } = await supabase
           .from('funil_leads')
           .select('*')
-          .eq('mes_referencia', mesReferencia)
+          .or(
+            `mes_referencia.eq.${mesReferencia},and(data_avaliacao.gte.${dataInicio},data_avaliacao.lte.${dataFim})`,
+          )
           .order('criado_em', { ascending: false })
 
         const filtered = (leads || []).filter((lead: any) => {
@@ -157,6 +164,11 @@ export function DashboardLeadsModal({
           if (['lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho'].includes(status)) {
             return false
           }
+
+          const dateStr = lead.data_avaliacao || lead.criado_em || ''
+          const itemDate = dateStr.substring(0, 7)
+
+          if (itemDate !== mesReferencia) return false
 
           if (type === 'leads') return true
 

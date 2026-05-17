@@ -75,18 +75,24 @@ export function VendasRankingDentistas({
   }
 
   const sortedRanking = useMemo(() => {
-    return [...ranking].sort((a, b) => {
-      let aVal = a[sortColumn]
-      let bVal = b[sortColumn]
+    return [...ranking]
+      .filter(
+        (d) =>
+          d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+          d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+      )
+      .sort((a, b) => {
+        let aVal = a[sortColumn]
+        let bVal = b[sortColumn]
 
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
-      }
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+        }
 
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
   }, [ranking, sortColumn, sortDirection])
 
   const formatCurrency = (val: number) => {
@@ -143,6 +149,11 @@ export function VendasRankingDentistas({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[...ranking]
+                  .filter(
+                    (d) =>
+                      d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+                      d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+                  )
                   .sort((a, b) => b.valorTotalConversao - a.valorTotalConversao)
                   .slice(0, 3)
                   .map((dentista, i) => (
@@ -180,6 +191,11 @@ export function VendasRankingDentistas({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[...ranking]
+                  .filter(
+                    (d) =>
+                      d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+                      d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+                  )
                   .sort((a, b) => b.conversao - a.conversao)
                   .slice(0, 3)
                   .map((dentista, i) => (
@@ -217,6 +233,11 @@ export function VendasRankingDentistas({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[...ranking]
+                  .filter(
+                    (d) =>
+                      d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+                      d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+                  )
                   .sort((a, b) => b.avaliacoes - a.avaliacoes)
                   .slice(0, 3)
                   .map((dentista, i) => (
@@ -255,6 +276,11 @@ export function VendasRankingDentistas({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[...ranking]
+                  .filter(
+                    (d) =>
+                      d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+                      d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+                  )
                   .sort((a, b) => b.comparecimentos - a.comparecimentos)
                   .slice(0, 3)
                   .map((dentista, i) => (

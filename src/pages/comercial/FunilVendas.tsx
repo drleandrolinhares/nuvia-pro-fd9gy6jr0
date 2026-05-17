@@ -64,7 +64,9 @@ export default function FunilVendas() {
     const { data: leadsData } = await supabase
       .from('funil_leads')
       .select('*')
-      .eq('mes_referencia', mesReferencia)
+      .or(
+        `mes_referencia.eq.${mesReferencia},and(data_avaliacao.gte.${dataInicio},data_avaliacao.lte.${dataFim})`,
+      )
       .limit(10000)
 
     const { data: vendasData } = await supabase
@@ -105,7 +107,12 @@ export default function FunilVendas() {
       if (!lead.nome || String(lead.nome).trim() === '') return false
 
       const status = (lead.status || '').toLowerCase()
-      if (['lixo', 'teste', 'rascunho', 'erro'].includes(status)) return false
+      if (['lixo', 'teste', 'rascunho', 'erro', 'duplicado', 'invalido'].includes(status))
+        return false
+
+      const dateStr = lead.data_avaliacao || lead.criado_em || ''
+      const itemDate = dateStr.substring(0, 7)
+      if (itemDate !== mesReferencia) return false
 
       return true
     })
