@@ -7,6 +7,7 @@ import {
   Building2,
   TrendingUp,
   Info,
+  Plus,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -75,6 +76,16 @@ export default function GestaoFiscal() {
   const [vendasPJ1, setVendasPJ1] = useState<any[]>([])
   const [vendasPJ2, setVendasPJ2] = useState<any[]>([])
 
+  const [entradasAnterioresPF, setEntradasAnterioresPF] = useState(0)
+  const [entradasAnterioresPJ1, setEntradasAnterioresPJ1] = useState(0)
+  const [entradasAnterioresPJ2, setEntradasAnterioresPJ2] = useState(0)
+
+  const [lancamentoPF, setLancamentoPF] = useState(0)
+  const [lancamentoPJ1, setLancamentoPJ1] = useState(0)
+  const [lancamentoPJ2, setLancamentoPJ2] = useState(0)
+
+  const [savingLancamento, setSavingLancamento] = useState(false)
+
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
   const [modalData, setModalData] = useState<any[]>([])
@@ -83,6 +94,59 @@ export default function GestaoFiscal() {
     setModalTitle(title)
     setModalData(data)
     setModalOpen(true)
+  }
+
+  const fetchLancamentos = async () => {
+    const todayDate = new Date()
+    const currentMonthRef = todayDate.toISOString().substring(0, 7)
+
+    const { data } = await (supabase as any)
+      .from('gestao_fiscal_entradas_manuais')
+      .select('destino_fiscal, valor')
+      .eq('mes_referencia', currentMonthRef)
+
+    if (data) {
+      let pf = 0
+      let pj1 = 0
+      let pj2 = 0
+
+      data.forEach((item: any) => {
+        if (item.destino_fiscal === 'PESSOA FISICA') pf += Number(item.valor)
+        else if (item.destino_fiscal === 'VITALI ODONTOLOGIA') pj1 += Number(item.valor)
+        else if (item.destino_fiscal === 'SOUZA FILHO ODONTOLOGIA') pj2 += Number(item.valor)
+      })
+
+      setEntradasAnterioresPF(pf)
+      setEntradasAnterioresPJ1(pj1)
+      setEntradasAnterioresPJ2(pj2)
+    }
+  }
+
+  const handleLancamento = async (destino: string, valor: number, setValor: any) => {
+    if (valor <= 0) return
+
+    setSavingLancamento(true)
+
+    const todayDate = new Date()
+    const currentMonthRef = todayDate.toISOString().substring(0, 7)
+
+    const { error } = await (supabase as any).from('gestao_fiscal_entradas_manuais').insert({
+      destino_fiscal: destino,
+      valor: valor,
+      mes_referencia: currentMonthRef,
+      data_lancamento: todayDate.toISOString().split('T')[0],
+    })
+
+    if (error) {
+      toast.error('Erro ao registrar lançamento')
+      console.error(error)
+    } else {
+      toast.success('Lançamento registrado com sucesso!')
+      setValor(0)
+      await fetchLancamentos()
+    }
+
+    setSavingLancamento(false)
   }
 
   useEffect(() => {
@@ -144,6 +208,7 @@ export default function GestaoFiscal() {
     }
 
     fetchData()
+    fetchLancamentos()
   }, [])
 
   const pf_receita_calc = c.pf_despesa + 4000
@@ -208,6 +273,33 @@ export default function GestaoFiscal() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-blue-500 rounded-xl p-5 shadow-sm flex flex-col justify-center">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+            Entradas Sobre Vendas do Período
+          </span>
+          <span className="text-2xl font-bold text-white">
+            R${' '}
+            {(realizadoPF + realizadoPJ1 + realizadoPJ2).toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-indigo-500 rounded-xl p-5 shadow-sm flex flex-col justify-center">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+            Entradas de Meses Anteriores
+          </span>
+          <span className="text-2xl font-bold text-indigo-400">
+            R${' '}
+            {(entradasAnterioresPF + entradasAnterioresPJ1 + entradasAnterioresPJ2).toLocaleString(
+              'pt-BR',
+              { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+            )}
+          </span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         {/* Card PF */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col relative overflow-hidden h-full">
@@ -247,6 +339,43 @@ export default function GestaoFiscal() {
                 />
               </div>
               <div className="mt-auto pt-6">
+                <div className="mb-4 bg-slate-950/50 p-3 rounded-lg border border-slate-800 shadow-sm flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Entradas Meses Anteriores
+                    </span>
+                    <span className="text-sm font-bold text-indigo-400">
+                      R${' '}
+                      {entradasAnterioresPF.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <CurrencyInput
+                      value={lancamentoPF}
+                      onChange={setLancamentoPF}
+                      className="h-8 text-xs bg-slate-900 border-slate-700 w-full"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3"
+                      onClick={() =>
+                        handleLancamento('PESSOA FISICA', lancamentoPF, setLancamentoPF)
+                      }
+                      disabled={savingLancamento || !lancamentoPF}
+                    >
+                      {savingLancamento ? (
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      ) : (
+                        <Plus className="w-3 h-3 mr-1" />
+                      )}
+                      Lançar
+                    </Button>
+                  </div>
+                </div>
+
                 <div
                   onClick={() => handleOpenModal('PESSOA FÍSICA', vendasPF)}
                   className="cursor-pointer group hover:border-amber-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm"
@@ -386,6 +515,44 @@ export default function GestaoFiscal() {
                     />
                   </div>
                 </div>
+
+                <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 shadow-sm flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Entradas Meses Anteriores
+                    </span>
+                    <span className="text-sm font-bold text-indigo-400">
+                      R${' '}
+                      {entradasAnterioresPJ1.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <CurrencyInput
+                      value={lancamentoPJ1}
+                      onChange={setLancamentoPJ1}
+                      className="h-8 text-xs bg-slate-900 border-slate-700 w-full"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3"
+                      onClick={() =>
+                        handleLancamento('VITALI ODONTOLOGIA', lancamentoPJ1, setLancamentoPJ1)
+                      }
+                      disabled={savingLancamento || !lancamentoPJ1}
+                    >
+                      {savingLancamento ? (
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      ) : (
+                        <Plus className="w-3 h-3 mr-1" />
+                      )}
+                      Lançar
+                    </Button>
+                  </div>
+                </div>
+
                 <div
                   onClick={() => handleOpenModal(c.pj1_titulo || 'VITALI ODONTOLOGIA', vendasPJ1)}
                   className="cursor-pointer group hover:border-blue-500/50 transition-colors p-3 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-between shadow-sm"
@@ -493,6 +660,44 @@ export default function GestaoFiscal() {
                     />
                   </div>
                 </div>
+
+                <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 shadow-sm flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Entradas Meses Anteriores
+                    </span>
+                    <span className="text-sm font-bold text-indigo-400">
+                      R${' '}
+                      {entradasAnterioresPJ2.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <CurrencyInput
+                      value={lancamentoPJ2}
+                      onChange={setLancamentoPJ2}
+                      className="h-8 text-xs bg-slate-900 border-slate-700 w-full"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3"
+                      onClick={() =>
+                        handleLancamento('SOUZA FILHO ODONTOLOGIA', lancamentoPJ2, setLancamentoPJ2)
+                      }
+                      disabled={savingLancamento || !lancamentoPJ2}
+                    >
+                      {savingLancamento ? (
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      ) : (
+                        <Plus className="w-3 h-3 mr-1" />
+                      )}
+                      Lançar
+                    </Button>
+                  </div>
+                </div>
+
                 <div
                   onClick={() =>
                     handleOpenModal(c.pj2_titulo || 'SOUZA FILHO ODONTOLOGIA', vendasPJ2)
