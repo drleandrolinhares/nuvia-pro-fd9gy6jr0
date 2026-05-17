@@ -3,16 +3,20 @@ import { format, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Phone, User, Clock, Edit2, Plus, Calendar as CalendarIcon } from 'lucide-react'
+import {
+  Loader2,
+  Phone,
+  User,
+  Clock,
+  Edit2,
+  Plus,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+} from 'lucide-react'
 import { LeadDialog } from './lead-dialog'
 import { Button } from '@/components/ui/button'
-import { EventoModal } from '@/pages/operacional/components/EventoModal'
-import {
-  getCompromissos,
-  createCompromisso,
-  updateCompromisso,
-  getUsuarios,
-} from '@/services/compromissos'
+import { CompromissoComercialModal } from './compromisso-comercial-modal'
+import { getCompromissos, getUsuarios } from '@/services/compromissos'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +29,7 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
   const [editingLead, setEditingLead] = useState<any>(null)
 
   const [activeTab, setActiveTab] = useState<'crc_lead' | 'crc_comercial'>('crc_lead')
-  const [isEventoModalOpen, setIsEventoModalOpen] = useState(false)
+  const [isComercialModalOpen, setIsComercialModalOpen] = useState(false)
   const [editingEvento, setEditingEvento] = useState<any>(null)
 
   const { toast } = useToast()
@@ -62,12 +66,17 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
 
   const compromissosDoDia = compromissos.filter((c) => {
     if (!date) return false
+    if (activeTab === 'crc_comercial' && c.tipo_compromisso !== 'acao_comercial') return false
     const start = new Date(c.data_inicio + 'T00:00:00')
     const end = new Date(c.data_fim + 'T23:59:59')
     const checkDate = new Date(date)
     checkDate.setHours(12, 0, 0, 0)
     return checkDate >= start && checkDate <= end
   })
+
+  const compromissosComerciaisDoDia = compromissosDoDia.filter(
+    (c) => c.tipo_compromisso === 'acao_comercial',
+  )
 
   const diasComCompromisso: Date[] = []
   if (activeTab === 'crc_lead') {
@@ -76,7 +85,7 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
     })
   } else {
     compromissos.forEach((c) => {
-      if (c.data_inicio && c.data_fim) {
+      if (c.tipo_compromisso === 'acao_comercial' && c.data_inicio && c.data_fim) {
         const start = new Date(c.data_inicio + 'T00:00:00')
         const end = new Date(c.data_fim + 'T00:00:00')
         let curr = new Date(start)
@@ -86,24 +95,6 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
         }
       }
     })
-  }
-
-  const handleSaveEvento = async (evento: any) => {
-    try {
-      const eventoComercial = { ...evento, setor: 'comercial' }
-      if (editingEvento && editingEvento.id) {
-        await updateCompromisso(editingEvento.id, eventoComercial)
-        toast({ title: 'Compromisso atualizado com sucesso!' })
-      } else {
-        await createCompromisso(eventoComercial)
-        toast({ title: 'Compromisso criado com sucesso!' })
-      }
-      setIsEventoModalOpen(false)
-      setEditingEvento(null)
-      fetchData()
-    } catch (err: any) {
-      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' })
-    }
   }
 
   return (
@@ -130,7 +121,7 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
               <Clock className="w-5 h-5 text-amber-500" />
             </div>
             <h3 className="text-xl font-bold text-white tracking-tight">
-              {activeTab === 'crc_lead' ? 'Contatos' : 'Compromissos'} Agendados para{' '}
+              {activeTab === 'crc_lead' ? 'Contatos' : 'Ações Comerciais'} Agendadas para{' '}
               {date ? format(date, "dd 'de' MMMM", { locale: ptBR }) : ''}
             </h3>
           </div>
@@ -164,12 +155,12 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
                 type="button"
                 onClick={() => {
                   setEditingEvento(null)
-                  setIsEventoModalOpen(true)
+                  setIsComercialModalOpen(true)
                 }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap ml-2"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap ml-2 shadow-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Novo
+                Nova Ação
               </Button>
             )}
           </div>
@@ -232,38 +223,68 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
               })}
             </div>
           )
-        ) : compromissosDoDia.length === 0 ? (
+        ) : compromissosComerciaisDoDia.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-500 opacity-50 py-12">
             <CalendarIcon className="w-16 h-16 mb-4" />
-            <p className="text-lg font-medium">Nenhum compromisso agendado para este dia.</p>
+            <p className="text-lg font-medium">Nenhuma ação comercial agendada para este dia.</p>
           </div>
         ) : (
           <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-            {compromissosDoDia.map((comp) => {
+            {compromissosComerciaisDoDia.map((comp) => {
+              const isConcluido = comp.status_acao === 'concluido'
               return (
                 <div
                   key={comp.id}
-                  className="bg-slate-950 p-5 rounded-lg border border-slate-800 flex items-center justify-between hover:border-slate-700 transition-all group shadow-sm"
+                  className={cn(
+                    'p-5 rounded-lg border flex items-center justify-between transition-all group shadow-sm',
+                    isConcluido
+                      ? 'bg-slate-900 border-slate-800 opacity-70'
+                      : 'bg-slate-950 border-slate-700 hover:border-amber-500/50',
+                  )}
                 >
                   <div>
-                    <h4 className="font-bold text-slate-200 text-base flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-slate-400" />
-                      {comp.tipo_compromisso?.replace('_', ' ').toUpperCase()}
+                    <h4
+                      className={cn(
+                        'font-bold text-base flex items-center gap-2',
+                        isConcluido ? 'text-slate-400' : 'text-amber-500',
+                      )}
+                    >
+                      {isConcluido ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
+                      Ação Comercial
                     </h4>
                     <div className="flex flex-col gap-1 mt-2">
-                      <p className="text-sm text-slate-300 font-medium">
+                      <p
+                        className={cn(
+                          'text-sm font-semibold',
+                          isConcluido ? 'text-slate-400' : 'text-slate-200',
+                        )}
+                      >
+                        {comp.paciente?.nome || comp.lead?.nome || 'Contato não especificado'}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate max-w-md">
                         {comp.descricao || 'Sem descrição'}
                       </p>
-                      <div className="flex items-center gap-4 mt-1">
-                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                      <div className="flex items-center gap-4 mt-2">
+                        <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
                           <User className="w-3 h-3" />
                           {comp.usuario?.nome || 'Desconhecido'}
                         </p>
-                        <div className="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <div
+                          className={cn(
+                            'text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1',
+                            isConcluido
+                              ? 'bg-slate-800 text-slate-400'
+                              : 'bg-amber-500/10 text-amber-500',
+                          )}
+                        >
                           <Clock className="w-3 h-3" />
                           {comp.eh_dia_inteiro
                             ? 'Dia Inteiro'
-                            : `${comp.hora_inicio?.substring(0, 5) || ''} às ${comp.hora_fim?.substring(0, 5) || ''}`}
+                            : `${comp.hora_inicio?.substring(0, 5) || ''}`}
                         </div>
                       </div>
                     </div>
@@ -271,9 +292,9 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
                   <button
                     onClick={() => {
                       setEditingEvento(comp)
-                      setIsEventoModalOpen(true)
+                      setIsComercialModalOpen(true)
                     }}
-                    className="p-2.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-emerald-500 hover:text-emerald-950 transition-colors shadow-sm"
+                    className="p-2.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-amber-500 hover:text-amber-950 transition-colors shadow-sm"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -299,16 +320,19 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
         />
       )}
 
-      {isEventoModalOpen && (
-        <EventoModal
-          isOpen={isEventoModalOpen}
+      {isComercialModalOpen && (
+        <CompromissoComercialModal
+          isOpen={isComercialModalOpen}
           onClose={() => {
-            setIsEventoModalOpen(false)
+            setIsComercialModalOpen(false)
             setEditingEvento(null)
           }}
-          onSave={handleSaveEvento}
+          onSave={() => {
+            setIsComercialModalOpen(false)
+            setEditingEvento(null)
+            fetchData()
+          }}
           evento={editingEvento}
-          usuarios={usuarios}
         />
       )}
     </div>

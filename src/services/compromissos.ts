@@ -9,6 +9,7 @@ export type TipoCompromisso =
   | 'folga_ferias'
   | 'treinamento'
   | 'atendimento_externo'
+  | 'acao_comercial'
 
 export interface Compromisso {
   id: string
@@ -28,12 +29,27 @@ export interface Compromisso {
     id: string
     nome: string
   }
+  paciente_id?: string | null
+  lead_id?: string | null
+  status_acao?: string | null
+  resultado_acao?: string | null
+  concluido_em?: string | null
+  concluido_por?: string | null
+  paciente?: { nome: string } | null
+  lead?: { nome: string } | null
+  concluido_por_user?: { nome: string } | null
 }
 
 export const getCompromissos = async (setor: string = 'operacional') => {
   const { data, error } = await supabase
     .from('compromissos')
-    .select('*, usuario:usuarios(id, nome)')
+    .select(`
+      *, 
+      usuario:usuarios!compromissos_usuario_id_fkey(id, nome),
+      paciente:pacientes(nome),
+      lead:funil_leads(nome),
+      concluido_por_user:usuarios!compromissos_concluido_por_fkey(nome)
+    `)
     .eq('setor', setor)
     .order('data_inicio', { ascending: true })
 
