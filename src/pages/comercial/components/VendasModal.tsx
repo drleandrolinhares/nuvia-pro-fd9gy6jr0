@@ -242,12 +242,12 @@ export function VendasModal({
       if (!formData.dentista_avaliador_id) throw new Error('Selecione o Dentista Avaliador')
       if (!formData.crc_comercial_id) throw new Error('Selecione o CRC Comercial')
       if (!formData.valor_orcamento) throw new Error('Informe o valor do tratamento')
-      if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
-      if (!formData.origem_id) throw new Error('Selecione a Origem do Paciente')
-
-      if (formData.tipo_lancamento === 'venda_concretizada' && !formData.data_fechamento) {
-        throw new Error('Data de Fechamento é obrigatória para vendas concretizadas')
+      if (formData.tipo_lancamento === 'venda_concretizada') {
+        if (!formData.valor_entrada) throw new Error('Informe o valor da entrada')
+        if (!formData.data_fechamento)
+          throw new Error('Data de Fechamento é obrigatória para vendas concretizadas')
       }
+      if (!formData.origem_id) throw new Error('Selecione a Origem do Paciente')
 
       const payload: any = {
         paciente_id: currentPacienteId,
@@ -256,8 +256,8 @@ export function VendasModal({
         data_avaliacao: formData.data_avaliacao,
         data_fechamento: formData.data_fechamento || null,
         valor_orcamento: Number(formData.valor_orcamento),
-        valor_entrada: Number(formData.valor_entrada),
-        destino_fiscal: formData.destino_fiscal,
+        valor_entrada: formData.valor_entrada ? Number(formData.valor_entrada) : null,
+        destino_fiscal: formData.destino_fiscal || null,
         origem_id: formData.origem_id,
         observacoes: formData.observacoes,
         status:
@@ -515,9 +515,11 @@ export function VendasModal({
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Valor da Entrada *</Label>
+                <Label>
+                  Valor da Entrada {formData.tipo_lancamento === 'venda_concretizada' ? '*' : ''}
+                </Label>
                 <Input
-                  required
+                  required={formData.tipo_lancamento === 'venda_concretizada'}
                   type="number"
                   step="0.01"
                   min="0"
@@ -529,11 +531,13 @@ export function VendasModal({
 
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label>Forma de Pgto *</Label>
+                <Label>
+                  Forma de Pgto {formData.tipo_lancamento === 'venda_concretizada' ? '*' : ''}
+                </Label>
                 <Select
                   value={formData.forma_pagamento}
                   onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
-                  required
+                  required={formData.tipo_lancamento === 'venda_concretizada'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
@@ -549,11 +553,13 @@ export function VendasModal({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Destino Pgto *</Label>
+                <Label>
+                  Destino Pgto {formData.tipo_lancamento === 'venda_concretizada' ? '*' : ''}
+                </Label>
                 <Select
                   value={formData.destino_pagamento}
                   onValueChange={(v) => setFormData({ ...formData, destino_pagamento: v })}
-                  required
+                  required={formData.tipo_lancamento === 'venda_concretizada'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
@@ -567,11 +573,13 @@ export function VendasModal({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Destino Fiscal *</Label>
+                <Label>
+                  Destino Fiscal {formData.tipo_lancamento === 'venda_concretizada' ? '*' : ''}
+                </Label>
                 <Select
                   value={formData.destino_fiscal}
                   onValueChange={(v) => setFormData({ ...formData, destino_fiscal: v })}
-                  required
+                  required={formData.tipo_lancamento === 'venda_concretizada'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
