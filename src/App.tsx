@@ -215,8 +215,8 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    if (day === 6 && !location.pathname.startsWith('/operacional/performance')) {
-      return <Navigate to="/operacional/performance" replace />
+    if (day === 6 && !location.pathname.startsWith('/intranet/performance')) {
+      return <Navigate to="/intranet/performance" replace />
     }
   }
 
@@ -258,7 +258,7 @@ const ProtectedRoute = ({
     }
 
     const isSaturdayPerformance =
-      new Date().getDay() === 6 && location.pathname.startsWith('/operacional/performance')
+      new Date().getDay() === 6 && location.pathname.startsWith('/intranet/performance')
     if (!hasAccess && !isSaturdayPerformance) return <Navigate to="/" replace />
   }
 
@@ -401,6 +401,20 @@ const AppRoutes = () => {
           }
         />
 
+        {/* Intranet Routes */}
+        <Route
+          path="/operacional/performance"
+          element={<Navigate to="/intranet/performance" replace />}
+        />
+        <Route
+          path="/intranet/performance"
+          element={
+            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
+              <Performance />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Operacional Routes */}
         <Route
           path="/operacional/pedidos"
@@ -437,14 +451,6 @@ const AppRoutes = () => {
               allowedPermissions={['operacional_fet', 'Acessar FET']}
             >
               <FET />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/operacional/performance"
-          element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
-              <Performance />
             </ProtectedRoute>
           }
         />

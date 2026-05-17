@@ -72,15 +72,21 @@ const navData = [
     isDirectLink: true,
   },
   {
-    title: 'OPERACIONAL',
-    icon: Activity,
+    title: 'INTRANET',
+    icon: Users,
     items: [
       {
         title: 'PERFORMANCE',
-        url: '/operacional/performance',
+        url: '/intranet/performance',
         icon: BarChart3,
         permission: ['operacional_performance', 'Acessar Performance'],
       },
+    ],
+  },
+  {
+    title: 'OPERACIONAL',
+    icon: Activity,
+    items: [
       {
         title: 'COMUNICADOS',
         url: '/operacional/comunicados',
