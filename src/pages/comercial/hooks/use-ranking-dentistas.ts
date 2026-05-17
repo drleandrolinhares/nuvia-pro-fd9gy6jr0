@@ -91,11 +91,18 @@ export function useRankingDentistas(periodo: string, dataInicio: string, dataFim
             break
         }
 
-        const { data: dentistas } = await supabase
+        const { data: dentistasData } = await supabase
           .from('dentistas_avaliadores')
           .select('id, nome, meta_mensal_criativos')
           .eq('status', 'ativo')
-        if (!dentistas) return
+
+        if (!dentistasData) return
+
+        const dentistas = dentistasData.filter(
+          (d) =>
+            d.nome.toUpperCase() !== 'CONVERSÃO DIRETA' &&
+            d.nome.toUpperCase() !== 'CONVERSAO DIRETA',
+        )
 
         let avaliacoesQuery = supabase
           .from('avaliacoes')

@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Edit2, Trash2, Loader2 } from 'lucide-react'
+import { Edit2, Trash2, Loader2, Search } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -52,12 +52,23 @@ export function VendasConcretizadasLista({
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedVenda, setSelectedVenda] = useState<any>(null)
   const [saving, setSaving] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500)
+    return () => clearTimeout(handler)
+  }, [searchTerm])
 
   const fetchVendas = async () => {
     setLoading(true)
     let query = supabase
       .from('vendas_confirmadas')
       .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
+
+    if (debouncedSearch) {
+      query = query.ilike('paciente_nome', `%${debouncedSearch}%`)
+    }
 
     let sd, ed
     const today = new Date()
@@ -122,7 +133,7 @@ export function VendasConcretizadasLista({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [periodo, dataInicio, dataFim, refreshKey])
+  }, [periodo, dataInicio, dataFim, refreshKey, debouncedSearch])
 
   useEffect(() => {
     supabase
@@ -283,6 +294,21 @@ export function VendasConcretizadasLista({
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4 bg-muted/20 p-4 rounded-lg border">
+        <div className="w-full sm:w-[300px]">
+          <Label className="mb-2 block text-slate-700 dark:text-slate-300">Buscar Paciente</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+            <Input
+              placeholder="Nome do paciente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-md border bg-white dark:bg-slate-900 overflow-x-auto">
         <Table>
           <TableHeader className="bg-slate-100 dark:bg-slate-800">
