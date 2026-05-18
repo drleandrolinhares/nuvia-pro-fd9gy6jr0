@@ -8,10 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import { TreinamentosQuizBuilder } from './TreinamentosQuizBuilder'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
+export function TreinamentosAdmin({ cursos, modulos, cargos, onRefresh }: any) {
   const [cursoEdit, setCursoEdit] = useState<any>(null)
   const [moduloEdit, setModuloEdit] = useState<any>(null)
+  const [selectedSetor, setSelectedSetor] = useState<string>('todos')
 
   const saveCurso = async (e: any) => {
     e.preventDefault()
@@ -19,7 +27,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
     const payload = {
       titulo: fd.get('titulo'),
       descricao: fd.get('descricao'),
-      setor: fd.get('setor'),
+      setor: selectedSetor === 'todos' ? null : selectedSetor,
       ativo: true,
     }
 
@@ -31,6 +39,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
       toast.success('Curso criado')
     }
     setCursoEdit(null)
+    setSelectedSetor('todos')
     onRefresh()
   }
 
@@ -73,20 +82,31 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-200">Setor (Opcional)</Label>
-              <Input
-                name="setor"
-                defaultValue={cursoEdit?.setor}
-                className="bg-slate-900 border-slate-700 text-slate-50 placeholder:text-slate-400"
-              />
+              <Label className="text-slate-200">Função Alvo (Opcional)</Label>
+              <Select value={selectedSetor} onValueChange={setSelectedSetor}>
+                <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-50">
+                  <SelectValue placeholder="Selecione a função foco..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  <SelectItem value="todos">Geral (Todas as funções)</SelectItem>
+                  {cargos?.map((c: any) => (
+                    <SelectItem key={c.id} value={c.nome}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-2">
               {cursoEdit && (
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-slate-700 bg-slate-900 text-white"
-                  onClick={() => setCursoEdit(null)}
+                  className="border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
+                  onClick={() => {
+                    setCursoEdit(null)
+                    setSelectedSetor('todos')
+                  }}
                 >
                   Cancelar
                 </Button>
@@ -103,17 +123,27 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                 key={c.id}
                 className="flex items-center justify-between bg-slate-950 p-3 rounded-lg border border-slate-800"
               >
-                <span className="text-slate-50 font-medium">{c.titulo}</span>
+                <div className="flex flex-col">
+                  <span className="text-slate-50 font-medium">{c.titulo}</span>
+                  {c.setor && c.setor !== 'todos' && (
+                    <span className="text-xs font-semibold text-amber-500 mt-0.5">{c.setor}</span>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button
+                    type="button"
                     size="icon"
                     variant="outline"
                     className="h-8 w-8 text-amber-500 border-slate-700 bg-slate-900 hover:bg-slate-800"
-                    onClick={() => setCursoEdit(c)}
+                    onClick={() => {
+                      setCursoEdit(c)
+                      setSelectedSetor(c.setor || 'todos')
+                    }}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button
+                    type="button"
                     size="icon"
                     variant="destructive"
                     className="h-8 w-8 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20"
@@ -124,6 +154,11 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                 </div>
               </div>
             ))}
+            {cursos.length === 0 && (
+              <p className="text-center text-sm text-slate-500 py-4 border border-dashed border-slate-800 rounded-lg">
+                Nenhum curso cadastrado.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -192,6 +227,11 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                     </div>
                   </div>
                 ))}
+                {modulos.length === 0 && (
+                  <p className="text-center text-sm text-slate-500 py-4 border border-dashed border-slate-800 rounded-lg">
+                    Nenhum módulo cadastrado.
+                  </p>
+                )}
               </div>
             </>
           )}

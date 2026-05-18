@@ -49,6 +49,8 @@ export default function Onboarding() {
   const [tForm, setTForm] = useState<any>({})
   const [cargosModal, setCargosModal] = useState(false)
   const [novoCargo, setNovoCargo] = useState('')
+  const [editandoCargo, setEditandoCargo] = useState<string | null>(null)
+  const [nomeEditadoCargo, setNomeEditadoCargo] = useState('')
 
   const fetchD = async () => {
     if (!user) return
@@ -136,6 +138,21 @@ export default function Onboarding() {
       fetchD()
     } else {
       toast.error('Erro ao criar função')
+    }
+  }
+
+  const handleUpdateCargo = async (id: string) => {
+    if (!nomeEditadoCargo.trim()) return
+    const { error } = await supabase
+      .from('cargos')
+      .update({ nome: nomeEditadoCargo.trim() })
+      .eq('id', id)
+    if (!error) {
+      toast.success('Função atualizada com sucesso!')
+      setEditandoCargo(null)
+      fetchD()
+    } else {
+      toast.error('Erro ao atualizar função')
     }
   }
 
@@ -541,15 +558,56 @@ export default function Onboarding() {
                   key={c.id}
                   className="flex items-center justify-between bg-slate-800 p-3 rounded-md border border-slate-700"
                 >
-                  <span className="font-medium text-slate-200">{c.nome}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-slate-700"
-                    onClick={() => handleDeleteCargo(c.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {editandoCargo === c.id ? (
+                    <div className="flex gap-2 w-full">
+                      <Input
+                        value={nomeEditadoCargo}
+                        onChange={(e) => setNomeEditadoCargo(e.target.value)}
+                        className="bg-slate-950 border-slate-700 h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateCargo(c.id)}
+                        className="bg-amber-500 text-slate-900 hover:bg-amber-600 h-8"
+                      >
+                        Salvar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditandoCargo(null)}
+                        className="h-8 text-slate-300 hover:text-white"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-medium text-slate-200">{c.nome}</span>
+                      <div className="flex gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700"
+                          onClick={() => {
+                            setEditandoCargo(c.id)
+                            setNomeEditadoCargo(c.nome)
+                          }}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-slate-700"
+                          onClick={() => handleDeleteCargo(c.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
               {cargos.length === 0 && (

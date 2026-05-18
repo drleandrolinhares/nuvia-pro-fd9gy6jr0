@@ -25,21 +25,25 @@ export default function Treinamentos() {
   const [loading, setLoading] = useState(true)
   const [activeModulo, setActiveModulo] = useState<any | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [cargos, setCargos] = useState<any[]>([])
+  const [filtroSetor, setFiltroSetor] = useState<string>('todos')
 
   const totalPontos = progresso.reduce((acc, p) => acc + (p.pontos || 0), 0)
 
   const fetchData = async () => {
     if (!user) return
-    const [c, m, p, adminRes] = await Promise.all([
+    const [c, m, p, adminRes, cargosRes] = await Promise.all([
       supabase.from('intranet_treinamentos_cursos').select('*').order('ordem'),
       supabase.from('intranet_treinamentos_modulos').select('*').order('ordem'),
       supabase.from('intranet_treinamentos_progresso').select('*').eq('usuario_id', user.id),
       supabase.rpc('is_admin'),
+      supabase.from('cargos').select('*').order('nome'),
     ])
     setCursos(c.data || [])
     setModulos(m.data || [])
     setProgresso(p.data || [])
     setIsAdmin(adminRes.data || false)
+    setCargos(cargosRes.data || [])
     setLoading(false)
   }
 
@@ -119,77 +123,116 @@ export default function Treinamentos() {
         </TabsList>
 
         <TabsContent value="cursos" className="mt-6 space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <span className="text-slate-300 font-medium whitespace-nowrap">
+              Filtrar por Função:
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filtroSetor === 'todos' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFiltroSetor('todos')}
+                className={
+                  filtroSetor === 'todos'
+                    ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                    : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                }
+              >
+                Todos
+              </Button>
+              {cargos.map((c) => (
+                <Button
+                  key={c.id}
+                  variant={filtroSetor === c.nome ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFiltroSetor(c.nome)}
+                  className={
+                    filtroSetor === c.nome
+                      ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                      : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                  }
+                >
+                  {c.nome}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid gap-6">
-            {cursos.map((curso) => {
-              const modulosCurso = modulos.filter((m) => m.curso_id === curso.id)
-              return (
-                <Card key={curso.id} className="bg-slate-900 border-slate-800 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-100">{curso.titulo}</CardTitle>
-                    <CardDescription className="text-slate-400">{curso.descricao}</CardDescription>
-                    {curso.setor && (
-                      <span className="inline-block px-3 py-1 text-xs font-semibold bg-amber-500/10 text-amber-500 rounded-full mt-2 max-w-max border border-amber-500/20">
-                        {curso.setor}
-                      </span>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {modulosCurso.map((modulo) => {
-                      const p = progresso.find((pr) => pr.modulo_id === modulo.id)
-                      return (
-                        <div
-                          key={modulo.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
-                              <PlayCircle className="w-5 h-5" />
+            {cursos
+              .filter((c) => filtroSetor === 'todos' || c.setor === filtroSetor)
+              .map((curso) => {
+                const modulosCurso = modulos.filter((m) => m.curso_id === curso.id)
+                return (
+                  <Card key={curso.id} className="bg-slate-900 border-slate-800 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-slate-100">{curso.titulo}</CardTitle>
+                      <CardDescription className="text-slate-400">
+                        {curso.descricao}
+                      </CardDescription>
+                      {curso.setor && (
+                        <span className="inline-block px-3 py-1 text-xs font-semibold bg-amber-500/10 text-amber-500 rounded-full mt-2 max-w-max border border-amber-500/20">
+                          {curso.setor}
+                        </span>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {modulosCurso.map((modulo) => {
+                        const p = progresso.find((pr) => pr.modulo_id === modulo.id)
+                        return (
+                          <div
+                            key={modulo.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
+                                <PlayCircle className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-slate-200">{modulo.titulo}</h4>
+                                {p && (
+                                  <p
+                                    className={`text-xs mt-1 font-medium ${p.aprovado ? 'text-emerald-500' : 'text-rose-500'}`}
+                                  >
+                                    Última nota: {p.nota_quiz}{' '}
+                                    {p.aprovado
+                                      ? `(Aprovado - ${p.pontos} pts)`
+                                      : '(Reprovado - Requer Revisão)'}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-slate-200">{modulo.titulo}</h4>
-                              {p && (
-                                <p
-                                  className={`text-xs mt-1 font-medium ${p.aprovado ? 'text-emerald-500' : 'text-rose-500'}`}
-                                >
-                                  Última nota: {p.nota_quiz}{' '}
-                                  {p.aprovado
-                                    ? `(Aprovado - ${p.pontos} pts)`
-                                    : '(Reprovado - Requer Revisão)'}
-                                </p>
-                              )}
+                            <div className="flex items-center gap-4">
+                              {p?.aprovado ? (
+                                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                              ) : p ? (
+                                <XCircle className="w-6 h-6 text-rose-500" />
+                              ) : null}
+                              <Button
+                                variant={p?.aprovado ? 'outline' : 'default'}
+                                size="sm"
+                                onClick={() => setActiveModulo(modulo)}
+                                className={
+                                  !p?.aprovado
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                                    : 'border-slate-700 hover:bg-slate-800'
+                                }
+                              >
+                                {p?.aprovado ? 'Revisar Conteúdo' : 'Acessar Módulo'}
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            {p?.aprovado ? (
-                              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                            ) : p ? (
-                              <XCircle className="w-6 h-6 text-rose-500" />
-                            ) : null}
-                            <Button
-                              variant={p?.aprovado ? 'outline' : 'default'}
-                              size="sm"
-                              onClick={() => setActiveModulo(modulo)}
-                              className={
-                                !p?.aprovado
-                                  ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                                  : 'border-slate-700 hover:bg-slate-800'
-                              }
-                            >
-                              {p?.aprovado ? 'Revisar Conteúdo' : 'Acessar Módulo'}
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                    {modulosCurso.length === 0 && (
-                      <p className="text-sm text-slate-500">
-                        Nenhum módulo cadastrado neste curso.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })}
+                        )
+                      })}
+                      {modulosCurso.length === 0 && (
+                        <p className="text-sm text-slate-500">
+                          Nenhum módulo cadastrado neste curso.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
             {cursos.length === 0 && (
               <div className="text-center py-12 text-slate-500 bg-slate-900/50 rounded-lg border border-slate-800 border-dashed">
                 Nenhum curso disponível no momento.
@@ -204,7 +247,12 @@ export default function Treinamentos() {
 
         {isAdmin && (
           <TabsContent value="admin" className="animate-fade-in">
-            <TreinamentosAdmin cursos={cursos} modulos={modulos} onRefresh={fetchData} />
+            <TreinamentosAdmin
+              cursos={cursos}
+              modulos={modulos}
+              cargos={cargos}
+              onRefresh={fetchData}
+            />
           </TabsContent>
         )}
       </Tabs>
