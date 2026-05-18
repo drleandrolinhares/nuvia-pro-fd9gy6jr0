@@ -31,6 +31,8 @@ import ProAgenda from './pages/operacional/ProAgenda'
 import Roteiros from './pages/diretrizes/Roteiros'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
+import Onboarding from './pages/intranet/Onboarding'
+import Treinamentos from './pages/intranet/Treinamentos'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
 import FunilVendas from './pages/comercial/FunilVendas'
@@ -411,6 +413,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
               <Performance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/intranet/onboarding"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/intranet/treinamentos"
+          element={
+            <ProtectedRoute allowedRoles={[]}>
+              <Treinamentos />
             </ProtectedRoute>
           }
         />

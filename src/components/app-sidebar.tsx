@@ -30,6 +30,8 @@ import {
   Users,
   User,
   Calculator,
+  UserPlus,
+  GraduationCap,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -80,6 +82,16 @@ const navData = [
         url: '/intranet/performance',
         icon: BarChart3,
         permission: ['operacional_performance', 'Acessar Performance'],
+      },
+      {
+        title: 'ONBOARDING',
+        url: '/intranet/onboarding',
+        icon: UserPlus,
+      },
+      {
+        title: 'TREINAMENTOS',
+        url: '/intranet/treinamentos',
+        icon: GraduationCap,
       },
     ],
   },
