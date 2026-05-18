@@ -65,8 +65,49 @@ export default function Onboarding() {
             .order('nome')
         : Promise.resolve({ data: [] }),
     ])
-    setFases(rf.data || [])
-    setEtapas(re.data || [])
+
+    const legacyEtapas = re.data?.filter((e) => !e.fase_id) || []
+    if (legacyEtapas.length > 0) {
+      const cargosToCreate = Array.from(new Set(legacyEtapas.map((e) => e.cargo_id)))
+      let maxOrdem = rf.data?.reduce((max, f) => Math.max(max, f.ordem), -1) || -1
+
+      for (const cid of cargosToCreate) {
+        maxOrdem++
+        const { data: newFase } = await supabase
+          .from('intranet_onboarding_fases')
+          .insert({
+            titulo: 'FASE PADRÃO (SEM FASE DEFINIDA)',
+            cargo_id: cid,
+            ordem: maxOrdem,
+          })
+          .select()
+          .single()
+
+        if (newFase) {
+          const query = supabase
+            .from('intranet_onboarding_etapas')
+            .update({ fase_id: newFase.id })
+            .is('fase_id', null)
+
+          if (cid) {
+            await query.eq('cargo_id', cid)
+          } else {
+            await query.is('cargo_id', null)
+          }
+        }
+      }
+
+      const [rf2, re2] = await Promise.all([
+        supabase.from('intranet_onboarding_fases').select('*').order('ordem'),
+        supabase.from('intranet_onboarding_etapas').select('*').order('dia').order('ordem'),
+      ])
+      setFases(rf2.data || [])
+      setEtapas(re2.data || [])
+    } else {
+      setFases(rf.data || [])
+      setEtapas(re.data || [])
+    }
+
     setTarefas(rt.data || [])
     setCargos(rc.data || [])
     setUsuarios(ru.data || [])
@@ -114,33 +155,37 @@ export default function Onboarding() {
   }
 
   const moveFase = async (fase: any, direction: 'up' | 'down') => {
-    const nonLegacy = [...fases].sort((a, b) => a.ordem - b.ordem)
-    const currentIndex = nonLegacy.findIndex((f) => f.id === fase.id)
+    const visibleFases = fasesFiltradas.sort((a, b) => a.ordem - b.ordem)
+
+    const currentIndex = visibleFases.findIndex((f) => f.id === fase.id)
     if (currentIndex < 0) return
     if (direction === 'up' && currentIndex === 0) return
-    if (direction === 'down' && currentIndex === nonLegacy.length - 1) return
+    if (direction === 'down' && currentIndex === visibleFases.length - 1) return
 
-    const adjacent = nonLegacy[direction === 'up' ? currentIndex - 1 : currentIndex + 1]
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    const adjacent = visibleFases[swapIndex]
 
-    if (fase.ordem !== adjacent.ordem) {
+    const orderA = fase.ordem
+    const orderB = adjacent.ordem
+
+    if (orderA !== orderB) {
       await Promise.all([
-        supabase
-          .from('intranet_onboarding_fases')
-          .update({ ordem: adjacent.ordem })
-          .eq('id', fase.id),
-        supabase
-          .from('intranet_onboarding_fases')
-          .update({ ordem: fase.ordem })
-          .eq('id', adjacent.id),
+        supabase.from('intranet_onboarding_fases').update({ ordem: orderB }).eq('id', fase.id),
+        supabase.from('intranet_onboarding_fases').update({ ordem: orderA }).eq('id', adjacent.id),
       ])
     } else {
-      const newArray = [...nonLegacy]
-      const temp = newArray[currentIndex]
-      newArray[currentIndex] = newArray[direction === 'up' ? currentIndex - 1 : currentIndex + 1]
-      newArray[direction === 'up' ? currentIndex - 1 : currentIndex + 1] = temp
+      const allFases = [...fases].sort((a, b) => a.ordem - b.ordem)
+      const globalCurr = allFases.findIndex((f) => f.id === fase.id)
+      const globalSwap = allFases.findIndex((f) => f.id === adjacent.id)
+
+      if (globalCurr >= 0 && globalSwap >= 0) {
+        const tempG = allFases[globalCurr]
+        allFases[globalCurr] = allFases[globalSwap]
+        allFases[globalSwap] = tempG
+      }
 
       await Promise.all(
-        newArray.map((f, i) =>
+        allFases.map((f, i) =>
           supabase.from('intranet_onboarding_fases').update({ ordem: i }).eq('id', f.id),
         ),
       )
@@ -180,7 +225,7 @@ export default function Onboarding() {
       dia: eForm.dia,
       ordem: eForm.ordem,
       cargo_id: eForm.cargo_id === 'geral' ? null : eForm.cargo_id,
-      fase_id: eForm.fase_id || null,
+      fase_id: eForm.fase_id,
     }
     if (eForm.id) await supabase.from('intranet_onboarding_etapas').update(data).eq('id', eForm.id)
     else await supabase.from('intranet_onboarding_etapas').insert(data)
@@ -263,22 +308,8 @@ export default function Onboarding() {
   }, [isAdmin, cargos, userCargos])
 
   const todasFases = useMemo(() => {
-    const agg = [...fases]
-    const legacyEtapas = etapas.filter((e) => !e.fase_id)
-    const legacyCargos = Array.from(new Set(legacyEtapas.map((e) => e.cargo_id)))
-
-    legacyCargos.forEach((cid) => {
-      agg.push({
-        id: `legacy-${cid || 'geral'}`,
-        titulo: 'Fase Padrão (Sem Fase Definida)',
-        cargo_id: cid,
-        ordem: 9999,
-        isLegacy: true,
-      })
-    })
-
-    return agg.sort((a, b) => a.ordem - b.ordem)
-  }, [fases, etapas])
+    return [...fases].sort((a, b) => a.ordem - b.ordem)
+  }, [fases])
 
   const fasesFiltradas = useMemo(() => {
     return todasFases.filter((f) => {
@@ -299,10 +330,7 @@ export default function Onboarding() {
 
   const tarefasVisiveis = useMemo(() => {
     const etapasAtivas = etapas.filter((e) => {
-      const matchingFase = fasesFiltradas.find((f) =>
-        f.isLegacy ? f.cargo_id === e.cargo_id && !e.fase_id : f.id === e.fase_id,
-      )
-      return !!matchingFase
+      return fasesFiltradas.some((f) => f.id === e.fase_id)
     })
     return tarefas.filter((t) => etapasAtivas.some((e) => e.id === t.etapa_id))
   }, [tarefas, etapas, fasesFiltradas])
@@ -466,7 +494,10 @@ export default function Onboarding() {
             </Button>
             <Button
               onClick={() => {
-                setFaseForm({ ordem: 0, cargo_id: 'geral' })
+                setFaseForm({
+                  ordem: fases.length > 0 ? Math.max(...fases.map((f) => f.ordem)) + 1 : 0,
+                  cargo_id: 'geral',
+                })
                 setFaseModal(true)
               }}
               className="bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold"
@@ -557,17 +588,13 @@ export default function Onboarding() {
 
       <div className="space-y-12">
         {fasesFiltradas.map((fase) => {
-          const etapasDaFase = etapas.filter((e) =>
-            fase.isLegacy ? !e.fase_id && e.cargo_id === fase.cargo_id : e.fase_id === fase.id,
-          )
-
-          if (etapasDaFase.length === 0 && fase.isLegacy) return null
+          const etapasDaFase = etapas.filter((e) => e.fase_id === fase.id)
 
           return (
             <div key={fase.id} className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-3 gap-4">
                 <div>
-                  <h2 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2 tracking-tight uppercase">
+                  <h2 className="text-2xl font-extrabold text-amber-500 flex items-center gap-2 tracking-tight uppercase bg-transparent">
                     <Layers className="w-6 h-6 text-amber-500" />
                     {fase.titulo}
                   </h2>
@@ -577,7 +604,7 @@ export default function Onboarding() {
                       : 'Trilha: Geral'}
                   </p>
                 </div>
-                {isAdmin && !fase.isLegacy && (
+                {isAdmin && (
                   <div className="flex gap-1 sm:gap-2 w-full md:w-auto justify-end">
                     <div className="flex bg-slate-800 rounded-md p-0.5 mr-2">
                       <Button
@@ -651,21 +678,6 @@ export default function Onboarding() {
                           ordem: 0,
                           cargo_id: fase.cargo_id || 'geral',
                         })
-                        setEModal(true)
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-1" /> Etapa (Dia)
-                    </Button>
-                  </div>
-                )}
-                {isAdmin && fase.isLegacy && (
-                  <div className="flex gap-2 w-full md:w-auto justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-                      onClick={() => {
-                        setEForm({ dia: 1, ordem: 0, cargo_id: fase.cargo_id || 'geral' })
                         setEModal(true)
                       }}
                     >
@@ -760,14 +772,13 @@ export default function Onboarding() {
             <div className="space-y-2">
               <Label className="text-slate-300">Fase (Opcional)</Label>
               <Select
-                value={eForm.fase_id || 'sem_fase'}
-                onValueChange={(v) => setEForm({ ...eForm, fase_id: v === 'sem_fase' ? null : v })}
+                value={eForm.fase_id || ''}
+                onValueChange={(v) => setEForm({ ...eForm, fase_id: v })}
               >
                 <SelectTrigger className="bg-slate-950 border-slate-700">
                   <SelectValue placeholder="Selecione a fase..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  <SelectItem value="sem_fase">Sem Fase (Legado)</SelectItem>
                   {fases.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
                       {f.titulo}
