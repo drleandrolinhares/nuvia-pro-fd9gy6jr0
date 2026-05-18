@@ -476,13 +476,13 @@ export default function Onboarding() {
 
           return (
             <div key={fase.id} className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-700 pb-3 gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-3 gap-4">
                 <div>
-                  <h2 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2 tracking-tight uppercase">
+                  <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2 tracking-tight uppercase">
                     <Layers className="w-6 h-6 text-amber-500" />
                     {fase.titulo}
                   </h2>
-                  <p className="text-sm text-amber-500/80 mt-1 font-medium uppercase tracking-wider">
+                  <p className="text-sm text-slate-500 mt-1 font-medium uppercase tracking-wider">
                     {fase.cargo_id
                       ? `Trilha: ${cargos.find((c) => c.id === fase.cargo_id)?.nome}`
                       : 'Trilha: Geral'}
@@ -493,7 +493,7 @@ export default function Onboarding() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-slate-400 hover:text-white hover:bg-slate-800"
+                      className="text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                       onClick={() => {
                         setFaseForm(fase)
                         setFaseModal(true)
@@ -504,7 +504,7 @@ export default function Onboarding() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-red-400 hover:text-red-300 hover:bg-slate-800"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       onClick={() => delFase(fase.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -512,7 +512,7 @@ export default function Onboarding() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                      className="bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
                       onClick={() => {
                         setEForm({
                           fase_id: fase.id,
@@ -532,7 +532,7 @@ export default function Onboarding() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                      className="bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
                       onClick={() => {
                         setEForm({ dia: 1, ordem: 0, cargo_id: fase.cargo_id || 'geral' })
                         setEModal(true)
