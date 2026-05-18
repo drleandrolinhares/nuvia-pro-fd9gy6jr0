@@ -52,7 +52,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
             onSubmit={saveCurso}
             className="space-y-4 bg-slate-950 p-4 rounded-lg border border-slate-800"
           >
-            <h4 className="font-semibold text-slate-100">
+            <h4 className="font-semibold text-slate-50">
               {cursoEdit ? 'Editar Curso' : 'Novo Curso'}
             </h4>
             <div className="space-y-2">
@@ -61,7 +61,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                 name="titulo"
                 defaultValue={cursoEdit?.titulo}
                 required
-                className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                className="bg-slate-900 border-slate-700 text-slate-50 placeholder:text-slate-400"
               />
             </div>
             <div className="space-y-2">
@@ -69,7 +69,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
               <Textarea
                 name="descricao"
                 defaultValue={cursoEdit?.descricao}
-                className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                className="bg-slate-900 border-slate-700 text-slate-50 placeholder:text-slate-400 min-h-[80px]"
               />
             </div>
             <div className="space-y-2">
@@ -77,7 +77,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
               <Input
                 name="setor"
                 defaultValue={cursoEdit?.setor}
-                className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                className="bg-slate-900 border-slate-700 text-slate-50 placeholder:text-slate-400"
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -103,7 +103,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                 key={c.id}
                 className="flex items-center justify-between bg-slate-950 p-3 rounded-lg border border-slate-800"
               >
-                <span className="text-slate-100 font-medium">{c.titulo}</span>
+                <span className="text-slate-50 font-medium">{c.titulo}</span>
                 <div className="flex gap-2">
                   <Button
                     size="icon"
@@ -142,6 +142,7 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                 onRefresh()
               }}
               onCancel={() => setModuloEdit(null)}
+              onRefresh={onRefresh}
             />
           ) : (
             <>
@@ -158,8 +159,8 @@ export function TreinamentosAdmin({ cursos, modulos, onRefresh }: any) {
                     className="flex items-center justify-between bg-slate-950 p-3 rounded-lg border border-slate-800"
                   >
                     <div className="flex flex-col">
-                      <span className="text-slate-100 font-medium">{m.titulo}</span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-slate-50 font-medium">{m.titulo}</span>
+                      <span className="text-xs text-slate-300">
                         {cursos.find((c: any) => c.id === m.curso_id)?.titulo}
                       </span>
                     </div>
