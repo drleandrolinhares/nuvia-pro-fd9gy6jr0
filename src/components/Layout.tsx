@@ -63,7 +63,9 @@ class ErrorBoundary extends Component<
 
 export default function Layout() {
   const location = useLocation()
-  const isFullWidth = location.pathname.includes('/precificacao')
+  const isFullWidth =
+    location.pathname.includes('/precificacao') ||
+    location.pathname.includes('/intranet/onboarding')
   const isChat = location.pathname.startsWith('/chat')
 
   return (
@@ -81,7 +83,7 @@ export default function Layout() {
             className={cn(
               'mx-auto w-full h-full',
               !isChat && 'pb-16',
-              !isChat && (isFullWidth ? 'max-w-[98%]' : 'max-w-[1600px]'),
+              !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1600px]'),
             )}
           >
             <ErrorBoundary>

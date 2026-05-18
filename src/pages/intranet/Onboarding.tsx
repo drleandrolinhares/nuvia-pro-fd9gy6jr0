@@ -5,43 +5,100 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, CheckSquare } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Loader2, CheckSquare, Plus, Edit2, Trash2 } from 'lucide-react'
 
 export default function Onboarding() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
   const [etapas, setEtapas] = useState<any[]>([])
   const [tarefas, setTarefas] = useState<any[]>([])
   const [progresso, setProgresso] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchData = async () => {
+  const [eModal, setEModal] = useState(false)
+  const [eForm, setEForm] = useState<any>({})
+  const [tModal, setTModal] = useState(false)
+  const [tForm, setTForm] = useState<any>({})
+
+  const fetchD = async () => {
     if (!user) return
-    const [resEtapas, resTarefas, resProgresso] = await Promise.all([
+    const [re, rt, rp] = await Promise.all([
       supabase.from('intranet_onboarding_etapas').select('*').order('dia').order('ordem'),
       supabase.from('intranet_onboarding_tarefas').select('*').order('ordem'),
       supabase.from('intranet_onboarding_progresso').select('*').eq('usuario_id', user.id),
     ])
-    setEtapas(resEtapas.data || [])
-    setTarefas(resTarefas.data || [])
-    setProgresso(resProgresso.data || [])
+    setEtapas(re.data || [])
+    setTarefas(rt.data || [])
+    setProgresso(rp.data || [])
     setLoading(false)
   }
 
   useEffect(() => {
-    fetchData()
+    fetchD()
   }, [user])
 
-  const toggleTarefa = async (tarefaId: string, concluido: boolean) => {
+  const toggleT = async (tId: string, c: boolean) => {
     if (!user) return
-    const prev = progresso.find((p) => p.tarefa_id === tarefaId)
-    if (prev) {
-      await supabase.from('intranet_onboarding_progresso').update({ concluido }).eq('id', prev.id)
-    } else {
+    const prev = progresso.find((p) => p.tarefa_id === tId)
+    if (prev)
       await supabase
         .from('intranet_onboarding_progresso')
-        .insert({ usuario_id: user.id, tarefa_id: tarefaId, concluido })
+        .update({ concluido: c })
+        .eq('id', prev.id)
+    else
+      await supabase
+        .from('intranet_onboarding_progresso')
+        .insert({ usuario_id: user.id, tarefa_id: tId, concluido: c })
+    fetchD()
+  }
+
+  const saveE = async () => {
+    const data = {
+      titulo: eForm.titulo,
+      descricao: eForm.descricao,
+      dia: eForm.dia,
+      ordem: eForm.ordem,
     }
-    fetchData()
+    if (eForm.id) await supabase.from('intranet_onboarding_etapas').update(data).eq('id', eForm.id)
+    else await supabase.from('intranet_onboarding_etapas').insert(data)
+    setEModal(false)
+    fetchD()
+  }
+
+  const delE = async (id: string) => {
+    if (confirm('Excluir etapa e todas as suas tarefas?')) {
+      await supabase.from('intranet_onboarding_etapas').delete().eq('id', id)
+      fetchD()
+    }
+  }
+
+  const saveT = async () => {
+    const data = {
+      titulo: tForm.titulo,
+      descricao: tForm.descricao,
+      ordem: tForm.ordem,
+      etapa_id: tForm.etapa_id,
+    }
+    if (tForm.id) await supabase.from('intranet_onboarding_tarefas').update(data).eq('id', tForm.id)
+    else await supabase.from('intranet_onboarding_tarefas').insert(data)
+    setTModal(false)
+    fetchD()
+  }
+
+  const delT = async (id: string) => {
+    if (confirm('Excluir tarefa?')) {
+      await supabase.from('intranet_onboarding_tarefas').delete().eq('id', id)
+      fetchD()
+    }
   }
 
   if (loading)
@@ -51,107 +108,273 @@ export default function Onboarding() {
       </div>
     )
 
-  const totalTarefas = tarefas.length
-  const concluidas = progresso.filter((p) => p.concluido).length
-  const percentual = totalTarefas > 0 ? Math.round((concluidas / totalTarefas) * 100) : 0
+  const pct = tarefas.length
+    ? Math.round((progresso.filter((p) => p.concluido).length / tarefas.length) * 100)
+    : 0
 
   return (
-    <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
-        <div className="flex items-start gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3 uppercase">
-              <CheckSquare className="h-8 w-8 text-amber-500" />
-              Onboarding
-            </h1>
-            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
-              Acompanhe as etapas de integração do seu início na Nuvia.
-            </p>
-          </div>
+    <div className="flex flex-col gap-6 w-full animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 md:p-8 rounded-xl shadow-lg border-l-4 border-amber-500">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3 uppercase">
+            <CheckSquare className="text-amber-500" /> Onboarding
+          </h1>
+          <p className="text-slate-300 mt-1">
+            Acompanhe as etapas de integração do seu início na Nuvia.
+          </p>
         </div>
+        {isAdmin && (
+          <Button
+            onClick={() => {
+              setEForm({ dia: 1, ordem: 0 })
+              setEModal(true)
+            }}
+            className="bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nova Etapa
+          </Button>
+        )}
       </div>
 
-      <Card className="bg-slate-900 border-slate-800 shadow-sm">
+      <Card className="bg-slate-900 border-slate-800 shadow-md">
         <CardHeader>
-          <CardTitle>Meu Progresso</CardTitle>
-          <CardDescription>
-            {concluidas} de {totalTarefas} tarefas concluídas ({percentual}%)
+          <CardTitle className="text-white text-xl">Meu Progresso</CardTitle>
+          <CardDescription className="text-slate-300 text-base">
+            {progresso.filter((p) => p.concluido).length} de {tarefas.length} tarefas concluídas (
+            {pct}%)
           </CardDescription>
-          <Progress value={percentual} className="h-3 mt-2" />
+          <Progress value={pct} className="h-3 mt-3 bg-slate-800" />
         </CardHeader>
       </Card>
 
       <div className="space-y-6">
-        {etapas.map((etapa) => {
-          const etapaTarefas = tarefas.filter((t) => t.etapa_id === etapa.id)
-          const etapaConcluidas = etapaTarefas.filter((t) =>
+        {etapas.map((e) => {
+          const eTs = tarefas.filter((t) => t.etapa_id === e.id)
+          const eCon = eTs.filter((t) =>
             progresso.some((p) => p.tarefa_id === t.id && p.concluido),
           ).length
-          const etapaPercent =
-            etapaTarefas.length > 0 ? Math.round((etapaConcluidas / etapaTarefas.length) * 100) : 0
+          const ePct = eTs.length ? Math.round((eCon / eTs.length) * 100) : 0
 
           return (
-            <Card key={etapa.id} className="bg-slate-900 border-slate-800 shadow-sm">
-              <CardHeader className="pb-3 border-b border-slate-800">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-lg text-amber-500">
-                      Dia {etapa.dia} - {etapa.titulo}
-                    </CardTitle>
-                    <CardDescription className="text-slate-400 mt-1">
-                      {etapa.descricao}
-                    </CardDescription>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-slate-300 bg-slate-800 px-3 py-1 rounded-full">
-                      {etapaPercent}% concluído
-                    </span>
-                  </div>
+            <Card key={e.id} className="bg-slate-900 border-slate-800 shadow-md">
+              <CardHeader className="pb-4 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <CardTitle className="text-xl text-amber-500">
+                    Dia {e.dia} - {e.titulo}
+                  </CardTitle>
+                  <CardDescription className="text-slate-300 mt-1 text-base">
+                    {e.descricao}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                  <span className="text-sm font-bold text-slate-200 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+                    {ePct}% concluído
+                  </span>
+                  {isAdmin && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800"
+                        onClick={() => {
+                          setEForm(e)
+                          setEModal(true)
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-slate-800"
+                        onClick={() => delE(e.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                        onClick={() => {
+                          setTForm({ etapa_id: e.id, ordem: 0 })
+                          setTModal(true)
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Tarefa
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
-              <CardContent className="pt-5 space-y-5">
-                {etapaTarefas.map((tarefa) => {
-                  const isDone = progresso.some((p) => p.tarefa_id === tarefa.id && p.concluido)
+              <CardContent className="pt-6 space-y-4">
+                {eTs.map((t) => {
+                  const isDone = progresso.some((p) => p.tarefa_id === t.id && p.concluido)
                   return (
                     <div
-                      key={tarefa.id}
-                      className="flex items-start space-x-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60"
+                      key={t.id}
+                      className="flex items-start justify-between bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 hover:bg-slate-800/80 transition-colors"
                     >
-                      <Checkbox
-                        id={tarefa.id}
-                        checked={isDone}
-                        onCheckedChange={(c) => toggleTarefa(tarefa.id, c === true)}
-                        className="mt-1"
-                      />
-                      <div className="grid gap-1.5 leading-none">
-                        <label
-                          htmlFor={tarefa.id}
-                          className={`text-sm font-semibold cursor-pointer ${isDone ? 'text-slate-500 line-through' : 'text-slate-200'}`}
-                        >
-                          {tarefa.titulo}
-                        </label>
-                        {tarefa.descricao && (
-                          <p className={`text-sm ${isDone ? 'text-slate-600' : 'text-slate-400'}`}>
-                            {tarefa.descricao}
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={isDone}
+                          onCheckedChange={(c) => toggleT(t.id, !!c)}
+                          className="mt-1 w-5 h-5"
+                        />
+                        <div>
+                          <p
+                            className={`text-base font-semibold ${isDone ? 'text-slate-500 line-through' : 'text-slate-50'}`}
+                          >
+                            {t.titulo}
                           </p>
-                        )}
+                          {t.descricao && (
+                            <p
+                              className={`text-sm mt-1.5 leading-relaxed ${isDone ? 'text-slate-600' : 'text-slate-300'}`}
+                            >
+                              {t.descricao}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      {isAdmin && (
+                        <div className="flex gap-1 ml-4">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-slate-400 hover:text-white"
+                            onClick={() => {
+                              setTForm(t)
+                              setTModal(true)
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-red-400 hover:text-red-300"
+                            onClick={() => delT(t.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
-                {etapaTarefas.length === 0 && (
-                  <p className="text-sm text-slate-500">Nenhuma tarefa cadastrada nesta etapa.</p>
+                {eTs.length === 0 && (
+                  <p className="text-sm text-slate-500 italic">Nenhuma tarefa nesta etapa.</p>
                 )}
               </CardContent>
             </Card>
           )
         })}
         {etapas.length === 0 && (
-          <div className="text-center py-12 text-slate-500 bg-slate-900/50 rounded-lg border border-slate-800 border-dashed">
-            Nenhuma etapa de onboarding configurada no sistema.
+          <div className="text-center py-12 text-slate-400 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed">
+            Nenhuma etapa configurada.
           </div>
         )}
       </div>
+
+      <Dialog open={eModal} onOpenChange={setEModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-amber-500">
+              {eForm.id ? 'Editar' : 'Nova'} Etapa
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Título</Label>
+              <Input
+                value={eForm.titulo || ''}
+                onChange={(e) => setEForm({ ...eForm, titulo: e.target.value })}
+                className="bg-slate-950 border-slate-700"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Descrição</Label>
+              <Textarea
+                value={eForm.descricao || ''}
+                onChange={(e) => setEForm({ ...eForm, descricao: e.target.value })}
+                className="bg-slate-950 border-slate-700 min-h-[100px]"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-slate-300">Dia de Referência</Label>
+                <Input
+                  type="number"
+                  value={eForm.dia || ''}
+                  onChange={(e) => setEForm({ ...eForm, dia: Number(e.target.value) })}
+                  className="bg-slate-950 border-slate-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">Ordem de Exibição</Label>
+                <Input
+                  type="number"
+                  value={eForm.ordem || ''}
+                  onChange={(e) => setEForm({ ...eForm, ordem: Number(e.target.value) })}
+                  className="bg-slate-950 border-slate-700"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={saveE}
+              className="bg-amber-500 text-slate-900 font-bold hover:bg-amber-600"
+            >
+              Salvar Etapa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={tModal} onOpenChange={setTModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-amber-500">
+              {tForm.id ? 'Editar' : 'Nova'} Tarefa
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Título da Tarefa</Label>
+              <Input
+                value={tForm.titulo || ''}
+                onChange={(e) => setTForm({ ...tForm, titulo: e.target.value })}
+                className="bg-slate-950 border-slate-700"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Descrição (Opcional)</Label>
+              <Textarea
+                value={tForm.descricao || ''}
+                onChange={(e) => setTForm({ ...tForm, descricao: e.target.value })}
+                className="bg-slate-950 border-slate-700 min-h-[100px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Ordem de Exibição</Label>
+              <Input
+                type="number"
+                value={tForm.ordem || ''}
+                onChange={(e) => setTForm({ ...tForm, ordem: Number(e.target.value) })}
+                className="bg-slate-950 border-slate-700 w-1/2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={saveT}
+              className="bg-amber-500 text-slate-900 font-bold hover:bg-amber-600"
+            >
+              Salvar Tarefa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
