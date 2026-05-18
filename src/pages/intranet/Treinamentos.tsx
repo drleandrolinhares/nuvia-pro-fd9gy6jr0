@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import {
   Loader2,
   PlayCircle,
+  FileText,
   CheckCircle2,
   XCircle,
   GraduationCap,
@@ -186,7 +187,11 @@ export default function Treinamentos() {
                           >
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
-                                <PlayCircle className="w-5 h-5" />
+                                {modulo.arquivo_url ? (
+                                  <FileText className="w-5 h-5" />
+                                ) : (
+                                  <PlayCircle className="w-5 h-5" />
+                                )}
                               </div>
                               <div>
                                 <h4 className="font-semibold text-slate-200">{modulo.titulo}</h4>

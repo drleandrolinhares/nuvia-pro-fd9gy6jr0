@@ -1,164 +1,222 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
+import { ArrowLeft, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft } from 'lucide-react'
-import { toast } from 'sonner'
 
 export function TreinamentosQuiz({ modulo, progressoAtual, onBack, onComplete }: any) {
   const { user } = useAuth()
-  const [respostas, setRespostas] = useState<Record<number, number>>({})
-
-  const submitQuiz = async () => {
-    if (!user) return
-    const quiz = modulo.quiz_json || []
-    let acertos = 0
-    quiz.forEach((q: any, i: number) => {
-      if (respostas[i] === q.correta) acertos++
-    })
-    const nota = quiz.length > 0 ? Math.round((acertos / quiz.length) * 10) : 10
-    const aprovado = nota >= (modulo.nota_minima || 7)
-
-    let pontos_ganhos = 0
-    const tentativasAtuais = progressoAtual ? progressoAtual.tentativas : 0
-    const novaTentativa = tentativasAtuais + 1
-
-    if (aprovado && (!progressoAtual || !progressoAtual.aprovado)) {
-      if (novaTentativa === 1) pontos_ganhos = 15
-      else if (novaTentativa === 2) pontos_ganhos = 10
-      else pontos_ganhos = 8
-    } else if (progressoAtual && progressoAtual.aprovado) {
-      pontos_ganhos = progressoAtual.pontos || 0
-    }
-
-    if (progressoAtual) {
-      await supabase
-        .from('intranet_treinamentos_progresso')
-        .update({
-          nota_quiz: nota,
-          aprovado,
-          tentativas: novaTentativa,
-          video_visto: true,
-          pontos: pontos_ganhos,
-        })
-        .eq('id', progressoAtual.id)
-    } else {
-      await supabase.from('intranet_treinamentos_progresso').insert({
-        usuario_id: user.id,
-        modulo_id: modulo.id,
-        nota_quiz: nota,
-        aprovado,
-        tentativas: novaTentativa,
-        video_visto: true,
-        pontos: pontos_ganhos,
-      })
-    }
-
-    if (aprovado) {
-      toast.success(`Parabéns! Você foi aprovado com nota ${nota}. Ganhou ${pontos_ganhos} pontos!`)
-    } else {
-      toast.error(`Nota ${nota}. Mínimo exigido: ${modulo.nota_minima || 7}. Revise o conteúdo!`)
-    }
-
-    onComplete()
-  }
-
+  const [step, setStep] = useState<'content' | 'quiz'>('content')
+  const [answers, setAnswers] = useState<number[]>([])
+  const [submitting, setSubmitting] = useState(false)
   const quiz = modulo.quiz_json || []
 
-  return (
-    <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
-      <Button
-        variant="outline"
-        className="gap-2 w-max border-slate-700 bg-slate-900 hover:bg-slate-800 text-white"
-        onClick={onBack}
-      >
-        <ArrowLeft className="w-4 h-4" /> Voltar aos Cursos
-      </Button>
-      <Card className="bg-slate-900 border-slate-800 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-amber-500 text-2xl">{modulo.titulo}</CardTitle>
-          <CardDescription className="text-slate-400 text-base">{modulo.descricao}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div className="aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
-            {modulo.video_url ? (
-              <iframe
-                src={modulo.video_url
-                  .replace('watch?v=', 'embed/')
-                  .replace('youtu.be/', 'youtube.com/embed/')}
-                className="w-full h-full"
-                allowFullScreen
-              />
-            ) : (
-              <span className="text-slate-500">Vídeo não configurado</span>
-            )}
-          </div>
+  const handleContentComplete = () => {
+    if (quiz.length > 0) {
+      setStep('quiz')
+      setAnswers(new Array(quiz.length).fill(-1))
+    } else {
+      submitResult(10, true)
+    }
+  }
 
-          {quiz.length > 0 && (
-            <div className="space-y-6 pt-6 border-t border-slate-800">
-              <h3 className="text-xl font-semibold text-slate-100">
-                Quiz de Avaliação (Nota Mínima: {modulo.nota_minima || 7})
-              </h3>
-              {quiz.map((q: any, i: number) => (
-                <div
-                  key={i}
-                  className="space-y-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800"
-                >
-                  <p className="text-slate-200 font-medium">
-                    {i + 1}. {q.pergunta}
-                  </p>
+  const submitResult = async (nota: number, aprovado: boolean) => {
+    if (!user) return
+    setSubmitting(true)
+    try {
+      const payload = {
+        usuario_id: user.id,
+        modulo_id: modulo.id,
+        video_visto: true,
+        nota_quiz: nota,
+        aprovado,
+        tentativas: (progressoAtual?.tentativas || 0) + 1,
+        pontos: aprovado ? 50 : 0,
+      }
+
+      if (progressoAtual?.id) {
+        await supabase
+          .from('intranet_treinamentos_progresso')
+          .update(payload)
+          .eq('id', progressoAtual.id)
+      } else {
+        await supabase.from('intranet_treinamentos_progresso').insert([payload])
+      }
+
+      if (aprovado) {
+        toast.success('Parabéns! Você concluiu este módulo.')
+      } else {
+        toast.error(
+          `Você atingiu a nota ${nota}. A nota mínima é ${modulo.nota_minima || 7}. Tente novamente.`,
+        )
+      }
+      onComplete()
+    } catch (error) {
+      toast.error('Erro ao salvar progresso')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const calculateScore = () => {
+    if (answers.includes(-1)) {
+      toast.error('Por favor, responda todas as questões.')
+      return
+    }
+
+    let correct = 0
+    quiz.forEach((q: any, i: number) => {
+      if (answers[i] === q.correctIndex) correct++
+    })
+    const nota = (correct / quiz.length) * 10
+    const aprovado = nota >= (modulo.nota_minima || 7)
+    submitResult(nota, aprovado)
+  }
+
+  const setAnswer = (qIndex: number, aIndex: number) => {
+    const newAnswers = [...answers]
+    newAnswers[qIndex] = aIndex
+    setAnswers(newAnswers)
+  }
+
+  const isPdf = !!modulo.arquivo_url
+  const hasVideo = !!modulo.video_url
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return ''
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.replace('watch?v=', 'embed/')
+    }
+    if (url.includes('youtu.be/')) {
+      return url.replace('youtu.be/', 'youtube.com/embed/')
+    }
+    return url
+  }
+
+  return (
+    <div className="flex flex-col gap-6 animate-fade-in w-full max-w-5xl mx-auto">
+      <Button variant="ghost" onClick={onBack} className="w-fit text-slate-400 hover:text-white">
+        <ArrowLeft className="w-4 h-4 mr-2" /> Voltar aos Treinamentos
+      </Button>
+
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">{modulo.titulo}</h2>
+          <p className="text-slate-400">{modulo.descricao}</p>
+        </div>
+
+        {step === 'content' && (
+          <div className="space-y-6">
+            {isPdf ? (
+              <div className="w-full h-[70vh] bg-slate-950 rounded-lg overflow-hidden border border-slate-800 relative shadow-inner">
+                <iframe
+                  src={`${modulo.arquivo_url}#toolbar=0`}
+                  className="w-full h-full border-0"
+                  title="Visualizador de PDF"
+                />
+              </div>
+            ) : hasVideo ? (
+              <div className="w-full aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 shadow-inner">
+                <iframe
+                  src={getEmbedUrl(modulo.video_url)}
+                  className="w-full h-full border-0"
+                  allowFullScreen
+                  title="Video Player"
+                />
+              </div>
+            ) : (
+              <div className="w-full aspect-video bg-slate-950/50 rounded-lg border border-slate-800 border-dashed flex flex-col items-center justify-center text-slate-500">
+                <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                <p>Nenhum conteúdo disponível para este módulo.</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-6 border-t border-slate-800">
+              <div className="text-sm text-slate-400">
+                {progressoAtual?.aprovado && (
+                  <span className="flex items-center text-emerald-500 font-medium">
+                    <CheckCircle2 className="w-4 h-4 mr-1" /> Você já foi aprovado neste módulo
+                  </span>
+                )}
+              </div>
+              <Button
+                onClick={handleContentComplete}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold px-6"
+              >
+                {quiz.length > 0 ? 'Ir para a Avaliação' : 'Concluir Módulo'}{' '}
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 'quiz' && (
+          <div className="space-y-8 animate-fade-in">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <h3 className="text-xl font-bold text-slate-100">Avaliação do Módulo</h3>
+              <div className="text-sm bg-slate-950 px-4 py-1.5 rounded-full border border-slate-800 text-slate-300 shadow-inner">
+                Nota Mínima:{' '}
+                <span className="text-amber-500 font-bold ml-1">{modulo.nota_minima || 7}</span>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {quiz.map((q: any, qIndex: number) => (
+                <div key={qIndex} className="p-6 bg-slate-950 rounded-xl border border-slate-800">
+                  <h4 className="text-lg font-medium text-slate-50 mb-4">
+                    {qIndex + 1}. {q.question}
+                  </h4>
                   <RadioGroup
-                    onValueChange={(val) => setRespostas((r) => ({ ...r, [i]: parseInt(val) }))}
-                    value={respostas[i]?.toString()}
+                    value={answers[qIndex]?.toString()}
+                    onValueChange={(val) => setAnswer(qIndex, parseInt(val))}
                     className="space-y-3"
                   >
-                    {q.opcoes.map((op: string, j: number) => (
+                    {q.options.map((opt: string, optIndex: number) => (
                       <div
-                        key={j}
-                        className="flex items-center space-x-3 bg-slate-900 px-4 py-2 rounded-md border border-slate-800/60 hover:border-amber-500/50 transition-colors"
+                        key={optIndex}
+                        className="flex items-center space-x-3 bg-slate-900 p-4 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
+                        onClick={() => setAnswer(qIndex, optIndex)}
                       >
                         <RadioGroupItem
-                          value={j.toString()}
-                          id={`q${i}-op${j}`}
-                          className="border-slate-500 text-amber-500"
+                          value={optIndex.toString()}
+                          id={`q${qIndex}-opt${optIndex}`}
+                          className="border-slate-600 text-amber-500"
                         />
                         <Label
-                          htmlFor={`q${i}-op${j}`}
-                          className="text-slate-300 font-normal cursor-pointer w-full py-1"
+                          htmlFor={`q${qIndex}-opt${optIndex}`}
+                          className="text-slate-300 cursor-pointer flex-1 text-base leading-snug"
                         >
-                          {op}
+                          {opt}
                         </Label>
                       </div>
                     ))}
                   </RadioGroup>
                 </div>
               ))}
-              <div className="flex justify-end pt-4">
-                <Button
-                  onClick={submitQuiz}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8"
-                  disabled={Object.keys(respostas).length < quiz.length}
-                >
-                  Finalizar Avaliação
-                </Button>
-              </div>
             </div>
-          )}
-          {quiz.length === 0 && (
-            <div className="flex justify-end pt-4 border-t border-slate-800">
+
+            <div className="flex justify-between pt-6 border-t border-slate-800">
               <Button
-                onClick={submitQuiz}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 mt-6"
+                variant="outline"
+                onClick={() => setStep('content')}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
-                Marcar como Concluído
+                <ArrowLeft className="w-4 h-4 mr-2" /> Revisar Conteúdo
+              </Button>
+              <Button
+                onClick={calculateScore}
+                disabled={submitting}
+                className="bg-amber-500 hover:bg-amber-600 text-black px-8 font-semibold"
+              >
+                {submitting ? 'Enviando...' : 'Finalizar Avaliação'}
               </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
