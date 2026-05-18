@@ -220,7 +220,7 @@ export default function Onboarding() {
       <Card key={e.id} className="bg-slate-900 border-slate-800 shadow-md">
         <CardHeader className="pb-4 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <CardTitle className="text-xl text-amber-500">
+            <CardTitle className="text-xl font-bold text-amber-500 tracking-tight uppercase">
               Dia {e.dia} - {e.titulo}
             </CardTitle>
             <CardDescription className="text-slate-300 mt-1 text-base">
@@ -383,7 +383,7 @@ export default function Onboarding() {
       <div className="space-y-10">
         {groupedEtapas['geral'] && groupedEtapas['geral'].length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
+            <h2 className="text-2xl font-extrabold text-amber-500 flex items-center gap-2 border-b border-slate-800 pb-2 tracking-tight uppercase">
               <LayoutList className="w-6 h-6 text-amber-500" />
               Onboarding Geral
             </h2>
@@ -396,7 +396,7 @@ export default function Onboarding() {
           if (!cargoEtapas || cargoEtapas.length === 0) return null
           return (
             <div key={c.id} className="space-y-4">
-              <h2 className="text-2xl font-bold text-amber-500 flex items-center gap-2 border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-extrabold text-amber-500 flex items-center gap-2 border-b border-slate-800 pb-2 tracking-tight uppercase">
                 <Briefcase className="w-6 h-6" />
                 Trilha Específica: {c.nome}
               </h2>
