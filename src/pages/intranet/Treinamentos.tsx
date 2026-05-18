@@ -123,7 +123,7 @@ export default function Treinamentos() {
         </TabsList>
 
         <TabsContent value="cursos" className="mt-6 space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
             <span className="text-slate-300 font-medium whitespace-nowrap">
               Filtrar por Função:
             </span>

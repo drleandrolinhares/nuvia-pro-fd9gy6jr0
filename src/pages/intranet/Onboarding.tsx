@@ -22,27 +22,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Loader2,
-  Plus,
-  Edit2,
-  Trash2,
-  Briefcase,
-  Users,
-  LayoutList,
-  CheckSquare,
-} from 'lucide-react'
+import { Loader2, Plus, Edit2, Trash2, CheckSquare, Users, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Onboarding() {
   const { user, profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
+  const [fases, setFases] = useState<any[]>([])
   const [etapas, setEtapas] = useState<any[]>([])
   const [tarefas, setTarefas] = useState<any[]>([])
   const [progresso, setProgresso] = useState<any[]>([])
   const [cargos, setCargos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [filtroCargo, setFiltroCargo] = useState<string>('todos')
+
+  const [faseModal, setFaseModal] = useState(false)
+  const [faseForm, setFaseForm] = useState<any>({})
   const [eModal, setEModal] = useState(false)
   const [eForm, setEForm] = useState<any>({})
   const [tModal, setTModal] = useState(false)
@@ -54,12 +50,14 @@ export default function Onboarding() {
 
   const fetchD = async () => {
     if (!user) return
-    const [re, rt, rp, rc] = await Promise.all([
+    const [rf, re, rt, rp, rc] = await Promise.all([
+      supabase.from('intranet_onboarding_fases').select('*').order('ordem'),
       supabase.from('intranet_onboarding_etapas').select('*').order('dia').order('ordem'),
       supabase.from('intranet_onboarding_tarefas').select('*').order('ordem'),
       supabase.from('intranet_onboarding_progresso').select('*').eq('usuario_id', user.id),
       supabase.from('cargos').select('*').order('nome'),
     ])
+    setFases(rf.data || [])
     setEtapas(re.data || [])
     setTarefas(rt.data || [])
     setProgresso(rp.data || [])
@@ -86,6 +84,30 @@ export default function Onboarding() {
     fetchD()
   }
 
+  const saveFase = async () => {
+    const data = {
+      titulo: faseForm.titulo,
+      ordem: faseForm.ordem || 0,
+      cargo_id: faseForm.cargo_id === 'geral' ? null : faseForm.cargo_id,
+    }
+    if (faseForm.id) {
+      await supabase.from('intranet_onboarding_fases').update(data).eq('id', faseForm.id)
+    } else {
+      await supabase.from('intranet_onboarding_fases').insert(data)
+    }
+    setFaseModal(false)
+    fetchD()
+    toast.success('Fase salva com sucesso!')
+  }
+
+  const delFase = async (id: string) => {
+    if (confirm('Excluir esta fase e todas as etapas vinculadas a ela?')) {
+      await supabase.from('intranet_onboarding_fases').delete().eq('id', id)
+      fetchD()
+      toast.success('Fase excluída!')
+    }
+  }
+
   const saveE = async () => {
     const data = {
       titulo: eForm.titulo,
@@ -93,6 +115,7 @@ export default function Onboarding() {
       dia: eForm.dia,
       ordem: eForm.ordem,
       cargo_id: eForm.cargo_id === 'geral' ? null : eForm.cargo_id,
+      fase_id: eForm.fase_id || null,
     }
     if (eForm.id) await supabase.from('intranet_onboarding_etapas').update(data).eq('id', eForm.id)
     else await supabase.from('intranet_onboarding_etapas').insert(data)
@@ -169,29 +192,49 @@ export default function Onboarding() {
     [profile],
   )
 
-  const etapasFiltradas = useMemo(
-    () => (isAdmin ? etapas : etapas.filter((e) => !e.cargo_id || userCargos.includes(e.cargo_id))),
-    [isAdmin, etapas, userCargos],
-  )
+  const cargosVisiveis = useMemo(() => {
+    if (isAdmin) return cargos
+    return cargos.filter((c) => userCargos.includes(c.id))
+  }, [isAdmin, cargos, userCargos])
 
-  const tarefasVisiveis = useMemo(
-    () => tarefas.filter((t) => etapasFiltradas.some((e) => e.id === t.etapa_id)),
-    [tarefas, etapasFiltradas],
-  )
+  const todasFases = useMemo(() => {
+    const agg = [...fases]
+    const legacyEtapas = etapas.filter((e) => !e.fase_id)
+    const legacyCargos = Array.from(new Set(legacyEtapas.map((e) => e.cargo_id)))
 
-  const groupedEtapas = useMemo(
-    () =>
-      etapasFiltradas.reduce(
-        (acc, etapa) => {
-          const key = etapa.cargo_id || 'geral'
-          if (!acc[key]) acc[key] = []
-          acc[key].push(etapa)
-          return acc
-        },
-        {} as Record<string, any[]>,
-      ),
-    [etapasFiltradas],
-  )
+    legacyCargos.forEach((cid) => {
+      agg.push({
+        id: `legacy-${cid || 'geral'}`,
+        titulo: 'Fase Padrão (Sem Fase Definida)',
+        cargo_id: cid,
+        ordem: 9999,
+        isLegacy: true,
+      })
+    })
+
+    return agg.sort((a, b) => a.ordem - b.ordem)
+  }, [fases, etapas])
+
+  const fasesFiltradas = useMemo(() => {
+    return todasFases.filter((f) => {
+      const isAllowedForUser = isAdmin || !f.cargo_id || userCargos.includes(f.cargo_id)
+      if (!isAllowedForUser) return false
+
+      if (filtroCargo === 'todos') return true
+      if (filtroCargo === 'geral') return !f.cargo_id
+      return f.cargo_id === filtroCargo
+    })
+  }, [todasFases, filtroCargo, isAdmin, userCargos])
+
+  const tarefasVisiveis = useMemo(() => {
+    const etapasAtivas = etapas.filter((e) => {
+      const matchingFase = fasesFiltradas.find((f) =>
+        f.isLegacy ? f.cargo_id === e.cargo_id && !e.fase_id : f.id === e.fase_id,
+      )
+      return !!matchingFase
+    })
+    return tarefas.filter((t) => etapasAtivas.some((e) => e.id === t.etapa_id))
+  }, [tarefas, etapas, fasesFiltradas])
 
   if (loading)
     return (
@@ -338,30 +381,73 @@ export default function Onboarding() {
             <CheckSquare className="text-amber-500" /> Onboarding
           </h1>
           <p className="text-slate-300 mt-1">
-            Acompanhe as etapas de integração de acordo com a sua função.
+            Acompanhe as fases de integração de acordo com a sua função.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {isAdmin && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setCargosModal(true)}
-                className="border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
-              >
-                <Users className="w-4 h-4 mr-2" /> Gerenciar Funções
-              </Button>
-              <Button
-                onClick={() => {
-                  setEForm({ dia: 1, ordem: 0, cargo_id: 'geral' })
-                  setEModal(true)
-                }}
-                className="bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Nova Etapa
-              </Button>
-            </>
-          )}
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+            <Button
+              variant="outline"
+              onClick={() => setCargosModal(true)}
+              className="border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
+            >
+              <Users className="w-4 h-4 mr-2" /> Gerenciar Funções
+            </Button>
+            <Button
+              onClick={() => {
+                setFaseForm({ ordem: 0, cargo_id: 'geral' })
+                setFaseModal(true)
+              }}
+              className="bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Nova Fase
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
+        <span className="text-slate-300 font-medium whitespace-nowrap">Filtrar por Função:</span>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filtroCargo === 'todos' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroCargo('todos')}
+            className={
+              filtroCargo === 'todos'
+                ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+            }
+          >
+            Todos
+          </Button>
+          <Button
+            variant={filtroCargo === 'geral' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroCargo('geral')}
+            className={
+              filtroCargo === 'geral'
+                ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+            }
+          >
+            Geral
+          </Button>
+          {cargosVisiveis.map((c) => (
+            <Button
+              key={c.id}
+              variant={filtroCargo === c.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFiltroCargo(c.id)}
+              className={
+                filtroCargo === c.id
+                  ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+            >
+              {c.nome}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -380,46 +466,185 @@ export default function Onboarding() {
         </CardHeader>
       </Card>
 
-      <div className="space-y-10">
-        {groupedEtapas['geral'] && groupedEtapas['geral'].length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-extrabold text-amber-500 flex items-center gap-2 border-b border-slate-800 pb-2 tracking-tight uppercase">
-              <LayoutList className="w-6 h-6 text-amber-500" />
-              Onboarding Geral
-            </h2>
-            {groupedEtapas['geral'].map(renderEtapaCard)}
-          </div>
-        )}
+      <div className="space-y-12">
+        {fasesFiltradas.map((fase) => {
+          const etapasDaFase = etapas.filter((e) =>
+            fase.isLegacy ? !e.fase_id && e.cargo_id === fase.cargo_id : e.fase_id === fase.id,
+          )
 
-        {cargos.map((c) => {
-          const cargoEtapas = groupedEtapas[c.id]
-          if (!cargoEtapas || cargoEtapas.length === 0) return null
+          if (etapasDaFase.length === 0 && fase.isLegacy) return null
+
           return (
-            <div key={c.id} className="space-y-4">
-              <h2 className="text-2xl font-extrabold text-amber-500 flex items-center gap-2 border-b border-slate-800 pb-2 tracking-tight uppercase">
-                <Briefcase className="w-6 h-6" />
-                Trilha Específica: {c.nome}
-              </h2>
-              {cargoEtapas.map(renderEtapaCard)}
+            <div key={fase.id} className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-700 pb-3 gap-4">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2 tracking-tight uppercase">
+                    <Layers className="w-6 h-6 text-amber-500" />
+                    {fase.titulo}
+                  </h2>
+                  <p className="text-sm text-amber-500/80 mt-1 font-medium uppercase tracking-wider">
+                    {fase.cargo_id
+                      ? `Trilha: ${cargos.find((c) => c.id === fase.cargo_id)?.nome}`
+                      : 'Trilha: Geral'}
+                  </p>
+                </div>
+                {isAdmin && !fase.isLegacy && (
+                  <div className="flex gap-2 w-full md:w-auto justify-end">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-slate-400 hover:text-white hover:bg-slate-800"
+                      onClick={() => {
+                        setFaseForm(fase)
+                        setFaseModal(true)
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300 hover:bg-slate-800"
+                      onClick={() => delFase(fase.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                      onClick={() => {
+                        setEForm({
+                          fase_id: fase.id,
+                          dia: 1,
+                          ordem: 0,
+                          cargo_id: fase.cargo_id || 'geral',
+                        })
+                        setEModal(true)
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Etapa (Dia)
+                    </Button>
+                  </div>
+                )}
+                {isAdmin && fase.isLegacy && (
+                  <div className="flex gap-2 w-full md:w-auto justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                      onClick={() => {
+                        setEForm({ dia: 1, ordem: 0, cargo_id: fase.cargo_id || 'geral' })
+                        setEModal(true)
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Etapa (Dia)
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {etapasDaFase.map(renderEtapaCard)}
+                {etapasDaFase.length === 0 && (
+                  <p className="text-sm text-slate-500 italic">Nenhuma etapa nesta fase.</p>
+                )}
+              </div>
             </div>
           )
         })}
 
-        {etapasFiltradas.length === 0 && (
+        {fasesFiltradas.length === 0 && (
           <div className="text-center py-12 text-slate-400 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed">
-            Nenhuma etapa de onboarding disponível.
+            Nenhuma fase de onboarding disponível para este filtro.
           </div>
         )}
       </div>
+
+      <Dialog open={faseModal} onOpenChange={setFaseModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-amber-500">
+              {faseForm.id ? 'Editar' : 'Nova'} Fase do Onboarding
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Título da Fase</Label>
+              <Input
+                value={faseForm.titulo || ''}
+                onChange={(e) => setFaseForm({ ...faseForm, titulo: e.target.value })}
+                className="bg-slate-950 border-slate-700"
+                placeholder="Ex: FASE 1 - AMBIENTAÇÃO"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Trilha (Função/Cargo)</Label>
+              <Select
+                value={faseForm.cargo_id || 'geral'}
+                onValueChange={(v) => setFaseForm({ ...faseForm, cargo_id: v })}
+              >
+                <SelectTrigger className="bg-slate-950 border-slate-700">
+                  <SelectValue placeholder="Selecione a trilha..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  <SelectItem value="geral">Trilha Geral (Para todos)</SelectItem>
+                  {cargos.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      Específico: {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Ordem de Exibição</Label>
+              <Input
+                type="number"
+                value={faseForm.ordem || ''}
+                onChange={(e) => setFaseForm({ ...faseForm, ordem: Number(e.target.value) })}
+                className="bg-slate-950 border-slate-700 w-1/2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={saveFase}
+              className="bg-amber-500 text-slate-900 font-bold hover:bg-amber-600"
+            >
+              Salvar Fase
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={eModal} onOpenChange={setEModal}>
         <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl text-amber-500">
-              {eForm.id ? 'Editar' : 'Nova'} Etapa
+              {eForm.id ? 'Editar' : 'Nova'} Etapa (Dia)
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Fase (Opcional)</Label>
+              <Select
+                value={eForm.fase_id || 'sem_fase'}
+                onValueChange={(v) => setEForm({ ...eForm, fase_id: v === 'sem_fase' ? null : v })}
+              >
+                <SelectTrigger className="bg-slate-950 border-slate-700">
+                  <SelectValue placeholder="Selecione a fase..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                  <SelectItem value="sem_fase">Sem Fase (Legado)</SelectItem>
+                  {fases.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.titulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label className="text-slate-300">Título</Label>
               <Input
