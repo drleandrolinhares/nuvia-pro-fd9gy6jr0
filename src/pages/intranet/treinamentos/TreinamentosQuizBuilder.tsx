@@ -52,19 +52,23 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
   return (
     <div className="space-y-6 bg-slate-950 p-4 rounded-lg border border-slate-800 h-max max-h-[800px] overflow-y-auto">
       <div className="space-y-4">
-        <h4 className="font-semibold text-slate-200">Detalhes do Módulo</h4>
+        <h4 className="font-semibold text-slate-100">Detalhes do Módulo</h4>
         <div className="space-y-2">
-          <Label>Curso</Label>
+          <Label className="text-slate-200">Curso</Label>
           <Select
             value={formData.curso_id}
             onValueChange={(v) => setFormData({ ...formData, curso_id: v })}
           >
-            <SelectTrigger className="bg-slate-900 border-slate-700">
-              <SelectValue placeholder="Selecione..." />
+            <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-100">
+              <SelectValue placeholder="Selecione..." className="text-slate-500" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-700">
+            <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
               {cursos.map((c: any) => (
-                <SelectItem key={c.id} value={c.id}>
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                  className="text-slate-200 focus:bg-slate-800 focus:text-slate-100"
+                >
                   {c.titulo}
                 </SelectItem>
               ))}
@@ -72,52 +76,52 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Título</Label>
+          <Label className="text-slate-200">Título</Label>
           <Input
             value={formData.titulo}
             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-            className="bg-slate-900 border-slate-700"
+            className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
           />
         </div>
         <div className="space-y-2">
-          <Label>Descrição</Label>
+          <Label className="text-slate-200">Descrição</Label>
           <Textarea
             value={formData.descricao}
             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-            className="bg-slate-900 border-slate-700"
+            className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
           />
         </div>
         <div className="space-y-2">
-          <Label>Link do Vídeo (YouTube)</Label>
+          <Label className="text-slate-200">Link do Vídeo (YouTube)</Label>
           <Input
             value={formData.video_url}
             onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
             placeholder="https://youtube.com/..."
-            className="bg-slate-900 border-slate-700"
+            className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
           />
         </div>
         <div className="space-y-2">
-          <Label>Nota Mínima (0 a 10)</Label>
+          <Label className="text-slate-200">Nota Mínima (0 a 10)</Label>
           <Input
             type="number"
             min={0}
             max={10}
             value={formData.nota_minima}
             onChange={(e) => setFormData({ ...formData, nota_minima: parseInt(e.target.value) })}
-            className="bg-slate-900 border-slate-700"
+            className="bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-500"
           />
         </div>
       </div>
 
       <div className="space-y-4 pt-4 border-t border-slate-800">
         <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-slate-200">Editor de Quiz</h4>
+          <h4 className="font-semibold text-slate-100">Editor de Quiz</h4>
           <Button
             type="button"
             size="sm"
             variant="outline"
             onClick={addPergunta}
-            className="border-slate-700 bg-slate-900 hover:bg-slate-800 text-white"
+            className="border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-100"
           >
             <Plus className="w-4 h-4 mr-1" /> Pergunta
           </Button>
@@ -137,7 +141,7 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
               <Trash2 className="w-4 h-4" />
             </Button>
             <div className="space-y-2 pr-8">
-              <Label>Pergunta {qIdx + 1}</Label>
+              <Label className="text-slate-200">Pergunta {qIdx + 1}</Label>
               <Input
                 value={q.pergunta}
                 onChange={(e) => {
@@ -145,12 +149,12 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
                   n[qIdx].pergunta = e.target.value
                   setQuiz(n)
                 }}
-                className="bg-slate-950 border-slate-800"
+                className="bg-slate-950 border-slate-800 text-slate-100 placeholder:text-slate-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Opções (Marque a correta)</Label>
+              <Label className="text-slate-200">Opções (Marque a correta)</Label>
               <RadioGroup
                 value={q.correta.toString()}
                 onValueChange={(v) => {
@@ -173,7 +177,7 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
                         n[qIdx].opcoes[oIdx] = e.target.value
                         setQuiz(n)
                       }}
-                      className="bg-slate-950 border-slate-800 flex-1"
+                      className="bg-slate-950 border-slate-800 flex-1 text-slate-100 placeholder:text-slate-500"
                     />
                     <Button
                       type="button"
