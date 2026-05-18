@@ -18,7 +18,7 @@ export default function Performance() {
   const [isAusenciaOpen, setIsAusenciaOpen] = useState(false)
 
   return (
-    <div className="flex flex-col gap-6 p-6 pb-20 w-full max-w-[1600px] mx-auto animate-fade-in-up">
+    <div className="flex flex-col gap-6 p-6 pb-20 w-full mx-auto animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
         <div className="flex items-start gap-4">
           <div>

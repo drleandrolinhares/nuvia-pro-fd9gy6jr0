@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckSquare } from 'lucide-react'
 
 export default function Onboarding() {
   const { user } = useAuth()
@@ -56,13 +56,18 @@ export default function Onboarding() {
   const percentual = totalTarefas > 0 ? Math.round((concluidas / totalTarefas) * 100) : 0
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-100">Onboarding</h1>
-          <p className="text-slate-400">
-            Acompanhe as etapas de integração do seu início na Nuvia.
-          </p>
+    <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
+        <div className="flex items-start gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3 uppercase">
+              <CheckSquare className="h-8 w-8 text-amber-500" />
+              Onboarding
+            </h1>
+            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
+              Acompanhe as etapas de integração do seu início na Nuvia.
+            </p>
+          </div>
         </div>
       </div>
 

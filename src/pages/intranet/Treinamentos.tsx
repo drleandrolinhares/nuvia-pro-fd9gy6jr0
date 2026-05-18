@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { Loader2, PlayCircle, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react'
+import { Loader2, PlayCircle, CheckCircle2, XCircle, ArrowLeft, GraduationCap } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Treinamentos() {
@@ -51,16 +51,14 @@ export default function Treinamentos() {
         .update({ nota_quiz: nota, aprovado, tentativas: prev.tentativas + 1, video_visto: true })
         .eq('id', prev.id)
     } else {
-      await supabase
-        .from('intranet_treinamentos_progresso')
-        .insert({
-          usuario_id: user.id,
-          modulo_id: activeModulo.id,
-          nota_quiz: nota,
-          aprovado,
-          tentativas: 1,
-          video_visto: true,
-        })
+      await supabase.from('intranet_treinamentos_progresso').insert({
+        usuario_id: user.id,
+        modulo_id: activeModulo.id,
+        nota_quiz: nota,
+        aprovado,
+        tentativas: 1,
+        video_visto: true,
+      })
     }
 
     if (aprovado) toast.success(`Parabéns! Você foi aprovado com nota ${nota}.`)
@@ -84,8 +82,8 @@ export default function Treinamentos() {
   if (activeModulo) {
     const quiz = activeModulo.quiz_json || []
     return (
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <Button variant="outline" className="gap-2" onClick={() => setActiveModulo(null)}>
+      <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
+        <Button variant="outline" className="gap-2 w-max" onClick={() => setActiveModulo(null)}>
           <ArrowLeft className="w-4 h-4" /> Voltar aos Cursos
         </Button>
         <Card className="bg-slate-900 border-slate-800 shadow-sm">
@@ -165,12 +163,19 @@ export default function Treinamentos() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-100">Treinamentos</h1>
-        <p className="text-slate-400">
-          Acesse os cursos e capacitações disponíveis para o seu setor.
-        </p>
+    <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
+        <div className="flex items-start gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3 uppercase">
+              <GraduationCap className="h-8 w-8 text-amber-500" />
+              Treinamentos
+            </h1>
+            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
+              Acesse os cursos e capacitações disponíveis para o seu setor.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6">
