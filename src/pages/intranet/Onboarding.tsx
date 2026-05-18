@@ -33,9 +33,11 @@ export default function Onboarding() {
   const [tarefas, setTarefas] = useState<any[]>([])
   const [progresso, setProgresso] = useState<any[]>([])
   const [cargos, setCargos] = useState<any[]>([])
+  const [usuarios, setUsuarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const [filtroCargo, setFiltroCargo] = useState<string>('todos')
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const [faseModal, setFaseModal] = useState(false)
   const [faseForm, setFaseForm] = useState<any>({})
@@ -50,27 +52,54 @@ export default function Onboarding() {
 
   const fetchD = async () => {
     if (!user) return
-    const [rf, re, rt, rp, rc] = await Promise.all([
+    const [rf, re, rt, rc, ru] = await Promise.all([
       supabase.from('intranet_onboarding_fases').select('*').order('ordem'),
       supabase.from('intranet_onboarding_etapas').select('*').order('dia').order('ordem'),
       supabase.from('intranet_onboarding_tarefas').select('*').order('ordem'),
-      supabase.from('intranet_onboarding_progresso').select('*').eq('usuario_id', user.id),
       supabase.from('cargos').select('*').order('nome'),
+      isAdmin
+        ? supabase
+            .from('usuarios')
+            .select('id, nome, cargo_id, cargo_secundario_id')
+            .eq('status', 'ativo')
+            .order('nome')
+        : Promise.resolve({ data: [] }),
     ])
     setFases(rf.data || [])
     setEtapas(re.data || [])
     setTarefas(rt.data || [])
-    setProgresso(rp.data || [])
     setCargos(rc.data || [])
+    setUsuarios(ru.data || [])
     setLoading(false)
+  }
+
+  const fetchProgresso = async () => {
+    const targetId = isAdmin && selectedUserId ? selectedUserId : user?.id
+    if (!targetId) return
+    const { data } = await supabase
+      .from('intranet_onboarding_progresso')
+      .select('*')
+      .eq('usuario_id', targetId)
+    setProgresso(data || [])
   }
 
   useEffect(() => {
     fetchD()
-  }, [user])
+  }, [user, isAdmin])
+
+  useEffect(() => {
+    fetchProgresso()
+  }, [selectedUserId, user, isAdmin])
+
+  useEffect(() => {
+    if (isAdmin && !selectedUserId && user) {
+      setSelectedUserId(user.id)
+    }
+  }, [isAdmin, user])
 
   const toggleT = async (tId: string, c: boolean) => {
-    if (!user) return
+    const targetId = isAdmin && selectedUserId ? selectedUserId : user?.id
+    if (!targetId) return
     const prev = progresso.find((p) => p.tarefa_id === tId)
     if (prev)
       await supabase
@@ -80,7 +109,43 @@ export default function Onboarding() {
     else
       await supabase
         .from('intranet_onboarding_progresso')
-        .insert({ usuario_id: user.id, tarefa_id: tId, concluido: c })
+        .insert({ usuario_id: targetId, tarefa_id: tId, concluido: c })
+    fetchProgresso()
+  }
+
+  const moveFase = async (fase: any, direction: 'up' | 'down') => {
+    const nonLegacy = [...fases].sort((a, b) => a.ordem - b.ordem)
+    const currentIndex = nonLegacy.findIndex((f) => f.id === fase.id)
+    if (currentIndex < 0) return
+    if (direction === 'up' && currentIndex === 0) return
+    if (direction === 'down' && currentIndex === nonLegacy.length - 1) return
+
+    const adjacent = nonLegacy[direction === 'up' ? currentIndex - 1 : currentIndex + 1]
+
+    if (fase.ordem !== adjacent.ordem) {
+      await Promise.all([
+        supabase
+          .from('intranet_onboarding_fases')
+          .update({ ordem: adjacent.ordem })
+          .eq('id', fase.id),
+        supabase
+          .from('intranet_onboarding_fases')
+          .update({ ordem: fase.ordem })
+          .eq('id', adjacent.id),
+      ])
+    } else {
+      const newArray = [...nonLegacy]
+      const temp = newArray[currentIndex]
+      newArray[currentIndex] = newArray[direction === 'up' ? currentIndex - 1 : currentIndex + 1]
+      newArray[direction === 'up' ? currentIndex - 1 : currentIndex + 1] = temp
+
+      await Promise.all(
+        newArray.map((f, i) =>
+          supabase.from('intranet_onboarding_fases').update({ ordem: i }).eq('id', f.id),
+        ),
+      )
+    }
+
     fetchD()
   }
 
@@ -221,10 +286,16 @@ export default function Onboarding() {
       if (!isAllowedForUser) return false
 
       if (filtroCargo === 'todos') return true
-      if (filtroCargo === 'geral') return !f.cargo_id
-      return f.cargo_id === filtroCargo
+      return f.cargo_id === filtroCargo || !f.cargo_id
     })
   }, [todasFases, filtroCargo, isAdmin, userCargos])
+
+  const usuariosFiltrados = useMemo(() => {
+    if (filtroCargo === 'todos') return usuarios
+    return usuarios.filter(
+      (u) => u.cargo_id === filtroCargo || u.cargo_secundario_id === filtroCargo,
+    )
+  }, [usuarios, filtroCargo])
 
   const tarefasVisiveis = useMemo(() => {
     const etapasAtivas = etapas.filter((e) => {
@@ -322,7 +393,7 @@ export default function Onboarding() {
                   <Checkbox
                     checked={isDone}
                     onCheckedChange={(c) => toggleT(t.id, !!c)}
-                    className="mt-1 w-5 h-5"
+                    className="mt-1 w-5 h-5 border-slate-400 bg-slate-900/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-900 shadow-sm"
                   />
                   <div>
                     <p
@@ -406,49 +477,67 @@ export default function Onboarding() {
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
-        <span className="text-slate-300 font-medium whitespace-nowrap">Filtrar por Função:</span>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={filtroCargo === 'todos' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFiltroCargo('todos')}
-            className={
-              filtroCargo === 'todos'
-                ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-            }
-          >
-            Todos
-          </Button>
-          <Button
-            variant={filtroCargo === 'geral' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFiltroCargo('geral')}
-            className={
-              filtroCargo === 'geral'
-                ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-            }
-          >
-            Geral
-          </Button>
-          {cargosVisiveis.map((c) => (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
+          <span className="text-slate-300 font-medium whitespace-nowrap">Filtrar por Função:</span>
+          <div className="flex flex-wrap gap-2">
             <Button
-              key={c.id}
-              variant={filtroCargo === c.id ? 'default' : 'outline'}
+              variant={filtroCargo === 'todos' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFiltroCargo(c.id)}
+              onClick={() => setFiltroCargo('todos')}
               className={
-                filtroCargo === c.id
+                filtroCargo === 'todos'
                   ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
                   : 'border-slate-700 text-slate-300 hover:bg-slate-800'
               }
             >
-              {c.nome}
+              Todos
             </Button>
-          ))}
+            {cargosVisiveis.map((c) => (
+              <Button
+                key={c.id}
+                variant={filtroCargo === c.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFiltroCargo(c.id)}
+                className={
+                  filtroCargo === c.id
+                    ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                    : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                }
+              >
+                {c.nome}
+              </Button>
+            ))}
+          </div>
         </div>
+
+        {isAdmin && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
+            <span className="text-slate-300 font-medium whitespace-nowrap">Colaborador:</span>
+            <div className="flex flex-wrap gap-2">
+              {usuariosFiltrados.map((u) => (
+                <Button
+                  key={u.id}
+                  variant={selectedUserId === u.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedUserId(u.id)}
+                  className={
+                    selectedUserId === u.id
+                      ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
+                      : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                  }
+                >
+                  {u.nome}
+                </Button>
+              ))}
+              {usuariosFiltrados.length === 0 && (
+                <span className="text-sm text-slate-500 italic py-1">
+                  Nenhum colaborador encontrado para este filtro.
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <Card className="bg-slate-900 border-slate-800 shadow-md">
@@ -476,24 +565,66 @@ export default function Onboarding() {
 
           return (
             <div key={fase.id} className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-3 gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-3 gap-4">
                 <div>
-                  <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2 tracking-tight uppercase">
+                  <h2 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2 tracking-tight uppercase">
                     <Layers className="w-6 h-6 text-amber-500" />
                     {fase.titulo}
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1 font-medium uppercase tracking-wider">
+                  <p className="text-sm text-slate-400 mt-1 font-medium uppercase tracking-wider">
                     {fase.cargo_id
                       ? `Trilha: ${cargos.find((c) => c.id === fase.cargo_id)?.nome}`
                       : 'Trilha: Geral'}
                   </p>
                 </div>
                 {isAdmin && !fase.isLegacy && (
-                  <div className="flex gap-2 w-full md:w-auto justify-end">
+                  <div className="flex gap-1 sm:gap-2 w-full md:w-auto justify-end">
+                    <div className="flex bg-slate-800 rounded-md p-0.5 mr-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-slate-400 hover:text-slate-100 hover:bg-slate-700"
+                        onClick={() => moveFase(fase, 'up')}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="m18 15-6-6-6 6" />
+                        </svg>
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-slate-400 hover:text-slate-100 hover:bg-slate-700"
+                        onClick={() => moveFase(fase, 'down')}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </Button>
+                    </div>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                      className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800"
                       onClick={() => {
                         setFaseForm(fase)
                         setFaseModal(true)
@@ -504,7 +635,7 @@ export default function Onboarding() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-slate-800"
                       onClick={() => delFase(fase.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -512,7 +643,7 @@ export default function Onboarding() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
                       onClick={() => {
                         setEForm({
                           fase_id: fase.id,
@@ -532,7 +663,7 @@ export default function Onboarding() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
                       onClick={() => {
                         setEForm({ dia: 1, ordem: 0, cargo_id: fase.cargo_id || 'geral' })
                         setEModal(true)
@@ -555,7 +686,7 @@ export default function Onboarding() {
         })}
 
         {fasesFiltradas.length === 0 && (
-          <div className="text-center py-12 text-slate-400 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed">
+          <div className="text-center py-12 text-slate-400 bg-slate-900 rounded-xl border border-slate-800 border-dashed shadow-none">
             Nenhuma fase de onboarding disponível para este filtro.
           </div>
         )}
