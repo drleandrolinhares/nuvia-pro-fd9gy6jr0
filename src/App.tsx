@@ -315,7 +315,14 @@ const AppRoutes = () => {
         <Route
           path="/financeiro/fluxo"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={[
+                'financeiro_fluxo',
+                'Acessar Financeiro',
+                'Acessar Fluxo de Caixa',
+              ]}
+            >
               <Fluxo />
             </ProtectedRoute>
           }
@@ -569,7 +576,14 @@ const AppRoutes = () => {
         <Route
           path="/financeiro/fiscal"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute
+              allowedRoles={[]}
+              allowedPermissions={[
+                'financeiro_fiscal',
+                'Acessar Financeiro',
+                'Acessar Gestão Fiscal',
+              ]}
+            >
               <GestaoFiscal />
             </ProtectedRoute>
           }

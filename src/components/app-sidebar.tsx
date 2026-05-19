@@ -182,13 +182,13 @@ const navData = [
         title: 'GESTÃO FISCAL',
         url: '/financeiro/fiscal',
         icon: Landmark,
-        showRole: ['admin'],
+        permission: ['financeiro_fiscal', 'Acessar Financeiro', 'Acessar Gestão Fiscal'],
       },
       {
         title: 'FLUXO DE CAIXA',
         url: '/financeiro/fluxo',
         icon: Activity,
-        showRole: ['admin'],
+        permission: ['financeiro_fluxo', 'Acessar Financeiro', 'Acessar Fluxo de Caixa'],
       },
       {
         title: 'ESTOQUE',

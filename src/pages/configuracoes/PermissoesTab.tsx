@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { CargoDialog } from './CargoDialog'
 import { UsuarioPermissoesDialog } from './UsuarioPermissoesDialog'
+import { getUsuarios } from '@/services/usuarios'
 
 export function PermissoesTab() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -38,14 +39,19 @@ export function PermissoesTab() {
       setIsAdmin(admin)
       if (!admin) return
 
-      const [c, p, u] = await Promise.all([
+      const [c, p, u, allUsers] = await Promise.all([
         getCargos(),
         getPermissoes(),
         getUsuariosComPermissoes(),
+        getUsuarios(),
       ])
       setCargos(c)
       setPermissoes(p)
-      setUsuarios(u)
+
+      const activeUserIds = new Set(
+        allUsers.filter((user) => user.status === 'ativo').map((user) => user.id),
+      )
+      setUsuarios(u.filter((user) => activeUserIds.has(user.id)))
     } catch (error: any) {
       toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
     } finally {
