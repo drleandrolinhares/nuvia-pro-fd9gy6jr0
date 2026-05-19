@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/select'
 import { Loader2, Filter, BarChart3 } from 'lucide-react'
 import { GestaoLeadsKanban } from '@/components/comercial/funil/gestao-leads-kanban'
-import { BussolaComercial } from '@/components/comercial/funil/bussola-comercial'
 import { SemaforoConversao } from '@/components/comercial/funil/semaforo-conversao'
 import { AgendaComercial } from '@/components/comercial/funil/agenda-comercial'
 import { VendasConcretizadasLista } from '@/pages/comercial/components/VendasConcretizadasLista'
@@ -22,13 +21,7 @@ import { cn } from '@/lib/utils'
 
 export default function FunilVendas() {
   const [view, setView] = useState<
-    | 'kanban'
-    | 'dashboard'
-    | 'configuracoes'
-    | 'bussola'
-    | 'semaforo'
-    | 'agenda'
-    | 'vendas_concretizadas'
+    'kanban' | 'dashboard' | 'configuracoes' | 'semaforo' | 'agenda' | 'vendas_concretizadas'
   >('dashboard')
   const [mesReferencia, setMesReferencia] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
@@ -414,8 +407,6 @@ export default function FunilVendas() {
           temperaturas={temperaturas}
           onUpdate={() => fetchData(false)}
         />
-      ) : view === 'bussola' ? (
-        <BussolaComercial origens={origens} dados={dadosMensais} mesReferencia={mesReferencia} />
       ) : view === 'semaforo' ? (
         <SemaforoConversao
           mesReferencia={mesReferencia}

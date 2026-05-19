@@ -138,11 +138,6 @@ export function FunilDashboard({
     [dadosAjustados, origens],
   )
 
-  const avaliacoesAtuais = useMemo(() => {
-    if (!avaliacoes) return []
-    return avaliacoes
-  }, [avaliacoes])
-
   const totalAvaliacoes = useMemo(
     () => totaisGerais.comparecimentos,
     [totaisGerais.comparecimentos],
