@@ -90,7 +90,7 @@ export function DashboardLeadsModal({
 
       let validOrigens = origens || []
 
-      if (type === 'competencia_fechamentos' || type === 'competencia_oportunidades') {
+      if (type === 'competencia_fechamentos') {
         validOrigens = (dbOrigens || [])
           .filter((o: any) => !o.nome?.toLowerCase().includes('recorrente'))
           .map((o: any) => o.id)
@@ -137,7 +137,7 @@ export function DashboardLeadsModal({
             new Date(b.data_fechamento || 0).getTime() - new Date(a.data_fechamento || 0).getTime(),
         )
         setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
-      } else if (type === 'oportunidades' || type === 'competencia_oportunidades') {
+      } else if (type === 'oportunidades') {
         let query = supabase
           .from('avaliacoes')
           .select(`*, pacientes!inner(nome), vendas_confirmadas(id)`)
@@ -164,8 +164,6 @@ export function DashboardLeadsModal({
 
           if (validOrigens && validOrigens.length > 0) {
             if (!validOrigens.includes(a.origem_id)) return false
-          } else if (type === 'competencia_oportunidades') {
-            return false
           }
 
           return true
@@ -318,17 +316,17 @@ export function DashboardLeadsModal({
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <DialogTitle className="text-xl text-white">{title}</DialogTitle>
-                {(type === 'competencia_oportunidades' || type === 'competencia_fechamentos') && (
+                {type === 'competencia_fechamentos' && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30">
                     Filtro de Competência Ativo
                   </span>
                 )}
               </div>
               <DialogDescription className="text-slate-400">
-                {type === 'oportunidades' || type === 'competencia_oportunidades'
+                {type === 'oportunidades'
                   ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
                   : 'Listagem detalhada dos registros do período selecionado.'}
-                {(type === 'competencia_oportunidades' || type === 'competencia_fechamentos') && (
+                {type === 'competencia_fechamentos' && (
                   <span className="block mt-1 text-fuchsia-400/80">
                     * Pacientes de origem "Recorrente" estão automaticamente excluídos desta visão.
                   </span>
@@ -374,7 +372,6 @@ export function DashboardLeadsModal({
                         Status & Vínculos
                       </TableHead>
                       {type === 'oportunidades' ||
-                      type === 'competencia_oportunidades' ||
                       type === 'fechamentos' ||
                       type === 'competencia_fechamentos' ? (
                         <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-right">

@@ -188,20 +188,6 @@ export function FunilDashboard({
     return competenciaMetrics.filter((m: any) => origensCompetencia.includes(m.origem_id))
   }, [competenciaMetrics, origensCompetencia])
 
-  const qtdeOportunidadesCompetencia = useMemo(() => {
-    return competenciaFiltrada.reduce(
-      (acc: number, curr: any) => acc + Number(curr.qtd_oportunidades || 0),
-      0,
-    )
-  }, [competenciaFiltrada])
-
-  const valorOportunidadesCompetencia = useMemo(() => {
-    return competenciaFiltrada.reduce(
-      (acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0),
-      0,
-    )
-  }, [competenciaFiltrada])
-
   const totaisCompetencia = useMemo(() => {
     const fechamentos = competenciaFiltrada.reduce(
       (acc: number, curr: any) => acc + Number(curr.qtd_vendas || 0),
@@ -213,11 +199,6 @@ export function FunilDashboard({
     )
     return { fechamentos, valor_fechado }
   }, [competenciaFiltrada])
-
-  const conversaoCompetencia =
-    valorOportunidadesCompetencia > 0
-      ? (totaisCompetencia.valor_fechado / valorOportunidadesCompetencia) * 100
-      : 0
   // -------------------------------------------------------------
 
   const pieData = useMemo(() => {
@@ -297,7 +278,6 @@ export function FunilDashboard({
       | 'faltas'
       | 'fechamentos'
       | 'oportunidades'
-      | 'competencia_oportunidades'
       | 'competencia_fechamentos'
     origens: string[]
     title: string
@@ -537,56 +517,10 @@ export function FunilDashboard({
   )
 
   const renderCompetenciaBlocks = () => (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center isolate">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center isolate max-w-3xl mx-auto">
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_oportunidades',
-            origens: origensCompetencia,
-            title: `Oportunidades (Qtde) - Competência (${mesReferencia})`,
-          })
-        }}
-      >
-        <Target className="w-5 h-5 text-fuchsia-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Oportunidades
-        </span>
-        <span className="text-2xl font-bold text-white">{qtdeOportunidadesCompetencia}</span>
-      </button>
-
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_oportunidades',
-            origens: origensCompetencia,
-            title: `Valor (Oport.) - Competência (${mesReferencia})`,
-          })
-        }}
-      >
-        <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Valor (Oport.)
-        </span>
-        <span className="text-lg font-bold text-white">
-          {formatBrl(valorOportunidadesCompetencia)}
-        </span>
-      </button>
-
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
         style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
@@ -595,20 +529,20 @@ export function FunilDashboard({
             isOpen: true,
             type: 'competencia_fechamentos',
             origens: origensCompetencia,
-            title: `Conversão (Mês) - ${mesReferencia}`,
+            title: `Vendas Concretizadas (Qtde) - Competência (${mesReferencia})`,
           })
         }}
       >
-        <Percent className="w-5 h-5 text-blue-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Conversão (Mês)
+        <CheckSquare className="w-6 h-6 text-fuchsia-500 mb-3" />
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 leading-tight">
+          Vendas Concretizadas (Qtde)
         </span>
-        <span className="text-2xl font-bold text-white">{conversaoCompetencia.toFixed(1)}%</span>
+        <span className="text-3xl font-bold text-white">{totaisCompetencia.fechamentos}</span>
       </button>
 
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
@@ -617,42 +551,16 @@ export function FunilDashboard({
             isOpen: true,
             type: 'competencia_fechamentos',
             origens: origensCompetencia,
-            title: `Vendas (Qtde) - ${mesReferencia}`,
+            title: `Vendas Concretizadas (Valor) - Competência (${mesReferencia})`,
           })
         }}
       >
-        <CheckSquare className="w-5 h-5 text-fuchsia-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
-          Vendas (Qtde)
+        <DollarSign className="w-6 h-6 text-emerald-500 mb-3" />
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 leading-tight">
+          Vendas Concretizadas (Valor Total)
         </span>
-        <span className="text-2xl font-bold text-white">{totaisCompetencia.fechamentos}</span>
-      </button>
-
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all col-span-2 md:col-span-1 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Ticket Médio (Competência) - ${mesReferencia}`,
-          })
-        }}
-      >
-        <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
-          Ticket Médio (Mês)
-        </span>
-        <span className="text-lg font-bold text-fuchsia-400">
-          {formatBrl(
-            totaisCompetencia.fechamentos > 0
-              ? totaisCompetencia.valor_fechado / totaisCompetencia.fechamentos
-              : 0,
-          )}
+        <span className="text-3xl font-bold text-emerald-400">
+          {formatBrl(totaisCompetencia.valor_fechado)}
         </span>
       </button>
     </div>
@@ -922,11 +830,11 @@ export function FunilDashboard({
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <div className="flex flex-col">
                 <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-fuchsia-500" />
-                  Funil por Competência (Mês)
+                  <CheckSquare className="w-5 h-5 text-fuchsia-500" />
+                  Vendas por Competência (Mês)
                 </CardTitle>
                 <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                  Avaliações e Vendas do mesmo ciclo (Exclui Recorrentes)
+                  Vendas do mesmo ciclo (Exclui Recorrentes)
                 </p>
               </div>
             </CardHeader>
