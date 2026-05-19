@@ -106,6 +106,7 @@ export function DashboardLeadsModal({
           .select('*, avaliacoes(*, pacientes(nome))')
           .gte('data_fechamento', dataInicio)
           .lte('data_fechamento', dataFim)
+          .limit(10000)
 
         const { data: vendas } = await query
 
@@ -139,34 +140,36 @@ export function DashboardLeadsModal({
       } else if (type === 'oportunidades' || type === 'competencia_oportunidades') {
         let query = supabase
           .from('avaliacoes')
-          .select(`*, pacientes(nome), vendas_confirmadas(id)`)
+          .select(`*, pacientes!inner(nome), vendas_confirmadas(id)`)
           .or(
-            `data_avaliacao.gte.${dataInicio},and(data_avaliacao.is.null,criado_em.gte.${dataInicio})`,
+            `data_avaliacao.gte.${dataInicio},and(data_avaliacao.is.null,criado_em.gte.${dataInicio}T00:00:00-03:00)`,
           )
-          .limit(3000)
+          .limit(10000)
 
         const { data: avaliacoes } = await query
 
-        const filtered = (avaliacoes || [])
-          .map((a: any) => {
-            if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') {
-              a.pacientes = { nome: 'Paciente não identificado' }
-            }
-            return a
-          })
-          .filter((a: any) => {
-            const dateStr = a.data_avaliacao || a.criado_em || ''
-            const itemDate = dateStr.substring(0, 7)
-            if (dateStr && itemDate !== mesReferencia) return false
+        const filtered = (avaliacoes || []).filter((a: any) => {
+          if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
 
-            if (validOrigens && validOrigens.length > 0) {
-              if (!validOrigens.includes(a.origem_id)) return false
-            } else if (type === 'competencia_oportunidades') {
-              return false
-            }
+          let itemDate = ''
+          if (a.data_avaliacao) {
+            itemDate = a.data_avaliacao.substring(0, 7)
+          } else if (a.criado_em) {
+            const d = new Date(a.criado_em)
+            const brt = new Date(d.getTime() - 3 * 60 * 60 * 1000)
+            itemDate = brt.toISOString().substring(0, 7)
+          }
 
-            return true
-          })
+          if (itemDate !== mesReferencia) return false
+
+          if (validOrigens && validOrigens.length > 0) {
+            if (!validOrigens.includes(a.origem_id)) return false
+          } else if (type === 'competencia_oportunidades') {
+            return false
+          }
+
+          return true
+        })
 
         filtered.sort((a: any, b: any) => {
           const dA = a.data_avaliacao || a.criado_em

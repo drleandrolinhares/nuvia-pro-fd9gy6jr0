@@ -149,19 +149,19 @@ export function FunilDashboard({
     [totaisGerais.comparecimentos],
   )
 
-  const calcValorOportunidades = (avs: any[]) => {
-    return avs.reduce((acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0), 0)
-  }
+  const valorOportunidadesClassico = useMemo(() => {
+    if (!competenciaMetrics) return 0
+    return competenciaMetrics
+      .filter((m: any) => isClassico(m.origem_id))
+      .reduce((acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0), 0)
+  }, [competenciaMetrics, origens])
 
-  const valorOportunidadesClassico = useMemo(
-    () => calcValorOportunidades(avaliacoesAtuais.filter((a: any) => isClassico(a.origem_id))),
-    [avaliacoesAtuais, origens],
-  )
-
-  const valorOportunidadesSecundario = useMemo(
-    () => calcValorOportunidades(avaliacoesAtuais.filter((a: any) => isSecundario(a.origem_id))),
-    [avaliacoesAtuais, origens],
-  )
+  const valorOportunidadesSecundario = useMemo(() => {
+    if (!competenciaMetrics) return 0
+    return competenciaMetrics
+      .filter((m: any) => isSecundario(m.origem_id))
+      .reduce((acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0), 0)
+  }, [competenciaMetrics, origens])
 
   const conversaoTotalClassico =
     valorOportunidadesClassico > 0
