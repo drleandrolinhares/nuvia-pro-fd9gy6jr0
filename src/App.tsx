@@ -9,6 +9,7 @@ import { CacheProvider } from '@/hooks/use-cache'
 import { GlobalNormasPopup } from '@/components/normas/global-normas-popup'
 import { SacNotificationPopup } from '@/components/sac/sac-notification-popup'
 import Layout from './components/Layout'
+import DocumentViewer from './pages/DocumentViewer'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
 import Fluxo from './pages/financeiro/Fluxo'
@@ -289,6 +290,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/viewer" element={<DocumentViewer />} />
       <Route
         element={
           <AccessGuard>

@@ -86,10 +86,9 @@ export default function Treinamentos() {
         lowerUrl.includes('.ppt') || lowerUrl.includes('.doc') || lowerUrl.includes('.xls')
 
       if (isPdf) {
-        // Usa a Edge Function proxy-document para forçar cabeçalhos inline e evitar bloqueio do Chrome
-        const supabaseUrl =
-          import.meta.env.VITE_SUPABASE_URL || 'https://jblynykmltyvseugkvkk.supabase.co'
-        return `${supabaseUrl}/functions/v1/proxy-document?url=${encodeURIComponent(url)}`
+        // Usa o motor de visualização interno (via JavaScript/Canvas) para PDFs
+        // Isso contorna as restrições de iframes e plugins nativos do navegador
+        return `${window.location.origin}/viewer?url=${encodeURIComponent(url)}`
       } else if (isOffice) {
         // Usa o visualizador integrado da Microsoft para arquivos PPTX, DOCX, etc.
         return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`
