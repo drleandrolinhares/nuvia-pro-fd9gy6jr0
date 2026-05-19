@@ -17,6 +17,13 @@ import { TreinamentosQuiz } from './treinamentos/TreinamentosQuiz'
 import { TreinamentosRanking } from './treinamentos/TreinamentosRanking'
 import { TreinamentosAdmin } from './treinamentos/TreinamentosAdmin'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function Treinamentos() {
   const { user } = useAuth()
@@ -124,39 +131,21 @@ export default function Treinamentos() {
         </TabsList>
 
         <TabsContent value="cursos" className="mt-6 space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
-            <span className="text-slate-300 font-medium whitespace-nowrap">
-              Filtrar por Função:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={filtroSetor === 'todos' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFiltroSetor('todos')}
-                className={
-                  filtroSetor === 'todos'
-                    ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                    : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                }
-              >
-                Todos
-              </Button>
-              {cargos.map((c) => (
-                <Button
-                  key={c.id}
-                  variant={filtroSetor === c.nome ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFiltroSetor(c.nome)}
-                  className={
-                    filtroSetor === c.nome
-                      ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                      : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                  }
-                >
-                  {c.nome}
-                </Button>
-              ))}
-            </div>
+          <div className="flex items-center gap-3 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none w-full md:w-fit">
+            <span className="text-slate-300 font-medium whitespace-nowrap">Função:</span>
+            <Select value={filtroSetor} onValueChange={setFiltroSetor}>
+              <SelectTrigger className="w-full md:w-[250px] bg-slate-950 border-slate-700 text-white">
+                <SelectValue placeholder="Selecione a função..." />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                <SelectItem value="todos">Todos</SelectItem>
+                {cargos.map((c) => (
+                  <SelectItem key={c.id} value={c.nome}>
+                    {c.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-6">

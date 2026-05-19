@@ -508,65 +508,48 @@ export default function Onboarding() {
         )}
       </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
-          <span className="text-slate-300 font-medium whitespace-nowrap">Filtrar por Função:</span>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filtroCargo === 'todos' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFiltroCargo('todos')}
-              className={
-                filtroCargo === 'todos'
-                  ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-              }
-            >
-              Todos
-            </Button>
-            {cargosVisiveis.map((c) => (
-              <Button
-                key={c.id}
-                variant={filtroCargo === c.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFiltroCargo(c.id)}
-                className={
-                  filtroCargo === c.id
-                    ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                    : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                }
-              >
-                {c.nome}
-              </Button>
-            ))}
-          </div>
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-slate-300 font-medium whitespace-nowrap">Função:</span>
+          <Select value={filtroCargo} onValueChange={setFiltroCargo}>
+            <SelectTrigger className="w-full md:w-[200px] bg-slate-950 border-slate-700 text-white">
+              <SelectValue placeholder="Selecione a função..." />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800 text-white">
+              <SelectItem value="todos">Todos</SelectItem>
+              {cargosVisiveis.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {isAdmin && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
+          <div className="flex items-center gap-3 w-full md:w-auto md:border-l md:border-slate-800 md:pl-4">
             <span className="text-slate-300 font-medium whitespace-nowrap">Colaborador:</span>
-            <div className="flex flex-wrap gap-2">
-              {usuariosFiltrados.map((u) => (
-                <Button
-                  key={u.id}
-                  variant={selectedUserId === u.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedUserId(u.id)}
-                  className={
-                    selectedUserId === u.id
-                      ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 font-medium'
-                      : 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                  }
-                >
-                  {u.nome}
-                </Button>
-              ))}
-              {usuariosFiltrados.length === 0 && (
-                <span className="text-sm text-slate-500 italic py-1">
-                  Nenhum colaborador encontrado para este filtro.
-                </span>
-              )}
-            </div>
+            <Select
+              value={selectedUserId || 'todos'}
+              onValueChange={(v) => setSelectedUserId(v === 'todos' ? null : v)}
+            >
+              <SelectTrigger className="w-full md:w-[200px] bg-slate-950 border-slate-700 text-white">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                {usuariosFiltrados.length === 0 ? (
+                  <SelectItem value="todos" disabled>
+                    Nenhum colaborador
+                  </SelectItem>
+                ) : (
+                  usuariosFiltrados.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>

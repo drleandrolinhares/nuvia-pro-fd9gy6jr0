@@ -19,7 +19,22 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
   const [descricao, setDescricao] = useState(modulo?.descricao || '')
   const [cursoId, setCursoId] = useState(modulo?.curso_id || '')
   const [notaMinima, setNotaMinima] = useState(modulo?.nota_minima || 7)
-  const [quiz, setQuiz] = useState<any[]>(modulo?.quiz_json || [])
+
+  // Safely parse quiz JSON
+  const initialQuiz = (() => {
+    if (Array.isArray(modulo?.quiz_json)) return modulo.quiz_json
+    if (typeof modulo?.quiz_json === 'string') {
+      try {
+        const parsed = JSON.parse(modulo.quiz_json)
+        return Array.isArray(parsed) ? parsed : []
+      } catch (e) {
+        return []
+      }
+    }
+    return []
+  })()
+
+  const [quiz, setQuiz] = useState<any[]>(initialQuiz)
 
   const [tipoConteudo, setTipoConteudo] = useState<'video' | 'pdf'>(
     modulo?.arquivo_url ? 'pdf' : 'video',
@@ -286,23 +301,24 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {q.options.map((opt: string, optIndex: number) => (
-                <div key={optIndex} className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name={`correct-${qIndex}`}
-                    checked={q.correctIndex === optIndex}
-                    onChange={() => updateQuestion(qIndex, 'correctIndex', optIndex)}
-                    className="w-4 h-4 accent-amber-500 bg-slate-950 border-slate-700 cursor-pointer"
-                  />
-                  <Input
-                    value={opt}
-                    onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                    placeholder={`Opção ${optIndex + 1}`}
-                    className="bg-slate-950 border-slate-700 text-white"
-                  />
-                </div>
-              ))}
+              {Array.isArray(q.options) &&
+                q.options.map((opt: string, optIndex: number) => (
+                  <div key={optIndex} className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name={`correct-${qIndex}`}
+                      checked={q.correctIndex === optIndex}
+                      onChange={() => updateQuestion(qIndex, 'correctIndex', optIndex)}
+                      className="w-4 h-4 accent-amber-500 bg-slate-950 border-slate-700 cursor-pointer"
+                    />
+                    <Input
+                      value={opt}
+                      onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
+                      placeholder={`Opção ${optIndex + 1}`}
+                      className="bg-slate-950 border-slate-700 text-white"
+                    />
+                  </div>
+                ))}
             </div>
           </div>
         ))}
