@@ -18,20 +18,26 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
   const [titulo, setTitulo] = useState(modulo?.titulo || '')
   const [descricao, setDescricao] = useState(modulo?.descricao || '')
   const [cursoId, setCursoId] = useState(modulo?.curso_id || '')
-  const [notaMinima, setNotaMinima] = useState(modulo?.nota_minima || 7)
+  const [notaMinima, setNotaMinima] = useState(modulo?.nota_minima ?? 7)
 
   // Safely parse quiz JSON
   const initialQuiz = (() => {
-    if (Array.isArray(modulo?.quiz_json)) return modulo.quiz_json
-    if (typeof modulo?.quiz_json === 'string') {
+    let parsed: any[] = []
+    if (Array.isArray(modulo?.quiz_json)) {
+      parsed = modulo.quiz_json
+    } else if (typeof modulo?.quiz_json === 'string') {
       try {
-        const parsed = JSON.parse(modulo.quiz_json)
-        return Array.isArray(parsed) ? parsed : []
+        const p = JSON.parse(modulo.quiz_json)
+        if (Array.isArray(p)) parsed = p
       } catch (e) {
-        return []
+        // ignore
       }
     }
-    return []
+    return parsed.map((q) => ({
+      question: q?.question || '',
+      options: Array.isArray(q?.options) ? q.options : ['', '', '', ''],
+      correctIndex: typeof q?.correctIndex === 'number' ? q.correctIndex : 0,
+    }))
   })()
 
   const [quiz, setQuiz] = useState<any[]>(initialQuiz)
@@ -155,7 +161,7 @@ export function TreinamentosQuizBuilder({ modulo, cursos, onSave, onCancel }: an
         </div>
         <div className="space-y-2">
           <Label className="text-slate-300">Curso</Label>
-          <Select value={cursoId} onValueChange={setCursoId}>
+          <Select value={cursoId || undefined} onValueChange={setCursoId}>
             <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
               <SelectValue placeholder="Selecione um curso" />
             </SelectTrigger>

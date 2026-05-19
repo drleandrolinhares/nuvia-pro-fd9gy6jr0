@@ -117,24 +117,30 @@ export default function Treinamentos() {
       </div>
 
       <Tabs defaultValue="cursos" className="w-full">
-        <TabsList className="bg-slate-900 border-slate-800">
-          <TabsTrigger value="cursos">Cursos Disponíveis</TabsTrigger>
-          <TabsTrigger value="ranking">Ranking</TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger
-              value="admin"
-              className="text-amber-500 data-[state=active]:text-amber-500"
-            >
-              <Settings className="w-4 h-4 mr-2" /> Gestão
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <TabsList className="bg-slate-900 border-slate-800 h-auto p-1 flex-wrap justify-start">
+            <TabsTrigger value="cursos" className="py-2">
+              Cursos Disponíveis
             </TabsTrigger>
-          )}
-        </TabsList>
+            <TabsTrigger value="ranking" className="py-2">
+              Ranking
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger
+                value="admin"
+                className="text-amber-500 data-[state=active]:text-amber-500 py-2"
+              >
+                <Settings className="w-4 h-4 mr-2" /> Gestão
+              </TabsTrigger>
+            )}
+          </TabsList>
 
-        <TabsContent value="cursos" className="mt-6 space-y-6 animate-fade-in">
-          <div className="flex items-center gap-3 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none w-full md:w-fit">
-            <span className="text-slate-300 font-medium whitespace-nowrap">Função:</span>
+          <div className="flex items-center gap-3 bg-slate-900 p-1.5 rounded-lg border border-slate-800 w-full md:w-auto shrink-0">
+            <span className="text-slate-300 font-medium text-sm whitespace-nowrap pl-2">
+              Função:
+            </span>
             <Select value={filtroSetor} onValueChange={setFiltroSetor}>
-              <SelectTrigger className="w-full md:w-[250px] bg-slate-950 border-slate-700 text-white">
+              <SelectTrigger className="w-full md:w-[220px] h-9 bg-slate-950 border-slate-700 text-white text-sm">
                 <SelectValue placeholder="Selecione a função..." />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-800 text-white">
@@ -147,7 +153,9 @@ export default function Treinamentos() {
               </SelectContent>
             </Select>
           </div>
+        </div>
 
+        <TabsContent value="cursos" className="mt-6 space-y-6 animate-fade-in">
           <div className="grid gap-6">
             {cursos
               .filter((c) => filtroSetor === 'todos' || c.setor === filtroSetor)
