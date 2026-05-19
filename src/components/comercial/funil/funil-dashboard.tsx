@@ -539,16 +539,6 @@ export function FunilDashboard({
     </div>
   )
 
-  const handleCompetenciaClick = (type: any, title: string) => {
-    console.log(`[Dashboard] Abrindo modal de competência: ${type} - ${title}`)
-    setModalConfig({
-      isOpen: true,
-      type,
-      origens: origensCompetencia,
-      title,
-    })
-  }
-
   const renderCompetenciaBlocks = () => (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center isolate">
       <button
@@ -558,10 +548,12 @@ export function FunilDashboard({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleCompetenciaClick(
-            'competencia_oportunidades',
-            `Oportunidades (Qtde) - Competência (${mesReferencia})`,
-          )
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_oportunidades',
+            origens: origensCompetencia,
+            title: `Oportunidades (Qtde) - Competência (${mesReferencia})`,
+          })
         }}
       >
         <Target className="w-5 h-5 text-fuchsia-500 mb-2" />
@@ -578,10 +570,12 @@ export function FunilDashboard({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleCompetenciaClick(
-            'competencia_oportunidades',
-            `Valor (Oport.) - Competência (${mesReferencia})`,
-          )
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_oportunidades',
+            origens: origensCompetencia,
+            title: `Valor (Oport.) - Competência (${mesReferencia})`,
+          })
         }}
       >
         <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
@@ -600,7 +594,12 @@ export function FunilDashboard({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleCompetenciaClick('competencia_fechamentos', `Conversão (Mês) - ${mesReferencia}`)
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_fechamentos',
+            origens: origensCompetencia,
+            title: `Conversão (Mês) - ${mesReferencia}`,
+          })
         }}
       >
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
@@ -617,7 +616,12 @@ export function FunilDashboard({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleCompetenciaClick('competencia_fechamentos', `Vendas (Qtde) - ${mesReferencia}`)
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_fechamentos',
+            origens: origensCompetencia,
+            title: `Vendas (Qtde) - ${mesReferencia}`,
+          })
         }}
       >
         <CheckSquare className="w-5 h-5 text-fuchsia-500 mb-2" />
@@ -634,10 +638,12 @@ export function FunilDashboard({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleCompetenciaClick(
-            'competencia_fechamentos',
-            `Ticket Médio (Competência) - ${mesReferencia}`,
-          )
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_fechamentos',
+            origens: origensCompetencia,
+            title: `Ticket Médio (Competência) - ${mesReferencia}`,
+          })
         }}
       >
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
