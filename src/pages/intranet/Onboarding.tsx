@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Loader2, Plus, Edit2, Trash2, CheckSquare, Users, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -79,6 +81,8 @@ export default function Onboarding() {
             titulo: 'FASE PADRÃO (SEM FASE DEFINIDA)',
             cargo_id: cid,
             ordem: maxOrdem,
+            todos_usuarios: !cid,
+            cargos_alvo: cid ? [cid] : [],
           })
           .select()
           .single()
@@ -198,7 +202,13 @@ export default function Onboarding() {
     const data = {
       titulo: faseForm.titulo,
       ordem: faseForm.ordem || 0,
-      cargo_id: faseForm.cargo_id === 'geral' ? null : faseForm.cargo_id,
+      cargo_id:
+        faseForm.direcionamento === 'cargos' && faseForm.cargos_alvo?.length === 1
+          ? faseForm.cargos_alvo[0]
+          : null,
+      todos_usuarios: faseForm.direcionamento === 'todos',
+      cargos_alvo: faseForm.direcionamento === 'cargos' ? faseForm.cargos_alvo || [] : [],
+      usuarios_alvo: faseForm.direcionamento === 'usuarios' ? faseForm.usuarios_alvo || [] : [],
     }
     if (faseForm.id) {
       await supabase.from('intranet_onboarding_fases').update(data).eq('id', faseForm.id)
@@ -313,13 +323,38 @@ export default function Onboarding() {
 
   const fasesFiltradas = useMemo(() => {
     return todasFases.filter((f) => {
-      const isAllowedForUser = isAdmin || !f.cargo_id || userCargos.includes(f.cargo_id)
+      const targetUserId = isAdmin && selectedUserId ? selectedUserId : user?.id
+      const targetUser = usuarios.find((u) => u.id === targetUserId)
+      const targetUserCargos =
+        isAdmin && selectedUserId && targetUser
+          ? [targetUser.cargo_id, targetUser.cargo_secundario_id].filter(Boolean)
+          : userCargos
+
+      const isAllowedForUser =
+        isAdmin && !selectedUserId
+          ? true
+          : f.todos_usuarios ||
+            (f.todos_usuarios === null && !f.cargo_id) ||
+            (f.cargos_alvo &&
+              f.cargos_alvo.length > 0 &&
+              targetUserCargos.some((c) => f.cargos_alvo.includes(c))) ||
+            (f.usuarios_alvo &&
+              f.usuarios_alvo.length > 0 &&
+              targetUserId &&
+              f.usuarios_alvo.includes(targetUserId)) ||
+            (f.cargo_id && targetUserCargos.includes(f.cargo_id))
+
       if (!isAllowedForUser) return false
 
       if (filtroCargo === 'todos') return true
-      return f.cargo_id === filtroCargo || !f.cargo_id
+
+      if (f.cargos_alvo && f.cargos_alvo.includes(filtroCargo)) return true
+      if (f.cargo_id === filtroCargo) return true
+      if (f.todos_usuarios || (f.todos_usuarios === null && !f.cargo_id)) return true
+
+      return false
     })
-  }, [todasFases, filtroCargo, isAdmin, userCargos])
+  }, [todasFases, filtroCargo, isAdmin, userCargos, user?.id, selectedUserId, usuarios])
 
   const usuariosFiltrados = useMemo(() => {
     if (filtroCargo === 'todos') return usuarios
@@ -496,7 +531,9 @@ export default function Onboarding() {
               onClick={() => {
                 setFaseForm({
                   ordem: fases.length > 0 ? Math.max(...fases.map((f) => f.ordem)) + 1 : 0,
-                  cargo_id: 'geral',
+                  direcionamento: 'todos',
+                  cargos_alvo: [],
+                  usuarios_alvo: [],
                 })
                 setFaseModal(true)
               }}
@@ -582,9 +619,18 @@ export default function Onboarding() {
                     {fase.titulo}
                   </h2>
                   <p className="text-sm text-slate-400 mt-1 font-medium uppercase tracking-wider">
-                    {fase.cargo_id
-                      ? `Trilha: ${cargos.find((c) => c.id === fase.cargo_id)?.nome}`
-                      : 'Trilha: Geral'}
+                    {fase.todos_usuarios || (fase.todos_usuarios === null && !fase.cargo_id)
+                      ? 'Direcionamento: Todos'
+                      : fase.cargos_alvo && fase.cargos_alvo.length > 0
+                        ? `Funções: ${fase.cargos_alvo
+                            .map((id: string) => cargos.find((c) => c.id === id)?.nome)
+                            .filter(Boolean)
+                            .join(', ')}`
+                        : fase.usuarios_alvo && fase.usuarios_alvo.length > 0
+                          ? `Colaboradores Específicos (${fase.usuarios_alvo.length})`
+                          : fase.cargo_id
+                            ? `Função: ${cargos.find((c) => c.id === fase.cargo_id)?.nome}`
+                            : 'Direcionamento: Todos'}
                   </p>
                 </div>
                 {isAdmin && (
@@ -636,7 +682,21 @@ export default function Onboarding() {
                       variant="ghost"
                       className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800"
                       onClick={() => {
-                        setFaseForm(fase)
+                        let dir = 'todos'
+                        if (fase.todos_usuarios === false) {
+                          if (fase.usuarios_alvo && fase.usuarios_alvo.length > 0) dir = 'usuarios'
+                          else if (fase.cargos_alvo && fase.cargos_alvo.length > 0) dir = 'cargos'
+                          else if (fase.cargo_id) dir = 'cargos'
+                        } else if (fase.cargo_id && fase.todos_usuarios !== true) {
+                          dir = 'cargos'
+                        }
+
+                        setFaseForm({
+                          ...fase,
+                          direcionamento: dir,
+                          cargos_alvo: fase.cargos_alvo || (fase.cargo_id ? [fase.cargo_id] : []),
+                          usuarios_alvo: fase.usuarios_alvo || [],
+                        })
                         setFaseModal(true)
                       }}
                     >
@@ -694,7 +754,7 @@ export default function Onboarding() {
               {faseForm.id ? 'Editar' : 'Nova'} Fase do Onboarding
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[75vh] overflow-y-auto pr-2">
             <div className="space-y-2">
               <Label className="text-slate-300">Título da Fase</Label>
               <Input
@@ -704,31 +764,122 @@ export default function Onboarding() {
                 placeholder="Ex: FASE 1 - AMBIENTAÇÃO"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-slate-300">Trilha (Função/Cargo)</Label>
-              <Select
-                value={faseForm.cargo_id || 'geral'}
-                onValueChange={(v) => setFaseForm({ ...faseForm, cargo_id: v })}
+
+            <div className="space-y-3 pt-2">
+              <Label className="text-slate-300 font-semibold">Direcionamento da Fase</Label>
+              <RadioGroup
+                value={faseForm.direcionamento || 'todos'}
+                onValueChange={(v) => setFaseForm({ ...faseForm, direcionamento: v })}
+                className="flex flex-col gap-3 mt-1"
               >
-                <SelectTrigger className="bg-slate-950 border-slate-700">
-                  <SelectValue placeholder="Selecione a trilha..." />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                  <SelectItem value="geral">Trilha Geral (Para todos)</SelectItem>
-                  {cargos.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      Específico: {c.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="todos"
+                    id="r-todos"
+                    className="border-slate-500 text-amber-500"
+                  />
+                  <Label htmlFor="r-todos" className="cursor-pointer text-slate-300">
+                    Para Todos os Colaboradores
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="cargos"
+                    id="r-cargos"
+                    className="border-slate-500 text-amber-500"
+                  />
+                  <Label htmlFor="r-cargos" className="cursor-pointer text-slate-300">
+                    Por Função / Trilha Específica
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="usuarios"
+                    id="r-usuarios"
+                    className="border-slate-500 text-amber-500"
+                  />
+                  <Label htmlFor="r-usuarios" className="cursor-pointer text-slate-300">
+                    Por Colaborador Específico
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
-            <div className="space-y-2">
+
+            {faseForm.direcionamento === 'cargos' && (
+              <div className="space-y-2 border border-slate-800 rounded-md p-3 bg-slate-950/50 mt-2">
+                <Label className="text-slate-300 font-medium">Selecione as Funções</Label>
+                <ScrollArea className="h-40 border border-slate-800 rounded-md p-3 bg-slate-900">
+                  <div className="space-y-3">
+                    {cargos.map((c) => (
+                      <div key={c.id} className="flex items-center space-x-3">
+                        <Checkbox
+                          id={`cargo-${c.id}`}
+                          checked={faseForm.cargos_alvo?.includes(c.id)}
+                          onCheckedChange={(checked) => {
+                            const current = faseForm.cargos_alvo || []
+                            const updated = checked
+                              ? [...current, c.id]
+                              : current.filter((id: string) => id !== c.id)
+                            setFaseForm({ ...faseForm, cargos_alvo: updated })
+                          }}
+                          className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-900"
+                        />
+                        <Label
+                          htmlFor={`cargo-${c.id}`}
+                          className="cursor-pointer font-normal text-slate-300 flex-1"
+                        >
+                          {c.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {faseForm.direcionamento === 'usuarios' && (
+              <div className="space-y-2 border border-slate-800 rounded-md p-3 bg-slate-950/50 mt-2">
+                <Label className="text-slate-300 font-medium">Selecione os Colaboradores</Label>
+                <ScrollArea className="h-40 border border-slate-800 rounded-md p-3 bg-slate-900">
+                  <div className="space-y-3">
+                    {usuarios.map((u) => (
+                      <div key={u.id} className="flex items-center space-x-3">
+                        <Checkbox
+                          id={`usuario-${u.id}`}
+                          checked={faseForm.usuarios_alvo?.includes(u.id)}
+                          onCheckedChange={(checked) => {
+                            const current = faseForm.usuarios_alvo || []
+                            const updated = checked
+                              ? [...current, u.id]
+                              : current.filter((id: string) => id !== u.id)
+                            setFaseForm({ ...faseForm, usuarios_alvo: updated })
+                          }}
+                          className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-slate-900"
+                        />
+                        <Label
+                          htmlFor={`usuario-${u.id}`}
+                          className="cursor-pointer font-normal text-slate-300 flex-1"
+                        >
+                          {u.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            <div className="space-y-2 pt-2 border-t border-slate-800">
               <Label className="text-slate-300">Ordem de Exibição</Label>
               <Input
                 type="number"
-                value={faseForm.ordem || ''}
-                onChange={(e) => setFaseForm({ ...faseForm, ordem: Number(e.target.value) })}
+                value={faseForm.ordem === undefined ? '' : faseForm.ordem}
+                onChange={(e) =>
+                  setFaseForm({
+                    ...faseForm,
+                    ordem: e.target.value === '' ? 0 : Number(e.target.value),
+                  })
+                }
                 className="bg-slate-950 border-slate-700 w-1/2"
               />
             </div>
@@ -736,7 +887,7 @@ export default function Onboarding() {
           <DialogFooter>
             <Button
               onClick={saveFase}
-              className="bg-amber-500 text-slate-900 font-bold hover:bg-amber-600"
+              className="bg-amber-500 text-slate-900 font-bold hover:bg-amber-600 w-full sm:w-auto"
             >
               Salvar Fase
             </Button>
@@ -865,8 +1016,10 @@ export default function Onboarding() {
               <Label className="text-slate-300">Ordem de Exibição</Label>
               <Input
                 type="number"
-                value={tForm.ordem || ''}
-                onChange={(e) => setTForm({ ...tForm, ordem: Number(e.target.value) })}
+                value={tForm.ordem === undefined ? '' : tForm.ordem}
+                onChange={(e) =>
+                  setTForm({ ...tForm, ordem: e.target.value === '' ? 0 : Number(e.target.value) })
+                }
                 className="bg-slate-950 border-slate-700 w-1/2"
               />
             </div>
