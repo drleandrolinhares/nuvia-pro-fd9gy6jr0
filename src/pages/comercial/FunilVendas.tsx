@@ -39,6 +39,7 @@ export default function FunilVendas() {
   const [avaliacoesMes, setAvaliacoesMes] = useState<any[]>([])
   const [leadsMes, setLeadsMes] = useState<any[]>([])
   const [vendasMes, setVendasMes] = useState<any[]>([])
+  const [competenciaMetrics, setCompetenciaMetrics] = useState<any[]>([])
 
   const fetchData = async (showLoader = true) => {
     if (showLoader) setLoading(true)
@@ -72,7 +73,7 @@ export default function FunilVendas() {
     const { data: vendasData } = await supabase
       .from('vendas_confirmadas')
       .select(
-        'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, data_original, criado_em, avaliacoes(origem_id, data_avaliacao, criado_em)',
+        'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, data_original, data_fechamento, criado_em, avaliacoes(origem_id, data_avaliacao, criado_em)',
       )
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)
@@ -83,7 +84,14 @@ export default function FunilVendas() {
       .select(
         'id, origem_id, valor_orcamento, status, data_avaliacao, criado_em, data_fechamento, pacientes(nome)',
       )
+      .or(
+        `and(data_avaliacao.gte.${dataInicio},data_avaliacao.lte.${dataFim}),and(data_avaliacao.is.null,criado_em.gte.${dataInicio}T00:00:00,criado_em.lte.${dataFim}T23:59:59)`,
+      )
       .limit(10000)
+
+    const { data: competenciaData } = await supabase.rpc('get_funil_competencia_metrics', {
+      p_mes_referencia: mesReferencia,
+    })
 
     const validOrigensSet = new Set(
       (origensData || []).filter((o: any) => o.ativo !== false).map((o: any) => o.id),
@@ -254,6 +262,7 @@ export default function FunilVendas() {
     setAvaliacoesMes(avaliacoesFiltradas)
     setLeadsMes(leadsData || [])
     setVendasMes(vendasGlobaisFiltradas)
+    setCompetenciaMetrics(competenciaData || [])
     if (showLoader) setLoading(false)
   }
 
@@ -409,6 +418,7 @@ export default function FunilVendas() {
           vendas={vendasMes}
           etapas={etapas}
           temperaturas={temperaturas}
+          competenciaMetrics={competenciaMetrics}
           onUpdate={() => fetchData(false)}
         />
       ) : view === 'bussola' ? (

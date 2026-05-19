@@ -38,6 +38,7 @@ export function FunilDashboard({
   vendas,
   etapas,
   temperaturas,
+  competenciaMetrics,
   onUpdate,
 }: any) {
   const [vendasLocais, setVendasLocais] = useState<any[]>([])
@@ -172,50 +173,46 @@ export function FunilDashboard({
       : 0
 
   // -------------------------------------------------------------
-  // Lógica Isolada para Competência (Mês)
+  // Lógica Isolada para Competência (Mês) baseada no RPC
   // -------------------------------------------------------------
-  const origensCompetencia = useMemo(() => {
-    return origens
-      .filter((o: any) => o.ativo && !o.nome?.toLowerCase().includes('recorrente'))
-      .map((o: any) => o.id)
+  const origemRecorrenteId = useMemo(() => {
+    return origens.find((o: any) => o.nome?.toLowerCase().includes('recorrente'))?.id
   }, [origens])
 
-  const avaliacoesCompetencia = useMemo(() => {
-    if (!avaliacoes) return []
-    return avaliacoes.filter((a: any) => {
-      if (!origensCompetencia.includes(a.origem_id)) return false
-      const dataAvaliacao = a.data_avaliacao || a.criado_em
-      return dataAvaliacao?.startsWith(mesReferencia)
-    })
-  }, [avaliacoes, origensCompetencia, mesReferencia])
+  const origensCompetencia = useMemo(() => {
+    return origens.filter((o: any) => o.ativo && o.id !== origemRecorrenteId).map((o: any) => o.id)
+  }, [origens, origemRecorrenteId])
 
-  const valorOportunidadesCompetencia = useMemo(() => {
-    return avaliacoesCompetencia.reduce(
-      (acc: number, curr: any) => acc + (Number(curr.valor_orcamento) || 0),
+  const competenciaFiltrada = useMemo(() => {
+    if (!competenciaMetrics) return []
+    return competenciaMetrics.filter((m: any) => origensCompetencia.includes(m.origem_id))
+  }, [competenciaMetrics, origensCompetencia])
+
+  const qtdeOportunidadesCompetencia = useMemo(() => {
+    return competenciaFiltrada.reduce(
+      (acc: number, curr: any) => acc + Number(curr.qtd_oportunidades || 0),
       0,
     )
-  }, [avaliacoesCompetencia])
+  }, [competenciaFiltrada])
 
-  const vendasCompetencia = useMemo(() => {
-    if (!vendasLocais) return []
-    return vendasLocais.filter((v: any) => {
-      if (!origensCompetencia.includes(v.origem_id)) return false
-      const dataFechamento = v.data_fechamento
-      if (!dataFechamento?.startsWith(mesReferencia)) return false
-
-      const dataOriginal = v.data_original || v.avaliacoes?.data_avaliacao || dataFechamento
-      return dataOriginal?.startsWith(mesReferencia)
-    })
-  }, [vendasLocais, origensCompetencia, mesReferencia])
+  const valorOportunidadesCompetencia = useMemo(() => {
+    return competenciaFiltrada.reduce(
+      (acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0),
+      0,
+    )
+  }, [competenciaFiltrada])
 
   const totaisCompetencia = useMemo(() => {
-    const fechamentos = vendasCompetencia.length
-    const valor_fechado = vendasCompetencia.reduce(
-      (acc: number, curr: any) => acc + (Number(curr.valor_tratamento) || 0),
+    const fechamentos = competenciaFiltrada.reduce(
+      (acc: number, curr: any) => acc + Number(curr.qtd_vendas || 0),
+      0,
+    )
+    const valor_fechado = competenciaFiltrada.reduce(
+      (acc: number, curr: any) => acc + Number(curr.valor_vendas || 0),
       0,
     )
     return { fechamentos, valor_fechado }
-  }, [vendasCompetencia])
+  }, [competenciaFiltrada])
 
   const conversaoCompetencia =
     valorOportunidadesCompetencia > 0
@@ -560,7 +557,7 @@ export function FunilDashboard({
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Oportunidades
         </span>
-        <span className="text-2xl font-bold text-white">{avaliacoesCompetencia.length}</span>
+        <span className="text-2xl font-bold text-white">{qtdeOportunidadesCompetencia}</span>
       </button>
 
       <button
