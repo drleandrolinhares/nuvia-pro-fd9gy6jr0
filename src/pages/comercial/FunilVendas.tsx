@@ -72,7 +72,7 @@ export default function FunilVendas() {
     const { data: vendasData } = await supabase
       .from('vendas_confirmadas')
       .select(
-        'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, avaliacoes(origem_id)',
+        'id, paciente_nome, valor_tratamento, oportunidade_id, origem_id, data_original, criado_em, avaliacoes(origem_id, data_avaliacao, criado_em)',
       )
       .gte('data_fechamento', dataInicio)
       .lte('data_fechamento', dataFim)

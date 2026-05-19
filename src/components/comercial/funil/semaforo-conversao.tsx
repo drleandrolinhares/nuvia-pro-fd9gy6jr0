@@ -181,6 +181,58 @@ export function SemaforoConversao({
   const formatBrl = (v: number) =>
     Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+  const metricsCompetencia = useMemo(() => {
+    // 1. Identificar Origens Recorrentes para EXCLUIR
+    const origensRecorrentesIds =
+      origens
+        ?.filter((o: any) => (o.nome?.toLowerCase() || '').includes('recorrente'))
+        .map((o: any) => o.id) || []
+
+    const isRecorrente = (origemId: string) => origensRecorrentesIds.includes(origemId)
+
+    // 2. Oportunidades Competência (Avaliações do Mês, Excluindo Recorrentes)
+    const avaliacoesCompetencia = avaliacoes.filter((a: any) => !isRecorrente(a.origem_id))
+    const valorOportunidadesCompetencia = avaliacoesCompetencia.reduce(
+      (acc, curr) => acc + (Number(curr.valor_orcamento) || 0),
+      0,
+    )
+
+    // 3. Vendas Competência (Fechamentos do Mês cuja avaliação/data original também é do mês, Excluindo Recorrentes)
+    const vendasCompetencia = vendas.filter((v: any) => {
+      const origemId = v.origem_id || v.avaliacoes?.origem_id
+      if (isRecorrente(origemId)) return false
+
+      // Verifica se a avaliação foi no mês de referência
+      const dataAvaliacao =
+        v.data_original || v.avaliacoes?.data_avaliacao || v.avaliacoes?.criado_em || v.criado_em
+      if (!dataAvaliacao) return false
+
+      const mesAvaliacao = dataAvaliacao.substring(0, 7)
+      return mesAvaliacao === mesReferencia
+    })
+
+    const qtdeVendasCompetencia = vendasCompetencia.length
+    const valorVendasCompetencia = vendasCompetencia.reduce(
+      (acc, curr) => acc + Number(curr.valor_tratamento || 0),
+      0,
+    )
+
+    return {
+      valorOportunidades: valorOportunidadesCompetencia,
+      valorVendas: valorVendasCompetencia,
+      qtdeVendas: qtdeVendasCompetencia,
+    }
+  }, [avaliacoes, vendas, origens, mesReferencia])
+
+  const conversaoCompetencia =
+    metricsCompetencia.valorOportunidades > 0
+      ? (metricsCompetencia.valorVendas / metricsCompetencia.valorOportunidades) * 100
+      : 0
+  const ticketMedioCompetencia =
+    metricsCompetencia.qtdeVendas > 0
+      ? metricsCompetencia.valorVendas / metricsCompetencia.qtdeVendas
+      : 0
+
   return (
     <div className="space-y-6 animate-fade-in-up pb-8">
       {/* BLOCO 1: FUNIL POR OPORTUNIDADES GERADAS EM R$ */}
@@ -231,7 +283,7 @@ export function SemaforoConversao({
               <DollarSign className="w-8 h-8 text-emerald-500" />
             </div>
             <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
-              Total de Vendas
+              Vendas do Mês + Follow-up
             </h3>
             <div className="text-2xl font-bold mb-2 text-emerald-400">
               {formatBrl(metrics.valorVendas)}
@@ -285,6 +337,95 @@ export function SemaforoConversao({
             </h3>
             <div className="text-2xl font-bold mb-2 text-white">{formatBrl(ticketMedio)}</div>
             <p className="text-xs text-slate-400 font-medium">Por fechamento</p>
+          </div>
+        </div>
+      </div>
+
+      {/* NOVO BLOCO: FUNIL POR COMPETÊNCIA (MÊS) */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-indigo-500/10 rounded-lg">
+            <Target className="w-6 h-6 text-indigo-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white uppercase tracking-wide">
+              Funil por Competência (Mês)
+            </h3>
+            <p className="text-sm text-slate-400">
+              Análise rigorosa: apenas avaliações e vendas realizadas{' '}
+              <strong>dentro do mesmo mês</strong> (excluindo pacientes recorrentes).
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-indigo-500/20">
+              <Target className="w-8 h-8 text-indigo-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Oportunidades (Competência)
+            </h3>
+            <div className="text-2xl font-bold mb-2 text-indigo-400">
+              {formatBrl(metricsCompetencia.valorOportunidades)}
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium mt-1">Apenas avaliações do mês</p>
+          </div>
+
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-emerald-500/20">
+              <DollarSign className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Vendas (Competência)
+            </h3>
+            <div className="text-2xl font-bold mb-2 text-emerald-400">
+              {formatBrl(metricsCompetencia.valorVendas)}
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium mt-1">
+              Vendas vindas das avaliações deste mês
+            </p>
+          </div>
+
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-cyan-500/20">
+              <Percent className="w-8 h-8 text-cyan-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Conversão (Competência)
+            </h3>
+            <div className="text-3xl font-bold mb-2 text-cyan-400">
+              {conversaoCompetencia.toFixed(1)}%
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Vendas / Oportunidades (Mês)</p>
+          </div>
+
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-violet-500/20">
+              <CheckSquare className="w-8 h-8 text-violet-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Fechamentos (Competência)
+            </h3>
+            <div className="text-3xl font-bold mb-2 text-violet-400">
+              {metricsCompetencia.qtdeVendas}
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Qtd. Vendas da Competência</p>
+          </div>
+
+          <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col items-center text-center shadow-lg">
+            <div className="p-4 bg-slate-900 rounded-full mb-4 ring-1 ring-purple-500/20">
+              <TrendingUp className="w-8 h-8 text-purple-500" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1 uppercase tracking-wider text-slate-200">
+              Ticket Médio (Competência)
+            </h3>
+            <div className="text-2xl font-bold mb-2 text-white">
+              {formatBrl(ticketMedioCompetencia)}
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Por fechamento (Mês)</p>
           </div>
         </div>
       </div>
