@@ -79,7 +79,7 @@ export function DashboardLeadsModal({
   const fetchData = async () => {
     setLoading(true)
     try {
-      if (type === 'fechamentos') {
+      if (type === 'fechamentos' || type === 'competencia_fechamentos') {
         const [ano, mes] = mesReferencia.split('-')
         const dataInicio = `${mesReferencia}-01`
         const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
@@ -96,6 +96,13 @@ export function DashboardLeadsModal({
             const oId = v.origem_id || v.avaliacoes?.origem_id
             if (!origens.includes(oId)) return false
           }
+
+          if (type === 'competencia_fechamentos') {
+            const dataOriginal =
+              v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
+            if (dataOriginal?.substring(0, 7) !== mesReferencia) return false
+          }
+
           return true
         })
 
@@ -104,7 +111,7 @@ export function DashboardLeadsModal({
             new Date(b.data_fechamento || 0).getTime() - new Date(a.data_fechamento || 0).getTime(),
         )
         setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
-      } else if (type === 'oportunidades') {
+      } else if (type === 'oportunidades' || type === 'competencia_oportunidades') {
         const query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
@@ -280,7 +287,7 @@ export function DashboardLeadsModal({
           <DialogHeader className="p-6 pb-4 border-b border-slate-800 bg-slate-950/50">
             <DialogTitle className="text-xl text-white">{title}</DialogTitle>
             <DialogDescription className="text-slate-400">
-              {type === 'oportunidades'
+              {type === 'oportunidades' || type === 'competencia_oportunidades'
                 ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
                 : 'Listagem detalhada dos registros do período selecionado.'}
             </DialogDescription>
@@ -322,7 +329,10 @@ export function DashboardLeadsModal({
                       <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                         Status & Vínculos
                       </TableHead>
-                      {type === 'oportunidades' || type === 'fechamentos' ? (
+                      {type === 'oportunidades' ||
+                      type === 'competencia_oportunidades' ||
+                      type === 'fechamentos' ||
+                      type === 'competencia_fechamentos' ? (
                         <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-right">
                           Valor
                         </TableHead>
