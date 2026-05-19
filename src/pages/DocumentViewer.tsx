@@ -34,29 +34,38 @@ export default function DocumentViewer() {
         const container = document.getElementById('pdf-container')
         if (!container) return
 
+        const padding = window.innerWidth < 640 ? 16 : 32
+        const availableWidth = window.innerWidth - padding
+
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum)
-          // Default scale 1.5 for better quality
-          let viewport = page.getViewport({ scale: 1.5 })
 
-          // Adjust scale for mobile screens to fit width
-          const screenWidth = window.innerWidth
-          if (screenWidth < viewport.width) {
-            const scale = (screenWidth - 32) / viewport.width // 32px padding
-            viewport = page.getViewport({ scale: 1.5 * scale })
-          }
+          const unscaledViewport = page.getViewport({ scale: 1.0 })
+
+          // Calculate scale to fit available width
+          const scale = availableWidth / unscaledViewport.width
+
+          // Limit maximum render scale to avoid browser crash, but display full width
+          const dpr = window.devicePixelRatio || 1
+          const renderScale = Math.min(scale * dpr, 3.0)
+
+          const renderViewport = page.getViewport({ scale: renderScale })
+          const displayViewport = page.getViewport({ scale: scale })
 
           const canvas = document.createElement('canvas')
-          canvas.className = 'mb-4 shadow-xl rounded-lg max-w-full mx-auto bg-white'
+          canvas.className = 'mb-6 shadow-2xl rounded max-w-full bg-white mx-auto'
+          canvas.style.width = `${Math.floor(displayViewport.width)}px`
+          canvas.style.height = 'auto'
+
           const context = canvas.getContext('2d')
 
           if (context) {
-            canvas.height = viewport.height
-            canvas.width = viewport.width
+            canvas.height = renderViewport.height
+            canvas.width = renderViewport.width
 
             const renderContext = {
               canvasContext: context,
-              viewport: viewport,
+              viewport: renderViewport,
             }
             await page.render(renderContext).promise
           }
@@ -113,7 +122,7 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-900/50 flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8 overflow-y-auto custom-scrollbar">
+    <div className="w-full min-h-screen bg-slate-900/50 flex flex-col items-center py-6 px-2 sm:px-4 overflow-y-auto custom-scrollbar">
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-50 transition-all duration-300">
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col items-center">
@@ -123,7 +132,7 @@ export default function DocumentViewer() {
           </div>
         </div>
       )}
-      <div id="pdf-container" className="flex flex-col items-center w-full max-w-5xl">
+      <div id="pdf-container" className="flex flex-col items-center w-full">
         {/* Os canvases das páginas do PDF serão injetados aqui */}
       </div>
     </div>

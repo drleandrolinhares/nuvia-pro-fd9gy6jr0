@@ -65,7 +65,9 @@ export default function Layout() {
   const location = useLocation()
   const isFullWidth =
     location.pathname.includes('/precificacao') ||
-    location.pathname.includes('/intranet/onboarding')
+    location.pathname.includes('/intranet/onboarding') ||
+    location.pathname.includes('/intranet/treinamentos') ||
+    location.pathname.includes('/viewer')
   const isChat = location.pathname.startsWith('/chat')
 
   return (
