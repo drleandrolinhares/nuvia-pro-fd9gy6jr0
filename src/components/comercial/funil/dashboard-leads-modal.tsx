@@ -47,6 +47,7 @@ export function DashboardLeadsModal({
   useEffect(() => {
     if (isOpen) {
       setData([])
+      setSearchTerm('')
       fetchData()
       fetchOptions()
 
@@ -455,7 +456,7 @@ export function DashboardLeadsModal({
                           </TableCell>
                           {isOportunidade || isVenda ? (
                             <TableCell className="text-right text-emerald-400 font-semibold">
-                              {formatCurrency(isVenda ? row.valor_entrada : row.valor_orcamento)}
+                              {formatCurrency(isVenda ? row.valor_tratamento : row.valor_orcamento)}
                             </TableCell>
                           ) : null}
                           <TableCell className="text-center">

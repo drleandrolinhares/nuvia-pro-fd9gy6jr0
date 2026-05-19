@@ -325,12 +325,14 @@ export function FunilDashboard({
 
   const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => {
     return (
-      <div className="grid gap-3 text-center grid-cols-2 md:grid-cols-5 relative z-10">
+      <div className="grid gap-3 text-center grid-cols-2 md:grid-cols-5 isolate">
         <button
           type="button"
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-slate-500/50"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-slate-500/50"
+          style={{ pointerEvents: 'auto', zIndex: 50 }}
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setModalConfig({
               isOpen: true,
               type: 'leads',
@@ -347,9 +349,11 @@ export function FunilDashboard({
         </button>
         <button
           type="button"
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          style={{ pointerEvents: 'auto', zIndex: 50 }}
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setModalConfig({
               isOpen: true,
               type: 'agendamentos',
@@ -367,9 +371,11 @@ export function FunilDashboard({
         </button>
         <button
           type="button"
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-purple-500/50"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+          style={{ pointerEvents: 'auto', zIndex: 50 }}
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setModalConfig({
               isOpen: true,
               type: 'comparecimentos',
@@ -387,9 +393,11 @@ export function FunilDashboard({
         </button>
         <button
           type="button"
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-rose-500/50"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+          style={{ pointerEvents: 'auto', zIndex: 50 }}
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setModalConfig({
               isOpen: true,
               type: 'faltas',
@@ -407,9 +415,11 @@ export function FunilDashboard({
         </button>
         <button
           type="button"
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto col-span-2 md:col-span-1 outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all col-span-2 md:col-span-1 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          style={{ pointerEvents: 'auto', zIndex: 50 }}
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setModalConfig({
               isOpen: true,
               type: 'fechamentos',
@@ -436,12 +446,14 @@ export function FunilDashboard({
     origensFilter: string[],
     funilName: string,
   ) => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center relative z-10">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center isolate">
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-purple-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
+          e.stopPropagation()
           setModalConfig({
             isOpen: true,
             type: 'oportunidades',
@@ -458,9 +470,11 @@ export function FunilDashboard({
       </button>
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
+          e.stopPropagation()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
@@ -478,9 +492,11 @@ export function FunilDashboard({
       </button>
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
+          e.stopPropagation()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
@@ -498,9 +514,11 @@ export function FunilDashboard({
       </button>
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-amber-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
+          e.stopPropagation()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
@@ -521,19 +539,29 @@ export function FunilDashboard({
     </div>
   )
 
+  const handleCompetenciaClick = (type: any, title: string) => {
+    console.log(`[Dashboard] Abrindo modal de competência: ${type} - ${title}`)
+    setModalConfig({
+      isOpen: true,
+      type,
+      origens: origensCompetencia,
+      title,
+    })
+  }
+
   const renderCompetenciaBlocks = () => (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center relative z-10">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center isolate">
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_oportunidades',
-            origens: origensCompetencia,
-            title: `Oportunidades (Qtde) - Competência (${mesReferencia})`,
-          })
+          e.stopPropagation()
+          handleCompetenciaClick(
+            'competencia_oportunidades',
+            `Oportunidades (Qtde) - Competência (${mesReferencia})`,
+          )
         }}
       >
         <Target className="w-5 h-5 text-fuchsia-500 mb-2" />
@@ -545,15 +573,15 @@ export function FunilDashboard({
 
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_oportunidades',
-            origens: origensCompetencia,
-            title: `Valor das Oportunidades - Competência (${mesReferencia})`,
-          })
+          e.stopPropagation()
+          handleCompetenciaClick(
+            'competencia_oportunidades',
+            `Valor (Oport.) - Competência (${mesReferencia})`,
+          )
         }}
       >
         <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
@@ -567,15 +595,12 @@ export function FunilDashboard({
 
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Conversão (Mês) - ${mesReferencia}`,
-          })
+          e.stopPropagation()
+          handleCompetenciaClick('competencia_fechamentos', `Conversão (Mês) - ${mesReferencia}`)
         }}
       >
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
@@ -587,15 +612,12 @@ export function FunilDashboard({
 
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Vendas (Qtde) - ${mesReferencia}`,
-          })
+          e.stopPropagation()
+          handleCompetenciaClick('competencia_fechamentos', `Vendas (Qtde) - ${mesReferencia}`)
         }}
       >
         <CheckSquare className="w-5 h-5 text-fuchsia-500 mb-2" />
@@ -607,15 +629,15 @@ export function FunilDashboard({
 
       <button
         type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto col-span-2 md:col-span-1 outline-none focus:ring-2 focus:ring-amber-500/50"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all col-span-2 md:col-span-1 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        style={{ pointerEvents: 'auto', zIndex: 50 }}
         onClick={(e) => {
           e.preventDefault()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Ticket Médio (Competência) - ${mesReferencia}`,
-          })
+          e.stopPropagation()
+          handleCompetenciaClick(
+            'competencia_fechamentos',
+            `Ticket Médio (Competência) - ${mesReferencia}`,
+          )
         }}
       >
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
@@ -735,9 +757,10 @@ export function FunilDashboard({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-2 gap-4 relative z-50">
         <Card
-          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50"
+          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50 relative z-50"
+          style={{ pointerEvents: 'auto' }}
           onClick={() =>
             setModalConfig({
               isOpen: true,
@@ -760,7 +783,8 @@ export function FunilDashboard({
         </Card>
 
         <Card
-          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50"
+          className="bg-slate-900 border-slate-800 shadow-sm transition-all hover:border-slate-700 cursor-pointer hover:bg-slate-800/50 relative z-50"
+          style={{ pointerEvents: 'auto' }}
           onClick={() =>
             setModalConfig({
               isOpen: true,
@@ -797,8 +821,8 @@ export function FunilDashboard({
         </div>
 
         {/* Funil Clássico */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-40">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-500" />
@@ -808,12 +832,12 @@ export function FunilDashboard({
                 Facebook e Instagram
               </p>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 relative z-40">
               {renderFunnelBlocks(totaisClassico, origensClassico, 'Funil Clássico')}
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <div className="flex flex-col">
                 <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
@@ -825,7 +849,7 @@ export function FunilDashboard({
                 </p>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 relative z-40">
               {renderOportunidadesBlocks(
                 valorOportunidadesClassico,
                 conversaoTotalClassico,
@@ -838,8 +862,8 @@ export function FunilDashboard({
         </div>
 
         {/* Funil Secundário */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 relative z-40">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-emerald-500" />
@@ -849,12 +873,12 @@ export function FunilDashboard({
                 Indicações, Google, Sorriso dos Sonhos, Espontâneos e Campanhas
               </p>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 relative z-40">
               {renderFunnelBlocks(totaisSecundario, origensSecundario, 'Funil Secundário')}
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <div className="flex flex-col">
                 <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
@@ -866,7 +890,7 @@ export function FunilDashboard({
                 </p>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 relative z-40">
               {renderOportunidadesBlocks(
                 valorOportunidadesSecundario,
                 conversaoTotalSecundario,
@@ -879,7 +903,7 @@ export function FunilDashboard({
         </div>
 
         {/* NOVO: Funil de Competência */}
-        <div className="space-y-6 pt-4 mt-6">
+        <div className="space-y-6 pt-4 mt-6 relative z-50">
           <div className="flex items-center gap-4 py-2">
             <div className="h-px bg-slate-800 flex-1"></div>
             <div className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-md border border-slate-700 shadow-sm">
@@ -891,7 +915,7 @@ export function FunilDashboard({
             <div className="h-px bg-slate-800 flex-1"></div>
           </div>
 
-          <Card className="bg-slate-900 border-slate-800 shadow-sm">
+          <Card className="bg-slate-900 border-slate-800 shadow-sm overflow-visible relative z-50">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <div className="flex flex-col">
                 <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
@@ -903,7 +927,7 @@ export function FunilDashboard({
                 </p>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">{renderCompetenciaBlocks()}</CardContent>
+            <CardContent className="pt-6 relative z-50">{renderCompetenciaBlocks()}</CardContent>
           </Card>
         </div>
       </div>
