@@ -63,11 +63,12 @@ class ErrorBoundary extends Component<
 
 export default function Layout() {
   const location = useLocation()
+  const isViewer = location.pathname.includes('/viewer')
   const isFullWidth =
     location.pathname.includes('/precificacao') ||
     location.pathname.includes('/intranet/onboarding') ||
     location.pathname.includes('/intranet/treinamentos') ||
-    location.pathname.includes('/viewer')
+    isViewer
   const isChat = location.pathname.startsWith('/chat')
 
   return (
@@ -78,13 +79,15 @@ export default function Layout() {
         <main
           className={cn(
             'flex-1 overflow-x-hidden',
-            isChat ? 'overflow-hidden' : 'overflow-y-auto p-4 md:p-8',
+            isChat ? 'overflow-hidden' : 'overflow-y-auto',
+            !isChat && !isViewer && 'p-4 md:p-8',
+            isViewer && 'p-0',
           )}
         >
           <div
             className={cn(
               'mx-auto w-full h-full',
-              !isChat && 'pb-16',
+              !isChat && !isViewer && 'pb-16',
               !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1600px]'),
             )}
           >

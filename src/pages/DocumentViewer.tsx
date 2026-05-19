@@ -34,8 +34,7 @@ export default function DocumentViewer() {
         const container = document.getElementById('pdf-container')
         if (!container) return
 
-        const padding = window.innerWidth < 640 ? 16 : 32
-        const availableWidth = window.innerWidth - padding
+        const availableWidth = container.clientWidth || window.innerWidth
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum)
@@ -50,11 +49,10 @@ export default function DocumentViewer() {
           const renderScale = Math.min(scale * dpr, 3.0)
 
           const renderViewport = page.getViewport({ scale: renderScale })
-          const displayViewport = page.getViewport({ scale: scale })
 
           const canvas = document.createElement('canvas')
-          canvas.className = 'mb-6 shadow-2xl rounded max-w-full bg-white mx-auto'
-          canvas.style.width = `${Math.floor(displayViewport.width)}px`
+          canvas.className = 'mb-1 bg-white mx-auto block !w-full !max-w-none !px-0'
+          canvas.style.width = '100%'
           canvas.style.height = 'auto'
 
           const context = canvas.getContext('2d')
@@ -122,17 +120,19 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-900/50 flex flex-col items-center py-6 px-2 sm:px-4 overflow-y-auto custom-scrollbar">
+    <div className="w-full min-h-screen bg-slate-950 flex flex-col items-center p-0 m-0 overflow-y-auto custom-scrollbar">
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-50 transition-all duration-300">
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col items-center">
             <Loader2 className="w-10 h-10 text-amber-500 animate-spin mb-4" />
             <p className="text-slate-200 font-medium tracking-wide">Renderizando documento...</p>
-            <p className="text-slate-500 text-sm mt-1">Preparando visualização otimizada</p>
+            <p className="text-slate-500 text-sm mt-1">
+              Preparando visualização otimizada (Tela Cheia)
+            </p>
           </div>
         </div>
       )}
-      <div id="pdf-container" className="flex flex-col items-center w-full">
+      <div id="pdf-container" className="flex flex-col items-center w-full !max-w-none p-0 m-0">
         {/* Os canvases das páginas do PDF serão injetados aqui */}
       </div>
     </div>
