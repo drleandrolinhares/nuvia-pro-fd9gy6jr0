@@ -842,7 +842,7 @@ export function RelatorioRotinasTab() {
         .select(`
           usuario_id,
           usuarios:usuario_id (
-            id, nome, role, dias_trabalho
+            id, nome, role, dias_trabalho, status
           )
         `)
         .eq('ativa', true)
@@ -851,7 +851,12 @@ export function RelatorioRotinasTab() {
         const uniqueUsers = new Map()
         rotinas.forEach((r: any) => {
           const u = Array.isArray(r.usuarios) ? r.usuarios[0] : r.usuarios
-          if (u && u.role?.toUpperCase() !== 'CEO' && u.role?.toUpperCase() !== 'SÓCIA') {
+          if (
+            u &&
+            u.role?.toUpperCase() !== 'CEO' &&
+            u.role?.toUpperCase() !== 'SÓCIA' &&
+            u.status === 'ativo'
+          ) {
             uniqueUsers.set(u.id, u)
           }
         })
@@ -896,7 +901,8 @@ export function RelatorioRotinasTab() {
             horario_fim
           ),
           usuarios:usuario_id (
-            nome
+            nome,
+            status
           )
         `)
         .gte('data_execucao', startStr)
@@ -940,7 +946,8 @@ export function RelatorioRotinasTab() {
           horario_fim
         ),
         usuarios:usuario_id (
-          nome
+          nome,
+          status
         )
       `)
       .gte('data_execucao', format(startM, 'yyyy-MM-dd'))
@@ -1046,11 +1053,13 @@ export function RelatorioRotinasTab() {
     executions.forEach((e) => {
       if (!usersToDisplay.has(e.usuario_id)) {
         const uObj = Array.isArray(e.usuarios) ? e.usuarios[0] : e.usuarios
-        usersToDisplay.set(e.usuario_id, {
-          id: e.usuario_id,
-          nome: uObj?.nome || 'Desconhecido',
-          dias_trabalho: uObj?.dias_trabalho,
-        } as any)
+        if (uObj?.status === 'ativo') {
+          usersToDisplay.set(e.usuario_id, {
+            id: e.usuario_id,
+            nome: uObj?.nome || 'Desconhecido',
+            dias_trabalho: uObj?.dias_trabalho,
+          } as any)
+        }
       }
     })
 

@@ -103,6 +103,7 @@ export function CarteiraTab() {
       .from('usuarios')
       .select('id, nome, possui_carteira')
       .eq('possui_carteira', true)
+      .eq('status', 'ativo')
       .order('nome')
     if (data) {
       setUsers(data)

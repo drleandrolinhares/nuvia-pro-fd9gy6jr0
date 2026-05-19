@@ -401,18 +401,14 @@ function FilledUserCard({
   const consStephani = historico.find(
     (c: any) => c.gestor === 'stephani' || c.admin_nome?.toLowerCase().includes('stephani'),
   )
-  const consHeloisa = historico.find(
-    (c: any) => c.gestor === 'heloisa' || c.admin_nome?.toLowerCase().includes('heloisa'),
-  )
 
   const isLeandro = Boolean(
     profile?.nome?.toLowerCase().includes('leandro') ||
     profile?.email?.toLowerCase().includes('leandro'),
   )
   const isStephani = Boolean(profile?.nome?.toLowerCase().includes('stephani'))
-  const isHeloisa = Boolean(profile?.nome?.toLowerCase().includes('heloisa'))
 
-  const allFilled = !!(consLeandro?.texto && consStephani?.texto && consHeloisa?.texto)
+  const allFilled = !!(consLeandro?.texto && consStephani?.texto)
 
   const handleSaveGestor = async (gestorKey: string, texto: string) => {
     const historicoAtual = Array.isArray(submission.consideracoes_gestao)
@@ -446,10 +442,8 @@ function FilledUserCard({
     (c: any) =>
       c.gestor !== 'leandro' &&
       c.gestor !== 'stephani' &&
-      c.gestor !== 'heloisa' &&
       !c.admin_nome?.toLowerCase().includes('leandro') &&
-      !c.admin_nome?.toLowerCase().includes('stephani') &&
-      !c.admin_nome?.toLowerCase().includes('heloisa'),
+      !c.admin_nome?.toLowerCase().includes('stephani'),
   )
 
   const getStatusBadge = (status: string) => {
@@ -614,7 +608,7 @@ function FilledUserCard({
                       Ações e Considerações da Gestão
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      O status "Resolvido" exige a análise dos 3 gestores.
+                      O status "Resolvido" exige a análise dos gestores.
                     </p>
                   </div>
                   <Select
@@ -651,14 +645,6 @@ function FilledUserCard({
                     consideration={consStephani}
                     onSave={(texto) => handleSaveGestor('stephani', texto)}
                   />
-                  <GestorConsiderationBlock
-                    title="Considerações Heloisa"
-                    gestorKey="heloisa"
-                    isOwner={isHeloisa}
-                    consideration={consHeloisa}
-                    onSave={(texto) => handleSaveGestor('heloisa', texto)}
-                  />
-
                   {outrasConsideracoes.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                       <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
