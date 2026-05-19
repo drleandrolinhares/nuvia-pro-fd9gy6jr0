@@ -68,9 +68,46 @@ export default function Treinamentos() {
 
   if (activeModulo) {
     const p = progresso.find((pr) => pr.modulo_id === activeModulo.id)
+
+    // Função para interceptar e modificar a URL do arquivo garantindo a visualização correta
+    const getViewerUrl = (url: string | null | undefined) => {
+      if (!url) return url
+      // Se já for uma URL de visualizador nativo, mantém como está
+      if (
+        url.includes('docs.google.com/viewer') ||
+        url.includes('view.officeapps.live.com') ||
+        url.includes('proxy-document')
+      )
+        return url
+
+      const lowerUrl = url.toLowerCase()
+      const isPdf = lowerUrl.includes('.pdf')
+      const isOffice =
+        lowerUrl.includes('.ppt') || lowerUrl.includes('.doc') || lowerUrl.includes('.xls')
+
+      if (isPdf) {
+        // Usa a Edge Function proxy-document para forçar cabeçalhos inline e evitar bloqueio do Chrome
+        const supabaseUrl =
+          import.meta.env.VITE_SUPABASE_URL || 'https://jblynykmltyvseugkvkk.supabase.co'
+        return `${supabaseUrl}/functions/v1/proxy-document?url=${encodeURIComponent(url)}`
+      } else if (isOffice) {
+        // Usa o visualizador integrado da Microsoft para arquivos PPTX, DOCX, etc.
+        return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`
+      }
+      return url
+    }
+
+    const modifiedModulo = {
+      ...activeModulo,
+      arquivo_url: activeModulo.arquivo_url
+        ? getViewerUrl(activeModulo.arquivo_url)
+        : activeModulo.arquivo_url,
+      original_arquivo_url: activeModulo.arquivo_url, // Mantém registro da URL original
+    }
+
     return (
       <TreinamentosQuiz
-        modulo={activeModulo}
+        modulo={modifiedModulo}
         progressoAtual={p}
         onBack={() => setActiveModulo(null)}
         onComplete={() => {
