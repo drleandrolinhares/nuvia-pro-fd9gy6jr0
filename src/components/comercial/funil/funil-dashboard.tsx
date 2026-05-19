@@ -38,7 +38,6 @@ export function FunilDashboard({
   vendas,
   etapas,
   temperaturas,
-  competenciaMetrics,
   onUpdate,
 }: any) {
   const [vendasLocais, setVendasLocais] = useState<any[]>([])
@@ -149,58 +148,6 @@ export function FunilDashboard({
     [totaisGerais.comparecimentos],
   )
 
-  const valorOportunidadesClassico = useMemo(() => {
-    if (!competenciaMetrics) return 0
-    return competenciaMetrics
-      .filter((m: any) => isClassico(m.origem_id))
-      .reduce((acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0), 0)
-  }, [competenciaMetrics, origens])
-
-  const valorOportunidadesSecundario = useMemo(() => {
-    if (!competenciaMetrics) return 0
-    return competenciaMetrics
-      .filter((m: any) => isSecundario(m.origem_id))
-      .reduce((acc: number, curr: any) => acc + Number(curr.valor_oportunidades || 0), 0)
-  }, [competenciaMetrics, origens])
-
-  const conversaoTotalClassico =
-    valorOportunidadesClassico > 0
-      ? (totaisClassico.valor_fechado / valorOportunidadesClassico) * 100
-      : 0
-  const conversaoTotalSecundario =
-    valorOportunidadesSecundario > 0
-      ? (totaisSecundario.valor_fechado / valorOportunidadesSecundario) * 100
-      : 0
-
-  // -------------------------------------------------------------
-  // Lógica Isolada para Competência (Mês) baseada no RPC
-  // -------------------------------------------------------------
-  const origemRecorrenteId = useMemo(() => {
-    return origens.find((o: any) => o.nome?.toLowerCase().includes('recorrente'))?.id
-  }, [origens])
-
-  const origensCompetencia = useMemo(() => {
-    return origens.filter((o: any) => o.ativo && o.id !== origemRecorrenteId).map((o: any) => o.id)
-  }, [origens, origemRecorrenteId])
-
-  const competenciaFiltrada = useMemo(() => {
-    if (!competenciaMetrics) return []
-    return competenciaMetrics.filter((m: any) => origensCompetencia.includes(m.origem_id))
-  }, [competenciaMetrics, origensCompetencia])
-
-  const totaisCompetencia = useMemo(() => {
-    const fechamentos = competenciaFiltrada.reduce(
-      (acc: number, curr: any) => acc + Number(curr.qtd_vendas || 0),
-      0,
-    )
-    const valor_fechado = competenciaFiltrada.reduce(
-      (acc: number, curr: any) => acc + Number(curr.valor_vendas || 0),
-      0,
-    )
-    return { fechamentos, valor_fechado }
-  }, [competenciaFiltrada])
-  // -------------------------------------------------------------
-
   const pieData = useMemo(() => {
     return origens
       .filter((o: any) => o.ativo)
@@ -271,14 +218,7 @@ export function FunilDashboard({
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean
-    type:
-      | 'leads'
-      | 'agendamentos'
-      | 'comparecimentos'
-      | 'faltas'
-      | 'fechamentos'
-      | 'oportunidades'
-      | 'competencia_fechamentos'
+    type: 'leads' | 'agendamentos' | 'comparecimentos' | 'faltas' | 'fechamentos'
     origens: string[]
     title: string
   }>({
@@ -415,156 +355,6 @@ export function FunilDashboard({
       </div>
     )
   }
-
-  const renderOportunidadesBlocks = (
-    valorOpp: number,
-    conversao: number,
-    totais: any,
-    origensFilter: string[],
-    funilName: string,
-  ) => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center isolate">
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'oportunidades',
-            origens: origensFilter,
-            title: `Oportunidades Geradas - ${funilName}`,
-          })
-        }}
-      >
-        <Target className="w-5 h-5 text-purple-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Oport. Geradas
-        </span>
-        <span className="text-lg font-bold text-white">{formatBrl(valorOpp)}</span>
-      </button>
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'fechamentos',
-            origens: origensFilter,
-            title: `Vendas p/ Conversão - ${funilName}`,
-          })
-        }}
-      >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-        <Percent className="w-5 h-5 text-blue-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Conversão Total
-        </span>
-        <span className="text-2xl font-bold text-white">{conversao.toFixed(1)}%</span>
-      </button>
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'fechamentos',
-            origens: origensFilter,
-            title: `Fechamentos - ${funilName}`,
-          })
-        }}
-      >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-        <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
-          Vendas (Mês + Follow-up)
-        </span>
-        <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
-      </button>
-      <button
-        type="button"
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'fechamentos',
-            origens: origensFilter,
-            title: `Vendas p/ Ticket Médio - ${funilName}`,
-          })
-        }}
-      >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
-        <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Ticket Médio
-        </span>
-        <span className="text-lg font-bold text-emerald-400">
-          {formatBrl(totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0)}
-        </span>
-      </button>
-    </div>
-  )
-
-  const renderCompetenciaBlocks = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center isolate max-w-3xl mx-auto">
-      <button
-        type="button"
-        className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Vendas Concretizadas (Qtde) - Competência (${mesReferencia})`,
-          })
-        }}
-      >
-        <CheckSquare className="w-6 h-6 text-fuchsia-500 mb-3" />
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 leading-tight">
-          Vendas Concretizadas (Qtde)
-        </span>
-        <span className="text-3xl font-bold text-white">{totaisCompetencia.fechamentos}</span>
-      </button>
-
-      <button
-        type="button"
-        className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-        style={{ pointerEvents: 'auto', zIndex: 50 }}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setModalConfig({
-            isOpen: true,
-            type: 'competencia_fechamentos',
-            origens: origensCompetencia,
-            title: `Vendas Concretizadas (Valor) - Competência (${mesReferencia})`,
-          })
-        }}
-      >
-        <DollarSign className="w-6 h-6 text-emerald-500 mb-3" />
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 leading-tight">
-          Vendas Concretizadas (Valor Total)
-        </span>
-        <span className="text-3xl font-bold text-emerald-400">
-          {formatBrl(totaisCompetencia.valor_fechado)}
-        </span>
-      </button>
-    </div>
-  )
 
   return (
     <div className="space-y-6">
@@ -732,7 +522,7 @@ export function FunilDashboard({
         </div>
 
         {/* Funil Clássico */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-40">
+        <div className="grid grid-cols-1 gap-6 relative z-40">
           <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
@@ -747,33 +537,10 @@ export function FunilDashboard({
               {renderFunnelBlocks(totaisClassico, origensClassico, 'Funil Clássico')}
             </CardContent>
           </Card>
-
-          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
-            <CardHeader className="border-b border-slate-800/50 pb-4">
-              <div className="flex flex-col">
-                <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-amber-500" />
-                  Funil Clássico: Oportunidades em R$
-                </CardTitle>
-                <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                  Soma de avaliações do Funil Clássico
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 relative z-40">
-              {renderOportunidadesBlocks(
-                valorOportunidadesClassico,
-                conversaoTotalClassico,
-                totaisClassico,
-                origensClassico,
-                'Funil Clássico',
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Funil Secundário */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 relative z-40">
+        <div className="grid grid-cols-1 gap-6 mt-6 relative z-40">
           <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
             <CardHeader className="border-b border-slate-800/50 pb-4">
               <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
@@ -787,58 +554,6 @@ export function FunilDashboard({
             <CardContent className="pt-6 relative z-40">
               {renderFunnelBlocks(totaisSecundario, origensSecundario, 'Funil Secundário')}
             </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900 border-slate-800 shadow-sm relative z-40 overflow-visible">
-            <CardHeader className="border-b border-slate-800/50 pb-4">
-              <div className="flex flex-col">
-                <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-emerald-500" />
-                  Funil Secundário: Oportunidades em R$
-                </CardTitle>
-                <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                  Soma de avaliações do Funil Secundário
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 relative z-40">
-              {renderOportunidadesBlocks(
-                valorOportunidadesSecundario,
-                conversaoTotalSecundario,
-                totaisSecundario,
-                origensSecundario,
-                'Funil Secundário',
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* NOVO: Funil de Competência */}
-        <div className="space-y-6 pt-4 mt-6 relative z-50">
-          <div className="flex items-center gap-4 py-2">
-            <div className="h-px bg-slate-800 flex-1"></div>
-            <div className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-md border border-slate-700 shadow-sm">
-              <Star className="w-5 h-5 text-fuchsia-500" />
-              <h3 className="text-sm font-bold text-white tracking-widest uppercase">
-                Análise de Competência
-              </h3>
-            </div>
-            <div className="h-px bg-slate-800 flex-1"></div>
-          </div>
-
-          <Card className="bg-slate-900 border-slate-800 shadow-sm overflow-visible relative z-50">
-            <CardHeader className="border-b border-slate-800/50 pb-4">
-              <div className="flex flex-col">
-                <CardTitle className="text-white font-semibold text-lg flex items-center gap-2">
-                  <CheckSquare className="w-5 h-5 text-fuchsia-500" />
-                  Vendas por Competência (Mês)
-                </CardTitle>
-                <p className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-wider">
-                  Vendas do mesmo ciclo (Exclui Recorrentes)
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 relative z-50">{renderCompetenciaBlocks()}</CardContent>
           </Card>
         </div>
       </div>

@@ -90,17 +90,7 @@ export function DashboardLeadsModal({
 
       let validOrigens = origens || []
 
-      if (type === 'competencia_fechamentos') {
-        validOrigens = (dbOrigens || [])
-          .filter((o: any) => !o.nome?.toLowerCase().includes('recorrente'))
-          .map((o: any) => o.id)
-
-        if (origens && origens.length > 0) {
-          validOrigens = validOrigens.filter((id: string) => origens.includes(id))
-        }
-      }
-
-      if (type === 'fechamentos' || type === 'competencia_fechamentos') {
+      if (type === 'fechamentos') {
         let query = supabase
           .from('vendas_confirmadas')
           .select('*, avaliacoes(*, pacientes(nome))')
@@ -115,18 +105,6 @@ export function DashboardLeadsModal({
 
           if (validOrigens && validOrigens.length > 0) {
             if (!validOrigens.includes(oId)) return false
-          } else if (
-            validOrigens &&
-            validOrigens.length === 0 &&
-            (type === 'competencia_fechamentos' || (origens && origens.length === 0))
-          ) {
-            if (type === 'competencia_fechamentos') return false
-          }
-
-          if (type === 'competencia_fechamentos') {
-            const dataOriginal =
-              v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
-            if (dataOriginal?.substring(0, 7) !== mesReferencia) return false
           }
 
           return true
@@ -137,45 +115,6 @@ export function DashboardLeadsModal({
             new Date(b.data_fechamento || 0).getTime() - new Date(a.data_fechamento || 0).getTime(),
         )
         setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
-      } else if (type === 'oportunidades') {
-        let query = supabase
-          .from('avaliacoes')
-          .select(`*, pacientes!inner(nome), vendas_confirmadas(id)`)
-          .or(
-            `data_avaliacao.gte.${dataInicio},and(data_avaliacao.is.null,criado_em.gte.${dataInicio}T00:00:00-03:00)`,
-          )
-          .limit(10000)
-
-        const { data: avaliacoes } = await query
-
-        const filtered = (avaliacoes || []).filter((a: any) => {
-          if (!a.pacientes?.nome || String(a.pacientes.nome).trim() === '') return false
-
-          let itemDate = ''
-          if (a.data_avaliacao) {
-            itemDate = a.data_avaliacao.substring(0, 7)
-          } else if (a.criado_em) {
-            const d = new Date(a.criado_em)
-            const brt = new Date(d.getTime() - 3 * 60 * 60 * 1000)
-            itemDate = brt.toISOString().substring(0, 7)
-          }
-
-          if (itemDate !== mesReferencia) return false
-
-          if (validOrigens && validOrigens.length > 0) {
-            if (!validOrigens.includes(a.origem_id)) return false
-          }
-
-          return true
-        })
-
-        filtered.sort((a: any, b: any) => {
-          const dA = a.data_avaliacao || a.criado_em
-          const dB = b.data_avaliacao || b.criado_em
-          return new Date(dB || 0).getTime() - new Date(dA || 0).getTime()
-        })
-
-        setData(filtered.map((a: any) => ({ ...a, _isAvaliacao: true })))
       } else {
         const { data: leads } = await supabase
           .from('funil_leads')
@@ -263,8 +202,6 @@ export function DashboardLeadsModal({
     try {
       if (itemType === 'venda') {
         await supabase.from('vendas_confirmadas').delete().eq('id', id)
-      } else if (itemType === 'oportunidade') {
-        await supabase.from('avaliacoes').delete().eq('id', id)
       } else if (id.startsWith('venda-direta-')) {
         const realId = id.replace('venda-direta-', '')
         await supabase.from('vendas_confirmadas').delete().eq('id', realId)
@@ -316,21 +253,9 @@ export function DashboardLeadsModal({
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <DialogTitle className="text-xl text-white">{title}</DialogTitle>
-                {type === 'competencia_fechamentos' && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30">
-                    Filtro de Competência Ativo
-                  </span>
-                )}
               </div>
               <DialogDescription className="text-slate-400">
-                {type === 'oportunidades'
-                  ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
-                  : 'Listagem detalhada dos registros do período selecionado.'}
-                {type === 'competencia_fechamentos' && (
-                  <span className="block mt-1 text-fuchsia-400/80">
-                    * Pacientes de origem "Recorrente" estão automaticamente excluídos desta visão.
-                  </span>
-                )}
+                Listagem detalhada dos registros do período selecionado.
               </DialogDescription>
             </div>
             <div className="relative mt-4">
@@ -371,9 +296,7 @@ export function DashboardLeadsModal({
                       <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                         Status & Vínculos
                       </TableHead>
-                      {type === 'oportunidades' ||
-                      type === 'fechamentos' ||
-                      type === 'competencia_fechamentos' ? (
+                      {type === 'fechamentos' ? (
                         <TableHead className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider text-right">
                           Valor
                         </TableHead>

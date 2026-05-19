@@ -39,7 +39,6 @@ export default function FunilVendas() {
   const [avaliacoesMes, setAvaliacoesMes] = useState<any[]>([])
   const [leadsMes, setLeadsMes] = useState<any[]>([])
   const [vendasMes, setVendasMes] = useState<any[]>([])
-  const [competenciaMetrics, setCompetenciaMetrics] = useState<any[]>([])
 
   const fetchData = async (showLoader = true) => {
     if (showLoader) setLoading(true)
@@ -88,10 +87,6 @@ export default function FunilVendas() {
         `and(data_avaliacao.gte.${dataInicio},data_avaliacao.lte.${dataFim}),and(data_avaliacao.is.null,criado_em.gte.${dataInicio}T00:00:00,criado_em.lte.${dataFim}T23:59:59)`,
       )
       .limit(10000)
-
-    const { data: competenciaData } = await supabase.rpc('get_funil_competencia_metrics', {
-      p_mes_referencia: mesReferencia,
-    })
 
     const validOrigensSet = new Set(
       (origensData || []).filter((o: any) => o.ativo !== false).map((o: any) => o.id),
@@ -262,7 +257,6 @@ export default function FunilVendas() {
     setAvaliacoesMes(avaliacoesFiltradas)
     setLeadsMes(leadsData || [])
     setVendasMes(vendasGlobaisFiltradas)
-    setCompetenciaMetrics(competenciaData || [])
     if (showLoader) setLoading(false)
   }
 
@@ -418,7 +412,6 @@ export default function FunilVendas() {
           vendas={vendasMes}
           etapas={etapas}
           temperaturas={temperaturas}
-          competenciaMetrics={competenciaMetrics}
           onUpdate={() => fetchData(false)}
         />
       ) : view === 'bussola' ? (
