@@ -85,6 +85,9 @@ export function DashboardLeadsModal({
         const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
         const dataFim = `${mesReferencia}-${ultimoDia}`
 
+        // Fetch origens to ensure we can hard-filter "recorrente" if needed
+        const { data: dbOrigens } = await supabase.from('funil_origens').select('id, nome')
+
         const { data: vendas } = await supabase
           .from('vendas_confirmadas')
           .select('*, avaliacoes(*, pacientes(nome))')
@@ -101,6 +104,14 @@ export function DashboardLeadsModal({
             const dataOriginal =
               v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
             if (dataOriginal?.substring(0, 7) !== mesReferencia) return false
+
+            // Hard filter para garantir exclusão de recorrente
+            const oId = v.origem_id || v.avaliacoes?.origem_id
+            const isRecorrente = dbOrigens
+              ?.find((o: any) => o.id === oId)
+              ?.nome?.toLowerCase()
+              .includes('recorrente')
+            if (isRecorrente) return false
           }
 
           return true
@@ -112,6 +123,8 @@ export function DashboardLeadsModal({
         )
         setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
       } else if (type === 'oportunidades' || type === 'competencia_oportunidades') {
+        const { data: dbOrigens } = await supabase.from('funil_origens').select('id, nome')
+
         const query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
@@ -132,6 +145,14 @@ export function DashboardLeadsModal({
 
             if (origens && origens.length > 0) {
               if (!origens.includes(a.origem_id)) return false
+            }
+
+            if (type === 'competencia_oportunidades') {
+              const isRecorrente = dbOrigens
+                ?.find((o: any) => o.id === a.origem_id)
+                ?.nome?.toLowerCase()
+                .includes('recorrente')
+              if (isRecorrente) return false
             }
 
             return true
@@ -285,12 +306,26 @@ export function DashboardLeadsModal({
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col bg-slate-900 border-slate-800 p-0 overflow-hidden shadow-2xl">
           <DialogHeader className="p-6 pb-4 border-b border-slate-800 bg-slate-950/50">
-            <DialogTitle className="text-xl text-white">{title}</DialogTitle>
-            <DialogDescription className="text-slate-400">
-              {type === 'oportunidades' || type === 'competencia_oportunidades'
-                ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
-                : 'Listagem detalhada dos registros do período selecionado.'}
-            </DialogDescription>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <DialogTitle className="text-xl text-white">{title}</DialogTitle>
+                {(type === 'competencia_oportunidades' || type === 'competencia_fechamentos') && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30">
+                    Filtro de Competência Ativo
+                  </span>
+                )}
+              </div>
+              <DialogDescription className="text-slate-400">
+                {type === 'oportunidades' || type === 'competencia_oportunidades'
+                  ? 'Listagem bruta e irrestrita de todas as oportunidades. Utilize o botão de lixeira para remover duplicidades.'
+                  : 'Listagem detalhada dos registros do período selecionado.'}
+                {(type === 'competencia_oportunidades' || type === 'competencia_fechamentos') && (
+                  <span className="block mt-1 text-fuchsia-400/80">
+                    * Pacientes de origem "Recorrente" estão automaticamente excluídos desta visão.
+                  </span>
+                )}
+              </DialogDescription>
+            </div>
             <div className="relative mt-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <Input

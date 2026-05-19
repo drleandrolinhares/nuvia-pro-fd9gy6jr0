@@ -444,7 +444,17 @@ export function FunilDashboard({
         </span>
         <span className="text-lg font-bold text-white">{formatBrl(valorOpp)}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'fechamentos',
+            origens: origensFilter,
+            title: `Vendas p/ Conversão - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -470,7 +480,17 @@ export function FunilDashboard({
         </span>
         <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'fechamentos',
+            origens: origensFilter,
+            title: `Vendas p/ Ticket Médio - ${funilName}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -504,7 +524,17 @@ export function FunilDashboard({
           {formatBrl(valorOportunidadesCompetencia)}
         </span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_fechamentos',
+            origens: origensCompetencia,
+            title: `Vendas p/ Conversão (Competência) - ${mesReferencia}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -530,7 +560,17 @@ export function FunilDashboard({
         </span>
         <span className="text-2xl font-bold text-white">{totaisCompetencia.fechamentos}</span>
       </div>
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative">
+      <div
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
+        onClick={() =>
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_fechamentos',
+            origens: origensCompetencia,
+            title: `Vendas p/ Ticket Médio (Competência) - ${mesReferencia}`,
+          })
+        }
+      >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
