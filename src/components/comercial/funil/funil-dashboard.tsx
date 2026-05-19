@@ -325,34 +325,38 @@ export function FunilDashboard({
 
   const renderFunnelBlocks = (totais: any, origensFilter: string[], funilName: string) => {
     return (
-      <div className="grid gap-3 text-center grid-cols-2 md:grid-cols-5">
-        <div
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
-          onClick={() =>
+      <div className="grid gap-3 text-center grid-cols-2 md:grid-cols-5 relative z-10">
+        <button
+          type="button"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-slate-500/50"
+          onClick={(e) => {
+            e.preventDefault()
             setModalConfig({
               isOpen: true,
               type: 'leads',
               origens: origensFilter,
               title: `Leads - ${funilName}`,
             })
-          }
+          }}
         >
           <Users className="w-5 h-5 text-slate-400 mb-2" />
           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
             Leads
           </span>
           <span className="text-2xl font-bold text-white">{totais.leads}</span>
-        </div>
-        <div
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-          onClick={() =>
+        </button>
+        <button
+          type="button"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+          onClick={(e) => {
+            e.preventDefault()
             setModalConfig({
               isOpen: true,
               type: 'agendamentos',
               origens: origensFilter,
               title: `Agendamentos - ${funilName}`,
             })
-          }
+          }}
         >
           <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
           <Calendar className="w-5 h-5 text-blue-500 mb-2" />
@@ -360,17 +364,19 @@ export function FunilDashboard({
             Agendamento
           </span>
           <span className="text-2xl font-bold text-white">{totais.agendamentos}</span>
-        </div>
-        <div
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-          onClick={() =>
+        </button>
+        <button
+          type="button"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-purple-500/50"
+          onClick={(e) => {
+            e.preventDefault()
             setModalConfig({
               isOpen: true,
               type: 'comparecimentos',
               origens: origensFilter,
               title: `Comparecimentos - ${funilName}`,
             })
-          }
+          }}
         >
           <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
           <CheckSquare className="w-5 h-5 text-purple-500 mb-2" />
@@ -378,17 +384,19 @@ export function FunilDashboard({
             Comparecimento
           </span>
           <span className="text-2xl font-bold text-white">{totais.comparecimentos}</span>
-        </div>
-        <div
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-          onClick={() =>
+        </button>
+        <button
+          type="button"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-rose-500/50"
+          onClick={(e) => {
+            e.preventDefault()
             setModalConfig({
               isOpen: true,
               type: 'faltas',
               origens: origensFilter,
               title: `Faltas - ${funilName}`,
             })
-          }
+          }}
         >
           <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
           <UserMinus className="w-5 h-5 text-rose-500 mb-2" />
@@ -396,17 +404,19 @@ export function FunilDashboard({
             Faltas
           </span>
           <span className="text-2xl font-bold text-white">{totais.faltas}</span>
-        </div>
-        <div
-          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-          onClick={() =>
+        </button>
+        <button
+          type="button"
+          className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto col-span-2 md:col-span-1 outline-none focus:ring-2 focus:ring-emerald-500/50"
+          onClick={(e) => {
+            e.preventDefault()
             setModalConfig({
               isOpen: true,
               type: 'fechamentos',
               origens: origensFilter,
               title: `Fechamentos - ${funilName}`,
             })
-          }
+          }}
         >
           <ArrowRight className="hidden md:block w-3 h-3 text-slate-600 absolute -left-2 top-1/2 -translate-y-1/2" />
           <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
@@ -414,7 +424,7 @@ export function FunilDashboard({
             Vendas (Mês + Follow-up)
           </span>
           <span className="text-2xl font-bold text-emerald-400">{totais.fechamentos}</span>
-        </div>
+        </button>
       </div>
     )
   }
@@ -426,34 +436,38 @@ export function FunilDashboard({
     origensFilter: string[],
     funilName: string,
   ) => (
-    <div className="grid grid-cols-4 gap-3 text-center">
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center relative z-10">
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-purple-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'oportunidades',
             origens: origensFilter,
             title: `Oportunidades Geradas - ${funilName}`,
           })
-        }
+        }}
       >
         <Target className="w-5 h-5 text-purple-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Oport. Geradas
         </span>
         <span className="text-lg font-bold text-white">{formatBrl(valorOpp)}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
             origens: origensFilter,
             title: `Vendas p/ Conversão - ${funilName}`,
           })
-        }
+        }}
       >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
@@ -461,17 +475,19 @@ export function FunilDashboard({
           Conversão Total
         </span>
         <span className="text-2xl font-bold text-white">{conversao.toFixed(1)}%</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-emerald-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
             origens: origensFilter,
             title: `Fechamentos - ${funilName}`,
           })
-        }
+        }}
       >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <CheckSquare className="w-5 h-5 text-emerald-500 mb-2" />
@@ -479,17 +495,19 @@ export function FunilDashboard({
           Vendas (Mês + Follow-up)
         </span>
         <span className="text-2xl font-bold text-white">{totais.fechamentos}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-amber-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'fechamentos',
             origens: origensFilter,
             title: `Vendas p/ Ticket Médio - ${funilName}`,
           })
-        }
+        }}
       >
         <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
@@ -499,82 +517,110 @@ export function FunilDashboard({
         <span className="text-lg font-bold text-emerald-400">
           {formatBrl(totais.fechamentos > 0 ? totais.valor_fechado / totais.fechamentos : 0)}
         </span>
-      </div>
+      </button>
     </div>
   )
 
   const renderCompetenciaBlocks = () => (
-    <div className="grid grid-cols-4 gap-3 text-center">
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center relative z-10">
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition-colors relative z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'competencia_oportunidades',
             origens: origensCompetencia,
-            title: `Oportunidades Geradas - Competência (${mesReferencia})`,
+            title: `Oportunidades (Qtde) - Competência (${mesReferencia})`,
           })
-        }
+        }}
       >
         <Target className="w-5 h-5 text-fuchsia-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-          Oport. Geradas
+          Oportunidades
+        </span>
+        <span className="text-2xl font-bold text-white">{avaliacoesCompetencia.length}</span>
+      </button>
+
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-emerald-500/50"
+        onClick={(e) => {
+          e.preventDefault()
+          setModalConfig({
+            isOpen: true,
+            type: 'competencia_oportunidades',
+            origens: origensCompetencia,
+            title: `Valor das Oportunidades - Competência (${mesReferencia})`,
+          })
+        }}
+      >
+        <DollarSign className="w-5 h-5 text-emerald-500 mb-2" />
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+          Valor (Oport.)
         </span>
         <span className="text-lg font-bold text-white">
           {formatBrl(valorOportunidadesCompetencia)}
         </span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-blue-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'competencia_fechamentos',
             origens: origensCompetencia,
-            title: `Vendas p/ Conversão (Competência) - ${mesReferencia}`,
+            title: `Conversão (Mês) - ${mesReferencia}`,
           })
-        }
+        }}
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <Percent className="w-5 h-5 text-blue-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
           Conversão (Mês)
         </span>
         <span className="text-2xl font-bold text-white">{conversaoCompetencia.toFixed(1)}%</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'competencia_fechamentos',
             origens: origensCompetencia,
-            title: `Vendas (Competência) - ${mesReferencia}`,
+            title: `Vendas (Qtde) - ${mesReferencia}`,
           })
-        }
+        }}
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <CheckSquare className="w-5 h-5 text-fuchsia-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
-          Vendas (Competência)
+          Vendas (Qtde)
         </span>
         <span className="text-2xl font-bold text-white">{totaisCompetencia.fechamentos}</span>
-      </div>
-      <div
-        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors"
-        onClick={() =>
+      </button>
+
+      <button
+        type="button"
+        className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-900 transition-colors z-20 pointer-events-auto col-span-2 md:col-span-1 outline-none focus:ring-2 focus:ring-amber-500/50"
+        onClick={(e) => {
+          e.preventDefault()
           setModalConfig({
             isOpen: true,
             type: 'competencia_fechamentos',
             origens: origensCompetencia,
-            title: `Vendas p/ Ticket Médio (Competência) - ${mesReferencia}`,
+            title: `Ticket Médio (Competência) - ${mesReferencia}`,
           })
-        }
+        }}
       >
-        <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 absolute -left-3 top-1/2 -translate-y-1/2" />
         <DollarSign className="w-5 h-5 text-amber-500 mb-2" />
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 leading-tight">
-          Ticket Médio (Competência)
+          Ticket Médio (Mês)
         </span>
         <span className="text-lg font-bold text-fuchsia-400">
           {formatBrl(
@@ -583,7 +629,7 @@ export function FunilDashboard({
               : 0,
           )}
         </span>
-      </div>
+      </button>
     </div>
   )
 

@@ -46,6 +46,7 @@ export function DashboardLeadsModal({
 
   useEffect(() => {
     if (isOpen) {
+      setData([])
       fetchData()
       fetchOptions()
 
@@ -79,39 +80,51 @@ export function DashboardLeadsModal({
   const fetchData = async () => {
     setLoading(true)
     try {
+      const [ano, mes] = mesReferencia.split('-')
+      const dataInicio = `${mesReferencia}-01`
+      const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
+      const dataFim = `${mesReferencia}-${ultimoDia}`
+
+      const { data: dbOrigens } = await supabase.from('funil_origens').select('id, nome')
+
+      let validOrigens = origens || []
+
+      if (type === 'competencia_fechamentos' || type === 'competencia_oportunidades') {
+        validOrigens = (dbOrigens || [])
+          .filter((o: any) => !o.nome?.toLowerCase().includes('recorrente'))
+          .map((o: any) => o.id)
+
+        if (origens && origens.length > 0) {
+          validOrigens = validOrigens.filter((id: string) => origens.includes(id))
+        }
+      }
+
       if (type === 'fechamentos' || type === 'competencia_fechamentos') {
-        const [ano, mes] = mesReferencia.split('-')
-        const dataInicio = `${mesReferencia}-01`
-        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-        const dataFim = `${mesReferencia}-${ultimoDia}`
-
-        // Fetch origens to ensure we can hard-filter "recorrente" if needed
-        const { data: dbOrigens } = await supabase.from('funil_origens').select('id, nome')
-
-        const { data: vendas } = await supabase
+        let query = supabase
           .from('vendas_confirmadas')
           .select('*, avaliacoes(*, pacientes(nome))')
           .gte('data_fechamento', dataInicio)
           .lte('data_fechamento', dataFim)
 
+        const { data: vendas } = await query
+
         const filtered = (vendas || []).filter((v: any) => {
-          if (origens && origens.length > 0) {
-            const oId = v.origem_id || v.avaliacoes?.origem_id
-            if (!origens.includes(oId)) return false
+          const oId = v.origem_id || v.avaliacoes?.origem_id
+
+          if (validOrigens && validOrigens.length > 0) {
+            if (!validOrigens.includes(oId)) return false
+          } else if (
+            validOrigens &&
+            validOrigens.length === 0 &&
+            (type === 'competencia_fechamentos' || (origens && origens.length === 0))
+          ) {
+            if (type === 'competencia_fechamentos') return false
           }
 
           if (type === 'competencia_fechamentos') {
             const dataOriginal =
               v.data_original || v.avaliacoes?.data_avaliacao || v.data_fechamento
             if (dataOriginal?.substring(0, 7) !== mesReferencia) return false
-
-            // Hard filter para garantir exclusão de recorrente
-            const oId = v.origem_id || v.avaliacoes?.origem_id
-            const isRecorrente = dbOrigens
-              ?.find((o: any) => o.id === oId)
-              ?.nome?.toLowerCase()
-              .includes('recorrente')
-            if (isRecorrente) return false
           }
 
           return true
@@ -123,11 +136,13 @@ export function DashboardLeadsModal({
         )
         setData(filtered.map((v: any) => ({ ...v, _isVenda: true })))
       } else if (type === 'oportunidades' || type === 'competencia_oportunidades') {
-        const { data: dbOrigens } = await supabase.from('funil_origens').select('id, nome')
-
-        const query = supabase
+        let query = supabase
           .from('avaliacoes')
           .select(`*, pacientes(nome), vendas_confirmadas(id)`)
+          .or(
+            `data_avaliacao.gte.${dataInicio},and(data_avaliacao.is.null,criado_em.gte.${dataInicio})`,
+          )
+          .limit(3000)
 
         const { data: avaliacoes } = await query
 
@@ -143,16 +158,10 @@ export function DashboardLeadsModal({
             const itemDate = dateStr.substring(0, 7)
             if (dateStr && itemDate !== mesReferencia) return false
 
-            if (origens && origens.length > 0) {
-              if (!origens.includes(a.origem_id)) return false
-            }
-
-            if (type === 'competencia_oportunidades') {
-              const isRecorrente = dbOrigens
-                ?.find((o: any) => o.id === a.origem_id)
-                ?.nome?.toLowerCase()
-                .includes('recorrente')
-              if (isRecorrente) return false
+            if (validOrigens && validOrigens.length > 0) {
+              if (!validOrigens.includes(a.origem_id)) return false
+            } else if (type === 'competencia_oportunidades') {
+              return false
             }
 
             return true
@@ -166,11 +175,6 @@ export function DashboardLeadsModal({
 
         setData(filtered.map((a: any) => ({ ...a, _isAvaliacao: true })))
       } else {
-        const [ano, mes] = mesReferencia.split('-')
-        const dataInicio = `${mesReferencia}-01`
-        const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate()
-        const dataFim = `${mesReferencia}-${ultimoDia}`
-
         const { data: leads } = await supabase
           .from('funil_leads')
           .select('*')
@@ -178,6 +182,7 @@ export function DashboardLeadsModal({
             `mes_referencia.eq.${mesReferencia},and(data_avaliacao.gte.${dataInicio},data_avaliacao.lte.${dataFim})`,
           )
           .order('criado_em', { ascending: false })
+          .limit(3000)
 
         const filtered = (leads || []).filter((lead: any) => {
           const status = (lead.status || '').toLowerCase()
