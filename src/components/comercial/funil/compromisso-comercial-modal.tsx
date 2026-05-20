@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -64,6 +64,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
   const [history, setHistory] = useState<any[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [saving, setSaving] = useState(false)
+  const resultadoRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     async function loadUsers() {
@@ -247,6 +248,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
           })
         }
         setResultado('')
+        setTimeout(() => resultadoRef.current?.focus(), 100)
       }
 
       toast({ title: 'Dados da ação e histórico atualizados com sucesso!' })
@@ -492,6 +494,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
                 <div>
                   <Label>Qual foi o desfecho? *</Label>
                   <Textarea
+                    ref={resultadoRef}
                     value={resultado}
                     onChange={(e) => setResultado(e.target.value)}
                     placeholder="Descreva o que foi conversado e acordado com o paciente..."
