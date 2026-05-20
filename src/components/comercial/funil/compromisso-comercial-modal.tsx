@@ -213,6 +213,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
         setor: 'comercial',
         lead_id: selectedPerson.type === 'lead' ? selectedPerson.id : null,
         paciente_id: selectedPerson.type === 'paciente' ? selectedPerson.id : null,
+        resultado_acao: resultado || null,
       }
 
       if (evento?.id) {
