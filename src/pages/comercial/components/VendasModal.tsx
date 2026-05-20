@@ -267,33 +267,14 @@ export function VendasModal({
         temperatura_lead: formData.temperatura_lead,
       }
 
-      // Verificar se já existe avaliação para este paciente
-      const { data: existingAvaliacoes } = await supabase
+      // Sempre criar uma nova avaliação (oportunidade) para garantir independência dos registros
+      const { data: insertedAvaliacao, error } = await supabase
         .from('avaliacoes')
+        .insert(payload)
         .select('id')
-        .eq('paciente_id', currentPacienteId)
-        .order('criado_em', { ascending: false })
-        .limit(1)
-
-      const existingAvaliacao = existingAvaliacoes?.[0]
-      let currentAvaliacaoId = ''
-
-      if (existingAvaliacao) {
-        const { error } = await supabase
-          .from('avaliacoes')
-          .update(payload)
-          .eq('id', existingAvaliacao.id)
-        if (error) throw error
-        currentAvaliacaoId = existingAvaliacao.id
-      } else {
-        const { data: insertedAvaliacao, error } = await supabase
-          .from('avaliacoes')
-          .insert(payload)
-          .select('id')
-          .single()
-        if (error) throw error
-        currentAvaliacaoId = insertedAvaliacao.id
-      }
+        .single()
+      if (error) throw error
+      const currentAvaliacaoId = insertedAvaliacao.id
 
       if (formData.tipo_lancamento === 'venda_concretizada') {
         const { data: vd, error: vdError } = await supabase
@@ -313,14 +294,7 @@ export function VendasModal({
           .select('id')
           .single()
 
-        if (vdError) {
-          if (vdError.code === '23505') {
-            throw new Error(
-              'Já existe uma venda registrada para este paciente nesta mesma data e origem.',
-            )
-          }
-          throw vdError
-        }
+        if (vdError) throw vdError
 
         if (vd) {
           await supabase
