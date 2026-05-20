@@ -165,6 +165,22 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
           })),
         )
       }
+    } else if (selectedPerson.type === 'paciente') {
+      const { data: fh } = await supabase
+        .from('fet_historico')
+        .select('*, usuario:usuarios(nome)')
+        .eq('paciente_id', selectedPerson.id)
+        .order('criado_em', { ascending: false })
+
+      if (fh) {
+        hist.push(
+          ...fh.map((h) => ({
+            date: h.criado_em,
+            desc: `${h.acao} ${h.detalhes ? '- ' + h.detalhes : ''}`,
+            user: h.usuario?.nome || 'Sistema',
+          })),
+        )
+      }
     }
 
     const { data: comps } = await supabase
@@ -191,6 +207,56 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
     hist.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     setHistory(hist)
     setLoadingHistory(false)
+  }
+
+  const handleApenasAtualizar = async () => {
+    if (!colaboradorId || !dataAcao || !selectedPerson) {
+      toast({ title: 'Preencha colaborador, data e paciente', variant: 'destructive' })
+      return
+    }
+
+    setSaving(true)
+    try {
+      if (evento?.id) {
+        const baseCompromisso = {
+          usuario_id: colaboradorId,
+          data_inicio: dataAcao,
+          data_fim: dataAcao,
+          hora_inicio: horaAcao ? `${horaAcao}:00` : null,
+          hora_fim: horaAcao ? `${horaAcao}:00` : null,
+          eh_dia_inteiro: !horaAcao,
+          descricao,
+        }
+        await updateCompromisso(evento.id, baseCompromisso)
+      }
+
+      if (resultado) {
+        if (selectedPerson.type === 'lead') {
+          await supabase.from('funil_leads_historico').insert({
+            lead_id: selectedPerson.id,
+            usuario_id: user!.id,
+            acao: 'Atualização de Desfecho',
+            detalhes: resultado,
+          })
+        } else if (selectedPerson.type === 'paciente') {
+          await supabase.from('fet_historico').insert({
+            paciente_id: selectedPerson.id,
+            usuario_id: user!.id,
+            acao: 'Atualização de Desfecho',
+            detalhes: resultado,
+          })
+        }
+        setResultado('')
+      }
+
+      toast({ title: 'Dados da ação e histórico atualizados com sucesso!' })
+      await loadHistory()
+      // Não chamamos onSave() aqui para garantir que o modal permaneça aberto (sem refresh na página/lista pai)
+    } catch (err: any) {
+      toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleSave = async () => {
@@ -526,7 +592,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
             {evento && evento.status_acao === 'pendente' && (
               <div className="pt-2">
                 <Button
-                  onClick={handleSave}
+                  onClick={handleApenasAtualizar}
                   variant="outline"
                   disabled={saving}
                   className="w-full border-slate-700 hover:bg-slate-800 text-white text-xs"
