@@ -87,6 +87,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (!profileRes.error && profileRes.data) {
           newProfile = profileRes.data
+          if (newProfile?.role) {
+            newProfile.role = newProfile.role.toLowerCase()
+          }
         }
 
         const permSet = new Set<string>()

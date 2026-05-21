@@ -142,7 +142,7 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    if (profile?.role === 'admin') {
+    if (profile?.role?.toLowerCase() === 'admin') {
       setChecking(false)
     } else {
       checkAbsences()
@@ -157,7 +157,7 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
     )
   }
 
-  const userRole = profile?.role || 'visualizacao'
+  const userRole = profile?.role?.toLowerCase() || 'visualizacao'
   const isAdmin = userRole === 'admin'
 
   if (!isAdmin && blockReason) {
@@ -246,7 +246,7 @@ const ProtectedRoute = ({
     )
   }
 
-  const userRole = profile?.role || 'visualizacao'
+  const userRole = profile?.role?.toLowerCase() || 'visualizacao'
 
   if (userRole === 'admin') return <>{children}</>
 

@@ -453,7 +453,7 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
-          const role = profile?.role || 'visualizacao'
+          const role = profile?.role?.toLowerCase() || 'visualizacao'
 
           if (group.showRole && !group.showRole.includes(role) && role !== 'admin') {
             return null
