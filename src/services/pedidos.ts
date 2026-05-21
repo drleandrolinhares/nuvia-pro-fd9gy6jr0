@@ -199,8 +199,4 @@ export const getRelatorioPedidos = async (startDate: string, endDate: string) =>
       '*, usuario:usuarios!pedidos_materiais_usuario_id_fkey(nome), itens:pedido_itens(quantidade)',
     )
     .eq('status', 'entregue')
-    .gte('data_entrega', startDate + 'T00:00:00Z')
-    .lte('data_entrega', endDate + 'T23:59:59Z')
-  if (error) throw error
-  return data
-}
+    .gte('data_entrega', s
