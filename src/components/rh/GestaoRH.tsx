@@ -117,6 +117,7 @@ export function GestaoRH() {
   const [ordenacao, setOrdenacao] = useState<'urgencia' | 'mais_antigos' | 'mais_recentes'>(
     'urgencia',
   )
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const loadData = async () => {
     setLoading(true)
@@ -412,6 +413,8 @@ export function GestaoRH() {
     return dateB - dateA
   })
 
+  const visibleData = isExpanded ? displayData : displayData.slice(0, 3)
+
   return (
     <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
@@ -484,7 +487,7 @@ export function GestaoRH() {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="p-0 overflow-x-auto">
+      <CardContent className="p-0 flex flex-col">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <Loader2 className="animate-spin text-amber-500 w-8 h-8" />
@@ -500,324 +503,366 @@ export function GestaoRH() {
             </p>
           </div>
         ) : (
-          <div className="min-w-[800px]">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-400 uppercase bg-slate-950 border-b border-slate-800 tracking-wider">
-                <tr>
-                  <th className="px-4 py-4 font-semibold">Colaborador</th>
-                  <th className="px-4 py-4 font-semibold">Período Aquisitivo</th>
-                  <th className="px-4 py-4 font-semibold">Vencimento (1 Ano)</th>
-                  <th className="px-4 py-4 font-semibold">Prazo Limite</th>
-                  <th className="px-4 py-4 font-semibold text-center">Dias (Gozo / Resta)</th>
-                  <th className="px-4 py-4 font-semibold text-center">Status</th>
-                  <th className="px-4 py-4 font-semibold text-right">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {displayData.map((item, idx) => {
-                  let countdownText = ''
-                  let isAdquirido = false
+          <>
+            <div className="overflow-x-auto">
+              <div className="min-w-[800px]">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-400 uppercase bg-slate-950 border-b border-slate-800 tracking-wider">
+                    <tr>
+                      <th className="px-4 py-4 font-semibold">Colaborador</th>
+                      <th className="px-4 py-4 font-semibold">Período Aquisitivo</th>
+                      <th className="px-4 py-4 font-semibold">Vencimento (1 Ano)</th>
+                      <th className="px-4 py-4 font-semibold">Prazo Limite</th>
+                      <th className="px-4 py-4 font-semibold text-center">Dias (Gozo / Resta)</th>
+                      <th className="px-4 py-4 font-semibold text-center">Status</th>
+                      <th className="px-4 py-4 font-semibold text-right">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {visibleData.map((item, idx) => {
+                      let countdownText = ''
+                      let isAdquirido = false
 
-                  if (item.periodo) {
-                    const [tYear, tMonth, tDay] = item.periodo.periodo_fim
-                      .split('T')[0]
-                      .split('-')
-                      .map(Number)
-                    const target = new Date(tYear, tMonth - 1, tDay)
-                    const now = new Date()
-                    now.setHours(0, 0, 0, 0)
+                      if (item.periodo) {
+                        const [tYear, tMonth, tDay] = item.periodo.periodo_fim
+                          .split('T')[0]
+                          .split('-')
+                          .map(Number)
+                        const target = new Date(tYear, tMonth - 1, tDay)
+                        const now = new Date()
+                        now.setHours(0, 0, 0, 0)
 
-                    if (isBefore(now, target)) {
-                      const years = differenceInYears(target, now)
-                      const nowPlusYears = addYears(now, years)
-                      const months = differenceInMonths(target, nowPlusYears)
-                      const nowPlusMonths = addMonths(nowPlusYears, months)
-                      const days = differenceInDays(target, nowPlusMonths)
+                        if (isBefore(now, target)) {
+                          const years = differenceInYears(target, now)
+                          const nowPlusYears = addYears(now, years)
+                          const months = differenceInMonths(target, nowPlusYears)
+                          const nowPlusMonths = addMonths(nowPlusYears, months)
+                          const days = differenceInDays(target, nowPlusMonths)
 
-                      const parts = []
-                      if (years > 0) parts.push(`${years}a`)
-                      if (months > 0) parts.push(`${months}m`)
-                      if (days > 0) parts.push(`${days}d`)
+                          const parts = []
+                          if (years > 0) parts.push(`${years}a`)
+                          if (months > 0) parts.push(`${months}m`)
+                          if (days > 0) parts.push(`${days}d`)
 
-                      if (parts.length > 0) {
-                        countdownText = `Faltam ${parts.join(' e ')}`
-                      } else {
-                        countdownText = `Vence amanhã`
+                          if (parts.length > 0) {
+                            countdownText = `Faltam ${parts.join(' e ')}`
+                          } else {
+                            countdownText = `Vence amanhã`
+                          }
+                        } else if (target.getTime() === now.getTime()) {
+                          isAdquirido = true
+                          countdownText = 'Vence hoje'
+                        } else {
+                          isAdquirido = true
+                          const years = differenceInYears(now, target)
+                          const targetPlusYears = addYears(target, years)
+                          const months = differenceInMonths(now, targetPlusYears)
+                          const targetPlusMonths = addMonths(targetPlusYears, months)
+                          const days = differenceInDays(now, targetPlusMonths)
+
+                          const parts = []
+                          if (years > 0) parts.push(`${years}a`)
+                          if (months > 0) parts.push(`${months}m`)
+                          if (days > 0) parts.push(`${days}d`)
+
+                          if (parts.length > 0) {
+                            countdownText = `Vencido há ${parts.join(' e ')}`
+                          } else {
+                            countdownText = 'Venceu recentemente'
+                          }
+                        }
                       }
-                    } else if (target.getTime() === now.getTime()) {
-                      isAdquirido = true
-                      countdownText = 'Vence hoje'
-                    } else {
-                      isAdquirido = true
-                      const years = differenceInYears(now, target)
-                      const targetPlusYears = addYears(target, years)
-                      const months = differenceInMonths(now, targetPlusYears)
-                      const targetPlusMonths = addMonths(targetPlusYears, months)
-                      const days = differenceInDays(now, targetPlusMonths)
 
-                      const parts = []
-                      if (years > 0) parts.push(`${years}a`)
-                      if (months > 0) parts.push(`${months}m`)
-                      if (days > 0) parts.push(`${days}d`)
-
-                      if (parts.length > 0) {
-                        countdownText = `Vencido há ${parts.join(' e ')}`
-                      } else {
-                        countdownText = 'Venceu recentemente'
+                      let inExperiencia = false
+                      let diasRestantesExperiencia = 0
+                      if (item.usuario.data_admissao) {
+                        const [year, month, day] = item.usuario.data_admissao
+                          .split('T')[0]
+                          .split('-')
+                          .map(Number)
+                        if (year && month && day) {
+                          const admissao = new Date(year, month - 1, day)
+                          const now = new Date()
+                          now.setHours(0, 0, 0, 0)
+                          const diasDesdeAdmissao = differenceInDays(now, admissao)
+                          if (diasDesdeAdmissao >= 0 && diasDesdeAdmissao <= 90) {
+                            inExperiencia = true
+                            diasRestantesExperiencia = 90 - diasDesdeAdmissao
+                          }
+                        }
                       }
-                    }
-                  }
 
-                  let inExperiencia = false
-                  let diasRestantesExperiencia = 0
-                  if (item.usuario.data_admissao) {
-                    const [year, month, day] = item.usuario.data_admissao
-                      .split('T')[0]
-                      .split('-')
-                      .map(Number)
-                    if (year && month && day) {
-                      const admissao = new Date(year, month - 1, day)
-                      const now = new Date()
-                      now.setHours(0, 0, 0, 0)
-                      const diasDesdeAdmissao = differenceInDays(now, admissao)
-                      if (diasDesdeAdmissao >= 0 && diasDesdeAdmissao <= 90) {
-                        inExperiencia = true
-                        diasRestantesExperiencia = 90 - diasDesdeAdmissao
-                      }
-                    }
-                  }
-
-                  return (
-                    <tr
-                      key={idx}
-                      className={cn(
-                        'hover:bg-slate-800/30 transition-colors',
-                        inExperiencia && 'bg-purple-500/5 hover:bg-purple-500/10',
-                      )}
-                    >
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            className={cn(
-                              'size-8 border',
-                              inExperiencia
-                                ? 'border-purple-500 ring-2 ring-purple-500/30'
-                                : 'border-slate-700',
+                      return (
+                        <tr
+                          key={idx}
+                          className={cn(
+                            'hover:bg-slate-800/30 transition-colors',
+                            inExperiencia && 'bg-purple-500/5 hover:bg-purple-500/10',
+                          )}
+                        >
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar
+                                className={cn(
+                                  'size-8 border',
+                                  inExperiencia
+                                    ? 'border-purple-500 ring-2 ring-purple-500/30'
+                                    : 'border-slate-700',
+                                )}
+                              >
+                                <AvatarImage
+                                  src={
+                                    item.usuario.avatar_url ||
+                                    `https://img.usecurling.com/ppl/thumbnail?seed=${item.usuario.id}`
+                                  }
+                                />
+                                <AvatarFallback className="bg-slate-800 text-slate-300">
+                                  {item.usuario.nome.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-slate-200">
+                                    {item.usuario.nome}
+                                  </p>
+                                  {inExperiencia && (
+                                    <Badge
+                                      variant="outline"
+                                      className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[9px] px-1.5 py-0 h-4 font-semibold uppercase tracking-wider"
+                                    >
+                                      Experiência ({diasRestantesExperiencia}d)
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex flex-col text-xs text-slate-500 mt-0.5 gap-0.5">
+                                  <span>
+                                    Admissão:{' '}
+                                    {item.usuario.data_admissao
+                                      ? format(
+                                          new Date(
+                                            item.usuario.data_admissao
+                                              .split('T')[0]
+                                              .split('-')
+                                              .map(Number)[0],
+                                            item.usuario.data_admissao
+                                              .split('T')[0]
+                                              .split('-')
+                                              .map(Number)[1] - 1,
+                                            item.usuario.data_admissao
+                                              .split('T')[0]
+                                              .split('-')
+                                              .map(Number)[2],
+                                          ),
+                                          'dd/MM/yyyy',
+                                        )
+                                      : '-'}
+                                  </span>
+                                  {item.usuario.data_admissao && (
+                                    <span className="text-[10px] text-amber-500/80 font-medium">
+                                      Tempo de casa: {getTempoDeCasa(item.usuario.data_admissao)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-slate-300">
+                            {item.periodo ? (
+                              <div className="flex flex-col">
+                                <span className="text-xs">
+                                  {format(
+                                    new Date(
+                                      item.periodo.periodo_inicio
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[0],
+                                      item.periodo.periodo_inicio
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[1] - 1,
+                                      item.periodo.periodo_inicio
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[2],
+                                    ),
+                                    'dd/MM/yy',
+                                  )}{' '}
+                                  até <br className="hidden lg:block" />
+                                  {format(
+                                    new Date(
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[0],
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[1] - 1,
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[2],
+                                    ),
+                                    'dd/MM/yy',
+                                  )}
+                                </span>
+                              </div>
+                            ) : (
+                              '-'
                             )}
-                          >
-                            <AvatarImage
-                              src={
-                                item.usuario.avatar_url ||
-                                `https://img.usecurling.com/ppl/thumbnail?seed=${item.usuario.id}`
-                              }
-                            />
-                            <AvatarFallback className="bg-slate-800 text-slate-300">
-                              {item.usuario.nome.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-slate-200">{item.usuario.nome}</p>
-                              {inExperiencia && (
+                          </td>
+                          <td className="px-4 py-4">
+                            {item.periodo ? (
+                              <div className="flex flex-col gap-1.5 items-start">
+                                <span className="font-medium text-slate-200">
+                                  {format(
+                                    new Date(
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[0],
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[1] - 1,
+                                      item.periodo.periodo_fim
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[2],
+                                    ),
+                                    'dd/MM/yyyy',
+                                  )}
+                                </span>
                                 <Badge
                                   variant="outline"
-                                  className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[9px] px-1.5 py-0 h-4 font-semibold uppercase tracking-wider"
+                                  className={cn(
+                                    'text-[10px] px-1.5 py-0 font-semibold tracking-wide border whitespace-nowrap',
+                                    isAdquirido
+                                      ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
+                                      : 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+                                  )}
                                 >
-                                  Experiência ({diasRestantesExperiencia}d)
+                                  {countdownText}
                                 </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-col text-xs text-slate-500 mt-0.5 gap-0.5">
-                              <span>
-                                Admissão:{' '}
-                                {item.usuario.data_admissao
-                                  ? format(
-                                      new Date(
-                                        item.usuario.data_admissao
-                                          .split('T')[0]
-                                          .split('-')
-                                          .map(Number)[0],
-                                        item.usuario.data_admissao
-                                          .split('T')[0]
-                                          .split('-')
-                                          .map(Number)[1] - 1,
-                                        item.usuario.data_admissao
-                                          .split('T')[0]
-                                          .split('-')
-                                          .map(Number)[2],
-                                      ),
-                                      'dd/MM/yyyy',
-                                    )
-                                  : '-'}
-                              </span>
-                              {item.usuario.data_admissao && (
-                                <span className="text-[10px] text-amber-500/80 font-medium">
-                                  Tempo de casa: {getTempoDeCasa(item.usuario.data_admissao)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-slate-300">
-                        {item.periodo ? (
-                          <div className="flex flex-col">
-                            <span className="text-xs">
-                              {format(
-                                new Date(
-                                  item.periodo.periodo_inicio
-                                    .split('T')[0]
-                                    .split('-')
-                                    .map(Number)[0],
-                                  item.periodo.periodo_inicio
-                                    .split('T')[0]
-                                    .split('-')
-                                    .map(Number)[1] - 1,
-                                  item.periodo.periodo_inicio
-                                    .split('T')[0]
-                                    .split('-')
-                                    .map(Number)[2],
-                                ),
-                                'dd/MM/yy',
-                              )}{' '}
-                              até <br className="hidden lg:block" />
-                              {format(
-                                new Date(
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[0],
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[1] -
-                                    1,
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[2],
-                                ),
-                                'dd/MM/yy',
-                              )}
-                            </span>
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {item.periodo ? (
-                          <div className="flex flex-col gap-1.5 items-start">
-                            <span className="font-medium text-slate-200">
-                              {format(
-                                new Date(
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[0],
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[1] -
-                                    1,
-                                  item.periodo.periodo_fim.split('T')[0].split('-').map(Number)[2],
-                                ),
-                                'dd/MM/yyyy',
-                              )}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                'text-[10px] px-1.5 py-0 font-semibold tracking-wide border whitespace-nowrap',
-                                isAdquirido
-                                  ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
-                                  : 'text-blue-400 border-blue-400/30 bg-blue-400/10',
-                              )}
-                            >
-                              {countdownText}
-                            </Badge>
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {item.periodo ? (
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                'font-medium',
-                                item.statusSemaforo === 'red'
-                                  ? 'text-red-400'
-                                  : item.statusSemaforo === 'yellow'
-                                    ? 'text-amber-400'
-                                    : 'text-slate-300',
-                              )}
-                            >
-                              {format(
-                                new Date(
-                                  item.periodo.prazo_limite.split('T')[0].split('-').map(Number)[0],
-                                  item.periodo.prazo_limite
-                                    .split('T')[0]
-                                    .split('-')
-                                    .map(Number)[1] - 1,
-                                  item.periodo.prazo_limite.split('T')[0].split('-').map(Number)[2],
-                                ),
-                                'dd/MM/yyyy',
-                              )}
-                            </span>
-                            {item.statusSemaforo === 'red' && (
-                              <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+                              </div>
+                            ) : (
+                              '-'
                             )}
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        {item.periodo ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 shadow-sm">
-                            <span className="text-emerald-400 font-bold">
-                              {item.periodo.dias_gozados}
-                            </span>
-                            <span className="text-slate-600">/</span>
-                            <span className="text-amber-500 font-bold">{item.diasRestantes}</span>
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        {item.statusSemaforo === 'red' ? (
-                          <Badge className="bg-red-500/20 text-red-400 border-0 uppercase font-bold text-[10px]">
-                            Crítico
-                          </Badge>
-                        ) : item.statusSemaforo === 'yellow' ? (
-                          <Badge className="bg-amber-500/20 text-amber-400 border-0 uppercase font-bold text-[10px]">
-                            Atenção
-                          </Badge>
-                        ) : item.statusSemaforo === 'blue' ? (
-                          <Badge className="bg-emerald-500/20 text-emerald-400 border-0 uppercase font-bold text-[10px]">
-                            Concluído
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-slate-800 text-slate-300 border-0 uppercase font-bold text-[10px]">
-                            No Prazo
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleOpenHistory(item.usuario, item.todosPeriodos)}
-                            className="h-8 text-[10px] uppercase font-bold border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300"
-                          >
-                            Histórico
-                          </Button>
-                          {item.periodo && item.diasRestantes > 0 && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenModal(item.usuario, item.periodo!)}
-                              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
-                            >
-                              <Plus className="w-3 h-3 mr-1.5" /> Registrar
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            {item.periodo ? (
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    'font-medium',
+                                    item.statusSemaforo === 'red'
+                                      ? 'text-red-400'
+                                      : item.statusSemaforo === 'yellow'
+                                        ? 'text-amber-400'
+                                        : 'text-slate-300',
+                                  )}
+                                >
+                                  {format(
+                                    new Date(
+                                      item.periodo.prazo_limite
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[0],
+                                      item.periodo.prazo_limite
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[1] - 1,
+                                      item.periodo.prazo_limite
+                                        .split('T')[0]
+                                        .split('-')
+                                        .map(Number)[2],
+                                    ),
+                                    'dd/MM/yyyy',
+                                  )}
+                                </span>
+                                {item.statusSemaforo === 'red' && (
+                                  <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+                                )}
+                              </div>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            {item.periodo ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 shadow-sm">
+                                <span className="text-emerald-400 font-bold">
+                                  {item.periodo.dias_gozados}
+                                </span>
+                                <span className="text-slate-600">/</span>
+                                <span className="text-amber-500 font-bold">
+                                  {item.diasRestantes}
+                                </span>
+                              </div>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            {item.statusSemaforo === 'red' ? (
+                              <Badge className="bg-red-500/20 text-red-400 border-0 uppercase font-bold text-[10px]">
+                                Crítico
+                              </Badge>
+                            ) : item.statusSemaforo === 'yellow' ? (
+                              <Badge className="bg-amber-500/20 text-amber-400 border-0 uppercase font-bold text-[10px]">
+                                Atenção
+                              </Badge>
+                            ) : item.statusSemaforo === 'blue' ? (
+                              <Badge className="bg-emerald-500/20 text-emerald-400 border-0 uppercase font-bold text-[10px]">
+                                Concluído
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-slate-800 text-slate-300 border-0 uppercase font-bold text-[10px]">
+                                No Prazo
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenHistory(item.usuario, item.todosPeriodos)}
+                                className="h-8 text-[10px] uppercase font-bold border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300"
+                              >
+                                Histórico
+                              </Button>
+                              {item.periodo && item.diasRestantes > 0 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleOpenModal(item.usuario, item.periodo!)}
+                                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase text-[10px] h-8"
+                                >
+                                  <Plus className="w-3 h-3 mr-1.5" /> Registrar
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {displayData.length > 3 && (
+              <div className="flex justify-center p-4 border-t border-slate-800 bg-slate-950/30">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+                >
+                  {isExpanded ? 'Ver menos' : `Ver mais (${displayData.length - 3})`}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
 
