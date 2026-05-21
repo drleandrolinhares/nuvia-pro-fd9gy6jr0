@@ -42,7 +42,7 @@ interface ModalProps {
 }
 
 export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: ModalProps) {
-  const { user } = useAuth()
+  const { user, profile } = useAuth() as any
   const { toast } = useToast()
 
   const [colaboradorId, setColaboradorId] = useState('')
@@ -199,7 +199,11 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
           date: c.concluido_em || c.criado_em,
           desc:
             `Ação: ${c.descricao} ` +
-            (c.status_acao === 'concluido' ? `(Resultado: ${c.resultado_acao})` : '(Pendente)'),
+            (c.resultado_acao
+              ? `(Resultado: ${c.resultado_acao})`
+              : c.status_acao === 'concluido'
+                ? '(Concluída)'
+                : '(Pendente)'),
           user: c.concluido_por_user?.nome || c.usuario?.nome || 'Sistema',
         })),
       )
@@ -219,7 +223,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
     setSaving(true)
     try {
       if (evento?.id) {
-        const baseCompromisso = {
+        const baseCompromisso: any = {
           usuario_id: colaboradorId,
           data_inicio: dataAcao,
           data_fim: dataAcao,
@@ -227,6 +231,9 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
           hora_fim: horaAcao ? `${horaAcao}:00` : null,
           eh_dia_inteiro: !horaAcao,
           descricao,
+        }
+        if (resultado) {
+          baseCompromisso.resultado_acao = resultado
         }
         await updateCompromisso(evento.id, baseCompromisso)
       }
@@ -247,13 +254,25 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
             detalhes: resultado,
           })
         }
+
+        const userName = profile?.nome || user?.email || 'Sistema'
+        const novoItem = {
+          date: new Date().toISOString(),
+          desc: `Atualização de Desfecho - ${resultado}`,
+          user: userName,
+        }
+
+        setHistory((prev) => {
+          const updated = [novoItem, ...prev]
+          return updated.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        })
+
         setResultado('')
         setTimeout(() => resultadoRef.current?.focus(), 100)
       }
 
       toast({ title: 'Dados da ação e histórico atualizados com sucesso!' })
-      await loadHistory()
-      // Não chamamos onSave() aqui para garantir que o modal permaneça aberto (sem refresh na página/lista pai)
+      // Sem recarregar loadHistory() para evitar flicker e chamadas desnecessárias
     } catch (err: any) {
       toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' })
     } finally {
