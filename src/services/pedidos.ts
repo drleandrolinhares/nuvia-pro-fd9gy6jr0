@@ -57,7 +57,7 @@ export const getPedidosRecebidos = async (ciclo?: string) => {
   let query = supabase
     .from('pedidos_materiais')
     .select(
-      '*, usuario:usuarios(nome, email), itens:pedido_itens(*, produto:produtos(nome, marca, variacao))',
+      '*, usuario:usuarios!pedidos_materiais_usuario_id_fkey(nome, email), itens:pedido_itens(*, produto:produtos(nome, marca, variacao))',
     )
     .in('status', ['enviado', 'entregue'])
     .order('data_envio', { ascending: false })
@@ -175,7 +175,7 @@ export const getItensEmFalta = async () => {
   const { data, error } = await supabase
     .from('pedido_itens')
     .select(
-      '*, pedido:pedidos_materiais(usuario:usuarios(nome), data_criacao), produto:produtos(nome, marca, variacao)',
+      '*, pedido:pedidos_materiais(usuario:usuarios!pedidos_materiais_usuario_id_fkey(nome), data_criacao), produto:produtos(nome, marca, variacao)',
     )
     .eq('status', 'em_falta')
     .order('pedido_id', { ascending: false })
@@ -195,7 +195,9 @@ export const resolverItemFalta = async (itemId: string) => {
 export const getRelatorioPedidos = async (startDate: string, endDate: string) => {
   const { data, error } = await supabase
     .from('pedidos_materiais')
-    .select('*, usuario:usuarios(nome), itens:pedido_itens(quantidade)')
+    .select(
+      '*, usuario:usuarios!pedidos_materiais_usuario_id_fkey(nome), itens:pedido_itens(quantidade)',
+    )
     .eq('status', 'entregue')
     .gte('data_entrega', startDate + 'T00:00:00Z')
     .lte('data_entrega', endDate + 'T23:59:59Z')
