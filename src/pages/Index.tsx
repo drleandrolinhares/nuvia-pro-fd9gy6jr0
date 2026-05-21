@@ -374,6 +374,106 @@ const Index = () => {
         </div>
       </div>
 
+      <div className="grid gap-6 md:grid-cols-2 mb-6">
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-md">
+                <Cake className="size-5 text-amber-500" />
+              </div>
+              <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+                Aniversariantes
+              </CardTitle>
+            </div>
+            <Select
+              value={selectedMonth.toString()}
+              onValueChange={(v) => setSelectedMonth(parseInt(v))}
+            >
+              <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-300">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
+                {MESES.map((mes, idx) => (
+                  <SelectItem
+                    key={idx}
+                    value={idx.toString()}
+                    className="text-xs focus:bg-slate-800 focus:text-slate-100"
+                  >
+                    {mes}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
+            {loadingUsuarios ? (
+              <div className="text-sm text-slate-500">Carregando...</div>
+            ) : aniversariantes.length > 0 ? (
+              <div className="space-y-3 pr-2">
+                {aniversariantes.map((a) => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      'flex items-center gap-3',
+                      a.isPast ? 'opacity-50 grayscale' : '',
+                    )}
+                  >
+                    <Avatar className="size-8 border border-slate-700">
+                      <AvatarImage
+                        src={
+                          a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
+                        }
+                      />
+                      <AvatarFallback className="bg-slate-800 text-slate-300">
+                        {a.nome.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
+                      <p className="text-xs text-slate-500">
+                        Dia {a.day.toString().padStart(2, '0')}
+                      </p>
+                    </div>
+                    {!a.isPast &&
+                      selectedMonth === new Date().getMonth() &&
+                      a.day === new Date().getDate() && (
+                        <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-0 uppercase shrink-0 font-bold border-0">
+                          Hoje!
+                        </Badge>
+                      )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
+                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
+                  Nenhum aniversariante neste mês
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
+          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
+            <div className="p-2 bg-amber-500/10 rounded-md">
+              <CheckCircle2 className="size-5 text-amber-500" />
+            </div>
+            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
+              A Única Coisa
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 pt-4 flex flex-col justify-center items-center h-full">
+            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50 w-full h-full p-6 text-center">
+              <Calendar className="w-8 h-8 text-slate-600 mb-3" />
+              <p className="text-sm text-slate-400 font-medium max-w-[250px]">
+                Nenhum lembrete ou agendamento pendente no momento.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {possuiCarteira && (
         <div className="grid gap-4 md:grid-cols-2 mb-6">
           <Card className="border-slate-800 bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[140px]">
@@ -559,122 +659,8 @@ const Index = () => {
         </Card>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-0">
         <GestaoRH />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-md">
-                <Cake className="size-5 text-amber-500" />
-              </div>
-              <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                Aniversariantes
-              </CardTitle>
-            </div>
-            <Select
-              value={selectedMonth.toString()}
-              onValueChange={(v) => setSelectedMonth(parseInt(v))}
-            >
-              <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-300">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
-                {MESES.map((mes, idx) => (
-                  <SelectItem
-                    key={idx}
-                    value={idx.toString()}
-                    className="text-xs focus:bg-slate-800 focus:text-slate-100"
-                  >
-                    {mes}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-            {loadingUsuarios ? (
-              <div className="text-sm text-slate-500">Carregando...</div>
-            ) : aniversariantes.length > 0 ? (
-              <div className="space-y-3 pr-2">
-                {aniversariantes.map((a) => (
-                  <div
-                    key={a.id}
-                    className={cn(
-                      'flex items-center gap-3',
-                      a.isPast ? 'opacity-50 grayscale' : '',
-                    )}
-                  >
-                    <Avatar className="size-8 border border-slate-700">
-                      <AvatarImage
-                        src={
-                          a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
-                        }
-                      />
-                      <AvatarFallback className="bg-slate-800 text-slate-300">
-                        {a.nome.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
-                      <p className="text-xs text-slate-500">
-                        Dia {a.day.toString().padStart(2, '0')}
-                      </p>
-                    </div>
-                    {!a.isPast &&
-                      selectedMonth === new Date().getMonth() &&
-                      a.day === new Date().getDate() && (
-                        <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-0 uppercase shrink-0 font-bold border-0">
-                          Hoje!
-                        </Badge>
-                      )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                  Nenhum aniversariante neste mês
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
-            <div className="p-2 bg-amber-500/10 rounded-md">
-              <LayoutDashboard className="size-5 text-amber-500" />
-            </div>
-            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-              Atalhos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 pt-6 flex flex-col gap-4">
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
-            >
-              <Link to="/operacional/comunicados">
-                <Calendar className="mr-3 h-5 w-5" />
-                Compromissos de Hoje
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start h-14 uppercase tracking-wider font-bold border-slate-800 bg-slate-950 text-slate-300 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-sm"
-            >
-              <Link to="/estoque">
-                <RefreshCcw className="mr-3 h-5 w-5" />
-                Atualizar Estoque
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
