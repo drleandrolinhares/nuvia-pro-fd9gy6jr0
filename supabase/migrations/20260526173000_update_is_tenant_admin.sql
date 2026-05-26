@@ -14,4 +14,4 @@ BEGIN
     WHERE id = auth.uid() AND tenant_id = v_tenant_id;
     RETURN LOWER(v_role) IN ('admin', 'administrador');
 END;
-$function$
+$function$;
