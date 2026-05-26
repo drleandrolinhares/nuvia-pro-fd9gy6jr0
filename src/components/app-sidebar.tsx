@@ -266,7 +266,7 @@ import { supabase } from '@/lib/supabase/client'
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, profile, permissions, signOut } = useAuth()
+  const { user, profile, permissions, signOut, isAdmin } = useAuth()
 
   const [badges, setBadges] = useState({
     pedidos: 0,
@@ -455,7 +455,7 @@ export function AppSidebar() {
         {navData.map((group: any) => {
           const role = profile?.role?.toLowerCase() || 'visualizacao'
 
-          if (group.showRole && !group.showRole.includes(role) && role !== 'admin') {
+          if (group.showRole && !group.showRole.includes(role) && !isAdmin) {
             return null
           }
 
@@ -491,11 +491,15 @@ export function AppSidebar() {
 
               if (
                 item.hideRole &&
-                item.hideRole.some((r: string) => r.toLowerCase() === role?.toLowerCase())
+                item.hideRole.some(
+                  (r: string) =>
+                    r.toLowerCase() === role?.toLowerCase() ||
+                    (['admin', 'administrador'].includes(r.toLowerCase()) && isAdmin),
+                )
               )
                 return false
 
-              if (role === 'admin') return true
+              if (isAdmin) return true
               if (item.permission) {
                 if (Array.isArray(item.permission)) {
                   return item.permission.some((p: string) => permissions.includes(p))

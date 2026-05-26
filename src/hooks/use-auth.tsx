@@ -38,6 +38,7 @@ interface AuthContextType {
   profile: UserProfile | null
   permissions: string[]
   acessoConfig: any
+  isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [permissions, setPermissions] = useState<string[]>([])
   const [acessoConfig, setAcessoConfig] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -123,12 +125,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           setProfile(newProfile)
           setPermissions(Array.from(permSet))
+          setIsAdmin(['admin', 'administrador'].includes(newProfile?.role || ''))
         }
       } catch (error) {
         console.error('Error fetching user data:', error)
         if (isMounted) {
           setProfile(null)
           setPermissions([])
+          setIsAdmin(false)
         }
       }
     }
@@ -147,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null)
           setPermissions([])
           setAcessoConfig(null)
+          setIsAdmin(false)
           setLoading(false)
         }
       }
@@ -187,7 +192,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, permissions, acessoConfig, signIn, signOut, loading }}
+      value={{
+        user,
+        session,
+        profile,
+        permissions,
+        acessoConfig,
+        isAdmin,
+        signIn,
+        signOut,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>

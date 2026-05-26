@@ -73,7 +73,7 @@ const AccessDeniedMessage = ({ message }: { message: string }) => {
 }
 
 const AccessGuard = ({ children }: { children: React.ReactNode }) => {
-  const { profile, acessoConfig, loading, user } = useAuth()
+  const { profile, acessoConfig, loading, user, isAdmin } = useAuth()
   const location = useLocation()
   const [checking, setChecking] = useState(true)
   const [blockReason, setBlockReason] = useState<string | null>(null)
@@ -142,12 +142,12 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    if (profile?.role?.toLowerCase() === 'admin') {
+    if (isAdmin) {
       setChecking(false)
     } else {
       checkAbsences()
     }
-  }, [loading, user, profile])
+  }, [loading, user, profile, isAdmin])
 
   if (loading || checking) {
     return (
@@ -156,9 +156,6 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
       </div>
     )
   }
-
-  const userRole = profile?.role?.toLowerCase() || 'visualizacao'
-  const isAdmin = userRole === 'admin'
 
   if (!isAdmin && blockReason) {
     return <AccessDeniedMessage message={blockReason} />
@@ -235,7 +232,7 @@ const ProtectedRoute = ({
   allowedPermissions?: string[]
   children: React.ReactNode
 }) => {
-  const { profile, permissions, loading } = useAuth()
+  const { profile, permissions, loading, isAdmin } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -248,7 +245,7 @@ const ProtectedRoute = ({
 
   const userRole = profile?.role?.toLowerCase() || 'visualizacao'
 
-  if (userRole === 'admin') return <>{children}</>
+  if (isAdmin) return <>{children}</>
 
   if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userRole))
     return <Navigate to="/" replace />
