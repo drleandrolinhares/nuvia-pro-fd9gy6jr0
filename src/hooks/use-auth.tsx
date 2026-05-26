@@ -13,7 +13,7 @@ interface UserProfile {
 }
 
 const normalizePermissionToKey = (name: string): string => {
-  const lowerName = name.toLowerCase()
+  const lowerName = name.toLowerCase().trim()
   if (lowerName.includes('estoque')) return 'financeiro_estoque'
   if (lowerName.includes('sac')) return 'operacional_sac'
   if (lowerName.includes('rotina')) return 'operacional_rotina'
@@ -90,13 +90,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!profileRes.error && profileRes.data) {
           newProfile = profileRes.data
           if (newProfile?.role) {
-            newProfile.role = newProfile.role.toLowerCase()
+            newProfile.role = newProfile.role.toLowerCase().trim()
           }
         }
 
         const permSet = new Set<string>()
         const addPerm = (nome: string) => {
+          if (!nome) return
           permSet.add(nome)
+          permSet.add(nome.toLowerCase().trim())
           permSet.add(normalizePermissionToKey(nome))
         }
 
@@ -125,7 +127,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           setProfile(newProfile)
           setPermissions(Array.from(permSet))
-          setIsAdmin(['admin', 'administrador'].includes(newProfile?.role || ''))
+          const userRole = newProfile?.role || ''
+          const isAdm = ['admin', 'administrador', 'administradora'].includes(userRole)
+          setIsAdmin(isAdm)
         }
       } catch (error) {
         console.error('Error fetching user data:', error)

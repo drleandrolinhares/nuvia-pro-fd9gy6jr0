@@ -453,7 +453,7 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
-          const role = profile?.role?.toLowerCase() || 'visualizacao'
+          const role = profile?.role?.toLowerCase().trim() || 'visualizacao'
 
           if (group.showRole && !group.showRole.includes(role) && !isAdmin) {
             return null
@@ -493,8 +493,11 @@ export function AppSidebar() {
                 item.hideRole &&
                 item.hideRole.some(
                   (r: string) =>
-                    r.toLowerCase() === role?.toLowerCase() ||
-                    (['admin', 'administrador'].includes(r.toLowerCase()) && isAdmin),
+                    r.toLowerCase().trim() === role ||
+                    (['admin', 'administrador', 'administradora'].includes(
+                      r.toLowerCase().trim(),
+                    ) &&
+                      isAdmin),
                 )
               )
                 return false
@@ -502,9 +505,15 @@ export function AppSidebar() {
               if (isAdmin) return true
               if (item.permission) {
                 if (Array.isArray(item.permission)) {
-                  return item.permission.some((p: string) => permissions.includes(p))
+                  return item.permission.some(
+                    (p: string) =>
+                      permissions.includes(p) || permissions.includes(p.toLowerCase().trim()),
+                  )
                 }
-                return permissions.includes(item.permission)
+                return (
+                  permissions.includes(item.permission) ||
+                  permissions.includes(item.permission.toLowerCase().trim())
+                )
               }
               if (item.showRole && !item.showRole.includes(role)) return false
               return true
