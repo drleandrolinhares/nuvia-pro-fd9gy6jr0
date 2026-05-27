@@ -12,26 +12,6 @@ interface UserProfile {
   pode_realizar_lancamento?: boolean
 }
 
-const normalizePermissionToKey = (name: string): string => {
-  const lowerName = name.toLowerCase().trim()
-  if (lowerName.includes('estoque')) return 'financeiro_estoque'
-  if (lowerName.includes('sac')) return 'operacional_sac'
-  if (lowerName.includes('rotina')) return 'operacional_rotina'
-  if (lowerName.includes('performance')) return 'operacional_performance'
-  if (lowerName.includes('comunicados')) return 'operacional_comunicados'
-  if (lowerName.includes('vendas')) return 'comercial_vendas'
-  if (lowerName.includes('comissões') || lowerName.includes('comissoes'))
-    return 'comercial_comissoes'
-  if (lowerName.includes('pacientes')) return 'comercial_pacientes'
-  if (lowerName.includes('negociaç') || lowerName.includes('negociac'))
-    return 'comercial_negociacao'
-  if (lowerName.includes('fet')) return 'operacional_fet'
-  if (lowerName.includes('funil')) return 'comercial_funil'
-  if (lowerName.includes('parceiro') || lowerName.includes('terceiro'))
-    return 'operacional_terceiros'
-  return lowerName.replace(/\s+/g, '_')
-}
-
 interface AuthContextType {
   user: User | null
   session: Session | null
@@ -102,10 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('cargo_id, cargo_secundario_id')
             .eq('id', userId)
             .single(),
-          supabase
-            .from('configuracoes_acesso' as any)
-            .select('*')
-            .single(),
+          supabase.from('configuracoes_acesso').select('*').maybeSingle(),
         ])
 
         if (isMounted && configRes.data) {
@@ -113,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         let newProfile = null
-        let newPermissions: string[] = []
         let isAdm = false
 
         if (!profileRes.error && profileRes.data) {
@@ -129,15 +105,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const permSet = new Set<string>()
         const addPerm = (nome: string) => {
           if (!nome) return
-          permSet.add(nome)
-          permSet.add(nome.toLowerCase().trim())
-          permSet.add(normalizePermissionToKey(nome))
           permSet.add(normalizeString(nome))
+        }
+
+        const extractPermName = (row: any) => {
+          if (!row) return null
+          if (row.permissao?.nome) return row.permissao.nome
+          if (row.permissoes?.nome) return row.permissoes.nome
+          if (Array.isArray(row.permissoes) && row.permissoes[0]?.nome)
+            return row.permissoes[0].nome
+          if (Array.isArray(row.permissao) && row.permissao[0]?.nome) return row.permissao[0].nome
+          return null
         }
 
         if (permsRes.data) {
           permsRes.data.forEach((up: any) => {
-            if (up.permissoes?.nome) addPerm(up.permissoes.nome)
+            const pNome = extractPermName(up)
+            if (pNome) addPerm(pNome)
           })
         }
 
@@ -156,7 +140,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (cPermsRes.data) {
               cPermsRes.data.forEach((cp: any) => {
-                if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
+                const pNome = extractPermName(cp)
+                if (pNome) addPerm(pNome)
               })
             }
 
@@ -241,13 +226,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasPermission = (p: string | string[]) => {
     if (isAdmin) return true
     if (Array.isArray(p)) {
-      return p.some((perm) => {
-        const pNorm = normalizeString(perm)
-        return permissions.some((userPerm) => normalizeString(userPerm) === pNorm)
-      })
+      return p.some((perm) => permissions.includes(normalizeString(perm)))
     }
-    const pNorm = normalizeString(p)
-    return permissions.some((userPerm) => normalizeString(userPerm) === pNorm)
+    return permissions.includes(normalizeString(p))
   }
 
   return (
