@@ -66,12 +66,14 @@ const navData = [
     url: '/',
     icon: LayoutDashboard,
     isDirectLink: true,
+    permission: ['Acessar Dashboard'],
   },
   {
     title: 'CHAT',
     url: '/chat',
     icon: MessageSquare,
     isDirectLink: true,
+    permission: ['Acessar Chat'],
   },
   {
     title: 'INTRANET',
@@ -81,17 +83,19 @@ const navData = [
         title: 'PERFORMANCE',
         url: '/intranet/performance',
         icon: BarChart3,
-        permission: ['operacional_performance', 'Acessar Performance'],
+        permission: ['Acessar Performance'],
       },
       {
         title: 'ONBOARDING',
         url: '/intranet/onboarding',
         icon: UserPlus,
+        permission: ['Acessar Onboarding'],
       },
       {
         title: 'TREINAMENTOS',
         url: '/intranet/treinamentos',
         icon: GraduationCap,
+        permission: ['Acessar Treinamentos'],
       },
     ],
   },
@@ -103,38 +107,37 @@ const navData = [
         title: 'COMUNICADOS',
         url: '/operacional/comunicados',
         icon: Bell,
-        permission: ['operacional_comunicados', 'Acessar Comunicados'],
+        permission: ['Acessar Comunicados'],
       },
       {
         title: 'SAC',
         url: '/operacional/sac',
         icon: MessageSquare,
-        permission: ['operacional_sac', 'Acessar SAC'],
+        permission: ['Acessar SAC'],
       },
       {
         title: 'PARCEIROS',
         url: '/operacional/parceiros',
         icon: ClipboardList,
-        permission: ['operacional_terceiros', 'Acessar Gestão de Terceiros'],
+        permission: ['Acessar Gestão de Terceiros'],
       },
       {
         title: 'PEDIDOS',
         url: '/operacional/pedidos',
         icon: Package,
-        permission: ['operacional_pedidos', 'operacional_pedidos_gerenciar'],
+        permission: ['Acessar Pedidos'],
       },
       {
         title: 'FET',
         url: '/operacional/fet',
         icon: FileText,
-        permission: ['operacional_fet', 'Acessar FET'],
+        permission: ['Acessar FET'],
       },
       {
         title: 'ROTINA DIÁRIA',
         url: '/operacional/rotina',
         icon: Clock,
-        permission: ['operacional_rotina', 'Acessar Rotina Diária'],
-        hideRole: ['admin', 'gestor', 'CEO', 'SÓCIA', 'ceo', 'sócia'],
+        permission: ['Acessar Rotina Diária'],
       },
     ],
   },
@@ -146,31 +149,31 @@ const navData = [
         title: 'FUNIL DE VENDAS',
         url: '/comercial/funil',
         icon: Filter,
-        permission: ['comercial_funil', 'Acessar Funil de Vendas'],
+        permission: ['Acessar Funil de Vendas'],
       },
       {
         title: 'GESTÃO DE VENDAS',
         url: '/comercial/vendas',
         icon: FileBarChart,
-        permission: ['comercial_vendas', 'Acessar Gestão de Vendas'],
+        permission: ['Acessar Gestão de Vendas'],
       },
       {
         title: 'COMISSÕES',
         url: '/comercial/comissoes',
         icon: Landmark,
-        permission: ['comercial_comissoes', 'Acessar Controle de Comissões'],
+        permission: ['Acessar Controle de Comissões'],
       },
       {
         title: 'NEGOCIAÇÃO',
         url: '/comercial/negociacao',
         icon: Handshake,
-        permission: ['comercial_negociacao', 'Acessar Negociações'],
+        permission: ['Acessar Negociações'],
       },
       {
         title: 'PACIENTES',
         url: '/comercial/pacientes',
         icon: Users,
-        permission: ['comercial_pacientes', 'Acessar Pacientes'],
+        permission: ['Acessar Pacientes'],
       },
     ],
   },
@@ -182,19 +185,19 @@ const navData = [
         title: 'GESTÃO FISCAL',
         url: '/financeiro/fiscal',
         icon: Landmark,
-        permission: ['financeiro_fiscal', 'Acessar Financeiro', 'Acessar Gestão Fiscal'],
+        permission: ['Acessar Gestão Fiscal'],
       },
       {
         title: 'FLUXO DE CAIXA',
         url: '/financeiro/fluxo',
         icon: Activity,
-        permission: ['financeiro_fluxo', 'Acessar Financeiro', 'Acessar Fluxo de Caixa'],
+        permission: ['Acessar Fluxo de Caixa'],
       },
       {
         title: 'ESTOQUE',
         url: '/estoque',
         icon: Package,
-        permission: ['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque'],
+        permission: ['Acessar Estoque'],
       },
     ],
   },
@@ -206,7 +209,7 @@ const navData = [
         title: 'PRECIFICAÇÃO',
         url: '/administrativo/precificacao',
         icon: Calculator,
-        showRole: ['admin'],
+        permission: ['Acessar Precificação'],
       },
     ],
   },
@@ -218,12 +221,13 @@ const navData = [
         title: 'PRO AGENDA',
         url: '/diretrizes/pro-agenda',
         icon: FileText,
-        permission: ['operacional_pro_agenda', 'Acessar Pro Agenda'],
+        permission: ['Acessar Pro Agenda'],
       },
       {
         title: 'ROTEIROS',
         url: '/diretrizes/roteiros',
         icon: MapIcon,
+        permission: ['Acessar Roteiros'],
       },
     ],
   },
@@ -235,26 +239,31 @@ const navData = [
         title: 'PARÂMETROS GERAIS',
         url: '/configuracoes',
         icon: SlidersHorizontal,
-        permission: ['configuracoes_usuarios', 'configuracoes_permissoes'],
+        permission: ['Acessar Parâmetros Gerais'],
       },
-      { title: 'USUÁRIOS', url: '/usuarios', icon: Users, showRole: ['admin'] },
+      {
+        title: 'USUÁRIOS',
+        url: '/usuarios',
+        icon: Users,
+        permission: ['Acessar Usuários'],
+      },
       {
         title: 'FORNECEDORES',
         url: '/fornecedores',
         icon: Truck,
-        permission: ['configuracoes_fornecedores'],
+        permission: ['Acessar Fornecedores'],
       },
       {
         title: 'ROTINA',
         url: '/configuracoes/rotinas',
         icon: ListTodo,
-        showRole: ['admin'],
+        permission: ['Acessar Configurações de Rotinas'],
       },
       {
         title: 'SMART LOCK',
         url: '/configuracoes/smart-lock',
         icon: Lock,
-        showRole: ['admin'],
+        permission: ['Acessar Smart Lock'],
       },
     ],
   },
@@ -453,16 +462,24 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
-          const role = normalizeString(profile?.role || 'visualizacao')
-
-          if (group.showRole) {
-            const normalizedShowRole = group.showRole.map((r: string) => normalizeString(r))
-            if (!normalizedShowRole.includes(role) && !isAdmin) {
-              return null
-            }
+          const checkPerm = (p: string) => {
+            const pNorm = normalizeString(p)
+            return permissions.some(
+              (userPerm) =>
+                normalizeString(userPerm) === pNorm ||
+                userPerm === p ||
+                userPerm === p.toLowerCase().trim(),
+            )
           }
 
           if (group.isDirectLink) {
+            if (group.permission) {
+              const hasGroupPerm = Array.isArray(group.permission)
+                ? group.permission.some(checkPerm)
+                : checkPerm(group.permission)
+              if (!hasGroupPerm) return null
+            }
+
             return (
               <SidebarGroup key={group.title} className="py-1 mb-2">
                 <SidebarGroupLabel
@@ -487,44 +504,18 @@ export function AppSidebar() {
 
           const filteredItems =
             group.items?.filter((item: any) => {
-              if (item.title === 'ROTINA DIÁRIA') {
-                if (profile?.exigir_rotina === false) return false
-                if (profile?.exigir_rotina === true) return true
+              if (item.title === 'ROTINA DIÁRIA' && profile?.exigir_rotina === false) {
+                return false
               }
-
-              if (item.hideRole) {
-                const shouldHide = item.hideRole.some((r: string) => {
-                  const normalizedR = normalizeString(r)
-                  return normalizedR === role || (isAdmin && isAdminRole(r))
-                })
-                if (shouldHide) return false
-              }
-
-              if (isAdmin) return true
 
               if (item.permission) {
-                const checkPerm = (p: string) => {
-                  const pNorm = normalizeString(p)
-                  return permissions.some(
-                    (userPerm) =>
-                      normalizeString(userPerm) === pNorm ||
-                      userPerm === p ||
-                      userPerm === p.toLowerCase().trim(),
-                  )
-                }
-
                 if (Array.isArray(item.permission)) {
                   return item.permission.some(checkPerm)
                 }
                 return checkPerm(item.permission)
               }
 
-              if (item.showRole) {
-                const normalizedShowRole = item.showRole.map((r: string) => normalizeString(r))
-                if (!normalizedShowRole.includes(role)) return false
-              }
-
-              return true
+              return false // Zero Trust: must have explicit permission mapping
             }) || []
 
           if (filteredItems.length === 0) return null
