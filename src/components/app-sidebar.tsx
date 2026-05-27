@@ -60,7 +60,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth, normalizeString, isAdminRole } from '@/hooks/use-auth'
 
-const navData = [
+export const navData = [
   {
     title: 'DASHBOARD',
     url: '/',
@@ -275,7 +275,7 @@ import { supabase } from '@/lib/supabase/client'
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, profile, permissions, signOut, isAdmin } = useAuth()
+  const { user, profile, permissions, signOut, isAdmin, hasPermission } = useAuth()
 
   const [badges, setBadges] = useState({
     pedidos: 0,
@@ -462,23 +462,9 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
-          const checkPerm = (p: string) => {
-            if (isAdmin) return true
-            const pNorm = normalizeString(p)
-            return permissions.some(
-              (userPerm) =>
-                normalizeString(userPerm) === pNorm ||
-                userPerm === p ||
-                userPerm === p.toLowerCase().trim(),
-            )
-          }
-
           if (group.isDirectLink) {
             if (group.permission) {
-              const hasGroupPerm = Array.isArray(group.permission)
-                ? group.permission.some(checkPerm)
-                : checkPerm(group.permission)
-              if (!hasGroupPerm) return null
+              if (!hasPermission(group.permission)) return null
             }
 
             return (
@@ -510,10 +496,7 @@ export function AppSidebar() {
               }
 
               if (item.permission) {
-                if (Array.isArray(item.permission)) {
-                  return item.permission.some(checkPerm)
-                }
-                return checkPerm(item.permission)
+                return hasPermission(item.permission)
               }
 
               return false // Zero Trust: must have explicit permission mapping

@@ -39,6 +39,7 @@ interface AuthContextType {
   permissions: string[]
   acessoConfig: any
   isAdmin: boolean
+  hasPermission: (p: string | string[]) => boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -131,6 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           permSet.add(nome)
           permSet.add(nome.toLowerCase().trim())
           permSet.add(normalizePermissionToKey(nome))
+          permSet.add(normalizeString(nome))
         }
 
         if (permsRes.data) {
@@ -236,6 +238,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  const hasPermission = (p: string | string[]) => {
+    if (isAdmin) return true
+    if (Array.isArray(p)) {
+      return p.some((perm) => {
+        const pNorm = normalizeString(perm)
+        return permissions.some((userPerm) => normalizeString(userPerm) === pNorm)
+      })
+    }
+    const pNorm = normalizeString(p)
+    return permissions.some((userPerm) => normalizeString(userPerm) === pNorm)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -245,6 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         permissions,
         acessoConfig,
         isAdmin,
+        hasPermission,
         signIn,
         signOut,
         loading,

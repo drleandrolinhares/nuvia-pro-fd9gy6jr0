@@ -47,6 +47,24 @@ import Chat from './pages/Chat'
 import { Loader2, Lock, Shield } from 'lucide-react'
 import SmartLock from './pages/configuracoes/SmartLock'
 import ControleAcesso from './pages/configuracoes/ControleAcesso'
+import { navData } from './components/app-sidebar'
+
+const getFirstAvailableRoute = (hasPermission: (p: string | string[]) => boolean) => {
+  for (const group of navData) {
+    if (group.isDirectLink) {
+      if (!group.permission || hasPermission(group.permission)) {
+        return group.url
+      }
+    } else if (group.items) {
+      for (const item of group.items) {
+        if (!item.permission || hasPermission(item.permission)) {
+          return item.url
+        }
+      }
+    }
+  }
+  return '/perfil'
+}
 
 const AccessDeniedMessage = ({ message }: { message: string }) => {
   const { signOut } = useAuth()
@@ -250,7 +268,7 @@ const ProtectedRoute = ({
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { permissions, loading, profile, isAdmin } = useAuth()
+  const { loading, profile, isAdmin, hasPermission } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -265,15 +283,7 @@ const ProtectedRoute = ({
 
   let hasPermAccess = false
   if (allowedPermissions && allowedPermissions.length > 0) {
-    hasPermAccess = allowedPermissions.some((p) => {
-      const pNorm = normalizeString(p)
-      return permissions.some(
-        (userPerm) =>
-          normalizeString(userPerm) === pNorm ||
-          userPerm === p ||
-          userPerm === p.toLowerCase().trim(),
-      )
-    })
+    hasPermAccess = hasPermission(allowedPermissions)
 
     if (allowedPermissions.includes('Acessar Rotina Diária') && profile?.exigir_rotina) {
       hasPermAccess = true
@@ -288,6 +298,10 @@ const ProtectedRoute = ({
   }
 
   if (!hasPermAccess) {
+    const fallbackRoute = getFirstAvailableRoute(hasPermission)
+    if (location.pathname !== fallbackRoute) {
+      return <Navigate to={fallbackRoute} replace />
+    }
     return <PermissionDeniedMessage />
   }
 
