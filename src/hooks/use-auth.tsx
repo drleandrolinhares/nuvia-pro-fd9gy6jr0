@@ -52,6 +52,32 @@ export const useAuth = () => {
   return context
 }
 
+const normalizeString = (str: string) => {
+  if (!str) return ''
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+const isAdminRole = (role: string) => {
+  if (!role) return false
+  const r = normalizeString(role)
+  return [
+    'admin',
+    'administrador',
+    'administradora',
+    'ceo',
+    'socia',
+    'socio',
+    'gestor',
+    'gestora',
+    'diretor',
+    'diretora',
+  ].includes(r)
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -86,11 +112,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         let newProfile = null
         let newPermissions: string[] = []
+        let isAdm = false
 
         if (!profileRes.error && profileRes.data) {
           newProfile = profileRes.data
           if (newProfile?.role) {
             newProfile.role = newProfile.role.toLowerCase().trim()
+            if (isAdminRole(newProfile.role)) {
+              isAdm = true
+            }
           }
         }
 
@@ -109,16 +139,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (cargoRes.data) {
-          const cargos = [cargoRes.data.cargo_id, cargoRes.data.cargo_secundario_id].filter(Boolean)
-          if (cargos.length > 0) {
-            const { data: cPerms } = await supabase
-              .from('cargo_permissoes')
-              .select('permissoes(nome)')
-              .in('cargo_id', cargos)
+          const cargosIds = [cargoRes.data.cargo_id, cargoRes.data.cargo_secundario_id].filter(
+            Boolean,
+          )
+          if (cargosIds.length > 0) {
+            const [cPermsRes, cNamesRes] = await Promise.all([
+              supabase
+                .from('cargo_permissoes')
+                .select('permissoes(nome)')
+                .in('cargo_id', cargosIds),
+              supabase.from('cargos').select('nome').in('id', cargosIds),
+            ])
 
-            if (cPerms) {
-              cPerms.forEach((cp: any) => {
+            if (cPermsRes.data) {
+              cPermsRes.data.forEach((cp: any) => {
                 if (cp.permissoes?.nome) addPerm(cp.permissoes.nome)
+              })
+            }
+
+            if (cNamesRes.data) {
+              cNamesRes.data.forEach((c: any) => {
+                if (c.nome && isAdminRole(c.nome)) {
+                  isAdm = true
+                }
               })
             }
           }
@@ -127,8 +170,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           setProfile(newProfile)
           setPermissions(Array.from(permSet))
-          const userRole = newProfile?.role || ''
-          const isAdm = ['admin', 'administrador', 'administradora'].includes(userRole)
           setIsAdmin(isAdm)
         }
       } catch (error) {

@@ -263,6 +263,32 @@ const navData = [
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
+const normalizeString = (str: string) => {
+  if (!str) return ''
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+const isAdminRole = (role: string) => {
+  if (!role) return false
+  const r = normalizeString(role)
+  return [
+    'admin',
+    'administrador',
+    'administradora',
+    'ceo',
+    'socia',
+    'socio',
+    'gestor',
+    'gestora',
+    'diretor',
+    'diretora',
+  ].includes(r)
+}
+
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -453,10 +479,13 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
-          const role = profile?.role?.toLowerCase().trim() || 'visualizacao'
+          const role = normalizeString(profile?.role || 'visualizacao')
 
-          if (group.showRole && !group.showRole.includes(role) && !isAdmin) {
-            return null
+          if (group.showRole) {
+            const normalizedShowRole = group.showRole.map((r: string) => normalizeString(r))
+            if (!normalizedShowRole.includes(role) && !isAdmin) {
+              return null
+            }
           }
 
           if (group.isDirectLink) {
@@ -489,33 +518,38 @@ export function AppSidebar() {
                 if (profile?.exigir_rotina === true) return true
               }
 
-              if (
-                item.hideRole &&
-                item.hideRole.some(
-                  (r: string) =>
-                    r.toLowerCase().trim() === role ||
-                    (['admin', 'administrador', 'administradora'].includes(
-                      r.toLowerCase().trim(),
-                    ) &&
-                      isAdmin),
-                )
-              )
-                return false
+              if (item.hideRole) {
+                const shouldHide = item.hideRole.some((r: string) => {
+                  const normalizedR = normalizeString(r)
+                  return normalizedR === role || (isAdmin && isAdminRole(r))
+                })
+                if (shouldHide) return false
+              }
 
               if (isAdmin) return true
+
               if (item.permission) {
-                if (Array.isArray(item.permission)) {
-                  return item.permission.some(
-                    (p: string) =>
-                      permissions.includes(p) || permissions.includes(p.toLowerCase().trim()),
+                const checkPerm = (p: string) => {
+                  const pNorm = normalizeString(p)
+                  return permissions.some(
+                    (userPerm) =>
+                      normalizeString(userPerm) === pNorm ||
+                      userPerm === p ||
+                      userPerm === p.toLowerCase().trim(),
                   )
                 }
-                return (
-                  permissions.includes(item.permission) ||
-                  permissions.includes(item.permission.toLowerCase().trim())
-                )
+
+                if (Array.isArray(item.permission)) {
+                  return item.permission.some(checkPerm)
+                }
+                return checkPerm(item.permission)
               }
-              if (item.showRole && !item.showRole.includes(role)) return false
+
+              if (item.showRole) {
+                const normalizedShowRole = item.showRole.map((r: string) => normalizeString(r))
+                if (!normalizedShowRole.includes(role)) return false
+              }
+
               return true
             }) || []
 

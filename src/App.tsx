@@ -223,6 +223,15 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
+const normalizeString = (str: string) => {
+  if (!str) return ''
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
 const ProtectedRoute = ({
   allowedRoles,
   allowedPermissions,
@@ -243,17 +252,25 @@ const ProtectedRoute = ({
     )
   }
 
-  const userRole = profile?.role?.toLowerCase().trim() || 'visualizacao'
+  const userRole = normalizeString(profile?.role || 'visualizacao')
 
   if (isAdmin) return <>{children}</>
 
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userRole))
-    return <Navigate to="/" replace />
+  if (allowedRoles && allowedRoles.length > 0) {
+    const normalizedAllowedRoles = allowedRoles.map((r) => normalizeString(r))
+    if (!normalizedAllowedRoles.includes(userRole)) return <Navigate to="/" replace />
+  }
 
   if (allowedPermissions && allowedPermissions.length > 0) {
-    let hasAccess = allowedPermissions.some(
-      (p) => permissions.includes(p) || permissions.includes(p.toLowerCase().trim()),
-    )
+    let hasAccess = allowedPermissions.some((p) => {
+      const pNorm = normalizeString(p)
+      return permissions.some(
+        (userPerm) =>
+          normalizeString(userPerm) === pNorm ||
+          userPerm === p ||
+          userPerm === p.toLowerCase().trim(),
+      )
+    })
 
     if (allowedPermissions.includes('operacional_rotina') && profile?.exigir_rotina) {
       hasAccess = true
