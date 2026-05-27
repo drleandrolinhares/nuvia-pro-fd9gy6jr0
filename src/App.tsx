@@ -309,7 +309,7 @@ const ProtectedRoute = ({
 }
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth()
+  const { user, loading, profile } = useAuth()
 
   if (loading) {
     return (
@@ -325,6 +325,12 @@ const AppRoutes = () => {
       <Routes>
         <Route path="*" element={<Login />} />
       </Routes>
+    )
+  }
+
+  if (profile?.status?.toLowerCase() === 'inativo') {
+    return (
+      <AccessDeniedMessage message="Sua conta está inativa. O acesso ao sistema foi bloqueado." />
     )
   }
 
