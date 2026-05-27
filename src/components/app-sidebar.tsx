@@ -58,7 +58,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth, normalizeString, isAdminRole } from '@/hooks/use-auth'
 
 const navData = [
   {
@@ -262,32 +262,6 @@ const navData = [
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-
-const normalizeString = (str: string) => {
-  if (!str) return ''
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-const isAdminRole = (role: string) => {
-  if (!role) return false
-  const r = normalizeString(role)
-  return [
-    'admin',
-    'administrador',
-    'administradora',
-    'ceo',
-    'socia',
-    'socio',
-    'gestor',
-    'gestora',
-    'diretor',
-    'diretora',
-  ].includes(r)
-}
 
 export function AppSidebar() {
   const location = useLocation()

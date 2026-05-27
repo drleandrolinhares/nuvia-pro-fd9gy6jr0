@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { AuthProvider, useAuth } from '@/hooks/use-auth'
+import { AuthProvider, useAuth, normalizeString } from '@/hooks/use-auth'
 import { CacheProvider } from '@/hooks/use-cache'
 import { GlobalNormasPopup } from '@/components/normas/global-normas-popup'
 import { SacNotificationPopup } from '@/components/sac/sac-notification-popup'
@@ -221,15 +221,6 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>
-}
-
-const normalizeString = (str: string) => {
-  if (!str) return ''
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
 }
 
 const ProtectedRoute = ({

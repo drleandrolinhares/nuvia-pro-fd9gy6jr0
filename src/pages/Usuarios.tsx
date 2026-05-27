@@ -58,7 +58,7 @@ import { toast } from 'sonner'
 import { Tables } from '@/lib/supabase/types'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth, isAdminRole } from '@/hooks/use-auth'
 
 export interface ExtendedUsuario extends UsuarioWithCargo {
   ordem?: number
@@ -124,11 +124,7 @@ export default function Usuarios() {
   const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
-  const { profile } = useAuth()
-  const isAdmin =
-    profile?.role === 'admin' ||
-    profile?.email === 'drleandro@nuvia.com' ||
-    profile?.email === 'drleandrolinhares@gmail.com'
+  const { profile, isAdmin } = useAuth()
 
   const load = async () => {
     try {
@@ -577,7 +573,7 @@ export default function Usuarios() {
 
                       <TableCell className="px-2 text-center">
                         <Switch
-                          checked={usuario.role === 'admin'}
+                          checked={isAdminRole(usuario.role)}
                           onCheckedChange={(checked) =>
                             handleToggleRole(usuario.id, checked ? 'admin' : 'user')
                           }

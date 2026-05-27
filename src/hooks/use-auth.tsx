@@ -52,7 +52,7 @@ export const useAuth = () => {
   return context
 }
 
-const normalizeString = (str: string) => {
+export const normalizeString = (str: string | null | undefined): string => {
   if (!str) return ''
   return str
     .toLowerCase()
@@ -61,7 +61,7 @@ const normalizeString = (str: string) => {
     .trim()
 }
 
-const isAdminRole = (role: string) => {
+export const isAdminRole = (role: string | null | undefined): boolean => {
   if (!role) return false
   const r = normalizeString(role)
   return [
@@ -117,10 +117,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!profileRes.error && profileRes.data) {
           newProfile = profileRes.data
           if (newProfile?.role) {
-            newProfile.role = newProfile.role.toLowerCase().trim()
-            if (isAdminRole(newProfile.role)) {
-              isAdm = true
-            }
+            newProfile.role = normalizeString(newProfile.role)
+          }
+          if (isAdminRole(newProfile?.role)) {
+            isAdm = true
           }
         }
 
