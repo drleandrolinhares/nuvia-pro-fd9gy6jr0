@@ -66,6 +66,7 @@ export const isAdminRole = (role: string | null | undefined): boolean => {
   const r = normalizeString(role)
   return [
     'admin',
+    'adm',
     'administrador',
     'administradora',
     'ceo',

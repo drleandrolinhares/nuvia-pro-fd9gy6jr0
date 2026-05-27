@@ -463,6 +463,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 pt-2">
         {navData.map((group: any) => {
           const checkPerm = (p: string) => {
+            if (isAdmin) return true
             const pNorm = normalizeString(p)
             return permissions.some(
               (userPerm) =>

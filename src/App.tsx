@@ -250,7 +250,7 @@ const ProtectedRoute = ({
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { permissions, loading, profile } = useAuth()
+  const { permissions, loading, profile, isAdmin } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -261,7 +261,7 @@ const ProtectedRoute = ({
     )
   }
 
-  if (openToAll) return <>{children}</>
+  if (openToAll || isAdmin) return <>{children}</>
 
   let hasPermAccess = false
   if (allowedPermissions && allowedPermissions.length > 0) {
