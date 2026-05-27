@@ -227,10 +227,12 @@ const ProtectedRoute = ({
   allowedRoles,
   allowedPermissions,
   children,
+  openToAll = false,
 }: {
-  allowedRoles: string[]
+  allowedRoles?: string[]
   allowedPermissions?: string[]
   children: React.ReactNode
+  openToAll?: boolean
 }) => {
   const { profile, permissions, loading, isAdmin } = useAuth()
   const location = useLocation()
@@ -243,17 +245,22 @@ const ProtectedRoute = ({
     )
   }
 
+  if (isAdmin) return <>{children}</>
+  if (openToAll) return <>{children}</>
+
   const userRole = normalizeString(profile?.role || 'visualizacao')
 
-  if (isAdmin) return <>{children}</>
-
+  let hasRoleAccess = false
   if (allowedRoles && allowedRoles.length > 0) {
     const normalizedAllowedRoles = allowedRoles.map((r) => normalizeString(r))
-    if (!normalizedAllowedRoles.includes(userRole)) return <Navigate to="/" replace />
+    if (normalizedAllowedRoles.includes(userRole)) {
+      hasRoleAccess = true
+    }
   }
 
+  let hasPermAccess = false
   if (allowedPermissions && allowedPermissions.length > 0) {
-    let hasAccess = allowedPermissions.some((p) => {
+    hasPermAccess = allowedPermissions.some((p) => {
       const pNorm = normalizeString(p)
       return permissions.some(
         (userPerm) =>
@@ -264,12 +271,19 @@ const ProtectedRoute = ({
     })
 
     if (allowedPermissions.includes('operacional_rotina') && profile?.exigir_rotina) {
-      hasAccess = true
+      hasPermAccess = true
     }
+  }
 
-    const isSaturdayPerformance =
-      new Date().getDay() === 6 && location.pathname.startsWith('/intranet/performance')
-    if (!hasAccess && !isSaturdayPerformance) return <Navigate to="/" replace />
+  const isSaturdayPerformance =
+    new Date().getDay() === 6 && location.pathname.startsWith('/intranet/performance')
+
+  if (isSaturdayPerformance && location.pathname.startsWith('/intranet/performance')) {
+    hasPermAccess = true
+  }
+
+  if (!hasRoleAccess && !hasPermAccess) {
+    return <Navigate to="/" replace />
   }
 
   return <>{children}</>
@@ -314,7 +328,9 @@ const AppRoutes = () => {
         <Route
           path="/estoque"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['financeiro_estoque']}>
+            <ProtectedRoute
+              allowedPermissions={['financeiro_estoque', 'Acessar Estoque', 'Gerenciar Estoque']}
+            >
               <Estoque />
             </ProtectedRoute>
           }
@@ -323,7 +339,6 @@ const AppRoutes = () => {
           path="/financeiro/fluxo"
           element={
             <ProtectedRoute
-              allowedRoles={[]}
               allowedPermissions={[
                 'financeiro_fluxo',
                 'Acessar Financeiro',
@@ -338,8 +353,11 @@ const AppRoutes = () => {
           path="/configuracoes"
           element={
             <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['configuracoes_usuarios', 'configuracoes_permissoes']}
+              allowedPermissions={[
+                'configuracoes_usuarios',
+                'configuracoes_permissoes',
+                'Acessar Configurações',
+              ]}
             >
               <Configuracoes />
             </ProtectedRoute>
@@ -349,7 +367,7 @@ const AppRoutes = () => {
         <Route
           path="/usuarios"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Usuarios />
             </ProtectedRoute>
           }
@@ -357,7 +375,9 @@ const AppRoutes = () => {
         <Route
           path="/fornecedores"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['configuracoes_fornecedores']}>
+            <ProtectedRoute
+              allowedPermissions={['configuracoes_fornecedores', 'Acessar Fornecedores']}
+            >
               <Fornecedores />
             </ProtectedRoute>
           }
@@ -365,7 +385,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/cadastros"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <CadastrosBasicos />
             </ProtectedRoute>
           }
@@ -373,7 +393,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/registro"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <RegistroUsuarios />
             </ProtectedRoute>
           }
@@ -381,7 +401,7 @@ const AppRoutes = () => {
         <Route
           path="/configuracoes/rotinas"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <ConfiguracaoRotinas />
             </ProtectedRoute>
           }
@@ -389,7 +409,7 @@ const AppRoutes = () => {
         <Route
           path="/configuracoes/descontos"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <DescontosPorPrazo />
             </ProtectedRoute>
           }
@@ -397,7 +417,7 @@ const AppRoutes = () => {
         <Route
           path="/configuracoes/faixas"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <EntradaEFaixas />
             </ProtectedRoute>
           }
@@ -427,7 +447,7 @@ const AppRoutes = () => {
         <Route
           path="/intranet/performance"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_performance']}>
+            <ProtectedRoute allowedPermissions={['operacional_performance', 'Acessar Performance']}>
               <Performance />
             </ProtectedRoute>
           }
@@ -435,7 +455,7 @@ const AppRoutes = () => {
         <Route
           path="/intranet/onboarding"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute openToAll={true}>
               <Onboarding />
             </ProtectedRoute>
           }
@@ -443,7 +463,7 @@ const AppRoutes = () => {
         <Route
           path="/intranet/treinamentos"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute openToAll={true}>
               <Treinamentos />
             </ProtectedRoute>
           }
@@ -454,8 +474,11 @@ const AppRoutes = () => {
           path="/operacional/pedidos"
           element={
             <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['operacional_pedidos', 'operacional_pedidos_gerenciar']}
+              allowedPermissions={[
+                'operacional_pedidos',
+                'operacional_pedidos_gerenciar',
+                'Acessar Pedidos',
+              ]}
             >
               <Pedidos />
             </ProtectedRoute>
@@ -464,7 +487,7 @@ const AppRoutes = () => {
         <Route
           path="/operacional/sac"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_sac']}>
+            <ProtectedRoute allowedPermissions={['operacional_sac', 'Acessar SAC']}>
               <SAC />
             </ProtectedRoute>
           }
@@ -472,7 +495,7 @@ const AppRoutes = () => {
         <Route
           path="/operacional/rotina"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_rotina']}>
+            <ProtectedRoute allowedPermissions={['operacional_rotina', 'Acessar Rotina Diária']}>
               <RotinaDiaria />
             </ProtectedRoute>
           }
@@ -480,10 +503,7 @@ const AppRoutes = () => {
         <Route
           path="/operacional/fet"
           element={
-            <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['operacional_fet', 'Acessar FET']}
-            >
+            <ProtectedRoute allowedPermissions={['operacional_fet', 'Acessar FET']}>
               <FET />
             </ProtectedRoute>
           }
@@ -491,7 +511,7 @@ const AppRoutes = () => {
         <Route
           path="/operacional/comunicados"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_comunicados']}>
+            <ProtectedRoute allowedPermissions={['operacional_comunicados', 'Acessar Comunicados']}>
               <Comunicados />
             </ProtectedRoute>
           }
@@ -499,7 +519,9 @@ const AppRoutes = () => {
         <Route
           path="/operacional/parceiros"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['operacional_terceiros']}>
+            <ProtectedRoute
+              allowedPermissions={['operacional_terceiros', 'Acessar Gestão de Terceiros']}
+            >
               <Parceiros />
             </ProtectedRoute>
           }
@@ -509,7 +531,7 @@ const AppRoutes = () => {
         <Route
           path="/administrativo/precificacao"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Precificacao />
             </ProtectedRoute>
           }
@@ -519,10 +541,7 @@ const AppRoutes = () => {
         <Route
           path="/diretrizes/pro-agenda"
           element={
-            <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['operacional_pro_agenda', 'Acessar Pro Agenda']}
-            >
+            <ProtectedRoute allowedPermissions={['operacional_pro_agenda', 'Acessar Pro Agenda']}>
               <ProAgenda />
             </ProtectedRoute>
           }
@@ -530,7 +549,7 @@ const AppRoutes = () => {
         <Route
           path="/diretrizes/roteiros"
           element={
-            <ProtectedRoute allowedRoles={[]}>
+            <ProtectedRoute openToAll={true}>
               <Roteiros />
             </ProtectedRoute>
           }
@@ -540,10 +559,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/funil"
           element={
-            <ProtectedRoute
-              allowedRoles={[]}
-              allowedPermissions={['comercial_funil', 'Acessar Funil de Vendas']}
-            >
+            <ProtectedRoute allowedPermissions={['comercial_funil', 'Acessar Funil de Vendas']}>
               <FunilVendas />
             </ProtectedRoute>
           }
@@ -551,7 +567,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/vendas"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['comercial_vendas']}>
+            <ProtectedRoute allowedPermissions={['comercial_vendas', 'Acessar Gestão de Vendas']}>
               <Vendas />
             </ProtectedRoute>
           }
@@ -559,7 +575,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/negociacao"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['comercial_negociacao']}>
+            <ProtectedRoute allowedPermissions={['comercial_negociacao', 'Acessar Negociações']}>
               <Negociacao />
             </ProtectedRoute>
           }
@@ -567,7 +583,9 @@ const AppRoutes = () => {
         <Route
           path="/comercial/comissoes"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['comercial_comissoes']}>
+            <ProtectedRoute
+              allowedPermissions={['comercial_comissoes', 'Acessar Controle de Comissões']}
+            >
               <ControleComissoes />
             </ProtectedRoute>
           }
@@ -575,7 +593,7 @@ const AppRoutes = () => {
         <Route
           path="/comercial/pacientes"
           element={
-            <ProtectedRoute allowedRoles={[]} allowedPermissions={['comercial_pacientes']}>
+            <ProtectedRoute allowedPermissions={['comercial_pacientes', 'Acessar Pacientes']}>
               <Pacientes />
             </ProtectedRoute>
           }
@@ -584,7 +602,6 @@ const AppRoutes = () => {
           path="/financeiro/fiscal"
           element={
             <ProtectedRoute
-              allowedRoles={[]}
               allowedPermissions={[
                 'financeiro_fiscal',
                 'Acessar Financeiro',
