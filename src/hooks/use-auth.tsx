@@ -11,6 +11,12 @@ export const normalizeString = (str: string) => {
     .trim()
 }
 
+export const isAdminRole = (role: string | null | undefined) => {
+  if (!role) return false
+  const s = normalizeString(role)
+  return ['admin', 'administrador', 'ceo', 'diretoria', 'diretor', 'gestor'].includes(s)
+}
+
 interface Profile {
   id: string
   email: string
@@ -114,13 +120,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Fallback local admin check if RPC returns false/null unexpectedly
       let userIsAdmin = isAdmRes.data === true
       if (!userIsAdmin) {
-        const checkAdm = (str: string | null | undefined) => {
-          if (!str) return false
-          const s = normalizeString(str)
-          return ['admin', 'administrador', 'ceo', 'diretoria', 'diretor', 'gestor'].includes(s)
-        }
         userIsAdmin =
-          checkAdm(p.role) || checkAdm(p.cargo_principal_nome) || checkAdm(p.cargo_secundario_nome)
+          isAdminRole(p.role) ||
+          isAdminRole(p.cargo_principal_nome) ||
+          isAdminRole(p.cargo_secundario_nome)
       }
 
       return {
