@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -45,11 +51,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'auditoria_acesso_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "auditoria_acesso_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -86,25 +92,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'auditoria_tarefas_rotina_tarefa_id_fkey'
-            columns: ['tarefa_id']
+            foreignKeyName: "auditoria_tarefas_rotina_tarefa_id_fkey"
+            columns: ["tarefa_id"]
             isOneToOne: false
-            referencedRelation: 'tarefas_rotina'
-            referencedColumns: ['id']
+            referencedRelation: "tarefas_rotina"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'auditoria_tarefas_rotina_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "auditoria_tarefas_rotina_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'auditoria_tarefas_rotina_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "auditoria_tarefas_rotina_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -156,18 +162,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'ausencias_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "ausencias_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'ausencias_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "ausencias_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -237,39 +243,39 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'avaliacoes_crc_comercial_id_fkey'
-            columns: ['crc_comercial_id']
+            foreignKeyName: "avaliacoes_crc_comercial_id_fkey"
+            columns: ["crc_comercial_id"]
             isOneToOne: false
-            referencedRelation: 'crc_comercial'
-            referencedColumns: ['id']
+            referencedRelation: "crc_comercial"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'avaliacoes_dentista_avaliador_id_fkey'
-            columns: ['dentista_avaliador_id']
+            foreignKeyName: "avaliacoes_dentista_avaliador_id_fkey"
+            columns: ["dentista_avaliador_id"]
             isOneToOne: false
-            referencedRelation: 'dentistas_avaliadores'
-            referencedColumns: ['id']
+            referencedRelation: "dentistas_avaliadores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'avaliacoes_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "avaliacoes_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'funil_origens'
-            referencedColumns: ['id']
+            referencedRelation: "funil_origens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'avaliacoes_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "avaliacoes_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'avaliacoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "avaliacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -300,18 +306,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'caixa_diario_fechamentos_conferido_por_fkey'
-            columns: ['conferido_por']
+            foreignKeyName: "caixa_diario_fechamentos_conferido_por_fkey"
+            columns: ["conferido_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'caixa_diario_fechamentos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "caixa_diario_fechamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -345,25 +351,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'campo_configuracao_campo_id_fkey'
-            columns: ['campo_id']
+            foreignKeyName: "campo_configuracao_campo_id_fkey"
+            columns: ["campo_id"]
             isOneToOne: false
-            referencedRelation: 'campos_personalizados'
-            referencedColumns: ['id']
+            referencedRelation: "campos_personalizados"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'campo_configuracao_especialidade_id_fkey'
-            columns: ['especialidade_id']
+            foreignKeyName: "campo_configuracao_especialidade_id_fkey"
+            columns: ["especialidade_id"]
             isOneToOne: false
-            referencedRelation: 'especialidades'
-            referencedColumns: ['id']
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'campo_configuracao_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "campo_configuracao_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -394,25 +400,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'campo_opcoes_campo_id_fkey'
-            columns: ['campo_id']
+            foreignKeyName: "campo_opcoes_campo_id_fkey"
+            columns: ["campo_id"]
             isOneToOne: false
-            referencedRelation: 'campos_personalizados'
-            referencedColumns: ['id']
+            referencedRelation: "campos_personalizados"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'campo_opcoes_especialidade_id_fkey'
-            columns: ['especialidade_id']
+            foreignKeyName: "campo_opcoes_especialidade_id_fkey"
+            columns: ["especialidade_id"]
             isOneToOne: false
-            referencedRelation: 'especialidades'
-            referencedColumns: ['id']
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'campo_opcoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "campo_opcoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -446,51 +452,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'campos_personalizados_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "campos_personalizados_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      cargo_permissoes: {
-        Row: {
-          cargo_id: string
-          permissao_id: string
-          tenant_id: string | null
-        }
-        Insert: {
-          cargo_id: string
-          permissao_id: string
-          tenant_id?: string | null
-        }
-        Update: {
-          cargo_id?: string
-          permissao_id?: string
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'cargo_permissoes_cargo_id_fkey'
-            columns: ['cargo_id']
-            isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'cargo_permissoes_permissao_id_fkey'
-            columns: ['permissao_id']
-            isOneToOne: false
-            referencedRelation: 'permissoes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'cargo_permissoes_tenant_id_fkey'
-            columns: ['tenant_id']
-            isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -518,11 +484,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cargos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "cargos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -565,32 +531,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'carteira_transacoes_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "carteira_transacoes_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'performance_bonificacao'
-            referencedColumns: ['id']
+            referencedRelation: "performance_bonificacao"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'carteira_transacoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "carteira_transacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'carteira_transacoes_transacao_original_id_fkey'
-            columns: ['transacao_original_id']
+            foreignKeyName: "carteira_transacoes_transacao_original_id_fkey"
+            columns: ["transacao_original_id"]
             isOneToOne: false
-            referencedRelation: 'carteira_transacoes'
-            referencedColumns: ['id']
+            referencedRelation: "carteira_transacoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'carteira_transacoes_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "carteira_transacoes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -621,18 +587,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'chat_conversas_criado_por_fkey'
-            columns: ['criado_por']
+            foreignKeyName: "chat_conversas_criado_por_fkey"
+            columns: ["criado_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'chat_conversas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "chat_conversas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -663,25 +629,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'chat_mensagens_conversa_id_fkey'
-            columns: ['conversa_id']
+            foreignKeyName: "chat_mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
             isOneToOne: false
-            referencedRelation: 'chat_conversas'
-            referencedColumns: ['id']
+            referencedRelation: "chat_conversas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'chat_mensagens_remetente_id_fkey'
-            columns: ['remetente_id']
+            foreignKeyName: "chat_mensagens_remetente_id_fkey"
+            columns: ["remetente_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'chat_mensagens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "chat_mensagens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -709,25 +675,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'chat_participantes_conversa_id_fkey'
-            columns: ['conversa_id']
+            foreignKeyName: "chat_participantes_conversa_id_fkey"
+            columns: ["conversa_id"]
             isOneToOne: false
-            referencedRelation: 'chat_conversas'
-            referencedColumns: ['id']
+            referencedRelation: "chat_conversas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'chat_participantes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "chat_participantes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'chat_participantes_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "chat_participantes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -770,18 +736,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'colaboradores_detalhes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "colaboradores_detalhes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'colaboradores_detalhes_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "colaboradores_detalhes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: true
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -839,32 +805,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'compra_itens_compra_id_fkey'
-            columns: ['compra_id']
+            foreignKeyName: "compra_itens_compra_id_fkey"
+            columns: ["compra_id"]
             isOneToOne: false
-            referencedRelation: 'compras'
-            referencedColumns: ['id']
+            referencedRelation: "compras"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compra_itens_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "compra_itens_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compra_itens_sala_id_fkey'
-            columns: ['sala_id']
+            foreignKeyName: "compra_itens_sala_id_fkey"
+            columns: ["sala_id"]
             isOneToOne: false
-            referencedRelation: 'salas'
-            referencedColumns: ['id']
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compra_itens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "compra_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -904,25 +870,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'compras_fornecedor_id_fkey'
-            columns: ['fornecedor_id']
+            foreignKeyName: "compras_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
             isOneToOne: false
-            referencedRelation: 'fornecedores'
-            referencedColumns: ['id']
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compras_sala_id_fkey'
-            columns: ['sala_id']
+            foreignKeyName: "compras_sala_id_fkey"
+            columns: ["sala_id"]
             isOneToOne: false
-            referencedRelation: 'salas'
-            referencedColumns: ['id']
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compras_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "compras_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -946,7 +912,7 @@ export type Database = {
           setor: string | null
           status_acao: string | null
           tenant_id: string | null
-          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
+          tipo_compromisso: Database["public"]["Enums"]["tipo_compromisso_enum"]
           usuario_id: string
         }
         Insert: {
@@ -968,7 +934,7 @@ export type Database = {
           setor?: string | null
           status_acao?: string | null
           tenant_id?: string | null
-          tipo_compromisso: Database['public']['Enums']['tipo_compromisso_enum']
+          tipo_compromisso: Database["public"]["Enums"]["tipo_compromisso_enum"]
           usuario_id: string
         }
         Update: {
@@ -990,44 +956,44 @@ export type Database = {
           setor?: string | null
           status_acao?: string | null
           tenant_id?: string | null
-          tipo_compromisso?: Database['public']['Enums']['tipo_compromisso_enum']
+          tipo_compromisso?: Database["public"]["Enums"]["tipo_compromisso_enum"]
           usuario_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'compromissos_concluido_por_fkey'
-            columns: ['concluido_por']
+            foreignKeyName: "compromissos_concluido_por_fkey"
+            columns: ["concluido_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compromissos_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "compromissos_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'funil_leads'
-            referencedColumns: ['id']
+            referencedRelation: "funil_leads"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compromissos_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "compromissos_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compromissos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "compromissos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compromissos_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "compromissos_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1085,11 +1051,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'configuracoes_acesso_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "configuracoes_acesso_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1117,11 +1083,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'configuracoes_negociacao_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "configuracoes_negociacao_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1164,25 +1130,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'contatos_follow_up_avaliacao_id_fkey'
-            columns: ['avaliacao_id']
+            foreignKeyName: "contatos_follow_up_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
             isOneToOne: false
-            referencedRelation: 'avaliacoes'
-            referencedColumns: ['id']
+            referencedRelation: "avaliacoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'contatos_follow_up_responsavel_id_fkey'
-            columns: ['responsavel_id']
+            foreignKeyName: "contatos_follow_up_responsavel_id_fkey"
+            columns: ["responsavel_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'contatos_follow_up_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "contatos_follow_up_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1219,18 +1185,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'crc_comercial_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "crc_comercial_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'crc_comercial_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "crc_comercial_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1264,18 +1230,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'criativos_gerados_dentista_avaliador_id_fkey'
-            columns: ['dentista_avaliador_id']
+            foreignKeyName: "criativos_gerados_dentista_avaliador_id_fkey"
+            columns: ["dentista_avaliador_id"]
             isOneToOne: false
-            referencedRelation: 'dentistas_avaliadores'
-            referencedColumns: ['id']
+            referencedRelation: "dentistas_avaliadores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'criativos_gerados_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "criativos_gerados_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1315,18 +1281,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'dentistas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "dentistas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'dentistas_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "dentistas_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1369,18 +1335,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'dentistas_avaliadores_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "dentistas_avaliadores_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'dentistas_avaliadores_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "dentistas_avaliadores_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1411,11 +1377,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'descontos_por_prazo_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "descontos_por_prazo_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1440,11 +1406,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'diametros_implante_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "diametros_implante_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1469,11 +1435,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'embalagens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "embalagens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1531,25 +1497,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'entrada_produtos_fornecedor_id_fkey'
-            columns: ['fornecedor_id']
+            foreignKeyName: "entrada_produtos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
             isOneToOne: false
-            referencedRelation: 'fornecedores'
-            referencedColumns: ['id']
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'entrada_produtos_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "entrada_produtos_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'entrada_produtos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "entrada_produtos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1583,25 +1549,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'especialidade_campos_campo_id_fkey'
-            columns: ['campo_id']
+            foreignKeyName: "especialidade_campos_campo_id_fkey"
+            columns: ["campo_id"]
             isOneToOne: false
-            referencedRelation: 'campos_personalizados'
-            referencedColumns: ['id']
+            referencedRelation: "campos_personalizados"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'especialidade_campos_especialidade_id_fkey'
-            columns: ['especialidade_id']
+            foreignKeyName: "especialidade_campos_especialidade_id_fkey"
+            columns: ["especialidade_id"]
             isOneToOne: false
-            referencedRelation: 'especialidades'
-            referencedColumns: ['id']
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'especialidade_campos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "especialidade_campos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1626,11 +1592,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'especialidades_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "especialidades_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1643,7 +1609,9 @@ export type Database = {
           fechamento_confirmado: boolean
           id: string
           minutos_atrasado: number
-          nivel_criticidade: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          nivel_criticidade:
+            | Database["public"]["Enums"]["nivel_criticidade_enum"]
+            | null
           tarefa_id: string
           tenant_id: string | null
           timestamp_conclusao: string | null
@@ -1657,7 +1625,9 @@ export type Database = {
           fechamento_confirmado?: boolean
           id?: string
           minutos_atrasado?: number
-          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          nivel_criticidade?:
+            | Database["public"]["Enums"]["nivel_criticidade_enum"]
+            | null
           tarefa_id: string
           tenant_id?: string | null
           timestamp_conclusao?: string | null
@@ -1671,7 +1641,9 @@ export type Database = {
           fechamento_confirmado?: boolean
           id?: string
           minutos_atrasado?: number
-          nivel_criticidade?: Database['public']['Enums']['nivel_criticidade_enum'] | null
+          nivel_criticidade?:
+            | Database["public"]["Enums"]["nivel_criticidade_enum"]
+            | null
           tarefa_id?: string
           tenant_id?: string | null
           timestamp_conclusao?: string | null
@@ -1679,25 +1651,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'execucoes_rotina_tarefa_id_fkey'
-            columns: ['tarefa_id']
+            foreignKeyName: "execucoes_rotina_tarefa_id_fkey"
+            columns: ["tarefa_id"]
             isOneToOne: false
-            referencedRelation: 'tarefas_rotina'
-            referencedColumns: ['id']
+            referencedRelation: "tarefas_rotina"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'execucoes_rotina_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "execucoes_rotina_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'execucoes_rotina_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "execucoes_rotina_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1731,11 +1703,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'faixas_valores_parcelas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "faixas_valores_parcelas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1769,11 +1741,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'faturamento_comissoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "faturamento_comissoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1822,25 +1794,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'faturas_comissoes_faturamento_id_fkey'
-            columns: ['faturamento_id']
+            foreignKeyName: "faturas_comissoes_faturamento_id_fkey"
+            columns: ["faturamento_id"]
             isOneToOne: false
-            referencedRelation: 'faturamento_comissoes'
-            referencedColumns: ['id']
+            referencedRelation: "faturamento_comissoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'faturas_comissoes_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "faturas_comissoes_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'faturas_comissoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "faturas_comissoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1868,11 +1840,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fet_etiquetas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fet_etiquetas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1906,25 +1878,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fet_historico_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "fet_historico_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'fet_pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "fet_pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'fet_historico_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fet_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'fet_historico_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "fet_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2006,25 +1978,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fet_procedimentos_concluido_por_fkey'
-            columns: ['concluido_por']
+            foreignKeyName: "fet_procedimentos_concluido_por_fkey"
+            columns: ["concluido_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'fet_procedimentos_dentista_id_fkey'
-            columns: ['dentista_id']
+            foreignKeyName: "fet_procedimentos_dentista_id_fkey"
+            columns: ["dentista_id"]
             isOneToOne: false
-            referencedRelation: 'pro_agenda_dentistas'
-            referencedColumns: ['id']
+            referencedRelation: "pro_agenda_dentistas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'fet_procedimentos_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "fet_procedimentos_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'fet_pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "fet_pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2049,11 +2021,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fluxo_caixa_categorias_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fluxo_caixa_categorias_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2090,11 +2062,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fluxo_caixa_despesas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fluxo_caixa_despesas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2140,11 +2112,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fluxo_caixa_parceiros_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fluxo_caixa_parceiros_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2178,11 +2150,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fluxo_caixa_receitas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fluxo_caixa_receitas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2237,11 +2209,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'fornecedores_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "fornecedores_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2317,18 +2289,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_dados_mensais_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "funil_dados_mensais_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'funil_origens'
-            referencedColumns: ['id']
+            referencedRelation: "funil_origens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_dados_mensais_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_dados_mensais_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2365,11 +2337,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_etapas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_etapas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2439,25 +2411,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_leads_avaliacao_id_fkey'
-            columns: ['avaliacao_id']
+            foreignKeyName: "funil_leads_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
             isOneToOne: false
-            referencedRelation: 'avaliacoes'
-            referencedColumns: ['id']
+            referencedRelation: "avaliacoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "funil_leads_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'funil_origens'
-            referencedColumns: ['id']
+            referencedRelation: "funil_origens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_leads_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2491,25 +2463,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_leads_historico_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "funil_leads_historico_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'funil_leads'
-            referencedColumns: ['id']
+            referencedRelation: "funil_leads"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_historico_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_leads_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_historico_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "funil_leads_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2540,25 +2512,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_leads_notas_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "funil_leads_notas_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'funil_leads'
-            referencedColumns: ['id']
+            referencedRelation: "funil_leads"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_notas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_leads_notas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'funil_leads_notas_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "funil_leads_notas_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2592,11 +2564,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_origens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_origens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2633,11 +2605,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'funil_temperaturas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "funil_temperaturas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2692,11 +2664,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'gestao_fiscal_config_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "gestao_fiscal_config_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2760,25 +2732,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'historico_compras_fornecedor_id_fkey'
-            columns: ['fornecedor_id']
+            foreignKeyName: "historico_compras_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
             isOneToOne: false
-            referencedRelation: 'fornecedores'
-            referencedColumns: ['id']
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'historico_compras_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "historico_compras_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'historico_compras_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "historico_compras_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2821,25 +2793,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_onboarding_etapas_cargo_id_fkey'
-            columns: ['cargo_id']
+            foreignKeyName: "intranet_onboarding_etapas_cargo_id_fkey"
+            columns: ["cargo_id"]
             isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_etapas_fase_id_fkey'
-            columns: ['fase_id']
+            foreignKeyName: "intranet_onboarding_etapas_fase_id_fkey"
+            columns: ["fase_id"]
             isOneToOne: false
-            referencedRelation: 'intranet_onboarding_fases'
-            referencedColumns: ['id']
+            referencedRelation: "intranet_onboarding_fases"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_etapas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_onboarding_etapas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2879,18 +2851,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_onboarding_fases_cargo_id_fkey'
-            columns: ['cargo_id']
+            foreignKeyName: "intranet_onboarding_fases_cargo_id_fkey"
+            columns: ["cargo_id"]
             isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_fases_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_onboarding_fases_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2924,25 +2896,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_onboarding_progresso_tarefa_id_fkey'
-            columns: ['tarefa_id']
+            foreignKeyName: "intranet_onboarding_progresso_tarefa_id_fkey"
+            columns: ["tarefa_id"]
             isOneToOne: false
-            referencedRelation: 'intranet_onboarding_tarefas'
-            referencedColumns: ['id']
+            referencedRelation: "intranet_onboarding_tarefas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_progresso_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_onboarding_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_progresso_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "intranet_onboarding_progresso_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2976,18 +2948,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_onboarding_tarefas_etapa_id_fkey'
-            columns: ['etapa_id']
+            foreignKeyName: "intranet_onboarding_tarefas_etapa_id_fkey"
+            columns: ["etapa_id"]
             isOneToOne: false
-            referencedRelation: 'intranet_onboarding_etapas'
-            referencedColumns: ['id']
+            referencedRelation: "intranet_onboarding_etapas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_onboarding_tarefas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_onboarding_tarefas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3024,11 +2996,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_treinamentos_cursos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_treinamentos_cursos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3074,18 +3046,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_treinamentos_modulos_curso_id_fkey'
-            columns: ['curso_id']
+            foreignKeyName: "intranet_treinamentos_modulos_curso_id_fkey"
+            columns: ["curso_id"]
             isOneToOne: false
-            referencedRelation: 'intranet_treinamentos_cursos'
-            referencedColumns: ['id']
+            referencedRelation: "intranet_treinamentos_cursos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_treinamentos_modulos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_treinamentos_modulos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3131,25 +3103,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'intranet_treinamentos_progresso_modulo_id_fkey'
-            columns: ['modulo_id']
+            foreignKeyName: "intranet_treinamentos_progresso_modulo_id_fkey"
+            columns: ["modulo_id"]
             isOneToOne: false
-            referencedRelation: 'intranet_treinamentos_modulos'
-            referencedColumns: ['id']
+            referencedRelation: "intranet_treinamentos_modulos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_treinamentos_progresso_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "intranet_treinamentos_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'intranet_treinamentos_progresso_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "intranet_treinamentos_progresso_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3174,11 +3146,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'marcas_implante_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "marcas_implante_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3206,25 +3178,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'normas_aceites_norma_id_fkey'
-            columns: ['norma_id']
+            foreignKeyName: "normas_aceites_norma_id_fkey"
+            columns: ["norma_id"]
             isOneToOne: false
-            referencedRelation: 'normas_internas'
-            referencedColumns: ['id']
+            referencedRelation: "normas_internas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'normas_aceites_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "normas_aceites_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'normas_aceites_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "normas_aceites_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3267,18 +3239,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'normas_internas_criado_por_fkey'
-            columns: ['criado_por']
+            foreignKeyName: "normas_internas_criado_por_fkey"
+            columns: ["criado_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'normas_internas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "normas_internas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3315,18 +3287,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'orcamentos_avaliacao_id_fkey'
-            columns: ['avaliacao_id']
+            foreignKeyName: "orcamentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
             isOneToOne: false
-            referencedRelation: 'avaliacoes'
-            referencedColumns: ['id']
+            referencedRelation: "avaliacoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'orcamentos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "orcamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3363,11 +3335,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pacientes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pacientes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3407,25 +3379,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pedido_itens_pedido_id_fkey'
-            columns: ['pedido_id']
+            foreignKeyName: "pedido_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
             isOneToOne: false
-            referencedRelation: 'pedidos_materiais'
-            referencedColumns: ['id']
+            referencedRelation: "pedidos_materiais"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pedido_itens_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "pedido_itens_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pedido_itens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pedido_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3471,32 +3443,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pedidos_materiais_entregue_por_fkey'
-            columns: ['entregue_por']
+            foreignKeyName: "pedidos_materiais_entregue_por_fkey"
+            columns: ["entregue_por"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pedidos_materiais_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pedidos_materiais_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pedidos_materiais_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "pedidos_materiais_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pedidos_materiais_usuario_id_usuarios_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "pedidos_materiais_usuario_id_usuarios_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3536,18 +3508,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'performance_bonificacao_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "performance_bonificacao_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'performance_bonificacao_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "performance_bonificacao_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3581,11 +3553,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'performance_bonificacao_itens_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "performance_bonificacao_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3628,18 +3600,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'performance_google_reviews_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "performance_google_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'performance_google_reviews_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "performance_google_reviews_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3697,50 +3669,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'performance_pp_pdm_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "performance_pp_pdm_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'performance_pp_pdm_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "performance_pp_pdm_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      permissoes: {
-        Row: {
-          descricao: string | null
-          id: string
-          modulo: string | null
-          nome: string
-          tenant_id: string | null
-        }
-        Insert: {
-          descricao?: string | null
-          id?: string
-          modulo?: string | null
-          nome: string
-          tenant_id?: string | null
-        }
-        Update: {
-          descricao?: string | null
-          id?: string
-          modulo?: string | null
-          nome?: string
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'permissoes_tenant_id_fkey'
-            columns: ['tenant_id']
-            isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3777,11 +3717,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_custos_fixos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_custos_fixos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3818,18 +3758,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_custos_fixos_detalhes_custo_fixo_id_fkey'
-            columns: ['custo_fixo_id']
+            foreignKeyName: "precificacao_custos_fixos_detalhes_custo_fixo_id_fkey"
+            columns: ["custo_fixo_id"]
             isOneToOne: false
-            referencedRelation: 'precificacao_custos_fixos'
-            referencedColumns: ['id']
+            referencedRelation: "precificacao_custos_fixos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'precificacao_custos_fixos_detalhes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_custos_fixos_detalhes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3854,11 +3794,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_especialidades_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_especialidades_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3892,11 +3832,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_globais_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_globais_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3948,11 +3888,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_ocupacao_cadeiras_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_ocupacao_cadeiras_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3980,11 +3920,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_ocupacao_config_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_ocupacao_config_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4030,18 +3970,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'precificacao_procedimentos_especialidade_id_fkey'
-            columns: ['especialidade_id']
+            foreignKeyName: "precificacao_procedimentos_especialidade_id_fkey"
+            columns: ["especialidade_id"]
             isOneToOne: false
-            referencedRelation: 'precificacao_especialidades'
-            referencedColumns: ['id']
+            referencedRelation: "precificacao_especialidades"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'precificacao_procedimentos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "precificacao_procedimentos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4072,11 +4012,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pro_agenda_dentistas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pro_agenda_dentistas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4107,11 +4047,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pro_agenda_procedimentos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pro_agenda_procedimentos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4142,25 +4082,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pro_agenda_tempos_dentista_id_fkey'
-            columns: ['dentista_id']
+            foreignKeyName: "pro_agenda_tempos_dentista_id_fkey"
+            columns: ["dentista_id"]
             isOneToOne: false
-            referencedRelation: 'pro_agenda_dentistas'
-            referencedColumns: ['id']
+            referencedRelation: "pro_agenda_dentistas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pro_agenda_tempos_procedimento_id_fkey'
-            columns: ['procedimento_id']
+            foreignKeyName: "pro_agenda_tempos_procedimento_id_fkey"
+            columns: ["procedimento_id"]
             isOneToOne: false
-            referencedRelation: 'pro_agenda_procedimentos'
-            referencedColumns: ['id']
+            referencedRelation: "pro_agenda_procedimentos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pro_agenda_tempos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "pro_agenda_tempos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4194,25 +4134,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'produto_campos_valores_campo_id_fkey'
-            columns: ['campo_id']
+            foreignKeyName: "produto_campos_valores_campo_id_fkey"
+            columns: ["campo_id"]
             isOneToOne: false
-            referencedRelation: 'campos_personalizados'
-            referencedColumns: ['id']
+            referencedRelation: "campos_personalizados"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'produto_campos_valores_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "produto_campos_valores_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'produto_campos_valores_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "produto_campos_valores_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4237,7 +4177,9 @@ export type Database = {
           observacoes: string | null
           quantidade_estoque: number | null
           quantidade_minima: number | null
-          referencia_consumo: Database['public']['Enums']['referencia_consumo_enum'] | null
+          referencia_consumo:
+            | Database["public"]["Enums"]["referencia_consumo_enum"]
+            | null
           sala: string | null
           sala_id: string | null
           tenant_id: string | null
@@ -4264,7 +4206,9 @@ export type Database = {
           observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
-          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
+          referencia_consumo?:
+            | Database["public"]["Enums"]["referencia_consumo_enum"]
+            | null
           sala?: string | null
           sala_id?: string | null
           tenant_id?: string | null
@@ -4291,7 +4235,9 @@ export type Database = {
           observacoes?: string | null
           quantidade_estoque?: number | null
           quantidade_minima?: number | null
-          referencia_consumo?: Database['public']['Enums']['referencia_consumo_enum'] | null
+          referencia_consumo?:
+            | Database["public"]["Enums"]["referencia_consumo_enum"]
+            | null
           sala?: string | null
           sala_id?: string | null
           tenant_id?: string | null
@@ -4300,32 +4246,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'produtos_embalagem_id_fkey'
-            columns: ['embalagem_id']
+            foreignKeyName: "produtos_embalagem_id_fkey"
+            columns: ["embalagem_id"]
             isOneToOne: false
-            referencedRelation: 'embalagens'
-            referencedColumns: ['id']
+            referencedRelation: "embalagens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'produtos_especialidade_id_fkey'
-            columns: ['especialidade_id']
+            foreignKeyName: "produtos_especialidade_id_fkey"
+            columns: ["especialidade_id"]
             isOneToOne: false
-            referencedRelation: 'especialidades'
-            referencedColumns: ['id']
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'produtos_sala_id_fkey'
-            columns: ['sala_id']
+            foreignKeyName: "produtos_sala_id_fkey"
+            columns: ["sala_id"]
             isOneToOne: false
-            referencedRelation: 'salas'
-            referencedColumns: ['id']
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'produtos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "produtos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4362,11 +4308,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'referencias_comissao_crc_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "referencias_comissao_crc_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4403,11 +4349,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'referencias_comissao_dentista_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "referencias_comissao_dentista_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4456,18 +4402,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'rh_ferias_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "rh_ferias_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'rh_ferias_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "rh_ferias_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4513,18 +4459,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'roteiros_setor_id_fkey'
-            columns: ['setor_id']
+            foreignKeyName: "roteiros_setor_id_fkey"
+            columns: ["setor_id"]
             isOneToOne: false
-            referencedRelation: 'roteiros_setores'
-            referencedColumns: ['id']
+            referencedRelation: "roteiros_setores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'roteiros_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "roteiros_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4555,11 +4501,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'roteiros_setores_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "roteiros_setores_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4593,25 +4539,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'rotinas_usuarios_cargo_id_fkey'
-            columns: ['cargo_id']
+            foreignKeyName: "rotinas_usuarios_cargo_id_fkey"
+            columns: ["cargo_id"]
             isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'rotinas_usuarios_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "rotinas_usuarios_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'rotinas_usuarios_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "rotinas_usuarios_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4645,25 +4591,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sac_acoes_solucao_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "sac_acoes_solucao_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'sac_demandas'
-            referencedColumns: ['id']
+            referencedRelation: "sac_demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_acoes_solucao_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sac_acoes_solucao_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_acoes_solucao_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "sac_acoes_solucao_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4691,11 +4637,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sac_configuracoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sac_configuracoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4753,25 +4699,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sac_demandas_quem_recebeu_id_fkey'
-            columns: ['quem_recebeu_id']
+            foreignKeyName: "sac_demandas_quem_recebeu_id_fkey"
+            columns: ["quem_recebeu_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_demandas_quem_resolve_id_fkey'
-            columns: ['quem_resolve_id']
+            foreignKeyName: "sac_demandas_quem_resolve_id_fkey"
+            columns: ["quem_resolve_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_demandas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sac_demandas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4805,25 +4751,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sac_historico_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "sac_historico_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'sac_demandas'
-            referencedColumns: ['id']
+            referencedRelation: "sac_demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_historico_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sac_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sac_historico_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "sac_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4869,25 +4815,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'saida_produtos_produto_id_fkey'
-            columns: ['produto_id']
+            foreignKeyName: "saida_produtos_produto_id_fkey"
+            columns: ["produto_id"]
             isOneToOne: false
-            referencedRelation: 'produtos'
-            referencedColumns: ['id']
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'saida_produtos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "saida_produtos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'saida_produtos_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "saida_produtos_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4912,11 +4858,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'salas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "salas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4947,11 +4893,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sorriso_dos_sonhos_config_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sorriso_dos_sonhos_config_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4997,25 +4943,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_colaborador_id_fkey'
-            columns: ['colaborador_id']
+            foreignKeyName: "sorriso_dos_sonhos_indicacoes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey'
-            columns: ['paciente_indicador_id']
+            foreignKeyName: "sorriso_dos_sonhos_indicacoes_paciente_indicador_id_fkey"
+            columns: ["paciente_indicador_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'sorriso_dos_sonhos_indicacoes_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "sorriso_dos_sonhos_indicacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5040,11 +4986,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'tamanhos_implante_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "tamanhos_implante_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5102,18 +5048,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'tarefas_rotina_rotina_id_fkey'
-            columns: ['rotina_id']
+            foreignKeyName: "tarefas_rotina_rotina_id_fkey"
+            columns: ["rotina_id"]
             isOneToOne: false
-            referencedRelation: 'rotinas_usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "rotinas_usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'tarefas_rotina_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "tarefas_rotina_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5192,11 +5138,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'terceiros_categorias_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "terceiros_categorias_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5230,18 +5176,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'terceiros_colunas_categoria_slug_tenant_fkey'
-            columns: ['categoria_slug', 'tenant_id']
+            foreignKeyName: "terceiros_colunas_categoria_slug_tenant_fkey"
+            columns: ["categoria_slug", "tenant_id"]
             isOneToOne: false
-            referencedRelation: 'terceiros_categorias'
-            referencedColumns: ['slug', 'tenant_id']
+            referencedRelation: "terceiros_categorias"
+            referencedColumns: ["slug", "tenant_id"]
           },
           {
-            foreignKeyName: 'terceiros_colunas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "terceiros_colunas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5269,11 +5215,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'terceiros_etiquetas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "terceiros_etiquetas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5307,25 +5253,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'terceiros_historico_tarefa_id_fkey'
-            columns: ['tarefa_id']
+            foreignKeyName: "terceiros_historico_tarefa_id_fkey"
+            columns: ["tarefa_id"]
             isOneToOne: false
-            referencedRelation: 'terceiros_tarefas'
-            referencedColumns: ['id']
+            referencedRelation: "terceiros_tarefas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'terceiros_historico_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "terceiros_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'terceiros_historico_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "terceiros_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5383,65 +5329,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'terceiros_tarefas_categoria_slug_tenant_fkey'
-            columns: ['categoria_slug', 'tenant_id']
+            foreignKeyName: "terceiros_tarefas_categoria_slug_tenant_fkey"
+            columns: ["categoria_slug", "tenant_id"]
             isOneToOne: false
-            referencedRelation: 'terceiros_categorias'
-            referencedColumns: ['slug', 'tenant_id']
+            referencedRelation: "terceiros_categorias"
+            referencedColumns: ["slug", "tenant_id"]
           },
           {
-            foreignKeyName: 'terceiros_tarefas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "terceiros_tarefas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'terceiros_tarefas_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "terceiros_tarefas_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      usuario_permissoes: {
-        Row: {
-          permissao_id: string
-          tenant_id: string | null
-          usuario_id: string
-        }
-        Insert: {
-          permissao_id: string
-          tenant_id?: string | null
-          usuario_id: string
-        }
-        Update: {
-          permissao_id?: string
-          tenant_id?: string | null
-          usuario_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'usuario_permissoes_permissao_id_fkey'
-            columns: ['permissao_id']
-            isOneToOne: false
-            referencedRelation: 'permissoes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'usuario_permissoes_tenant_id_fkey'
-            columns: ['tenant_id']
-            isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'usuario_permissoes_usuario_id_fkey'
-            columns: ['usuario_id']
-            isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5553,25 +5459,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'usuarios_cargo_id_fkey'
-            columns: ['cargo_id']
+            foreignKeyName: "usuarios_cargo_id_fkey"
+            columns: ["cargo_id"]
             isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'usuarios_cargo_secundario_id_fkey'
-            columns: ['cargo_secundario_id']
+            foreignKeyName: "usuarios_cargo_secundario_id_fkey"
+            columns: ["cargo_secundario_id"]
             isOneToOne: false
-            referencedRelation: 'cargos'
-            referencedColumns: ['id']
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'usuarios_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "usuarios_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5580,7 +5486,7 @@ export type Database = {
           compromisso_id: string
           criado_em: string
           id: string
-          permissao: Database['public']['Enums']['permissao_compromisso_enum']
+          permissao: Database["public"]["Enums"]["permissao_compromisso_enum"]
           tenant_id: string | null
           usuario_criador_id: string
           usuario_destinatario_id: string
@@ -5589,7 +5495,7 @@ export type Database = {
           compromisso_id: string
           criado_em?: string
           id?: string
-          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
+          permissao?: Database["public"]["Enums"]["permissao_compromisso_enum"]
           tenant_id?: string | null
           usuario_criador_id: string
           usuario_destinatario_id: string
@@ -5598,39 +5504,39 @@ export type Database = {
           compromisso_id?: string
           criado_em?: string
           id?: string
-          permissao?: Database['public']['Enums']['permissao_compromisso_enum']
+          permissao?: Database["public"]["Enums"]["permissao_compromisso_enum"]
           tenant_id?: string | null
           usuario_criador_id?: string
           usuario_destinatario_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'usuarios_compromissos_compromisso_id_fkey'
-            columns: ['compromisso_id']
+            foreignKeyName: "usuarios_compromissos_compromisso_id_fkey"
+            columns: ["compromisso_id"]
             isOneToOne: false
-            referencedRelation: 'compromissos'
-            referencedColumns: ['id']
+            referencedRelation: "compromissos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'usuarios_compromissos_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "usuarios_compromissos_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'usuarios_compromissos_usuario_criador_id_fkey'
-            columns: ['usuario_criador_id']
+            foreignKeyName: "usuarios_compromissos_usuario_criador_id_fkey"
+            columns: ["usuario_criador_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'usuarios_compromissos_usuario_destinatario_id_fkey'
-            columns: ['usuario_destinatario_id']
+            foreignKeyName: "usuarios_compromissos_usuario_destinatario_id_fkey"
+            columns: ["usuario_destinatario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5718,46 +5624,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vendas_confirmadas_crc_fkey'
-            columns: ['crc']
+            foreignKeyName: "vendas_confirmadas_crc_fkey"
+            columns: ["crc"]
             isOneToOne: false
-            referencedRelation: 'crc_comercial'
-            referencedColumns: ['id']
+            referencedRelation: "crc_comercial"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_confirmadas_dentista_avaliador_fkey'
-            columns: ['dentista_avaliador']
+            foreignKeyName: "vendas_confirmadas_dentista_avaliador_fkey"
+            columns: ["dentista_avaliador"]
             isOneToOne: false
-            referencedRelation: 'dentistas_avaliadores'
-            referencedColumns: ['id']
+            referencedRelation: "dentistas_avaliadores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_confirmadas_fatura_comissao_id_fkey'
-            columns: ['fatura_comissao_id']
+            foreignKeyName: "vendas_confirmadas_fatura_comissao_id_fkey"
+            columns: ["fatura_comissao_id"]
             isOneToOne: false
-            referencedRelation: 'faturas_comissoes'
-            referencedColumns: ['id']
+            referencedRelation: "faturas_comissoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_confirmadas_oportunidade_id_fkey'
-            columns: ['oportunidade_id']
+            foreignKeyName: "vendas_confirmadas_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
             isOneToOne: false
-            referencedRelation: 'avaliacoes'
-            referencedColumns: ['id']
+            referencedRelation: "avaliacoes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_confirmadas_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "vendas_confirmadas_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'funil_origens'
-            referencedColumns: ['id']
+            referencedRelation: "funil_origens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_confirmadas_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "vendas_confirmadas_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5812,39 +5718,39 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vendas_diarias_crc_comercial_id_fkey'
-            columns: ['crc_comercial_id']
+            foreignKeyName: "vendas_diarias_crc_comercial_id_fkey"
+            columns: ["crc_comercial_id"]
             isOneToOne: false
-            referencedRelation: 'crc_comercial'
-            referencedColumns: ['id']
+            referencedRelation: "crc_comercial"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_diarias_dentista_avaliador_id_fkey'
-            columns: ['dentista_avaliador_id']
+            foreignKeyName: "vendas_diarias_dentista_avaliador_id_fkey"
+            columns: ["dentista_avaliador_id"]
             isOneToOne: false
-            referencedRelation: 'dentistas_avaliadores'
-            referencedColumns: ['id']
+            referencedRelation: "dentistas_avaliadores"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_diarias_origem_id_fkey'
-            columns: ['origem_id']
+            foreignKeyName: "vendas_diarias_origem_id_fkey"
+            columns: ["origem_id"]
             isOneToOne: false
-            referencedRelation: 'funil_origens'
-            referencedColumns: ['id']
+            referencedRelation: "funil_origens"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_diarias_tenant_id_fkey'
-            columns: ['tenant_id']
+            foreignKeyName: "vendas_diarias_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: 'tenants'
-            referencedColumns: ['id']
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_diarias_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "vendas_diarias_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5892,6 +5798,15 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_user_consolidated_permissions: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          modulo: string
+          nome: string
+        }[]
+      }
+      get_user_permissions: { Args: { p_user_id: string }; Returns: string[] }
       get_vendas_por_origem: {
         Args: { p_mes_referencia: string }
         Returns: {
@@ -5925,22 +5840,26 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: undefined
       }
-      unaccent_string: { Args: { '': string }; Returns: string }
+      unaccent_string: { Args: { "": string }; Returns: string }
     }
     Enums: {
-      nivel_criticidade_enum: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida'
-      permissao_compromisso_enum: 'visualizar' | 'editar' | 'deletar'
-      referencia_consumo_enum: 'qtd_comprada' | 'itens_embalagem'
+      nivel_criticidade_enum:
+        | "no_horario"
+        | "tolerancia"
+        | "critico"
+        | "nao_concluida"
+      permissao_compromisso_enum: "visualizar" | "editar" | "deletar"
+      referencia_consumo_enum: "qtd_comprada" | "itens_embalagem"
       tipo_compromisso_enum:
-        | 'consulta'
-        | 'viagem_pessoal'
-        | 'viagem_trabalho'
-        | 'reuniao'
-        | 'congresso'
-        | 'folga_ferias'
-        | 'treinamento'
-        | 'atendimento_externo'
-        | 'acao_comercial'
+        | "consulta"
+        | "viagem_pessoal"
+        | "viagem_trabalho"
+        | "reuniao"
+        | "congresso"
+        | "folga_ferias"
+        | "treinamento"
+        | "atendimento_externo"
+        | "acao_comercial"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5948,31 +5867,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -5981,23 +5902,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -6006,23 +5927,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -6031,58 +5952,64 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      nivel_criticidade_enum: ['no_horario', 'tolerancia', 'critico', 'nao_concluida'],
-      permissao_compromisso_enum: ['visualizar', 'editar', 'deletar'],
-      referencia_consumo_enum: ['qtd_comprada', 'itens_embalagem'],
+      nivel_criticidade_enum: [
+        "no_horario",
+        "tolerancia",
+        "critico",
+        "nao_concluida",
+      ],
+      permissao_compromisso_enum: ["visualizar", "editar", "deletar"],
+      referencia_consumo_enum: ["qtd_comprada", "itens_embalagem"],
       tipo_compromisso_enum: [
-        'consulta',
-        'viagem_pessoal',
-        'viagem_trabalho',
-        'reuniao',
-        'congresso',
-        'folga_ferias',
-        'treinamento',
-        'atendimento_externo',
-        'acao_comercial',
+        "consulta",
+        "viagem_pessoal",
+        "viagem_trabalho",
+        "reuniao",
+        "congresso",
+        "folga_ferias",
+        "treinamento",
+        "atendimento_externo",
+        "acao_comercial",
       ],
     },
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -6176,10 +6103,6 @@ export const Constants = {
 //   tipo: text (nullable, default: 'text'::text)
 //   data_criacao: timestamp with time zone (nullable, default: now())
 //   opcoes: jsonb (nullable)
-//   tenant_id: uuid (nullable, default: get_my_tenant_id())
-// Table: cargo_permissoes
-//   cargo_id: uuid (not null)
-//   permissao_id: uuid (not null)
 //   tenant_id: uuid (nullable, default: get_my_tenant_id())
 // Table: cargos
 //   id: uuid (not null, default: gen_random_uuid())
@@ -6811,12 +6734,6 @@ export const Constants = {
 //   status_gestao: text (nullable, default: 'aguardando_acao'::text)
 //   consideracoes_gestao: jsonb (nullable, default: '[]'::jsonb)
 //   tenant_id: uuid (nullable, default: get_my_tenant_id())
-// Table: permissoes
-//   id: uuid (not null, default: gen_random_uuid())
-//   nome: text (not null)
-//   descricao: text (nullable)
-//   modulo: text (nullable)
-//   tenant_id: uuid (nullable, default: get_my_tenant_id())
 // Table: precificacao_custos_fixos
 //   id: uuid (not null, default: gen_random_uuid())
 //   descricao: text (not null)
@@ -7147,10 +7064,6 @@ export const Constants = {
 //   cor: text (nullable, default: 'border-slate-700'::text)
 //   etiquetas: jsonb (nullable, default: '[]'::jsonb)
 //   tenant_id: uuid (nullable, default: get_my_tenant_id())
-// Table: usuario_permissoes
-//   usuario_id: uuid (not null)
-//   permissao_id: uuid (not null)
-//   tenant_id: uuid (nullable, default: get_my_tenant_id())
 // Table: usuarios
 //   id: uuid (not null)
 //   email: text (not null)
@@ -7275,11 +7188,6 @@ export const Constants = {
 //   UNIQUE campos_personalizados_nome_key: UNIQUE (nome)
 //   PRIMARY KEY campos_personalizados_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY campos_personalizados_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
-// Table: cargo_permissoes
-//   FOREIGN KEY cargo_permissoes_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE CASCADE
-//   FOREIGN KEY cargo_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
-//   PRIMARY KEY cargo_permissoes_pkey: PRIMARY KEY (cargo_id, permissao_id)
-//   FOREIGN KEY cargo_permissoes_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 // Table: cargos
 //   PRIMARY KEY cargos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY cargos_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
@@ -7553,10 +7461,6 @@ export const Constants = {
 //   FOREIGN KEY performance_pp_pdm_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 //   UNIQUE performance_pp_pdm_usuario_id_data_registro_key: UNIQUE (usuario_id, data_registro)
 //   FOREIGN KEY performance_pp_pdm_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-// Table: permissoes
-//   UNIQUE permissoes_nome_tenant_key: UNIQUE (nome, tenant_id)
-//   PRIMARY KEY permissoes_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY permissoes_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 // Table: precificacao_custos_fixos
 //   PRIMARY KEY precificacao_custos_fixos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY precificacao_custos_fixos_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
@@ -7700,11 +7604,6 @@ export const Constants = {
 //   PRIMARY KEY terceiros_tarefas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY terceiros_tarefas_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 //   FOREIGN KEY terceiros_tarefas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-// Table: usuario_permissoes
-//   FOREIGN KEY usuario_permissoes_permissao_id_fkey: FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
-//   PRIMARY KEY usuario_permissoes_pkey: PRIMARY KEY (usuario_id, permissao_id)
-//   FOREIGN KEY usuario_permissoes_tenant_id_fkey: FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
-//   FOREIGN KEY usuario_permissoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: usuarios
 //   FOREIGN KEY usuarios_cargo_id_fkey: FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE SET NULL
 //   FOREIGN KEY usuarios_cargo_secundario_id_fkey: FOREIGN KEY (cargo_secundario_id) REFERENCES cargos(id) ON DELETE SET NULL
@@ -7736,1074 +7635,986 @@ export const Constants = {
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: auditoria_acesso
-//   Policy "auditoria_read_own" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((tenant_id = (((auth.jwt() -> 'app_metadata'::text) ->> 'tenant_id'::text))::uuid) OR ((((auth.jwt() -> 'app_metadata'::text) ->> 'is_super_admin'::text))::boolean = true))
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: auditoria_tarefas_rotina
-//   Policy "auditoria_tarefas_rotina_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "auditoria_tarefas_rotina_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "auditoria_tarefas_rotina_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "auditoria_tarefas_rotina_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: ausencias
-//   Policy "ausencias_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "ausencias_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "ausencias_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "ausencias_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: avaliacoes
-//   Policy "avaliacoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "avaliacoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "avaliacoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "avaliacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: caixa_diario_fechamentos
-//   Policy "caixa_diario_fechamentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "caixa_diario_fechamentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "caixa_diario_fechamentos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "caixa_diario_fechamentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: campo_configuracao
-//   Policy "campo_configuracao_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campo_configuracao_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "campo_configuracao_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campo_configuracao_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: campo_opcoes
-//   Policy "campo_opcoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campo_opcoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "campo_opcoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campo_opcoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: campos_personalizados
-//   Policy "campos_personalizados_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campos_personalizados_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "campos_personalizados_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "campos_personalizados_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-// Table: cargo_permissoes
-//   Policy "cargo_permissoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (((tenant_id = get_my_tenant_id()) AND is_tenant_admin()) OR is_super_admin())
-//   Policy "cargo_permissoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (((tenant_id = get_my_tenant_id()) AND is_tenant_admin()) OR is_super_admin())
-//   Policy "cargo_permissoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL) OR is_super_admin())
-//   Policy "cargo_permissoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: cargos
-//   Policy "cargos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "cargos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "cargos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL) OR is_super_admin())
-//   Policy "cargos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: carteira_transacoes
-//   Policy "carteira_transacoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "carteira_transacoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "carteira_transacoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "carteira_transacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: chat_conversas
-//   Policy "chat_conversas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_conversas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "chat_conversas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_conversas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: chat_mensagens
-//   Policy "chat_mensagens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_mensagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "chat_mensagens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_mensagens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: chat_participantes
-//   Policy "chat_participantes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_participantes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "chat_participantes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "chat_participantes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: colaboradores_detalhes
-//   Policy "colaboradores_detalhes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "colaboradores_detalhes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "colaboradores_detalhes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "colaboradores_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: compra_itens
-//   Policy "compra_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compra_itens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "compra_itens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compra_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: compras
-//   Policy "compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compras_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "compras_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: compromissos
-//   Policy "compromissos_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "compromissos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compromissos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "compromissos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "compromissos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: configuracoes_acesso
-//   Policy "configuracoes_acesso_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_acesso_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_acesso_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_acesso_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: configuracoes_negociacao
-//   Policy "configuracoes_negociacao_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_negociacao_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_negociacao_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "configuracoes_negociacao_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: contatos_follow_up
-//   Policy "contatos_follow_up_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "contatos_follow_up_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "contatos_follow_up_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "contatos_follow_up_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: crc_comercial
-//   Policy "crc_comercial_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "crc_comercial_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "crc_comercial_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "crc_comercial_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: criativos_gerados
-//   Policy "criativos_gerados_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "criativos_gerados_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "criativos_gerados_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "criativos_gerados_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: dentistas
-//   Policy "dentistas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: dentistas_avaliadores
-//   Policy "dentistas_avaliadores_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_avaliadores_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_avaliadores_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "dentistas_avaliadores_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: descontos_por_prazo
-//   Policy "descontos_por_prazo_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "descontos_por_prazo_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "descontos_por_prazo_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "descontos_por_prazo_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: diametros_implante
-//   Policy "diametros_implante_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "diametros_implante_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "diametros_implante_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "diametros_implante_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: embalagens
-//   Policy "embalagens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "embalagens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "embalagens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "embalagens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: entrada_produtos
-//   Policy "entrada_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "entrada_produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "entrada_produtos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "entrada_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: especialidade_campos
-//   Policy "especialidade_campos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "especialidade_campos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "especialidade_campos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "especialidade_campos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: especialidades
-//   Policy "especialidades_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "especialidades_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "especialidades_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "especialidades_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: execucoes_rotina
-//   Policy "execucoes_rotina_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "execucoes_rotina_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "execucoes_rotina_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "execucoes_rotina_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: faixas_valores_parcelas
-//   Policy "faixas_valores_parcelas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faixas_valores_parcelas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "faixas_valores_parcelas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faixas_valores_parcelas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: faturamento_comissoes
-//   Policy "faturamento_comissoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faturamento_comissoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "faturamento_comissoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faturamento_comissoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: faturas_comissoes
-//   Policy "faturas_comissoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faturas_comissoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "faturas_comissoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "faturas_comissoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fet_etiquetas
-//   Policy "fet_etiquetas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_etiquetas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fet_etiquetas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_etiquetas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fet_historico
-//   Policy "fet_historico_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fet_historico_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fet_pacientes
-//   Policy "fet_pacientes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_pacientes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fet_pacientes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_pacientes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fet_procedimentos
-//   Policy "fet_procedimentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_procedimentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fet_procedimentos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fet_procedimentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fluxo_caixa_categorias
-//   Policy "fluxo_caixa_categorias_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_categorias_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_categorias_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_categorias_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fluxo_caixa_despesas
-//   Policy "fluxo_caixa_despesas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_despesas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_despesas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_despesas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fluxo_caixa_parceiros
-//   Policy "fluxo_caixa_parceiros_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_parceiros_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_parceiros_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_parceiros_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fluxo_caixa_receitas
-//   Policy "fluxo_caixa_receitas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_receitas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_receitas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fluxo_caixa_receitas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: fornecedores
-//   Policy "fornecedores_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fornecedores_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "fornecedores_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "fornecedores_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_dados_mensais
-//   Policy "funil_dados_mensais_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_dados_mensais_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_dados_mensais_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_dados_mensais_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_etapas
-//   Policy "funil_etapas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_etapas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_etapas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_etapas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_leads
-//   Policy "funil_leads_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_leads_historico
-//   Policy "funil_leads_historico_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_historico_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_historico_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_historico_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_historico_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_leads_notas
-//   Policy "funil_leads_notas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_notas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_notas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_leads_notas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_origens
-//   Policy "funil_origens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_origens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_origens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_origens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: funil_temperaturas
-//   Policy "funil_temperaturas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_temperaturas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "funil_temperaturas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "funil_temperaturas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: gestao_fiscal_config
-//   Policy "gestao_fiscal_config_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_config_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_config_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_config_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: gestao_fiscal_entradas_manuais
-//   Policy "gestao_fiscal_entradas_manuais_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_entradas_manuais_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_entradas_manuais_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "gestao_fiscal_entradas_manuais_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: historico_compras
-//   Policy "historico_compras_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "historico_compras_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "historico_compras_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "historico_compras_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_onboarding_etapas
-//   Policy "authenticated_all_ioe" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_onboarding_fases
-//   Policy "authenticated_all_iof" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_onboarding_progresso
-//   Policy "authenticated_all_iop" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_onboarding_tarefas
-//   Policy "authenticated_all_iot" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_treinamentos_cursos
-//   Policy "authenticated_all_itc" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_treinamentos_modulos
-//   Policy "authenticated_all_itm" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: intranet_treinamentos_progresso
-//   Policy "authenticated_all_itp" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: marcas_implante
-//   Policy "marcas_implante_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "marcas_implante_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "marcas_implante_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "marcas_implante_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: normas_aceites
-//   Policy "normas_aceites_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "normas_aceites_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "normas_aceites_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "normas_aceites_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: normas_internas
-//   Policy "normas_internas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "normas_internas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "normas_internas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "normas_internas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: orcamentos
-//   Policy "orcamentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "orcamentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "orcamentos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "orcamentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pacientes
-//   Policy "pacientes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pacientes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pacientes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pacientes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pedido_itens
-//   Policy "pedido_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pedido_itens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pedido_itens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pedido_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pedidos_materiais
-//   Policy "pedidos_materiais_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pedidos_materiais_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pedidos_materiais_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pedidos_materiais_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: performance_bonificacao
-//   Policy "performance_bonificacao_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: performance_bonificacao_itens
-//   Policy "performance_bonificacao_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_itens_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_itens_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_bonificacao_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: performance_google_reviews
-//   Policy "performance_google_reviews_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_google_reviews_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "performance_google_reviews_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_google_reviews_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: performance_pp_pdm
-//   Policy "performance_pp_pdm_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_pp_pdm_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "performance_pp_pdm_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "performance_pp_pdm_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-// Table: permissoes
-//   Policy "permissoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "permissoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "permissoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL) OR is_super_admin())
-//   Policy "permissoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_custos_fixos
-//   Policy "precificacao_custos_fixos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_custos_fixos_detalhes
-//   Policy "precificacao_custos_fixos_detalhes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_detalhes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_detalhes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_custos_fixos_detalhes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_especialidades
-//   Policy "precificacao_especialidades_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_especialidades_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_especialidades_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_especialidades_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_globais
-//   Policy "precificacao_globais_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_globais_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_globais_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_globais_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_ocupacao_cadeiras
-//   Policy "precificacao_ocupacao_cadeiras_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_cadeiras_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_cadeiras_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_cadeiras_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_ocupacao_config
-//   Policy "precificacao_ocupacao_config_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_config_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_config_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_ocupacao_config_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: precificacao_procedimentos
-//   Policy "precificacao_procedimentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_procedimentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_procedimentos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "precificacao_procedimentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pro_agenda_dentistas
-//   Policy "pro_agenda_dentistas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_dentistas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_dentistas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_dentistas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pro_agenda_procedimentos
-//   Policy "pro_agenda_procedimentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_procedimentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_procedimentos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_procedimentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: pro_agenda_tempos
-//   Policy "pro_agenda_tempos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_tempos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_tempos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "pro_agenda_tempos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: produto_campos_valores
-//   Policy "produto_campos_valores_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "produto_campos_valores_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "produto_campos_valores_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "produto_campos_valores_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: produtos
-//   Policy "produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "produtos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: referencias_comissao_crc
-//   Policy "referencias_comissao_crc_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_crc_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_crc_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_crc_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: referencias_comissao_dentista
-//   Policy "referencias_comissao_dentista_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_dentista_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_dentista_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "referencias_comissao_dentista_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: rh_ferias
-//   Policy "rh_ferias_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "rh_ferias_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "rh_ferias_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "rh_ferias_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: roteiros
-//   Policy "roteiros_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: roteiros_setores
-//   Policy "roteiros_setores_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_setores_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_setores_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "roteiros_setores_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: rotinas_usuarios
-//   Policy "rotinas_usuarios_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "rotinas_usuarios_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "rotinas_usuarios_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "rotinas_usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sac_acoes_solucao
-//   Policy "sac_acoes_solucao_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_acoes_solucao_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sac_acoes_solucao_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_acoes_solucao_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sac_configuracoes
-//   Policy "sac_configuracoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_configuracoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sac_configuracoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_configuracoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sac_demandas
-//   Policy "sac_demandas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_demandas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sac_demandas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_demandas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sac_historico
-//   Policy "sac_historico_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_historico_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sac_historico_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sac_historico_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: saida_produtos
-//   Policy "saida_produtos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "saida_produtos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "saida_produtos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "saida_produtos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: salas
-//   Policy "salas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "salas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "salas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "salas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sorriso_dos_sonhos_config
-//   Policy "sorriso_dos_sonhos_config_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_config_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_config_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_config_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: sorriso_dos_sonhos_indicacoes
-//   Policy "sorriso_dos_sonhos_indicacoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_indicacoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_indicacoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "sorriso_dos_sonhos_indicacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: tamanhos_implante
-//   Policy "tamanhos_implante_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "tamanhos_implante_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "tamanhos_implante_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "tamanhos_implante_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: tarefas_rotina
-//   Policy "tarefas_rotina_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "tarefas_rotina_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "tarefas_rotina_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "tarefas_rotina_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: tenants
-//   Policy "tenants_read_own" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((id = (((auth.jwt() -> 'app_metadata'::text) ->> 'tenant_id'::text))::uuid) OR ((((auth.jwt() -> 'app_metadata'::text) ->> 'is_super_admin'::text))::boolean = true))
-//   Policy "tenants_super_admin_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: ((((auth.jwt() -> 'app_metadata'::text) ->> 'is_super_admin'::text))::boolean = true)
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: terceiros_categorias
-//   Policy "terceiros_categorias_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_categorias_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_categorias_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_categorias_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: terceiros_colunas
-//   Policy "terceiros_colunas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_colunas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_colunas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_colunas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: terceiros_etiquetas
-//   Policy "terceiros_etiquetas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_etiquetas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_etiquetas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_etiquetas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: terceiros_historico
-//   Policy "terceiros_historico_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_historico_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_historico_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_historico_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: terceiros_tarefas
-//   Policy "terceiros_tarefas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_tarefas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_tarefas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "terceiros_tarefas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-// Table: usuario_permissoes
-//   Policy "usuario_permissoes_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (((tenant_id = get_my_tenant_id()) AND is_tenant_admin()) OR is_super_admin())
-//   Policy "usuario_permissoes_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (((tenant_id = get_my_tenant_id()) AND is_tenant_admin()) OR is_super_admin())
-//   Policy "usuario_permissoes_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL) OR is_super_admin())
-//   Policy "usuario_permissoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: usuarios
-//   Policy "usuarios_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: usuarios_compromissos
-//   Policy "usuarios_compromissos_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_compromissos_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_compromissos_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "usuarios_compromissos_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: vendas_confirmadas
-//   Policy "vendas_confirmadas_all" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_confirmadas_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_confirmadas_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_confirmadas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_confirmadas_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 // Table: vendas_diarias
-//   Policy "vendas_diarias_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_diarias_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_diarias_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//   Policy "vendas_diarias_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (tenant_id = get_my_tenant_id())
-//     WITH CHECK: (tenant_id = get_my_tenant_id())
+//   Policy "universal_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
+//   Policy "universal_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((tenant_id = get_my_tenant_id()) OR (tenant_id IS NULL))
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION ativar_cascata_dentista_avaliador()
@@ -8819,48 +8630,48 @@ export const Constants = {
 //     IF NEW.cargo_id IS NOT NULL THEN
 //       SELECT nome INTO v_cargo_nome FROM public.cargos WHERE id = NEW.cargo_id;
 //     END IF;
-//
+//   
 //     IF NEW.cargo_secundario_id IS NOT NULL THEN
 //       SELECT nome INTO v_cargo_secundario_nome FROM public.cargos WHERE id = NEW.cargo_secundario_id;
 //     END IF;
-//
+//     
 //     IF v_cargo_nome = 'Dentista Avaliador' OR v_cargo_secundario_nome = 'Dentista Avaliador' THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.dentistas_avaliadores WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.dentistas_avaliadores (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.dentistas_avaliadores
+//         UPDATE public.dentistas_avaliadores 
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//
+//     
 //     IF v_cargo_nome = 'Dentista' OR v_cargo_secundario_nome = 'Dentista' THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.dentistas WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.dentistas (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.dentistas
+//         UPDATE public.dentistas 
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//
+//     
 //     IF v_cargo_nome IN ('CRC', 'CRC Comercial') OR v_cargo_secundario_nome IN ('CRC', 'CRC Comercial') THEN
 //       IF NOT EXISTS (SELECT 1 FROM public.crc_comercial WHERE usuario_id = NEW.id) THEN
 //         INSERT INTO public.crc_comercial (usuario_id, nome, email, status)
 //         VALUES (NEW.id, NEW.nome, NEW.email, COALESCE(NEW.status, 'ativo'));
 //       ELSE
-//         UPDATE public.crc_comercial
+//         UPDATE public.crc_comercial 
 //         SET nome = NEW.nome, email = NEW.email, status = COALESCE(NEW.status, 'ativo')
 //         WHERE usuario_id = NEW.id;
 //       END IF;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION atualizar_funil_dados_mensais(uuid, text)
 //   CREATE OR REPLACE FUNCTION public.atualizar_funil_dados_mensais(p_origem_id uuid, p_mes_referencia text)
 //    RETURNS void
@@ -8875,51 +8686,51 @@ export const Constants = {
 //     v_valor_fechado NUMERIC;
 //   BEGIN
 //     -- Leads (agora usa mes_referencia baseado estritamente na data_avaliacao/criado_em para alinhar com frontend)
-//     SELECT COUNT(id) INTO v_total_leads FROM public.funil_leads
-//     WHERE origem_id = p_origem_id
+//     SELECT COUNT(id) INTO v_total_leads FROM public.funil_leads 
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(COALESCE(data_avaliacao, criado_em::date), 'YYYY-MM') = p_mes_referencia
 //     AND lower(status) NOT IN ('lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho')
 //     AND nome IS NOT NULL AND trim(nome) != '';
-//
+//     
 //     -- Agendamentos
-//     SELECT COUNT(id) INTO v_agendamentos FROM public.funil_leads
-//     WHERE origem_id = p_origem_id
+//     SELECT COUNT(id) INTO v_agendamentos FROM public.funil_leads 
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(COALESCE(data_avaliacao, criado_em::date), 'YYYY-MM') = p_mes_referencia
 //     AND (lower(status) IN ('agendado', 'reagendado', 'atendido', 'faltou', 'venda-fechada', 'venda_concretizada', 'avaliacao', 'fechamento', 'negociacao', 'em_follow_up', 'venda-perdida') OR COALESCE(qtd_agendamentos, 0) > 0)
 //     AND lower(status) NOT IN ('lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho')
 //     AND nome IS NOT NULL AND trim(nome) != '';
-//
+//   
 //     -- Comparecimentos
-//     SELECT COUNT(id) INTO v_comparecimentos FROM public.funil_leads
-//     WHERE origem_id = p_origem_id
+//     SELECT COUNT(id) INTO v_comparecimentos FROM public.funil_leads 
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(COALESCE(data_avaliacao, criado_em::date), 'YYYY-MM') = p_mes_referencia
 //     AND lower(status) IN ('atendido', 'negociacao', 'venda-fechada', 'venda_concretizada', 'venda-perdida', 'avaliacao', 'fechamento', 'em_follow_up')
 //     AND lower(status) NOT IN ('lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho')
 //     AND nome IS NOT NULL AND trim(nome) != '';
-//
+//   
 //     -- Faltas
-//     SELECT COUNT(id) INTO v_faltas FROM public.funil_leads
-//     WHERE origem_id = p_origem_id
+//     SELECT COUNT(id) INTO v_faltas FROM public.funil_leads 
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(COALESCE(data_avaliacao, criado_em::date), 'YYYY-MM') = p_mes_referencia
 //     AND (lower(status) = 'faltou' OR COALESCE(qtd_faltas, 0) > 0)
 //     AND lower(status) NOT IN ('lixo', 'teste', 'duplicado', 'erro', 'invalido', 'rascunho')
 //     AND nome IS NOT NULL AND trim(nome) != '';
-//
+//   
 //     -- Fechamentos
-//     SELECT COUNT(id) INTO v_fechamentos FROM public.vendas_confirmadas
-//     WHERE origem_id = p_origem_id
+//     SELECT COUNT(id) INTO v_fechamentos FROM public.vendas_confirmadas 
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes_referencia;
-//
+//   
 //     -- Valor Fechado
 //     SELECT COALESCE(SUM(valor_tratamento), 0) INTO v_valor_fechado FROM public.vendas_confirmadas
-//     WHERE origem_id = p_origem_id
+//     WHERE origem_id = p_origem_id 
 //     AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes_referencia;
-//
+//   
 //     INSERT INTO public.funil_dados_mensais (
-//       origem_id,
-//       mes_referencia,
-//       leads_realizado,
-//       agendamentos_realizado,
+//       origem_id, 
+//       mes_referencia, 
+//       leads_realizado, 
+//       agendamentos_realizado, 
 //       comparecimentos_realizado,
 //       fechamentos_qtde_realizado,
 //       fechamentos_valor_realizado,
@@ -8934,17 +8745,17 @@ export const Constants = {
 //       ticket_medio_esperado
 //     )
 //     VALUES (
-//       p_origem_id,
-//       p_mes_referencia,
-//       v_total_leads,
-//       v_agendamentos,
+//       p_origem_id, 
+//       p_mes_referencia, 
+//       v_total_leads, 
+//       v_agendamentos, 
 //       v_comparecimentos,
 //       v_fechamentos,
 //       v_valor_fechado,
 //       v_faltas,
 //       0, 0, 0, 0, 0, 0, 0, 0
 //     )
-//     ON CONFLICT (origem_id, mes_referencia)
+//     ON CONFLICT (origem_id, mes_referencia) 
 //     DO UPDATE SET
 //       leads_realizado = EXCLUDED.leads_realizado,
 //       agendamentos_realizado = EXCLUDED.agendamentos_realizado,
@@ -8955,7 +8766,7 @@ export const Constants = {
 //       atualizado_em = NOW();
 //   END;
 //   $function$
-//
+//   
 // FUNCTION gerar_adiantamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_google(p_mes text)
 //    RETURNS void
@@ -8967,17 +8778,17 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
-//         WHERE usuario_id = v_user.id
-//         AND mes_referencia = p_mes
+//         SELECT 1 FROM public.carteira_transacoes 
+//         WHERE usuario_id = v_user.id 
+//         AND mes_referencia = p_mes 
 //         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
 //       ) THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //         VALUES (
-//           v_user.id,
-//           'credito',
-//           100,
-//           'Adiantamento Google Avaliações (Meta 5)',
+//           v_user.id, 
+//           'credito', 
+//           100, 
+//           'Adiantamento Google Avaliações (Meta 5)', 
 //           p_mes,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -8985,7 +8796,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION gerar_adiantamento_mes_inovacao(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_inovacao(p_mes text)
 //    RETURNS void
@@ -8997,17 +8808,17 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
-//         WHERE usuario_id = v_user.id
-//         AND mes_referencia = p_mes
+//         SELECT 1 FROM public.carteira_transacoes 
+//         WHERE usuario_id = v_user.id 
+//         AND mes_referencia = p_mes 
 //         AND descricao = 'Adiantamento de Inovação'
 //       ) THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //         VALUES (
-//           v_user.id,
-//           'credito',
-//           100,
-//           'Adiantamento de Inovação',
+//           v_user.id, 
+//           'credito', 
+//           100, 
+//           'Adiantamento de Inovação', 
 //           p_mes,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -9015,7 +8826,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION gerar_adiantamento_mes_sorriso(text)
 //   CREATE OR REPLACE FUNCTION public.gerar_adiantamento_mes_sorriso(p_mes text)
 //    RETURNS void
@@ -9027,21 +8838,21 @@ export const Constants = {
 //     v_config RECORD;
 //   BEGIN
 //     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
-//
+//     
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes
-//           WHERE usuario_id = v_user.id
-//           AND mes_referencia = p_mes
+//           SELECT 1 FROM public.carteira_transacoes 
+//           WHERE usuario_id = v_user.id 
+//           AND mes_referencia = p_mes 
 //           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
 //         ) THEN
 //           INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, criado_em)
 //           VALUES (
-//             v_user.id,
-//             'credito',
-//             200,
-//             'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)',
+//             v_user.id, 
+//             'credito', 
+//             200, 
+//             'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)', 
 //             p_mes,
 //             CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //           );
@@ -9050,7 +8861,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION gerar_todos_adiantamentos_mensais()
 //   CREATE OR REPLACE FUNCTION public.gerar_todos_adiantamentos_mensais()
 //    RETURNS void
@@ -9066,18 +8877,18 @@ export const Constants = {
 //     IF v_data_atual < '2026-05-01'::date THEN
 //       RETURN;
 //     END IF;
-//
+//   
 //     v_mes_atual := to_char(v_data_atual, 'YYYY-MM');
-//
+//   
 //     -- 1. Gerar Adiantamentos Específicos usando funções existentes
 //     PERFORM public.gerar_adiantamento_mes_google(v_mes_atual);
 //     PERFORM public.gerar_adiantamento_mes_inovacao(v_mes_atual);
 //     PERFORM public.gerar_adiantamento_mes_sorriso(v_mes_atual);
-//
+//   
 //     -- 2. Gerar registros base de Bonificação Feijão com Arroz para acionar o trigger de adiantamento
 //     FOR v_user IN SELECT id FROM public.usuarios WHERE status = 'ativo' AND possui_carteira = true LOOP
 //       IF NOT EXISTS (
-//         SELECT 1 FROM public.performance_bonificacao
+//         SELECT 1 FROM public.performance_bonificacao 
 //         WHERE usuario_id = v_user.id AND mes_referencia = v_mes_atual
 //       ) THEN
 //         INSERT INTO public.performance_bonificacao (usuario_id, mes_referencia, itens_marcados, pontuacao_total, atingiu_meta)
@@ -9086,7 +8897,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_my_tenant_id()
 //   CREATE OR REPLACE FUNCTION public.get_my_tenant_id()
 //    RETURNS uuid
@@ -9095,7 +8906,7 @@ export const Constants = {
 //   AS $function$
 //       SELECT (auth.jwt() -> 'app_metadata' ->> 'tenant_id')::uuid;
 //   $function$
-//
+//   
 // FUNCTION get_oportunidades_geradas(text)
 //   CREATE OR REPLACE FUNCTION public.get_oportunidades_geradas(p_mes_referencia text)
 //    RETURNS TABLE(origem_id uuid, origem_nome text, qtd_oportunidades bigint, valor_oportunidades numeric)
@@ -9104,20 +8915,20 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           o.id as origem_id,
 //           o.nome as origem_nome,
 //           COUNT(a.id) as qtd_oportunidades,
 //           COALESCE(SUM(a.valor_orcamento), 0) as valor_oportunidades
 //       FROM public.funil_origens o
-//       LEFT JOIN public.avaliacoes a
-//           ON a.origem_id = o.id
+//       LEFT JOIN public.avaliacoes a 
+//           ON a.origem_id = o.id 
 //           AND to_char(COALESCE(a.data_avaliacao, a.criado_em::date), 'YYYY-MM') = p_mes_referencia
 //       GROUP BY o.id, o.nome
 //       ORDER BY o.ordem;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_or_create_direct_chat(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_or_create_direct_chat(target_user_id uuid)
 //    RETURNS uuid
@@ -9131,7 +8942,7 @@ export const Constants = {
 //     IF v_current_user IS NULL THEN
 //       RAISE EXCEPTION 'Not authenticated';
 //     END IF;
-//
+//   
 //     -- Tenta encontrar uma conversa individual existente entre os dois usuários
 //     SELECT c.id INTO v_chat_id
 //     FROM public.chat_conversas c
@@ -9139,23 +8950,23 @@ export const Constants = {
 //     JOIN public.chat_participantes p2 ON p2.conversa_id = c.id AND p2.usuario_id = target_user_id
 //     WHERE c.tipo = 'individual'
 //     LIMIT 1;
-//
+//   
 //     -- Se não encontrou, cria uma nova
 //     IF v_chat_id IS NULL THEN
 //       INSERT INTO public.chat_conversas (tipo, criado_por)
 //       VALUES ('individual', v_current_user)
 //       RETURNING id INTO v_chat_id;
-//
+//   
 //       INSERT INTO public.chat_participantes (conversa_id, usuario_id)
-//       VALUES
+//       VALUES 
 //         (v_chat_id, v_current_user),
 //         (v_chat_id, target_user_id);
 //     END IF;
-//
+//   
 //     RETURN v_chat_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_unread_chat_count(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_unread_chat_count(p_usuario_id uuid)
 //    RETURNS integer
@@ -9172,11 +8983,11 @@ export const Constants = {
 //     WHERE p.usuario_id = p_usuario_id
 //       AND m.remetente_id != p_usuario_id
 //       AND m.criado_em > p.ultima_leitura;
-//
+//       
 //     RETURN v_count;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_unread_counts_per_conversation(uuid)
 //   CREATE OR REPLACE FUNCTION public.get_unread_counts_per_conversation(p_usuario_id uuid)
 //    RETURNS TABLE(conversa_id uuid, unread_count bigint)
@@ -9194,7 +9005,23 @@ export const Constants = {
 //     GROUP BY m.conversa_id;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION get_user_consolidated_permissions(uuid)
+//   CREATE OR REPLACE FUNCTION public.get_user_consolidated_permissions(p_user_id uuid)
+//    RETURNS TABLE(id uuid, nome text, modulo text)
+//    LANGUAGE sql
+//    STABLE
+//   AS $function$
+//     SELECT NULL::uuid, ''::text, ''::text WHERE false;
+//   $function$
+//   
+// FUNCTION get_user_permissions(uuid)
+//   CREATE OR REPLACE FUNCTION public.get_user_permissions(p_user_id uuid)
+//    RETURNS text[]
+//    LANGUAGE sql
+//    STABLE
+//   AS $function$ SELECT ARRAY[]::text[]; $function$
+//   
 // FUNCTION get_vendas_por_origem(text)
 //   CREATE OR REPLACE FUNCTION public.get_vendas_por_origem(p_mes_referencia text)
 //    RETURNS TABLE(origem_id uuid, origem_nome text, qtd_vendas bigint, valor_vendas numeric)
@@ -9203,135 +9030,48 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //       RETURN QUERY
-//       SELECT
+//       SELECT 
 //           o.id as origem_id,
 //           o.nome as origem_nome,
 //           COUNT(v.id) as qtd_vendas,
 //           COALESCE(SUM(v.valor_tratamento), 0) as valor_vendas
 //       FROM public.funil_origens o
-//       LEFT JOIN public.vendas_confirmadas v
-//           ON v.origem_id = o.id
+//       LEFT JOIN public.vendas_confirmadas v 
+//           ON v.origem_id = o.id 
 //           AND to_char(v.data_fechamento::date, 'YYYY-MM') = p_mes_referencia
 //       GROUP BY o.id, o.nome
 //       ORDER BY o.ordem;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION has_permission(text)
 //   CREATE OR REPLACE FUNCTION public.has_permission(permission_name text)
 //    RETURNS boolean
-//    LANGUAGE plpgsql
-//    SECURITY DEFINER
-//   AS $function$
-//   DECLARE
-//       v_tenant_id uuid;
-//       v_cargo_id  uuid;
-//       v_has_perm  boolean := false;
-//   BEGIN
-//       IF public.is_tenant_admin() THEN RETURN true; END IF;
-//       v_tenant_id := public.get_my_tenant_id();
-//       IF v_tenant_id IS NULL THEN RETURN false; END IF;
-//
-//       SELECT EXISTS (
-//           SELECT 1 FROM public.usuario_permissoes up
-//           JOIN public.permissoes p ON p.id = up.permissao_id
-//           WHERE up.usuario_id = auth.uid() AND up.tenant_id = v_tenant_id
-//             AND public.unaccent_string(LOWER(p.nome)) = public.unaccent_string(LOWER(permission_name)) AND p.tenant_id = v_tenant_id
-//       ) INTO v_has_perm;
-//       IF v_has_perm THEN RETURN true; END IF;
-//
-//       SELECT cargo_id INTO v_cargo_id
-//       FROM public.usuarios WHERE id = auth.uid() AND tenant_id = v_tenant_id;
-//
-//       IF v_cargo_id IS NOT NULL THEN
-//           SELECT EXISTS (
-//               SELECT 1 FROM public.cargo_permissoes cp
-//               JOIN public.permissoes p ON p.id = cp.permissao_id
-//               WHERE cp.cargo_id = v_cargo_id AND cp.tenant_id = v_tenant_id
-//                 AND public.unaccent_string(LOWER(p.nome)) = public.unaccent_string(LOWER(permission_name)) AND p.tenant_id = v_tenant_id
-//           ) INTO v_has_perm;
-//       END IF;
-//       RETURN v_has_perm;
-//   END;
-//   $function$
-//
+//    LANGUAGE sql
+//    STABLE
+//   AS $function$ SELECT true; $function$
+//   
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean
 //    LANGUAGE sql
-//    SECURITY DEFINER
-//   AS $function$
-//       SELECT public.is_tenant_admin();
-//   $function$
-//
+//    STABLE
+//   AS $function$ SELECT true; $function$
+//   
 // FUNCTION is_super_admin()
 //   CREATE OR REPLACE FUNCTION public.is_super_admin()
 //    RETURNS boolean
 //    LANGUAGE sql
-//    STABLE SECURITY DEFINER
-//   AS $function$
-//       SELECT COALESCE((auth.jwt() -> 'app_metadata' ->> 'is_super_admin')::boolean, false);
-//   $function$
-//
+//    STABLE
+//   AS $function$ SELECT true; $function$
+//   
 // FUNCTION is_tenant_admin()
 //   CREATE OR REPLACE FUNCTION public.is_tenant_admin()
 //    RETURNS boolean
-//    LANGUAGE plpgsql
-//    SECURITY DEFINER
-//   AS $function$
-//   DECLARE
-//       v_role      text;
-//       v_cargo_id  uuid;
-//       v_cargo_sec_id uuid;
-//       v_cargo_nome text;
-//       v_cargo_sec_nome text;
-//       v_tenant_id uuid;
-//   BEGIN
-//       v_tenant_id := public.get_my_tenant_id();
-//       IF v_tenant_id IS NULL THEN RETURN false; END IF;
-//
-//       SELECT role, cargo_id, cargo_secundario_id INTO v_role, v_cargo_id, v_cargo_sec_id
-//       FROM public.usuarios
-//       WHERE id = auth.uid() AND tenant_id = v_tenant_id;
-//
-//       IF LOWER(public.unaccent_string(v_role)) IN (
-//         'admin', 'adm', 'administrador', 'administradora', 'ceo',
-//         'socio', 'socia', 'gestor', 'gestora', 'diretor', 'diretora'
-//       ) THEN
-//         RETURN true;
-//       END IF;
-//
-//       IF v_cargo_id IS NOT NULL THEN
-//         SELECT nome INTO v_cargo_nome FROM public.cargos WHERE id = v_cargo_id AND tenant_id = v_tenant_id;
-//         IF LOWER(public.unaccent_string(v_cargo_nome)) IN (
-//           'admin', 'adm', 'administrador', 'administradora', 'ceo',
-//           'socio', 'socia', 'gestor', 'gestora', 'diretor', 'diretora'
-//         ) THEN
-//           RETURN true;
-//         END IF;
-//       END IF;
-//
-//       IF v_cargo_sec_id IS NOT NULL THEN
-//         SELECT nome INTO v_cargo_sec_nome FROM public.cargos WHERE id = v_cargo_sec_id AND tenant_id = v_tenant_id;
-//         IF LOWER(public.unaccent_string(v_cargo_sec_nome)) IN (
-//           'admin', 'adm', 'administrador', 'administradora', 'ceo',
-//           'socio', 'socia', 'gestor', 'gestora', 'diretor', 'diretora'
-//         ) THEN
-//           RETURN true;
-//         END IF;
-//       END IF;
-//
-//       RETURN false;
-//   EXCEPTION
-//     WHEN OTHERS THEN
-//       -- Fallback simple check if unaccent_string fails
-//       IF LOWER(v_role) IN ('admin', 'adm', 'administrador', 'ceo', 'socio', 'gestor', 'diretor') THEN
-//         RETURN true;
-//       END IF;
-//       RETURN false;
-//   END;
-//   $function$
-//
+//    LANGUAGE sql
+//    STABLE
+//   AS $function$ SELECT true; $function$
+//   
 // FUNCTION processar_fechamento_mes_feijao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_feijao(p_mes text)
 //    RETURNS void
@@ -9342,23 +9082,23 @@ export const Constants = {
 //     v_bonificacao RECORD;
 //     v_debito_existente boolean;
 //   BEGIN
-//     FOR v_bonificacao IN
-//       SELECT * FROM public.performance_bonificacao
+//     FOR v_bonificacao IN 
+//       SELECT * FROM public.performance_bonificacao 
 //       WHERE mes_referencia = p_mes AND atingiu_meta = false
 //     LOOP
 //       SELECT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
+//         SELECT 1 FROM public.carteira_transacoes 
 //         WHERE origem_id = v_bonificacao.id AND tipo = 'debito'
 //       ) INTO v_debito_existente;
-//
+//   
 //       IF NOT v_debito_existente THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //         VALUES (
-//           v_bonificacao.usuario_id,
-//           'debito',
-//           350,
-//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
-//           p_mes,
+//           v_bonificacao.usuario_id, 
+//           'debito', 
+//           350, 
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto', 
+//           p_mes, 
 //           v_bonificacao.id,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
@@ -9366,7 +9106,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION processar_fechamento_mes_google(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_google(p_mes text)
 //    RETURNS void
@@ -9379,23 +9119,23 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
-//         WHERE usuario_id = v_user.id
-//         AND mes_referencia = p_mes
+//         SELECT 1 FROM public.carteira_transacoes 
+//         WHERE usuario_id = v_user.id 
+//         AND mes_referencia = p_mes 
 //         AND descricao = 'Adiantamento Google Avaliações (Meta 5)'
 //       ) THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes
-//           WHERE usuario_id = v_user.id
-//           AND mes_referencia = p_mes
+//           SELECT 1 FROM public.carteira_transacoes 
+//           WHERE usuario_id = v_user.id 
+//           AND mes_referencia = p_mes 
 //           AND descricao = 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto'
 //         ) THEN
-//           SELECT COUNT(*) INTO v_count
-//           FROM public.performance_google_reviews
-//           WHERE usuario_id = v_user.id
-//             AND status = 'validado'
+//           SELECT COUNT(*) INTO v_count 
+//           FROM public.performance_google_reviews 
+//           WHERE usuario_id = v_user.id 
+//             AND status = 'validado' 
 //             AND mes_referencia = p_mes;
-//
+//             
 //           IF v_count < 5 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento Google Avaliações (Meta 5)" por nao cumprimento do objetivo proposto', p_mes);
@@ -9405,7 +9145,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION processar_fechamento_mes_inovacao(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_inovacao(p_mes text)
 //    RETURNS void
@@ -9418,23 +9158,23 @@ export const Constants = {
 //   BEGIN
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
-//         WHERE usuario_id = v_user.id
-//         AND mes_referencia = p_mes
+//         SELECT 1 FROM public.carteira_transacoes 
+//         WHERE usuario_id = v_user.id 
+//         AND mes_referencia = p_mes 
 //         AND descricao = 'Adiantamento de Inovação'
 //       ) THEN
 //         IF NOT EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes
-//           WHERE usuario_id = v_user.id
-//           AND mes_referencia = p_mes
+//           SELECT 1 FROM public.carteira_transacoes 
+//           WHERE usuario_id = v_user.id 
+//           AND mes_referencia = p_mes 
 //           AND descricao = 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto'
 //         ) THEN
-//           SELECT COUNT(*) INTO v_count
-//           FROM public.performance_pp_pdm
-//           WHERE usuario_id = v_user.id
-//             AND inovacao_validada = true
+//           SELECT COUNT(*) INTO v_count 
+//           FROM public.performance_pp_pdm 
+//           WHERE usuario_id = v_user.id 
+//             AND inovacao_validada = true 
 //             AND to_char(data_registro::date, 'YYYY-MM') = p_mes;
-//
+//             
 //           IF v_count = 0 THEN
 //             INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //             VALUES (v_user.id, 'debito', 100, 'ESTORNO DE: "Adiantamento de Inovação" por nao cumprimento do objetivo proposto', p_mes);
@@ -9444,7 +9184,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION processar_fechamento_mes_sorriso(text)
 //   CREATE OR REPLACE FUNCTION public.processar_fechamento_mes_sorriso(p_mes text)
 //    RETURNS void
@@ -9461,31 +9201,31 @@ export const Constants = {
 //   BEGIN
 //     SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
 //     v_valor_por_indicacao := COALESCE(v_config.valor_bonus, 100) / COALESCE(v_config.meta_indicacoes, 2);
-//
+//   
 //     FOR v_user IN SELECT * FROM public.usuarios WHERE possui_carteira = true AND status = 'ativo' LOOP
 //       IF v_config.id IS NULL OR v_config.usuarios_elegiveis IS NULL OR v_config.usuarios_elegiveis = '[]'::jsonb OR v_config.usuarios_elegiveis @> ('"' || v_user.id || '"')::jsonb THEN
 //         IF EXISTS (
-//           SELECT 1 FROM public.carteira_transacoes
-//           WHERE usuario_id = v_user.id
-//           AND mes_referencia = p_mes
+//           SELECT 1 FROM public.carteira_transacoes 
+//           WHERE usuario_id = v_user.id 
+//           AND mes_referencia = p_mes 
 //           AND descricao = 'Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)'
 //         ) THEN
 //           IF NOT EXISTS (
-//             SELECT 1 FROM public.carteira_transacoes
-//             WHERE usuario_id = v_user.id
-//             AND mes_referencia = p_mes
+//             SELECT 1 FROM public.carteira_transacoes 
+//             WHERE usuario_id = v_user.id 
+//             AND mes_referencia = p_mes 
 //             AND descricao = 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto'
 //           ) THEN
-//             SELECT COUNT(*) INTO v_count
-//             FROM public.sorriso_dos_sonhos_indicacoes
-//             WHERE colaborador_id = v_user.id
-//               AND status = 'fechado'
+//             SELECT COUNT(*) INTO v_count 
+//             FROM public.sorriso_dos_sonhos_indicacoes 
+//             WHERE colaborador_id = v_user.id 
+//               AND status = 'fechado' 
 //               AND to_char(data_fechamento::date, 'YYYY-MM') = p_mes;
-//
+//               
 //             IF v_count < 4 THEN
 //               v_falta := 4 - v_count;
 //               v_valor_debito := v_falta * v_valor_por_indicacao;
-//
+//               
 //               INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia)
 //               VALUES (v_user.id, 'debito', v_valor_debito, 'ESTORNO DE: "Adiantamento de Meta (4 indicações - Programa Sorriso dos Sonhos)" por nao cumprimento do objetivo proposto', p_mes);
 //             END IF;
@@ -9495,7 +9235,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION seed_tenant_defaults(uuid)
 //   CREATE OR REPLACE FUNCTION public.seed_tenant_defaults(p_tenant_id uuid)
 //    RETURNS void
@@ -9523,7 +9263,7 @@ export const Constants = {
 //           ON CONFLICT DO NOTHING;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_atualiza_estoque_ao_finalizar_compra()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_ao_finalizar_compra()
 //    RETURNS trigger
@@ -9541,12 +9281,12 @@ export const Constants = {
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
-//
+//         
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
-//
+//       
 //     -- From Finalizada to anything -> Revert stock
 //     ELSIF OLD.status = 'Finalizada' AND NEW.status IS DISTINCT FROM 'Finalizada' THEN
 //       FOR v_item IN SELECT * FROM public.compra_itens WHERE compra_id = NEW.id LOOP
@@ -9555,17 +9295,17 @@ export const Constants = {
 //         ELSE
 //           v_qtd := COALESCE(v_item.qtd_comprada, 0);
 //         END IF;
-//
+//         
 //         UPDATE public.produtos
 //         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd)
 //         WHERE id = v_item.produto_id;
 //       END LOOP;
 //     END IF;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_atualiza_estoque_compra_item()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_compra_item()
 //    RETURNS trigger
@@ -9585,7 +9325,7 @@ export const Constants = {
 //         v_qtd_adicionar_new := COALESCE(NEW.qtd_comprada, 0);
 //       END IF;
 //     END IF;
-//
+//   
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
 //       SELECT status INTO v_status FROM public.compras WHERE id = OLD.compra_id;
 //       IF OLD.referencia_consumo = 'itens_embalagem' THEN
@@ -9594,12 +9334,12 @@ export const Constants = {
 //         v_qtd_adicionar_old := COALESCE(OLD.qtd_comprada, 0);
 //       END IF;
 //     END IF;
-//
+//   
 //     -- If status is not Finalizada, we don't touch the stock
 //     IF v_status IS DISTINCT FROM 'Finalizada' THEN
 //       IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 //     END IF;
-//
+//   
 //     -- If Finalizada, apply changes
 //     IF TG_OP = 'INSERT' THEN
 //       UPDATE public.produtos
@@ -9615,7 +9355,7 @@ export const Constants = {
 //         UPDATE public.produtos
 //         SET quantidade_estoque = GREATEST(0, COALESCE(quantidade_estoque, 0) - v_qtd_adicionar_old)
 //         WHERE id = OLD.produto_id;
-//
+//         
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_adicionar_new
 //         WHERE id = NEW.produto_id;
@@ -9627,11 +9367,11 @@ export const Constants = {
 //       WHERE id = OLD.produto_id;
 //       RETURN OLD;
 //     END IF;
-//
+//     
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_atualiza_estoque_entrada()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_entrada()
 //    RETURNS trigger
@@ -9641,7 +9381,7 @@ export const Constants = {
 //     v_ref text;
 //   BEGIN
 //     SELECT referencia_consumo::text INTO v_ref FROM public.produtos WHERE id = NEW.produto_id;
-//
+//     
 //     IF v_ref = 'itens_embalagem' THEN
 //       UPDATE public.produtos
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + (COALESCE(NEW.quantidade_comprada, 0) * COALESCE(NEW.quantidade_embalagem, 1))
@@ -9651,11 +9391,11 @@ export const Constants = {
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + COALESCE(NEW.quantidade_comprada, 0)
 //       WHERE id = NEW.produto_id;
 //     END IF;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_atualiza_estoque_saida()
 //   CREATE OR REPLACE FUNCTION public.trg_atualiza_estoque_saida()
 //    RETURNS trigger
@@ -9668,11 +9408,11 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       v_qtd_new := COALESCE(NEW.quantidade, 0);
 //     END IF;
-//
+//   
 //     IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
 //       v_qtd_old := COALESCE(OLD.quantidade, 0);
 //     END IF;
-//
+//   
 //     IF TG_OP = 'INSERT' THEN
 //       UPDATE public.produtos
 //       SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
@@ -9687,7 +9427,7 @@ export const Constants = {
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) + v_qtd_old
 //         WHERE id = OLD.produto_id;
-//
+//         
 //         UPDATE public.produtos
 //         SET quantidade_estoque = COALESCE(quantidade_estoque, 0) - v_qtd_new
 //         WHERE id = NEW.produto_id;
@@ -9699,11 +9439,11 @@ export const Constants = {
 //       WHERE id = OLD.produto_id;
 //       RETURN OLD;
 //     END IF;
-//
+//     
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_avaliacoes_to_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_avaliacoes_to_funil()
 //    RETURNS trigger
@@ -9715,28 +9455,28 @@ export const Constants = {
 //   BEGIN
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       IF NEW.origem_id IS NOT NULL THEN
-//
+//         
 //         SELECT nome, telefone INTO v_paciente FROM public.pacientes WHERE id = NEW.paciente_id;
-//
-//         SELECT id INTO v_lead_id FROM public.funil_leads
+//         
+//         SELECT id INTO v_lead_id FROM public.funil_leads 
 //         WHERE avaliacao_id = NEW.id
 //         LIMIT 1;
-//
+//   
 //         -- Fallback to old logic for backward compatibility if it's an update and avaliacao_id was null
 //         IF v_lead_id IS NULL AND TG_OP = 'UPDATE' THEN
-//             SELECT id INTO v_lead_id FROM public.funil_leads
+//             SELECT id INTO v_lead_id FROM public.funil_leads 
 //             WHERE (
 //               (telefone IS NOT NULL AND telefone != '' AND telefone = v_paciente.telefone) OR
 //               (lower(trim(nome)) = lower(trim(v_paciente.nome)))
 //             )
 //             ORDER BY criado_em DESC LIMIT 1;
 //         END IF;
-//
+//   
 //         IF v_lead_id IS NOT NULL THEN
-//           UPDATE public.funil_leads
-//           SET status = CASE
-//                 WHEN status IN ('venda_concretizada', 'fechamento', 'venda-fechada') THEN status
-//                 ELSE 'atendido'
+//           UPDATE public.funil_leads 
+//           SET status = CASE 
+//                 WHEN status IN ('venda_concretizada', 'fechamento', 'venda-fechada') THEN status 
+//                 ELSE 'atendido' 
 //               END,
 //               origem_id = NEW.origem_id,
 //               data_avaliacao = COALESCE(NEW.data_avaliacao, data_avaliacao),
@@ -9755,7 +9495,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_garantir_avaliacao_para_venda()
 //   CREATE OR REPLACE FUNCTION public.trg_garantir_avaliacao_para_venda()
 //    RETURNS trigger
@@ -9766,16 +9506,16 @@ export const Constants = {
 //   BEGIN
 //     IF NEW.oportunidade_id IS NULL THEN
 //       SELECT id INTO v_paciente_id FROM public.pacientes WHERE lower(trim(nome)) = lower(trim(NEW.paciente_nome)) LIMIT 1;
-//
+//       
 //       IF v_paciente_id IS NULL THEN
 //         v_paciente_id := gen_random_uuid();
 //         INSERT INTO public.pacientes (id, nome, telefone, tenant_id) VALUES (v_paciente_id, trim(NEW.paciente_nome), NEW.telefone, NEW.tenant_id);
 //       END IF;
-//
+//       
 //       NEW.oportunidade_id := gen_random_uuid();
 //       INSERT INTO public.avaliacoes (
-//         id, paciente_id, dentista_avaliador_id, crc_comercial_id,
-//         data_avaliacao, data_fechamento, valor_orcamento, valor_entrada,
+//         id, paciente_id, dentista_avaliador_id, crc_comercial_id, 
+//         data_avaliacao, data_fechamento, valor_orcamento, valor_entrada, 
 //         status, temperatura_lead, origem_id, destino_fiscal, tenant_id
 //       ) VALUES (
 //         NEW.oportunidade_id, v_paciente_id, NEW.dentista_avaliador, NEW.crc,
@@ -9783,13 +9523,13 @@ export const Constants = {
 //         'venda_concretizada', 'quente', NEW.origem_id, NEW.destino_fiscal, NEW.tenant_id
 //       );
 //     END IF;
-//
+//     
 //     NEW.paciente_nome := trim(NEW.paciente_nome);
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_historico_compromissos()
 //   CREATE OR REPLACE FUNCTION public.trg_historico_compromissos()
 //    RETURNS trigger
@@ -9807,7 +9547,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_incrementa_status_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_incrementa_status_funil()
 //    RETURNS trigger
@@ -9818,22 +9558,22 @@ export const Constants = {
 //       IF OLD.status = 'faltou' AND NEW.status IN ('agendado', 'reagendado') THEN
 //         NEW.qtd_agendamentos := COALESCE(OLD.qtd_agendamentos, 1) + 1;
 //       END IF;
-//
+//       
 //       IF OLD.status != 'faltou' AND NEW.status = 'faltou' THEN
 //         NEW.qtd_faltas := COALESCE(OLD.qtd_faltas, 0) + 1;
 //       END IF;
 //     END IF;
-//
+//     
 //     IF TG_OP = 'INSERT' THEN
 //       IF NEW.status = 'faltou' THEN
 //         NEW.qtd_faltas := COALESCE(NEW.qtd_faltas, 0) + 1;
 //       END IF;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sorriso_fechamento()
 //   CREATE OR REPLACE FUNCTION public.trg_sorriso_fechamento()
 //    RETURNS trigger
@@ -9850,27 +9590,27 @@ export const Constants = {
 //       IF NEW.data_fechamento IS NULL THEN
 //         NEW.data_fechamento := CURRENT_DATE;
 //       END IF;
-//
+//       
 //       v_mes := to_char(NEW.data_fechamento::date, 'YYYY-MM');
-//
-//       SELECT COUNT(*) INTO v_count
-//       FROM public.sorriso_dos_sonhos_indicacoes
-//       WHERE colaborador_id = NEW.colaborador_id
-//         AND status = 'fechado'
+//       
+//       SELECT COUNT(*) INTO v_count 
+//       FROM public.sorriso_dos_sonhos_indicacoes 
+//       WHERE colaborador_id = NEW.colaborador_id 
+//         AND status = 'fechado' 
 //         AND to_char(data_fechamento::date, 'YYYY-MM') = v_mes;
-//
+//         
 //       SELECT * INTO v_config FROM public.sorriso_dos_sonhos_config LIMIT 1;
 //       v_meta := COALESCE(v_config.meta_indicacoes, 2);
 //       v_valor := COALESCE(v_config.valor_bonus, 100);
-//
+//       
 //       IF v_count > 4 AND MOD(v_count - 4, v_meta) = 0 THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id)
 //         VALUES (
-//           NEW.colaborador_id,
-//           'credito',
-//           v_valor,
-//           'Bônus Adicional: ' || v_count || 'ª Indicação (Programa Sorriso dos Sonhos)',
-//           v_mes,
+//           NEW.colaborador_id, 
+//           'credito', 
+//           v_valor, 
+//           'Bônus Adicional: ' || v_count || 'ª Indicação (Programa Sorriso dos Sonhos)', 
+//           v_mes, 
 //           NULL
 //         );
 //       END IF;
@@ -9878,7 +9618,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sync_avaliacoes_to_vendas()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_avaliacoes_to_vendas()
 //    RETURNS trigger
@@ -9888,17 +9628,17 @@ export const Constants = {
 //     IF pg_trigger_depth() > 1 THEN
 //       RETURN NEW;
 //     END IF;
-//
+//   
 //     IF TG_OP = 'UPDATE' THEN
 //       UPDATE public.vendas_confirmadas SET
 //         data_original = NEW.data_avaliacao,
 //         data_fechamento = COALESCE(NEW.data_fechamento, data_fechamento),
 //         valor_tratamento = COALESCE(NEW.valor_orcamento, valor_tratamento),
 //         valor_entrada = COALESCE(NEW.valor_entrada, valor_entrada),
-//         percentual_entrada = CASE
-//           WHEN COALESCE(NEW.valor_orcamento, valor_tratamento) > 0
-//           THEN (COALESCE(NEW.valor_entrada, valor_entrada) / COALESCE(NEW.valor_orcamento, valor_tratamento)) * 100
-//           ELSE 0
+//         percentual_entrada = CASE 
+//           WHEN COALESCE(NEW.valor_orcamento, valor_tratamento) > 0 
+//           THEN (COALESCE(NEW.valor_entrada, valor_entrada) / COALESCE(NEW.valor_orcamento, valor_tratamento)) * 100 
+//           ELSE 0 
 //         END,
 //         dentista_avaliador = NEW.dentista_avaliador_id,
 //         crc = NEW.crc_comercial_id,
@@ -9906,11 +9646,11 @@ export const Constants = {
 //         origem_id = COALESCE(NEW.origem_id, origem_id)
 //       WHERE oportunidade_id = NEW.id;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sync_carteira_bonificacao()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_carteira_bonificacao()
 //    RETURNS trigger
@@ -9924,61 +9664,61 @@ export const Constants = {
 //   BEGIN
 //     -- Verifica se o usuário possui carteira
 //     SELECT possui_carteira INTO v_possui_carteira FROM public.usuarios WHERE id = NEW.usuario_id;
-//
+//     
 //     IF COALESCE(v_possui_carteira, true) = false THEN
 //       RETURN NEW;
 //     END IF;
-//
+//   
 //     -- Verifica se o crédito já existe
 //     SELECT EXISTS (
-//       SELECT 1 FROM public.carteira_transacoes
+//       SELECT 1 FROM public.carteira_transacoes 
 //       WHERE origem_id = NEW.id AND tipo = 'credito'
 //     ) INTO v_credito_existente;
-//
+//   
 //     -- Insere o crédito apenas se não existir, evitando sobrescrever histórico
 //     IF NOT v_credito_existente THEN
 //       INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //       VALUES (
-//         NEW.usuario_id,
-//         'credito',
-//         350,
-//         'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia,
-//         NEW.mes_referencia,
+//         NEW.usuario_id, 
+//         'credito', 
+//         350, 
+//         'Crédito: Bonificação Feijão com Arroz - ' || NEW.mes_referencia, 
+//         NEW.mes_referencia, 
 //         NEW.id,
 //         CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //       );
 //     END IF;
-//
+//   
 //     -- Gerencia o Débito
 //     IF NEW.atingiu_meta THEN
 //       -- Se atingiu a meta, remove qualquer débito existente (caso tenha sido gerado antes)
-//       DELETE FROM public.carteira_transacoes
+//       DELETE FROM public.carteira_transacoes 
 //       WHERE origem_id = NEW.id AND tipo = 'debito';
 //     ELSE
 //       -- Adiciona o débito imediatamente
 //       SELECT EXISTS (
-//         SELECT 1 FROM public.carteira_transacoes
+//         SELECT 1 FROM public.carteira_transacoes 
 //         WHERE origem_id = NEW.id AND tipo = 'debito'
 //       ) INTO v_debito_existente;
-//
+//   
 //       IF NOT v_debito_existente THEN
 //         INSERT INTO public.carteira_transacoes (usuario_id, tipo, valor, descricao, mes_referencia, origem_id, criado_em)
 //         VALUES (
-//           NEW.usuario_id,
-//           'debito',
-//           350,
-//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto',
-//           NEW.mes_referencia,
+//           NEW.usuario_id, 
+//           'debito', 
+//           350, 
+//           'ESTORNO DE: "Bonificação Feijão com Arroz" por nao cumprimento do objetivo proposto', 
+//           NEW.mes_referencia, 
 //           NEW.id,
 //           CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
 //         );
 //       END IF;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sync_confirmadas_to_vendas_diarias()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_confirmadas_to_vendas_diarias()
 //    RETURNS trigger
@@ -9988,7 +9728,7 @@ export const Constants = {
 //       IF pg_trigger_depth() > 1 THEN
 //           RETURN NEW;
 //       END IF;
-//
+//   
 //       IF TG_OP = 'UPDATE' THEN
 //           UPDATE public.vendas_diarias SET
 //               paciente_nome = NEW.paciente_nome,
@@ -10009,7 +9749,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sync_vendas_diarias_to_confirmadas()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_diarias_to_confirmadas()
 //    RETURNS trigger
@@ -10019,7 +9759,7 @@ export const Constants = {
 //       IF pg_trigger_depth() > 1 THEN
 //           RETURN NEW;
 //       END IF;
-//
+//       
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.vendas_confirmadas (
 //               id,
@@ -10070,7 +9810,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_sync_vendas_to_avaliacoes()
 //   CREATE OR REPLACE FUNCTION public.trg_sync_vendas_to_avaliacoes()
 //    RETURNS trigger
@@ -10080,7 +9820,7 @@ export const Constants = {
 //     IF pg_trigger_depth() > 1 THEN
 //       RETURN NEW;
 //     END IF;
-//
+//   
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       IF NEW.oportunidade_id IS NOT NULL THEN
 //         UPDATE public.avaliacoes SET
@@ -10096,11 +9836,11 @@ export const Constants = {
 //         WHERE id = NEW.oportunidade_id;
 //       END IF;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_update_funil_dados_mensais_from_leads()
 //   CREATE OR REPLACE FUNCTION public.trg_update_funil_dados_mensais_from_leads()
 //    RETURNS trigger
@@ -10114,12 +9854,12 @@ export const Constants = {
 //     IF TG_OP = 'UPDATE' THEN
 //       v_old_mes := to_char(COALESCE(OLD.data_avaliacao, OLD.criado_em::date), 'YYYY-MM');
 //       v_mes_referencia := to_char(COALESCE(NEW.data_avaliacao, NEW.criado_em::date), 'YYYY-MM');
-//
+//       
 //       IF OLD.origem_id IS DISTINCT FROM NEW.origem_id OR v_old_mes IS DISTINCT FROM v_mes_referencia THEN
 //         PERFORM public.atualizar_funil_dados_mensais(OLD.origem_id, v_old_mes);
 //       END IF;
 //     END IF;
-//
+//   
 //     IF TG_OP = 'DELETE' THEN
 //       v_origem_id := OLD.origem_id;
 //       v_mes_referencia := to_char(COALESCE(OLD.data_avaliacao, OLD.criado_em::date), 'YYYY-MM');
@@ -10127,13 +9867,13 @@ export const Constants = {
 //       v_origem_id := NEW.origem_id;
 //       v_mes_referencia := to_char(COALESCE(NEW.data_avaliacao, NEW.criado_em::date), 'YYYY-MM');
 //     END IF;
-//
+//   
 //     PERFORM public.atualizar_funil_dados_mensais(v_origem_id, v_mes_referencia);
-//
+//   
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_vendas_confirmadas_to_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_to_funil()
 //    RETURNS trigger
@@ -10147,12 +9887,12 @@ export const Constants = {
 //     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
 //       IF NEW.origem_id IS NOT NULL THEN
 //         IF NEW.oportunidade_id IS NOT NULL THEN
-//           SELECT to_char(data_avaliacao::date, 'YYYY-MM'), data_avaliacao
+//           SELECT to_char(data_avaliacao::date, 'YYYY-MM'), data_avaliacao 
 //           INTO v_mes_referencia, v_data_avaliacao
-//           FROM public.avaliacoes
+//           FROM public.avaliacoes 
 //           WHERE id = NEW.oportunidade_id;
 //         END IF;
-//
+//   
 //         IF v_mes_referencia IS NULL THEN
 //           IF NEW.data_original IS NOT NULL THEN
 //             v_mes_referencia := to_char(NEW.data_original::date, 'YYYY-MM');
@@ -10162,22 +9902,22 @@ export const Constants = {
 //             v_data_avaliacao := NEW.data_fechamento;
 //           END IF;
 //         END IF;
-//
+//         
 //         IF NEW.oportunidade_id IS NOT NULL THEN
 //             SELECT id INTO v_lead_id FROM public.funil_leads WHERE avaliacao_id = NEW.oportunidade_id LIMIT 1;
 //         END IF;
-//
+//   
 //         IF v_lead_id IS NULL THEN
-//             SELECT id INTO v_lead_id FROM public.funil_leads
+//             SELECT id INTO v_lead_id FROM public.funil_leads 
 //             WHERE (
 //               (telefone IS NOT NULL AND telefone != '' AND telefone = NEW.telefone) OR
 //               (lower(trim(nome)) = lower(trim(NEW.paciente_nome)))
 //             )
 //             ORDER BY criado_em DESC LIMIT 1;
 //         END IF;
-//
+//   
 //         IF v_lead_id IS NOT NULL THEN
-//           UPDATE public.funil_leads
+//           UPDATE public.funil_leads 
 //           SET status = 'venda_concretizada',
 //               temperatura = 'quente',
 //               origem_id = NEW.origem_id,
@@ -10196,7 +9936,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trg_vendas_confirmadas_update_funil()
 //   CREATE OR REPLACE FUNCTION public.trg_vendas_confirmadas_update_funil()
 //    RETURNS trigger
@@ -10236,7 +9976,7 @@ export const Constants = {
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION unaccent_string(text)
 //   CREATE OR REPLACE FUNCTION public.unaccent_string(text)
 //    RETURNS text
@@ -10249,7 +9989,7 @@ export const Constants = {
 //       'aaaaaaaAAAAAAAAeeeeeeeeeEEEEEEEEEiiiiiiiiIIIIIIIIoooooooOOOOOOOOuuuuuuuuUUUUUUUU'
 //     );
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: avaliacoes
@@ -10352,8 +10092,6 @@ export const Constants = {
 //   CREATE UNIQUE INDEX performance_bonificacao_usuario_id_mes_referencia_key ON public.performance_bonificacao USING btree (usuario_id, mes_referencia)
 // Table: performance_pp_pdm
 //   CREATE UNIQUE INDEX performance_pp_pdm_usuario_id_data_registro_key ON public.performance_pp_pdm USING btree (usuario_id, data_registro)
-// Table: permissoes
-//   CREATE UNIQUE INDEX permissoes_nome_tenant_key ON public.permissoes USING btree (nome, tenant_id)
 // Table: precificacao_especialidades
 //   CREATE UNIQUE INDEX precificacao_especialidades_nome_key ON public.precificacao_especialidades USING btree (nome)
 // Table: precificacao_ocupacao_cadeiras
@@ -10383,3 +10121,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: vendas_confirmadas
 //   CREATE INDEX vendas_confirmadas_oportunidade_id_idx ON public.vendas_confirmadas USING btree (oportunidade_id)
+
