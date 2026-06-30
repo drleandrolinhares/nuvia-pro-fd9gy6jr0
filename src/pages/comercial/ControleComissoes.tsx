@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DollarSign } from 'lucide-react'
+import { DollarSign, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import { format, subMonths } from 'date-fns'
@@ -16,10 +16,12 @@ import { ptBR } from 'date-fns/locale'
 import { ConfiguracaoFaixas } from '@/components/comissoes/configuracao-faixas'
 import { ComissoesDashboardCards } from '@/components/comissoes/comissoes-dashboard-cards'
 import { ComissoesTabela } from '@/components/comissoes/comissoes-tabela'
+import { ProfessionalCards } from '@/components/comissoes/professional-cards'
 import {
   fetchComissoesPeriodo,
   type ComissaoVenda,
   type DashboardTotals,
+  type ProfessionalSummary,
 } from '@/services/comissoes-dashboard'
 
 export default function ControleComissoes() {
@@ -32,6 +34,7 @@ export default function ControleComissoes() {
     totalComissaoCRC: 0,
     totalVendas: 0,
   })
+  const [profissionais, setProfissionais] = useState<ProfessionalSummary[]>([])
 
   const mesesOptions = useMemo(
     () =>
@@ -51,9 +54,10 @@ export default function ControleComissoes() {
     const loadData = async () => {
       setLoading(true)
       try {
-        const { vendas: v, totals: t } = await fetchComissoesPeriodo(mesAno)
+        const { vendas: v, totals: t, profissionais: p } = await fetchComissoesPeriodo(mesAno)
         setVendas(v)
         setTotals(t)
+        setProfissionais(p)
       } catch (error: any) {
         toast({
           title: 'Erro ao carregar dados',
@@ -122,6 +126,23 @@ export default function ControleComissoes() {
       </div>
 
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
+
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="w-5 h-5 text-slate-500" />
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+            Performance Individual por Profissional
+          </h2>
+          <span className="text-sm text-slate-400">({competenciaLabel})</span>
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <ProfessionalCards profissionais={profissionais} />
+        )}
+      </div>
 
       <Tabs defaultValue="dentistas" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
