@@ -1,5 +1,5 @@
-import { Users, Shield, Database, Percent, DollarSign } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Users, Shield, Database, Percent, DollarSign, Loader2, Lock } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
 import { PermissoesTab } from './configuracoes/PermissoesTab'
@@ -10,13 +10,14 @@ import DentistasProTab from './configuracoes/DentistasProTab'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Configuracoes() {
-  const { profile, permissions } = useAuth()
-  const isAdmin = profile?.role === 'admin'
+  const { isAdmin, loading, hasPermission } = useAuth()
 
-  const canViewUsuarios = isAdmin || permissions.includes('configuracoes_usuarios')
-  const canViewPermissoes = isAdmin || permissions.includes('configuracoes_permissoes')
-  const canViewCadastros = isAdmin
-  const canViewNegociacao = isAdmin
+  const canViewUsuarios = isAdmin || hasPermission('configuracoes_usuarios')
+  const canViewPermissoes = isAdmin || hasPermission('configuracoes_permissoes')
+  const canViewCadastros = isAdmin || hasPermission('configuracoes_parametros')
+  const canViewNegociacao = isAdmin || hasPermission('configuracoes_parametros')
+
+  const hasAnyAccess = canViewUsuarios || canViewPermissoes || canViewCadastros || canViewNegociacao
 
   const defaultTab = canViewUsuarios
     ? 'usuarios'
@@ -25,6 +26,38 @@ export default function Configuracoes() {
       : canViewCadastros
         ? 'cadastros'
         : 'descontos'
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+          <p className="text-slate-400 font-medium text-sm uppercase tracking-wider">
+            Carregando configurações...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAnyAccess) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-[70vh]">
+        <Card className="max-w-md w-full shadow-xl border-border/50">
+          <CardContent className="flex flex-col items-center text-center space-y-4 py-12">
+            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
+            <p className="text-sm text-muted-foreground">
+              Você não tem permissão para acessar as configurações do sistema. Solicite acesso a um
+              administrador.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
