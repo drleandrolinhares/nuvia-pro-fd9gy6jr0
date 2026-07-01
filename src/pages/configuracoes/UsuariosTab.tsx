@@ -95,7 +95,7 @@ export function UsuariosTab() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border border-amber-500/20 shadow-sm hidden sm:flex">
-                            <AvatarFallback className="bg-slate-900 text-amber-500 text-xs font-bold uppercase">
+                            <AvatarFallback className="bg-muted text-amber-600 dark:text-amber-500 text-xs font-bold uppercase">
                               {u.nome
                                 ?.split(' ')
                                 .map((n: string) => n[0])

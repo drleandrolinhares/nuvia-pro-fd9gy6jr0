@@ -187,7 +187,7 @@ export default function CadastrosBasicos() {
   if (isLoadingAccess) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-sidebar-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
       </div>
     )
   }
@@ -196,13 +196,13 @@ export default function CadastrosBasicos() {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center space-y-4 text-center">
         <ShieldAlert className="h-16 w-16 text-red-500" />
-        <h1 className="text-2xl font-bold text-sidebar-foreground">Acesso Negado</h1>
-        <p className="text-sidebar-foreground/70 max-w-md">
+        <h1 className="text-2xl font-bold text-foreground">Acesso Negado</h1>
+        <p className="text-muted-foreground max-w-md">
           Apenas usuários com permissão de Administrador podem acessar esta área do sistema.
         </p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-sidebar-primary hover:text-sidebar-primary/80 font-medium transition-colors"
+          className="mt-4 text-amber-500 hover:text-amber-600 font-medium transition-colors"
         >
           Voltar para o Início
         </button>
@@ -213,31 +213,29 @@ export default function CadastrosBasicos() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl space-y-8 animate-fade-in-up">
       <div className="mb-2">
-        <h1 className="text-3xl font-bold tracking-tight text-sidebar-foreground">
-          Cadastros Básicos
-        </h1>
-        <p className="text-sidebar-foreground/60 mt-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Cadastros Básicos</h1>
+        <p className="text-muted-foreground mt-2">
           Gerencie as especialidades, embalagens, salas e demais opções utilizadas no sistema.
         </p>
       </div>
 
       <Tabs defaultValue="especialidades" className="w-full">
-        <TabsList className="bg-sidebar border border-sidebar-border w-full justify-start rounded-xl h-auto p-1.5 mb-8 flex-wrap shadow-subtle gap-1">
+        <TabsList className="w-full justify-start rounded-xl h-auto p-1.5 mb-8 flex-wrap bg-muted/50 gap-1 border">
           <TabsTrigger
             value="especialidades"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow text-muted-foreground px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
             Especialidades
           </TabsTrigger>
           <TabsTrigger
             value="embalagens"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow text-muted-foreground px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
             Embalagens
           </TabsTrigger>
           <TabsTrigger
             value="salas"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow text-muted-foreground px-4 py-2 rounded-lg font-medium transition-all text-sm"
           >
             Salas
           </TabsTrigger>
@@ -246,7 +244,7 @@ export default function CadastrosBasicos() {
             <TabsTrigger
               key={ac.id}
               value={`campo_${ac.id}`}
-              className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm flex flex-col items-start gap-0.5"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow text-muted-foreground px-4 py-2 rounded-lg font-medium transition-all text-sm flex flex-col items-start gap-0.5"
             >
               <span>{ac.label}</span>
               <span className="text-[10px] opacity-70 font-normal">{ac.especialidade_nome}</span>
@@ -255,7 +253,7 @@ export default function CadastrosBasicos() {
 
           <TabsTrigger
             value="campos_especialidade"
-            className="data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-primary text-sidebar-foreground/60 px-4 py-2 rounded-lg font-medium transition-all text-sm ml-auto bg-slate-800 text-slate-200 hover:bg-slate-700"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow text-muted-foreground px-4 py-2 rounded-lg font-medium transition-all text-sm ml-auto"
           >
             Campos por Especialidade
           </TabsTrigger>

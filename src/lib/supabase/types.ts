@@ -5800,15 +5800,6 @@ export type Database = {
           unread_count: number
         }[]
       }
-      get_user_consolidated_permissions: {
-        Args: { p_user_id: string }
-        Returns: {
-          id: string
-          modulo: string
-          nome: string
-        }[]
-      }
-      get_user_permissions: { Args: { p_user_id: string }; Returns: string[] }
       get_vendas_por_origem: {
         Args: { p_mes_referencia: string }
         Returns: {
@@ -5818,7 +5809,6 @@ export type Database = {
           valor_vendas: number
         }[]
       }
-      has_permission: { Args: { permission_name: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       is_tenant_admin: { Args: never; Returns: boolean }

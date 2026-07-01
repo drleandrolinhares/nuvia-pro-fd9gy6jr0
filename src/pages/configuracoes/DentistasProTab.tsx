@@ -110,14 +110,14 @@ export default function DentistasProTab() {
     <Card className="border-0 rounded-none shadow-none bg-transparent">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 pt-6">
         <div>
-          <CardTitle className="text-xl font-bold text-white">Dentistas Pro Agenda</CardTitle>
-          <CardDescription className="text-slate-400 mt-1">
+          <CardTitle className="text-xl font-bold">Dentistas Pro Agenda</CardTitle>
+          <CardDescription className="mt-1">
             Gerencie os dentistas e especialistas que aparecerão na aba Pro Agenda.
           </CardDescription>
         </div>
         <Button
           onClick={() => handleOpen()}
-          className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold shadow-md w-full sm:w-auto"
+          className="bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Dentista
@@ -125,30 +125,32 @@ export default function DentistasProTab() {
       </CardHeader>
       <CardContent className="px-6 pb-6 pt-4">
         {loading ? (
-          <div className="flex justify-center p-8 bg-slate-900/50 rounded-lg border border-slate-800">
+          <div className="flex justify-center p-8 bg-muted/30 rounded-lg border border-border">
             <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
           </div>
         ) : dentistas.length === 0 ? (
-          <div className="text-center p-12 bg-slate-900/50 rounded-lg border border-slate-800 text-slate-400">
+          <div className="text-center p-12 bg-muted/30 rounded-lg border border-border text-muted-foreground">
             Nenhum dentista cadastrado no Pro Agenda.
           </div>
         ) : (
-          <div className="rounded-lg border border-slate-800 overflow-hidden bg-slate-900/50">
+          <div className="rounded-lg border border-border overflow-hidden bg-background shadow-sm">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900 border-b border-slate-800">
+              <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="p-4 text-left font-semibold text-slate-300">Nome do Dentista</th>
-                  <th className="p-4 text-left font-semibold text-slate-300 w-32">Status</th>
-                  <th className="p-4 text-right font-semibold text-slate-300 w-32">Ações</th>
+                  <th className="p-4 text-left font-semibold text-muted-foreground">
+                    Nome do Dentista
+                  </th>
+                  <th className="p-4 text-left font-semibold text-muted-foreground w-32">Status</th>
+                  <th className="p-4 text-right font-semibold text-muted-foreground w-32">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-border">
                 {dentistas.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="p-4 text-slate-200 font-medium">{d.nome}</td>
+                  <tr key={d.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="p-4 text-foreground font-medium">{d.nome}</td>
                     <td className="p-4">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide ${d.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide ${d.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20'}`}
                       >
                         {d.status === 'ativo' ? 'Ativo' : 'Inativo'}
                       </span>
@@ -159,7 +161,7 @@ export default function DentistasProTab() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpen(d)}
-                          className="text-slate-400 hover:text-amber-500 hover:bg-slate-800 h-8 w-8"
+                          className="text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 h-8 w-8"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -167,7 +169,7 @@ export default function DentistasProTab() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(d.id)}
-                          className="text-slate-400 hover:text-red-500 hover:bg-slate-800 h-8 w-8"
+                          className="text-muted-foreground hover:text-red-600 hover:bg-red-500/10 h-8 w-8"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -182,45 +184,43 @@ export default function DentistasProTab() {
       </CardContent>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white shadow-2xl">
-          <DialogHeader className="border-b border-slate-800 pb-4">
-            <DialogTitle className="text-lg font-bold">
-              {editing ? 'Editar Dentista' : 'Novo Dentista'}
-            </DialogTitle>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Dentista' : 'Novo Dentista'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-3">
-              <Label className="text-slate-300">Nome do Dentista</Label>
+              <Label>Nome do Dentista</Label>
               <Input
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: Dr. João Silva"
-                className="bg-slate-950 border-slate-800 focus-visible:ring-amber-500"
+                className="focus-visible:ring-amber-500"
               />
             </div>
-            <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
               <div className="space-y-1">
-                <Label className="text-white font-semibold">Status do Dentista</Label>
-                <div className="text-xs text-slate-400">
+                <Label className="font-semibold">Status do Dentista</Label>
+                <div className="text-xs text-muted-foreground">
                   Define se ele aparecerá no filtro do Pro Agenda
                 </div>
               </div>
               <Switch checked={status} onCheckedChange={setStatus} />
             </div>
           </div>
-          <DialogFooter className="border-t border-slate-800 pt-4">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
               disabled={saving}
+              className="rounded-full"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold"
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

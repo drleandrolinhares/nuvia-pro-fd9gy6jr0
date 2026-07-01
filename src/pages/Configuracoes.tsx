@@ -70,11 +70,11 @@ export default function Configuracoes() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="bg-slate-200/50 p-1 mb-6 flex-wrap h-auto rounded-lg gap-2">
+        <TabsList className="bg-muted/50 p-1 mb-6 flex-wrap h-auto rounded-lg gap-2 border">
           {canViewUsuarios && (
             <TabsTrigger
               value="usuarios"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-muted-foreground rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Users className="size-4 mr-2" /> USUÁRIOS E RH
             </TabsTrigger>
@@ -82,7 +82,7 @@ export default function Configuracoes() {
           {canViewCadastros && (
             <TabsTrigger
               value="cadastros"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-muted-foreground rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Database className="size-4 mr-2" /> CADASTROS BÁSICOS
             </TabsTrigger>
@@ -90,7 +90,7 @@ export default function Configuracoes() {
           {canViewCadastros && (
             <TabsTrigger
               value="dentistas-pro"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-muted-foreground rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Users className="size-4 mr-2" /> DENTISTAS PRO
             </TabsTrigger>
@@ -98,7 +98,7 @@ export default function Configuracoes() {
           {canViewNegociacao && (
             <TabsTrigger
               value="descontos"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-muted-foreground rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <Percent className="size-4 mr-2" /> DESCONTOS POR PRAZO
             </TabsTrigger>
@@ -106,7 +106,7 @@ export default function Configuracoes() {
           {canViewNegociacao && (
             <TabsTrigger
               value="faixas"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
+              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-muted-foreground rounded-md transition-all flex-1 sm:flex-none py-2"
             >
               <DollarSign className="size-4 mr-2" /> ENTRADA E FAIXAS
             </TabsTrigger>
@@ -122,7 +122,7 @@ export default function Configuracoes() {
         {canViewCadastros && (
           <TabsContent
             value="cadastros"
-            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm"
           >
             <CadastrosBasicos />
           </TabsContent>
@@ -131,7 +131,7 @@ export default function Configuracoes() {
         {canViewCadastros && (
           <TabsContent
             value="dentistas-pro"
-            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm"
           >
             <DentistasProTab />
           </TabsContent>
@@ -140,7 +140,7 @@ export default function Configuracoes() {
         {canViewNegociacao && (
           <TabsContent
             value="descontos"
-            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm"
           >
             <DescontosPorPrazo />
           </TabsContent>
@@ -149,7 +149,7 @@ export default function Configuracoes() {
         {canViewNegociacao && (
           <TabsContent
             value="faixas"
-            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-background"
+            className="m-0 border border-border/50 rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm"
           >
             <EntradaEFaixas />
           </TabsContent>
