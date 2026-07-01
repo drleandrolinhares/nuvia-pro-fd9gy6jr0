@@ -62,23 +62,8 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Ensure tenant_id columns exist on permission tables
-ALTER TABLE public.permissoes ADD COLUMN IF NOT EXISTS tenant_id UUID DEFAULT public.get_my_tenant_id();
-ALTER TABLE public.cargo_permissoes ADD COLUMN IF NOT EXISTS tenant_id UUID DEFAULT public.get_my_tenant_id();
-ALTER TABLE public.usuario_permissoes ADD COLUMN IF NOT EXISTS tenant_id UUID DEFAULT public.get_my_tenant_id();
-
--- Ensure indexes for performance
-CREATE INDEX IF NOT EXISTS idx_cargo_permissoes_cargo_id ON public.cargo_permissoes(cargo_id);
-CREATE INDEX IF NOT EXISTS idx_cargo_permissoes_permissao_id ON public.cargo_permissoes(permissao_id);
-CREATE INDEX IF NOT EXISTS idx_cargo_permissoes_tenant ON public.cargo_permissoes(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_usuario_permissoes_usuario ON public.usuario_permissoes(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_usuario_permissoes_tenant ON public.usuario_permissoes(tenant_id);
-
 -- Ensure RLS is enabled
 ALTER TABLE public.cargos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.permissoes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.cargo_permissoes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.usuario_permissoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.colaboradores_detalhes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.especialidades ENABLE ROW LEVEL SECURITY;
 
@@ -101,60 +86,6 @@ CREATE POLICY "cargos_update" ON public.cargos
 
 DROP POLICY IF EXISTS "cargos_delete" ON public.cargos;
 CREATE POLICY "cargos_delete" ON public.cargos
-  FOR DELETE TO authenticated
-  USING ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
--- ===== PERMISSOES =====
-DROP POLICY IF EXISTS "permissoes_select" ON public.permissoes;
-CREATE POLICY "permissoes_select" ON public.permissoes
-  FOR SELECT TO authenticated
-  USING (tenant_id = public.get_my_tenant_id() OR tenant_id IS NULL OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "permissoes_insert" ON public.permissoes;
-CREATE POLICY "permissoes_insert" ON public.permissoes
-  FOR INSERT TO authenticated
-  WITH CHECK ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "permissoes_update" ON public.permissoes;
-CREATE POLICY "permissoes_update" ON public.permissoes
-  FOR UPDATE TO authenticated
-  USING ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin())
-  WITH CHECK ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "permissoes_delete" ON public.permissoes;
-CREATE POLICY "permissoes_delete" ON public.permissoes
-  FOR DELETE TO authenticated
-  USING ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
--- ===== CARGO_PERMISSOES =====
-DROP POLICY IF EXISTS "cargo_permissoes_select" ON public.cargo_permissoes;
-CREATE POLICY "cargo_permissoes_select" ON public.cargo_permissoes
-  FOR SELECT TO authenticated
-  USING (tenant_id = public.get_my_tenant_id() OR tenant_id IS NULL OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "cargo_permissoes_insert" ON public.cargo_permissoes;
-CREATE POLICY "cargo_permissoes_insert" ON public.cargo_permissoes
-  FOR INSERT TO authenticated
-  WITH CHECK ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "cargo_permissoes_delete" ON public.cargo_permissoes;
-CREATE POLICY "cargo_permissoes_delete" ON public.cargo_permissoes
-  FOR DELETE TO authenticated
-  USING ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
--- ===== USUARIO_PERMISSOES =====
-DROP POLICY IF EXISTS "usuario_permissoes_select" ON public.usuario_permissoes;
-CREATE POLICY "usuario_permissoes_select" ON public.usuario_permissoes
-  FOR SELECT TO authenticated
-  USING (tenant_id = public.get_my_tenant_id() OR tenant_id IS NULL OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "usuario_permissoes_insert" ON public.usuario_permissoes;
-CREATE POLICY "usuario_permissoes_insert" ON public.usuario_permissoes
-  FOR INSERT TO authenticated
-  WITH CHECK ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
-
-DROP POLICY IF EXISTS "usuario_permissoes_delete" ON public.usuario_permissoes;
-CREATE POLICY "usuario_permissoes_delete" ON public.usuario_permissoes
   FOR DELETE TO authenticated
   USING ((tenant_id = public.get_my_tenant_id() AND public.is_admin()) OR public.is_super_admin());
 
