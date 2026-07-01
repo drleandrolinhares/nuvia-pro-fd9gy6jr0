@@ -72,7 +72,8 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
 
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500 flex items-center gap-1">
-                  <Percent className="w-3.5 h-3.5" />% Entrada (Agregado)
+                  <Percent className="w-3.5 h-3.5" />
+                  Performance
                 </span>
                 <span className="font-bold text-slate-950">{prof.entryPercentage.toFixed(1)}%</span>
               </div>
@@ -87,7 +88,7 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
 
               <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                 <span className="text-xs text-slate-600 font-semibold uppercase tracking-wider">
-                  Comissão Devida
+                  Comissão a Pagar
                 </span>
                 <span className={`text-lg font-bold ${commissionColor}`}>
                   {formatCurrency(prof.totalComissao)}

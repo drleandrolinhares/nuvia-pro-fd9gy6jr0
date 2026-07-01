@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DollarSign, Users } from 'lucide-react'
+import { DollarSign, Users, TrendingUp } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import { format, subMonths } from 'date-fns'
@@ -96,23 +96,23 @@ export default function ControleComissoes() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <DollarSign className="w-6 h-6 text-amber-600" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-slate-800 rounded-lg">
+            <DollarSign className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-950 uppercase">
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
               Controle de Comissões
             </h1>
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
               Cálculo agregado por profissional — Comissões de Dentistas e CRC Comercial
             </p>
           </div>
         </div>
         <div className="w-full md:w-56">
           <Select value={mesAno} onValueChange={setMesAno}>
-            <SelectTrigger className="bg-white border-slate-300">
+            <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
               <SelectValue placeholder="Mês/Ano" />
             </SelectTrigger>
             <SelectContent>
@@ -126,6 +126,11 @@ export default function ControleComissoes() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-5 h-5 text-slate-600" />
+        <h2 className="text-lg font-bold text-slate-950">Visão Geral</h2>
+        <span className="text-sm text-slate-400">({competenciaLabel})</span>
+      </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
       <div>
