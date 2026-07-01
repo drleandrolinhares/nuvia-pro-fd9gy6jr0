@@ -23,12 +23,23 @@ export function ComissoesTabela({
   vendas,
   tipo,
   loading,
+  profissionalFilter = 'todos',
 }: {
   vendas: ComissaoVenda[]
   tipo: 'dentista' | 'crc'
   loading: boolean
+  profissionalFilter?: string
 }) {
-  const filtered = vendas.filter((v) => (tipo === 'dentista' ? v.dentista_avaliador : v.crc))
+  const filtered = vendas.filter((v) => {
+    const matchesTipo = tipo === 'dentista' ? v.dentista_avaliador : v.crc
+    if (!matchesTipo) return false
+    if (profissionalFilter && profissionalFilter !== 'todos') {
+      return tipo === 'dentista'
+        ? v.dentista_avaliador === profissionalFilter
+        : v.crc === profissionalFilter
+    }
+    return true
+  })
 
   const totalComissao = filtered.reduce(
     (acc, v) => acc + (tipo === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc),

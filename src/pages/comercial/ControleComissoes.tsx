@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -8,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DollarSign, Users, TrendingUp } from 'lucide-react'
+import { DollarSign, Users, TrendingUp, BarChart3, Filter } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import { format, subMonths } from 'date-fns'
@@ -36,6 +35,8 @@ export default function ControleComissoes() {
     totalEntries: 0,
   })
   const [profissionais, setProfissionais] = useState<ProfessionalSummary[]>([])
+  const [filtroDentista, setFiltroDentista] = useState<string>('todos')
+  const [filtroCRC, setFiltroCRC] = useState<string>('todos')
 
   const mesesOptions = useMemo(
     () =>
@@ -50,6 +51,30 @@ export default function ControleComissoes() {
   )
 
   const competenciaLabel = mesesOptions.find((m) => m.value === mesAno)?.label || ''
+
+  const dentistasOptions = useMemo(() => {
+    const map = new Map<string, string>()
+    vendas.forEach((v) => {
+      if (v.dentista_avaliador && v.dentista_nome) {
+        map.set(v.dentista_avaliador, v.dentista_nome)
+      }
+    })
+    return Array.from(map.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [vendas])
+
+  const crcOptions = useMemo(() => {
+    const map = new Map<string, string>()
+    vendas.forEach((v) => {
+      if (v.crc && v.crc_nome) {
+        map.set(v.crc, v.crc_nome)
+      }
+    })
+    return Array.from(map.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [vendas])
 
   useEffect(() => {
     const loadData = async () => {
@@ -95,8 +120,8 @@ export default function ControleComissoes() {
   }, [mesAno])
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-50 min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-lg">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-slate-800 rounded-lg">
             <DollarSign className="w-6 h-6 text-amber-500" />
@@ -126,80 +151,124 @@ export default function ControleComissoes() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-amber-500" />
         <h2 className="text-lg font-bold text-slate-900">Visão Geral</h2>
         <span className="text-sm text-slate-500">({competenciaLabel})</span>
       </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-amber-500" />
-          <h2 className="text-lg font-bold text-slate-900">
-            Performance Individual por Profissional
-          </h2>
-          <span className="text-sm text-slate-500">({competenciaLabel})</span>
-        </div>
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <ProfessionalCards profissionais={profissionais} />
-        )}
-      </div>
-
-      <Tabs defaultValue="dentistas" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md bg-slate-900 border border-slate-800">
+      <Tabs defaultValue="dash" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 max-w-2xl bg-slate-900 border border-slate-800 h-auto">
+          <TabsTrigger
+            value="dash"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
+          >
+            <BarChart3 className="w-4 h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">DASH POR VENDEDOR</span>
+            <span className="sm:hidden">DASH</span>
+          </TabsTrigger>
           <TabsTrigger
             value="dentistas"
-            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
           >
-            Dentistas
+            DENTISTAS
           </TabsTrigger>
           <TabsTrigger
             value="crc"
-            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
           >
             CRC
           </TabsTrigger>
           <TabsTrigger
             value="configuracoes"
-            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
           >
-            Configurações
+            CONFIG.
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="dash" className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-5 h-5 text-amber-500" />
+            <h2 className="text-lg font-bold text-slate-900">
+              Performance Individual por Profissional
+            </h2>
+            <span className="text-sm text-slate-500">({competenciaLabel})</span>
+          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <ProfessionalCards profissionais={profissionais} />
+          )}
+        </TabsContent>
+
         <TabsContent value="dentistas" className="mt-6">
-          <Card className="bg-slate-900 border-slate-800 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-white">Comissões — Dentistas Avaliadores</CardTitle>
-              <CardDescription className="text-slate-400">
-                Taxa aplicada com base no percentual de entrada agregado do profissional (
-                {competenciaLabel}).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ComissoesTabela vendas={vendas} tipo="dentista" loading={loading} />
-            </CardContent>
-          </Card>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg font-bold text-slate-900">
+                Comissões — Dentistas Avaliadores
+              </h2>
+              <span className="text-sm text-slate-500">({competenciaLabel})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-500" />
+              <Select value={filtroDentista} onValueChange={setFiltroDentista}>
+                <SelectTrigger className="w-[240px] bg-white border-slate-300 text-slate-900">
+                  <SelectValue placeholder="Todos os dentistas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os dentistas</SelectItem>
+                  {dentistasOptions.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <ComissoesTabela
+            vendas={vendas}
+            tipo="dentista"
+            loading={loading}
+            profissionalFilter={filtroDentista}
+          />
         </TabsContent>
 
         <TabsContent value="crc" className="mt-6">
-          <Card className="bg-slate-900 border-slate-800 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-white">Comissões — CRC Comercial</CardTitle>
-              <CardDescription className="text-slate-400">
-                Taxa aplicada com base no percentual de entrada agregado do profissional (
-                {competenciaLabel}).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ComissoesTabela vendas={vendas} tipo="crc" loading={loading} />
-            </CardContent>
-          </Card>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg font-bold text-slate-900">Comissões — CRC Comercial</h2>
+              <span className="text-sm text-slate-500">({competenciaLabel})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-500" />
+              <Select value={filtroCRC} onValueChange={setFiltroCRC}>
+                <SelectTrigger className="w-[240px] bg-white border-slate-300 text-slate-900">
+                  <SelectValue placeholder="Todos os agentes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os agentes</SelectItem>
+                  {crcOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <ComissoesTabela
+            vendas={vendas}
+            tipo="crc"
+            loading={loading}
+            profissionalFilter={filtroCRC}
+          />
         </TabsContent>
 
         <TabsContent value="configuracoes" className="mt-6">
