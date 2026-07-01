@@ -12,7 +12,7 @@ import Layout from './components/Layout'
 import DocumentViewer from './pages/DocumentViewer'
 import Index from './pages/Index'
 import Estoque from './pages/Estoque'
-import Fluxo from './pages/financeiro/Fluxo'
+
 import Configuracoes from './pages/Configuracoes'
 import Usuarios from './pages/Usuarios'
 import Fornecedores from './pages/Fornecedores'
@@ -347,14 +347,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedPermissions={['Acessar Estoque']}>
               <Estoque />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/financeiro/fluxo"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Fluxo de Caixa']}>
-              <Fluxo />
             </ProtectedRoute>
           }
         />

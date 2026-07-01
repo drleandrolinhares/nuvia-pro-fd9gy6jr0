@@ -188,12 +188,6 @@ export const navData = [
         permission: ['Acessar Gestão Fiscal'],
       },
       {
-        title: 'FLUXO DE CAIXA',
-        url: '/financeiro/fluxo',
-        icon: Activity,
-        permission: ['Acessar Fluxo de Caixa'],
-      },
-      {
         title: 'ESTOQUE',
         url: '/estoque',
         icon: Package,
