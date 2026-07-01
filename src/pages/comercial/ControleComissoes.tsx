@@ -95,8 +95,8 @@ export default function ControleComissoes() {
   }, [mesAno])
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-950 min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-slate-800 rounded-lg">
             <DollarSign className="w-6 h-6 text-amber-500" />
@@ -127,18 +127,16 @@ export default function ControleComissoes() {
       </div>
 
       <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-5 h-5 text-slate-600" />
-        <h2 className="text-lg font-bold text-slate-950">Visão Geral</h2>
+        <TrendingUp className="w-5 h-5 text-amber-500" />
+        <h2 className="text-lg font-bold text-white">Visão Geral</h2>
         <span className="text-sm text-slate-400">({competenciaLabel})</span>
       </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-slate-600" />
-          <h2 className="text-lg font-bold text-slate-950">
-            Performance Individual por Profissional
-          </h2>
+          <Users className="w-5 h-5 text-amber-500" />
+          <h2 className="text-lg font-bold text-white">Performance Individual por Profissional</h2>
           <span className="text-sm text-slate-400">({competenciaLabel})</span>
         </div>
         {loading ? (
@@ -151,32 +149,32 @@ export default function ControleComissoes() {
       </div>
 
       <Tabs defaultValue="dentistas" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md bg-slate-100">
+        <TabsList className="grid w-full grid-cols-3 max-w-md bg-slate-900 border border-slate-800">
           <TabsTrigger
             value="dentistas"
-            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
           >
             Dentistas
           </TabsTrigger>
           <TabsTrigger
             value="crc"
-            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
           >
             CRC
           </TabsTrigger>
           <TabsTrigger
             value="configuracoes"
-            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
           >
             Configurações
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dentistas" className="mt-6">
-          <Card className="bg-white border-slate-200 shadow-sm">
+          <Card className="bg-slate-900 border-slate-800 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-slate-950">Comissões — Dentistas Avaliadores</CardTitle>
-              <CardDescription className="text-slate-500">
+              <CardTitle className="text-white">Comissões — Dentistas Avaliadores</CardTitle>
+              <CardDescription className="text-slate-400">
                 Taxa aplicada com base no percentual de entrada agregado do profissional (
                 {competenciaLabel}).
               </CardDescription>
@@ -188,10 +186,10 @@ export default function ControleComissoes() {
         </TabsContent>
 
         <TabsContent value="crc" className="mt-6">
-          <Card className="bg-white border-slate-200 shadow-sm">
+          <Card className="bg-slate-900 border-slate-800 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-slate-950">Comissões — CRC Comercial</CardTitle>
-              <CardDescription className="text-slate-500">
+              <CardTitle className="text-white">Comissões — CRC Comercial</CardTitle>
+              <CardDescription className="text-slate-400">
                 Taxa aplicada com base no percentual de entrada agregado do profissional (
                 {competenciaLabel}).
               </CardDescription>

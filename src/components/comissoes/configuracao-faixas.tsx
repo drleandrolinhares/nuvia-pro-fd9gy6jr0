@@ -104,13 +104,13 @@ export function ConfiguracaoFaixas() {
   }
 
   const renderTable = (tipo: 'dentista' | 'crc', faixas: FaixaBase[]) => (
-    <Card className="border-slate-200 bg-white flex-1 shadow-sm">
+    <Card className="border-slate-800 bg-slate-900 flex-1 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-lg text-slate-950">
+          <CardTitle className="text-lg text-white">
             Faixas - {tipo === 'dentista' ? 'Dentistas Avaliadores' : 'CRC Comercial'}
           </CardTitle>
-          <CardDescription className="text-slate-500">
+          <CardDescription className="text-slate-400">
             Configure as regras por percentual de entrada do paciente.
           </CardDescription>
         </div>
@@ -124,21 +124,21 @@ export function ConfiguracaoFaixas() {
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border border-slate-200 overflow-hidden">
+        <div className="rounded-md border border-slate-800 overflow-hidden">
           <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow className="border-slate-200">
-                <TableHead className="text-slate-700">Entrada Mín.</TableHead>
-                <TableHead className="text-slate-700">Entrada Máx.</TableHead>
-                <TableHead className="text-slate-700">% Comissão</TableHead>
-                <TableHead className="text-slate-700">Status</TableHead>
-                <TableHead className="text-right text-slate-700">Ações</TableHead>
+            <TableHeader className="bg-slate-800/80">
+              <TableRow className="border-slate-800 hover:bg-slate-800/80">
+                <TableHead className="text-slate-300">Entrada Mín.</TableHead>
+                <TableHead className="text-slate-300">Entrada Máx.</TableHead>
+                <TableHead className="text-slate-300">% Comissão</TableHead>
+                <TableHead className="text-slate-300">Status</TableHead>
+                <TableHead className="text-right text-slate-300">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {faixas.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-slate-500 py-8">
+                <TableRow className="border-slate-800">
+                  <TableCell colSpan={5} className="text-center text-slate-400 py-8 bg-slate-900">
                     Nenhuma faixa configurada.
                   </TableCell>
                 </TableRow>
@@ -146,15 +146,15 @@ export function ConfiguracaoFaixas() {
                 faixas.map((f) => (
                   <TableRow
                     key={f.id}
-                    className="border-slate-200 hover:bg-slate-50 transition-colors"
+                    className="border-slate-800 hover:bg-slate-800/50 bg-slate-900 transition-colors"
                   >
-                    <TableCell className="text-slate-700 font-medium">
+                    <TableCell className="text-slate-300 font-medium">
                       {Number(f.faixa_entrada_minima).toFixed(1)}%
                     </TableCell>
-                    <TableCell className="text-slate-700 font-medium">
+                    <TableCell className="text-slate-300 font-medium">
                       {Number(f.faixa_entrada_maxima).toFixed(1)}%
                     </TableCell>
-                    <TableCell className="text-amber-600 font-bold">
+                    <TableCell className="text-amber-400 font-bold">
                       {Number(f.percentual_comissao).toFixed(1)}%
                     </TableCell>
                     <TableCell>
@@ -162,8 +162,8 @@ export function ConfiguracaoFaixas() {
                         variant="outline"
                         className={
                           f.status === 'ativo'
-                            ? 'border-emerald-200 text-emerald-700 bg-emerald-50'
-                            : 'border-slate-200 text-slate-500 bg-slate-100'
+                            ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                            : 'border-slate-700 text-slate-500 bg-slate-800'
                         }
                       >
                         {f.status === 'ativo' ? 'Ativo' : 'Inativo'}
@@ -175,7 +175,7 @@ export function ConfiguracaoFaixas() {
                           variant="ghost"
                           size="icon"
                           onClick={() => openDialog(tipo, f)}
-                          className="h-8 w-8 text-slate-400 hover:text-slate-950 hover:bg-slate-100"
+                          className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -183,7 +183,7 @@ export function ConfiguracaoFaixas() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteFaixa(f.id!, tipo)}
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-500/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -212,22 +212,22 @@ export function ConfiguracaoFaixas() {
         {renderTable('dentista', faixasDentista)}
         {renderTable('crc', faixasCRC)}
       </div>
-      <div className="rounded-lg border border-slate-200 bg-blue-50 p-4">
-        <p className="text-sm text-slate-700">
-          <strong>Cálculo Agregado:</strong> A taxa de comissão é determinada pelo percentual de
-          entrada total do profissional (soma de todas as entradas ÷ soma de todas as vendas no
-          período), e não por venda individual.
+      <div className="rounded-lg border border-slate-800 bg-slate-800/50 p-4">
+        <p className="text-sm text-slate-300">
+          <strong className="text-amber-400">Cálculo Agregado:</strong> A taxa de comissão é
+          determinada pelo percentual de entrada total do profissional (soma de todas as entradas ÷
+          soma de todas as vendas no período), e não por venda individual.
         </p>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-white border-slate-200 shadow-2xl">
+        <DialogContent className="bg-slate-900 border-slate-800 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl text-slate-950">
+            <DialogTitle className="text-xl text-white">
               {currentFaixa.id ? 'Editar Faixa' : 'Nova Faixa'} -{' '}
               {faixaTipo === 'dentista' ? 'Dentista' : 'CRC'}
             </DialogTitle>
-            <DialogDescription className="text-slate-500">
+            <DialogDescription className="text-slate-400">
               Defina os percentuais mínimos e máximos de entrada para aplicar a comissão
               correspondente.
             </DialogDescription>
@@ -235,11 +235,11 @@ export function ConfiguracaoFaixas() {
           <div className="space-y-5 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-700 font-semibold">Entrada Mínima (%)</Label>
+                <Label className="text-slate-300 font-semibold">Entrada Mínima (%)</Label>
                 <Input
                   type="number"
                   step="0.1"
-                  className="bg-white border-slate-300 focus-visible:ring-amber-500"
+                  className="bg-slate-800 border-slate-700 text-white focus-visible:ring-amber-500"
                   value={currentFaixa.faixa_entrada_minima ?? ''}
                   onChange={(e) =>
                     setCurrentFaixa((p) => ({
@@ -250,11 +250,11 @@ export function ConfiguracaoFaixas() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-700 font-semibold">Entrada Máxima (%)</Label>
+                <Label className="text-slate-300 font-semibold">Entrada Máxima (%)</Label>
                 <Input
                   type="number"
                   step="0.1"
-                  className="bg-white border-slate-300 focus-visible:ring-amber-500"
+                  className="bg-slate-800 border-slate-700 text-white focus-visible:ring-amber-500"
                   value={currentFaixa.faixa_entrada_maxima ?? ''}
                   onChange={(e) =>
                     setCurrentFaixa((p) => ({
@@ -266,11 +266,11 @@ export function ConfiguracaoFaixas() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Percentual de Comissão (%)</Label>
+              <Label className="text-slate-300 font-semibold">Percentual de Comissão (%)</Label>
               <Input
                 type="number"
                 step="0.1"
-                className="bg-white border-slate-300 focus-visible:ring-amber-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-amber-500"
                 value={currentFaixa.percentual_comissao ?? ''}
                 onChange={(e) =>
                   setCurrentFaixa((p) => ({
@@ -281,19 +281,19 @@ export function ConfiguracaoFaixas() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Status de Operação</Label>
+              <Label className="text-slate-300 font-semibold">Status de Operação</Label>
               <Select
                 value={currentFaixa.status || 'ativo'}
                 onValueChange={(v) => setCurrentFaixa((p) => ({ ...p, status: v }))}
               >
-                <SelectTrigger className="bg-white border-slate-300 focus:ring-amber-500">
+                <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-amber-500">
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="ativo" className="focus:bg-slate-100">
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="ativo" className="focus:bg-slate-700 text-white">
                     Ativo
                   </SelectItem>
-                  <SelectItem value="inativo" className="focus:bg-slate-100">
+                  <SelectItem value="inativo" className="focus:bg-slate-700 text-white">
                     Inativo
                   </SelectItem>
                 </SelectContent>
@@ -304,7 +304,7 @@ export function ConfiguracaoFaixas() {
             <Button
               variant="ghost"
               onClick={() => setIsDialogOpen(false)}
-              className="hover:bg-slate-100 text-slate-600"
+              className="hover:bg-slate-800 text-slate-300"
             >
               Cancelar
             </Button>

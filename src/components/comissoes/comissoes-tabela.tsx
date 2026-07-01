@@ -38,62 +38,65 @@ export function ComissoesTabela({
   const totalVendas = filtered.reduce((acc, v) => acc + v.valor_tratamento, 0)
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
+    <div className="rounded-lg border border-slate-800 overflow-hidden bg-slate-900">
       <Table>
         <TableHeader>
-          <TableRow className="bg-slate-50 border-slate-200">
-            <TableHead className="text-slate-700 font-semibold">Data</TableHead>
-            <TableHead className="text-slate-700 font-semibold">Paciente</TableHead>
-            <TableHead className="text-slate-700 font-semibold">
+          <TableRow className="bg-slate-800/80 border-slate-800 hover:bg-slate-800/80">
+            <TableHead className="text-slate-300 font-semibold">Data</TableHead>
+            <TableHead className="text-slate-300 font-semibold">Paciente</TableHead>
+            <TableHead className="text-slate-300 font-semibold">
               {tipo === 'dentista' ? 'Dentista' : 'CRC'}
             </TableHead>
-            <TableHead className="text-slate-700 font-semibold text-right">Valor Trat.</TableHead>
-            <TableHead className="text-slate-700 font-semibold text-right">Entrada</TableHead>
-            <TableHead className="text-slate-700 font-semibold text-center">% Ent.</TableHead>
-            <TableHead className="text-slate-700 font-semibold text-center">% Comis.</TableHead>
-            <TableHead className="text-slate-700 font-semibold text-right">Vlr. Comissão</TableHead>
-            <TableHead className="text-slate-700 font-semibold">Status</TableHead>
+            <TableHead className="text-slate-300 font-semibold text-right">Valor Trat.</TableHead>
+            <TableHead className="text-slate-300 font-semibold text-right">Entrada</TableHead>
+            <TableHead className="text-slate-300 font-semibold text-center">% Ent.</TableHead>
+            <TableHead className="text-slate-300 font-semibold text-center">% Comis.</TableHead>
+            <TableHead className="text-slate-300 font-semibold text-right">Vlr. Comissão</TableHead>
+            <TableHead className="text-slate-300 font-semibold">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell colSpan={9} className="text-center py-8">
+            <TableRow className="border-slate-800">
+              <TableCell colSpan={9} className="text-center py-8 bg-slate-900">
                 <Loader2 className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
               </TableCell>
             </TableRow>
           ) : filtered.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={9} className="text-center text-slate-500 py-8">
+            <TableRow className="border-slate-800">
+              <TableCell colSpan={9} className="text-center text-slate-400 py-8 bg-slate-900">
                 Nenhuma comissão encontrada para este período.
               </TableCell>
             </TableRow>
           ) : (
             <>
               {filtered.map((v) => (
-                <TableRow key={v.id} className="border-slate-200 hover:bg-slate-50">
-                  <TableCell className="text-slate-700">{formatDate(v.data_fechamento)}</TableCell>
-                  <TableCell className="font-medium text-slate-950">{v.paciente_nome}</TableCell>
-                  <TableCell className="text-slate-700">
+                <TableRow
+                  key={v.id}
+                  className="border-slate-800 hover:bg-slate-800/50 bg-slate-900"
+                >
+                  <TableCell className="text-slate-300">{formatDate(v.data_fechamento)}</TableCell>
+                  <TableCell className="font-medium text-white">{v.paciente_nome}</TableCell>
+                  <TableCell className="text-slate-300">
                     {tipo === 'dentista' ? v.dentista_nome || '-' : v.crc_nome || '-'}
                   </TableCell>
-                  <TableCell className="text-right text-slate-700">
+                  <TableCell className="text-right text-slate-300">
                     {formatCurrency(v.valor_tratamento)}
                   </TableCell>
-                  <TableCell className="text-right text-slate-700">
+                  <TableCell className="text-right text-slate-300">
                     {formatCurrency(v.valor_entrada)}
                   </TableCell>
-                  <TableCell className="text-center text-slate-700">
+                  <TableCell className="text-center text-slate-300">
                     {v.percentual_entrada.toFixed(1)}%
                   </TableCell>
-                  <TableCell className="text-center font-medium text-slate-950">
+                  <TableCell className="text-center font-medium text-amber-400">
                     {(tipo === 'dentista'
                       ? v.percentual_comissao_dentista
                       : v.percentual_comissao_crc
                     ).toFixed(1)}
                     %
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-emerald-600">
+                  <TableCell className="text-right font-semibold text-emerald-400">
                     {formatCurrency(
                       tipo === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc,
                     )}
@@ -103,8 +106,8 @@ export function ComissoesTabela({
                       variant="outline"
                       className={
                         v.status_comissao === 'pago'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                       }
                     >
                       {v.status_comissao === 'pago' ? 'Pago' : 'Em Aberto'}
@@ -112,17 +115,17 @@ export function ComissoesTabela({
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="bg-slate-50 border-slate-200 font-bold">
-                <TableCell colSpan={3} className="text-right text-slate-950">
+              <TableRow className="bg-slate-800/80 border-slate-800 font-bold">
+                <TableCell colSpan={3} className="text-right text-white">
                   Total ({filtered.length} vendas):
                 </TableCell>
-                <TableCell className="text-right text-slate-950">
+                <TableCell className="text-right text-white">
                   {formatCurrency(totalVendas)}
                 </TableCell>
-                <TableCell colSpan={3} className="text-right text-slate-950">
+                <TableCell colSpan={3} className="text-right text-white">
                   Comissão Total:
                 </TableCell>
-                <TableCell className="text-right text-emerald-600">
+                <TableCell className="text-right text-emerald-400">
                   {formatCurrency(totalComissao)}
                 </TableCell>
                 <TableCell></TableCell>

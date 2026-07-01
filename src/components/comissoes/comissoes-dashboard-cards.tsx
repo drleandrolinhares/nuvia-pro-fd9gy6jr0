@@ -14,71 +14,67 @@ export function ComissoesDashboardCards({
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative border-l-4 border-l-amber-500">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+          <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
             Comissões Dentistas
           </CardTitle>
-          <div className="p-2 bg-amber-50 rounded-lg">
-            <Stethoscope className="w-5 h-5 text-amber-600" />
+          <div className="p-2 bg-amber-500/10 rounded-lg">
+            <Stethoscope className="w-5 h-5 text-amber-500" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-slate-950">
+          <div className="text-2xl font-bold text-white">
             {formatCurrency(totals.totalComissaoDentista)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
+          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative border-l-4 border-l-emerald-500">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+          <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
             Comissões CRC
           </CardTitle>
-          <div className="p-2 bg-emerald-50 rounded-lg">
-            <Headphones className="w-5 h-5 text-emerald-600" />
+          <div className="p-2 bg-emerald-500/10 rounded-lg">
+            <Headphones className="w-5 h-5 text-emerald-500" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-slate-950">
+          <div className="text-2xl font-bold text-white">
             {formatCurrency(totals.totalComissaoCRC)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
+          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative border-l-4 border-l-blue-500">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+          <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
             Volume de Vendas
           </CardTitle>
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-blue-500" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-slate-950">
-            {formatCurrency(totals.totalVendas)}
-          </div>
-          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
+          <div className="text-2xl font-bold text-white">{formatCurrency(totals.totalVendas)}</div>
+          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative border-l-4 border-l-violet-500">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+          <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
             Total de Entradas
           </CardTitle>
-          <div className="p-2 bg-violet-50 rounded-lg">
-            <Wallet className="w-5 h-5 text-violet-600" />
+          <div className="p-2 bg-violet-500/10 rounded-lg">
+            <Wallet className="w-5 h-5 text-violet-500" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-slate-950">
-            {formatCurrency(totals.totalEntries)}
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <div className="text-2xl font-bold text-white">{formatCurrency(totals.totalEntries)}</div>
+          <p className="text-xs text-slate-500 mt-1">
             {totals.totalVendas > 0
               ? `${((totals.totalEntries / totals.totalVendas) * 100).toFixed(1)}% do volume`
               : competencia}
