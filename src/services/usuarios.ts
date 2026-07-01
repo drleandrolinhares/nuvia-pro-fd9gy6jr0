@@ -116,64 +116,10 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
   return userId
 }
 
-export async function checkHasPermission(permissionName: string) {
-  const { data: isAdmin } = await supabase.rpc('is_admin')
-  if (isAdmin) return true
-
+export async function checkHasPermission(_permissionName: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return false
-
-  const normalize = (str: string | null | undefined): string => {
-    if (!str) return ''
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-  }
-
-  const pNorm = normalize(permissionName)
-
-  const extractPermName = (row: any) => {
-    if (!row) return null
-    if (row.permissao?.nome) return row.permissao.nome
-    if (row.permissoes?.nome) return row.permissoes.nome
-    if (Array.isArray(row.permissoes) && row.permissoes[0]?.nome) return row.permissoes[0].nome
-    if (Array.isArray(row.permissao) && row.permissao[0]?.nome) return row.permissao[0].nome
-    return null
-  }
-
-  // Verifica permissões individuais do usuário
-  const { data: permissoes } = await supabase
-    .from('usuario_permissoes')
-    .select('permissoes(nome)')
-    .eq('usuario_id', user.id)
-
-  const hasUserPerm = (permissoes as any[])?.some((p) => normalize(extractPermName(p)) === pNorm)
-  if (hasUserPerm) return true
-
-  // Verifica permissões atreladas ao cargo do usuário
-  const { data: usuario } = await supabase
-    .from('usuarios')
-    .select('cargo_id, cargo_secundario_id')
-    .eq('id', user.id)
-    .single()
-
-  const cargoIds = [usuario?.cargo_id, usuario?.cargo_secundario_id].filter(Boolean)
-
-  if (cargoIds.length > 0) {
-    const { data: cargoPermissoes } = await supabase
-      .from('cargo_permissoes')
-      .select('permissoes(nome)')
-      .in('cargo_id', cargoIds)
-
-    const hasCargoPerm = (cargoPermissoes as any[])?.some(
-      (p) => normalize(extractPermName(p)) === pNorm,
-    )
-    if (hasCargoPerm) return true
-  }
-
-  return false
+  return true
 }

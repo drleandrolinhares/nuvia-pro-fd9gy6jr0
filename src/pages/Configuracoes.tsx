@@ -2,7 +2,6 @@ import { Users, Shield, Database, Percent, DollarSign, Loader2, Lock } from 'luc
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsuariosTab } from './configuracoes/UsuariosTab'
-import { PermissoesTab } from './configuracoes/PermissoesTab'
 import CadastrosBasicos from './admin/CadastrosBasicos'
 import DescontosPorPrazo from './configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './configuracoes/EntradaEFaixas'
@@ -14,7 +13,6 @@ export default function Configuracoes() {
 
   const canViewAll = isAdmin || hasPermission('Acessar Parâmetros Gerais')
   const canViewUsuarios = canViewAll
-  const canViewPermissoes = canViewAll
   const canViewCadastros = canViewAll
   const canViewNegociacao = canViewAll
 
@@ -81,14 +79,6 @@ export default function Configuracoes() {
               <Users className="size-4 mr-2" /> USUÁRIOS E RH
             </TabsTrigger>
           )}
-          {canViewPermissoes && (
-            <TabsTrigger
-              value="permissoes"
-              className="uppercase tracking-wider text-xs font-bold data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 rounded-md transition-all flex-1 sm:flex-none py-2"
-            >
-              <Shield className="size-4 mr-2" /> CARGOS E PERMISSÕES
-            </TabsTrigger>
-          )}
           {canViewCadastros && (
             <TabsTrigger
               value="cadastros"
@@ -126,12 +116,6 @@ export default function Configuracoes() {
         {canViewUsuarios && (
           <TabsContent value="usuarios" className="m-0">
             <UsuariosTab />
-          </TabsContent>
-        )}
-
-        {canViewPermissoes && (
-          <TabsContent value="permissoes" className="m-0">
-            <PermissoesTab />
           </TabsContent>
         )}
 

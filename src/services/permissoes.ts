@@ -1,8 +1,17 @@
 import { supabase } from '@/lib/supabase/client'
-import { Tables } from '@/lib/supabase/types'
 
-export type Permissao = Tables<'permissoes'>
-export type Cargo = Tables<'cargos'> & {
+export type Permissao = {
+  id: string
+  nome: string
+  descricao: string | null
+  modulo: string | null
+}
+
+export type Cargo = {
+  id: string
+  nome: string
+  descricao: string | null
+  setor: string | null
   cargo_permissoes: { permissao_id: string }[]
 }
 
@@ -26,40 +35,29 @@ export async function checkIsAdmin() {
 export async function getCargos() {
   const { data, error } = await supabase
     .from('cargos')
-    .select('*, cargo_permissoes(permissao_id)')
+    .select('id, nome, descricao, setor')
     .order('nome')
   if (error) {
     console.error('[permissoes] Error fetching cargos:', error)
     throw error
   }
-  return (data || []) as Cargo[]
+  return (data || []).map((c: any) => ({ ...c, cargo_permissoes: [] })) as Cargo[]
 }
 
-export async function getPermissoes() {
-  const { data, error } = await supabase
-    .from('permissoes')
-    .select('*')
-    .order('modulo')
-    .order('nome')
-  if (error) {
-    console.error('[permissoes] Error fetching permissoes:', error)
-    throw error
-  }
-  return (data || []) as Permissao[]
+export async function getPermissoes(): Promise<Permissao[]> {
+  return []
 }
 
 export async function getUsuariosComPermissoes() {
   const { data, error } = await supabase
     .from('usuarios')
-    .select(
-      'id, nome, email, cargo:cargos!usuarios_cargo_id_fkey(nome), usuario_permissoes(permissao_id)',
-    )
+    .select('id, nome, email, cargo:cargos!usuarios_cargo_id_fkey(nome)')
     .order('nome')
   if (error) {
-    console.error('[permissoes] Error fetching usuarios with permissoes:', error)
+    console.error('[permissoes] Error fetching usuarios:', error)
     throw error
   }
-  return (data || []) as unknown as UsuarioComPermissoes[]
+  return (data || []).map((u: any) => ({ ...u, usuario_permissoes: [] })) as UsuarioComPermissoes[]
 }
 
 export async function saveCargo(
@@ -83,30 +81,9 @@ export async function saveCargo(
     if (error) throw error
   }
 
-  const { error: deleteError } = await supabase.from('cargo_permissoes').delete().eq('cargo_id', id)
-  if (deleteError) throw deleteError
-
-  if (data.permissoes.length > 0) {
-    const { error: insertError } = await supabase
-      .from('cargo_permissoes')
-      .insert(data.permissoes.map((pid) => ({ cargo_id: id!, permissao_id: pid })))
-    if (insertError) throw insertError
-  }
-
   return id
 }
 
-export async function saveUsuarioPermissoes(usuarioId: string, permissoes: string[]) {
-  const { error: deleteError } = await supabase
-    .from('usuario_permissoes')
-    .delete()
-    .eq('usuario_id', usuarioId)
-  if (deleteError) throw deleteError
-
-  if (permissoes.length > 0) {
-    const { error: insertError } = await supabase
-      .from('usuario_permissoes')
-      .insert(permissoes.map((pid) => ({ usuario_id: usuarioId, permissao_id: pid })))
-    if (insertError) throw insertError
-  }
+export async function saveUsuarioPermissoes(_usuarioId: string, _permissoes: string[]) {
+  // No-op: permissions tables have been removed from the database
 }

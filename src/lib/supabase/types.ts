@@ -5842,7 +5842,7 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: undefined
       }
-      unaccent_string: { Args: { '': string }; Returns: string }
+      unaccent_string: { Args: { input: string }; Returns: string }
     }
     Enums: {
       nivel_criticidade_enum: 'no_horario' | 'tolerancia' | 'critico' | 'nao_concluida'

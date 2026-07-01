@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [permissions, setPermissions] = useState<string[]>([])
+  const [permissions] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [acessoConfig, setAcessoConfig] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,33 +91,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         cargo_secundario: userProfile.cargo_secundario || null,
       }
 
-      const [userPermsRes, isAdmRes, acessoRes] = await Promise.all([
-        supabase.from('usuario_permissoes').select('permissoes(nome)').eq('usuario_id', userId),
+      const [isAdmRes, acessoRes] = await Promise.all([
         supabase.rpc('is_admin'),
         supabase.from('configuracoes_acesso').select('*').limit(1).maybeSingle(),
       ])
 
-      const cargoIds = [p.cargo_id, p.cargo_secundario_id].filter(Boolean)
-      let cargoPermsData: any[] = []
-      if (cargoIds.length > 0) {
-        const { data } = await supabase
-          .from('cargo_permissoes')
-          .select('permissoes(nome)')
-          .in('cargo_id', cargoIds)
-        if (data) cargoPermsData = data
-      }
-
-      const permSet = new Set<string>()
-
-      userPermsRes.data?.forEach((item: any) => {
-        if (item.permissoes?.nome) permSet.add(normalizeString(item.permissoes.nome))
-      })
-
-      cargoPermsData?.forEach((item: any) => {
-        if (item.permissoes?.nome) permSet.add(normalizeString(item.permissoes.nome))
-      })
-
-      // Fallback local admin check if RPC returns false/null unexpectedly
       let userIsAdmin = isAdmRes.data === true
       if (!userIsAdmin) {
         userIsAdmin =
@@ -128,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return {
         profile: p,
-        permissions: Array.from(permSet),
         isAdmin: userIsAdmin,
         acessoConfig: acessoRes.data || null,
       }
@@ -146,7 +123,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await fetchProfileData(currentSession.user.id)
       if (data) {
         setProfile(data.profile)
-        setPermissions(data.permissions)
         setIsAdmin(data.isAdmin)
         setAcessoConfig(data.acessoConfig)
       }
@@ -168,18 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             refreshProfile()
           },
         )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'usuario_permissoes',
-            filter: `usuario_id=eq.${userId}`,
-          },
-          () => {
-            refreshProfile()
-          },
-        )
         .subscribe()
     }
 
@@ -188,7 +152,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const data = await fetchProfileData(currentSession.user.id)
         if (data && mounted) {
           setProfile(data.profile)
-          setPermissions(data.permissions)
           setIsAdmin(data.isAdmin)
           setAcessoConfig(data.acessoConfig)
         }
@@ -196,7 +159,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         if (mounted) {
           setProfile(null)
-          setPermissions([])
           setIsAdmin(false)
           setAcessoConfig(null)
         }
@@ -214,7 +176,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (event === 'SIGNED_OUT') {
         setProfile(null)
-        setPermissions([])
         setIsAdmin(false)
         setAcessoConfig(null)
         setLoading(false)
@@ -261,14 +222,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
-  const hasPermission = (perms: string | string[]) => {
+  const hasPermission = (_perms: string | string[]) => {
     if (isAdmin) return true
     if (profile?.status?.toLowerCase() === 'inativo') return false
-    if (!perms || perms.length === 0) return true
-
-    const permsArray = Array.isArray(perms) ? perms : [perms]
-    const normalizedTargetPerms = permsArray.map(normalizeString)
-    return normalizedTargetPerms.some((p) => permissions.includes(p))
+    return true
   }
 
   return (

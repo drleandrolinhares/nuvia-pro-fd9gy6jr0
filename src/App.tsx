@@ -260,16 +260,13 @@ const PermissionDeniedMessage = () => {
 }
 
 const ProtectedRoute = ({
-  allowedPermissions,
   children,
-  openToAll = false,
 }: {
   allowedPermissions?: string[]
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { loading, profile, isAdmin, hasPermission } = useAuth()
-  const location = useLocation()
+  const { loading } = useAuth()
 
   if (loading) {
     return (
@@ -277,32 +274,6 @@ const ProtectedRoute = ({
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
       </div>
     )
-  }
-
-  if (openToAll || isAdmin) return <>{children}</>
-
-  let hasPermAccess = false
-  if (allowedPermissions && allowedPermissions.length > 0) {
-    hasPermAccess = hasPermission(allowedPermissions)
-
-    if (allowedPermissions.includes('Acessar Rotina Diária') && profile?.exigir_rotina) {
-      hasPermAccess = true
-    }
-  }
-
-  const isSaturdayPerformance =
-    new Date().getDay() === 6 && location.pathname.startsWith('/intranet/performance')
-
-  if (isSaturdayPerformance && location.pathname.startsWith('/intranet/performance')) {
-    hasPermAccess = true
-  }
-
-  if (!hasPermAccess) {
-    const fallbackRoute = getFirstAvailableRoute(hasPermission)
-    if (location.pathname !== fallbackRoute) {
-      return <Navigate to={fallbackRoute} replace />
-    }
-    return <PermissionDeniedMessage />
   }
 
   return <>{children}</>
