@@ -95,7 +95,7 @@ export default function ControleComissoes() {
   }, [mesAno])
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-950 min-h-screen">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-50 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-slate-800 rounded-lg">
@@ -128,16 +128,18 @@ export default function ControleComissoes() {
 
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="w-5 h-5 text-amber-500" />
-        <h2 className="text-lg font-bold text-white">Visão Geral</h2>
-        <span className="text-sm text-slate-400">({competenciaLabel})</span>
+        <h2 className="text-lg font-bold text-slate-900">Visão Geral</h2>
+        <span className="text-sm text-slate-500">({competenciaLabel})</span>
       </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
       <div>
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-amber-500" />
-          <h2 className="text-lg font-bold text-white">Performance Individual por Profissional</h2>
-          <span className="text-sm text-slate-400">({competenciaLabel})</span>
+          <h2 className="text-lg font-bold text-slate-900">
+            Performance Individual por Profissional
+          </h2>
+          <span className="text-sm text-slate-500">({competenciaLabel})</span>
         </div>
         {loading ? (
           <div className="flex justify-center py-12">
