@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Stethoscope, Headphones, TrendingUp } from 'lucide-react'
+import { Stethoscope, Headphones, TrendingUp, Wallet } from 'lucide-react'
 import type { DashboardTotals } from '@/services/comissoes-dashboard'
 
 const formatCurrency = (val: number) =>
@@ -13,58 +13,76 @@ export function ComissoesDashboardCards({
   competencia: string
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative">
-        <div className="absolute -top-4 -right-4 p-4 opacity-5">
-          <Stethoscope className="w-32 h-32 text-white" />
-        </div>
-        <CardHeader className="pb-2 relative z-10 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
-            Total Comissões Dentistas
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+            Comissões Dentistas
           </CardTitle>
-          <Stethoscope className="w-5 h-5 text-amber-500" />
+          <div className="p-2 bg-amber-50 rounded-lg">
+            <Stethoscope className="w-5 h-5 text-amber-600" />
+          </div>
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-2xl font-bold text-amber-400">
+        <CardContent>
+          <div className="text-2xl font-bold text-slate-950">
             {formatCurrency(totals.totalComissaoDentista)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative">
-        <div className="absolute -top-4 -right-4 p-4 opacity-5">
-          <Headphones className="w-32 h-32 text-white" />
-        </div>
-        <CardHeader className="pb-2 relative z-10 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
-            Total Comissões CRC
+      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+            Comissões CRC
           </CardTitle>
-          <Headphones className="w-5 h-5 text-emerald-500" />
+          <div className="p-2 bg-emerald-50 rounded-lg">
+            <Headphones className="w-5 h-5 text-emerald-600" />
+          </div>
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-2xl font-bold text-emerald-400">
+        <CardContent>
+          <div className="text-2xl font-bold text-slate-950">
             {formatCurrency(totals.totalComissaoCRC)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800 shadow-lg overflow-hidden relative">
-        <div className="absolute -top-4 -right-4 p-4 opacity-5">
-          <TrendingUp className="w-32 h-32 text-white" />
-        </div>
-        <CardHeader className="pb-2 relative z-10 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-wider">
-            Volume de Vendas (Mês)
+      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+            Volume de Vendas
           </CardTitle>
-          <TrendingUp className="w-5 h-5 text-blue-500" />
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+          </div>
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-2xl font-bold text-blue-400">
+        <CardContent>
+          <div className="text-2xl font-bold text-slate-950">
             {formatCurrency(totals.totalVendas)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          <p className="text-xs text-slate-400 mt-1">{competencia}</p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white border-slate-200 shadow-sm overflow-hidden relative">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
+            Total de Entradas
+          </CardTitle>
+          <div className="p-2 bg-violet-50 rounded-lg">
+            <Wallet className="w-5 h-5 text-violet-600" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-slate-950">
+            {formatCurrency(totals.totalEntries)}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {totals.totalVendas > 0
+              ? `${((totals.totalEntries / totals.totalVendas) * 100).toFixed(1)}% do volume`
+              : competencia}
+          </p>
         </CardContent>
       </Card>
     </div>

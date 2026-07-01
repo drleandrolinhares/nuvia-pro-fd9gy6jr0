@@ -33,6 +33,7 @@ export default function ControleComissoes() {
     totalComissaoDentista: 0,
     totalComissaoCRC: 0,
     totalVendas: 0,
+    totalEntries: 0,
   })
   const [profissionais, setProfissionais] = useState<ProfessionalSummary[]>([])
 
@@ -94,24 +95,24 @@ export default function ControleComissoes() {
   }, [mesAno])
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-500/10 rounded-lg">
-            <DollarSign className="w-6 h-6 text-amber-500" />
+          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <DollarSign className="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 uppercase">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950 uppercase">
               Controle de Comissões
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Gerencie comissões de Dentistas e CRC Comercial
+            <p className="text-slate-500 text-sm">
+              Cálculo agregado por profissional — Comissões de Dentistas e CRC Comercial
             </p>
           </div>
         </div>
         <div className="w-full md:w-56">
           <Select value={mesAno} onValueChange={setMesAno}>
-            <SelectTrigger className="bg-white dark:bg-slate-950">
+            <SelectTrigger className="bg-white border-slate-300">
               <SelectValue placeholder="Mês/Ano" />
             </SelectTrigger>
             <SelectContent>
@@ -129,8 +130,8 @@ export default function ControleComissoes() {
 
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-slate-500" />
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+          <Users className="w-5 h-5 text-slate-600" />
+          <h2 className="text-lg font-bold text-slate-950">
             Performance Individual por Profissional
           </h2>
           <span className="text-sm text-slate-400">({competenciaLabel})</span>
@@ -145,18 +146,33 @@ export default function ControleComissoes() {
       </div>
 
       <Tabs defaultValue="dentistas" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="dentistas">Dentistas</TabsTrigger>
-          <TabsTrigger value="crc">CRC</TabsTrigger>
-          <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 max-w-md bg-slate-100">
+          <TabsTrigger
+            value="dentistas"
+            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+          >
+            Dentistas
+          </TabsTrigger>
+          <TabsTrigger
+            value="crc"
+            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+          >
+            CRC
+          </TabsTrigger>
+          <TabsTrigger
+            value="configuracoes"
+            className="data-[state=active]:bg-white data-[state=active]:text-slate-950"
+          >
+            Configurações
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dentistas" className="mt-6">
-          <Card>
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle>Comissões - Dentistas Avaliadores</CardTitle>
-              <CardDescription>
-                Comissões calculadas automaticamente com base nas regras de faixa de entrada (
+              <CardTitle className="text-slate-950">Comissões — Dentistas Avaliadores</CardTitle>
+              <CardDescription className="text-slate-500">
+                Taxa aplicada com base no percentual de entrada agregado do profissional (
                 {competenciaLabel}).
               </CardDescription>
             </CardHeader>
@@ -167,11 +183,11 @@ export default function ControleComissoes() {
         </TabsContent>
 
         <TabsContent value="crc" className="mt-6">
-          <Card>
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle>Comissões - CRC Comercial</CardTitle>
-              <CardDescription>
-                Comissões calculadas automaticamente com base nas regras de faixa de entrada (
+              <CardTitle className="text-slate-950">Comissões — CRC Comercial</CardTitle>
+              <CardDescription className="text-slate-500">
+                Taxa aplicada com base no percentual de entrada agregado do profissional (
                 {competenciaLabel}).
               </CardDescription>
             </CardHeader>

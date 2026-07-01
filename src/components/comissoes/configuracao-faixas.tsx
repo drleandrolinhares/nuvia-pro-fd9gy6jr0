@@ -213,6 +213,13 @@ export function ConfiguracaoFaixas() {
         {renderTable('dentista', faixasDentista)}
         {renderTable('crc', faixasCRC)}
       </div>
+      <div className="rounded-lg border border-slate-200 bg-blue-50 p-4">
+        <p className="text-sm text-slate-700">
+          <strong>Cálculo Agregado:</strong> A taxa de comissão é determinada pelo percentual de
+          entrada total do profissional (soma de todas as entradas ÷ soma de todas as vendas no
+          período), e não por venda individual.
+        </p>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 shadow-2xl">

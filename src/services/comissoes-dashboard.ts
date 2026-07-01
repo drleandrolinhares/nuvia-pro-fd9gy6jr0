@@ -23,7 +23,8 @@ export interface ComissaoVenda {
 export interface DashboardTotals {
   totalComissaoDentista: number
   totalComissaoCRC: number
-  totalVendas: 0
+  totalVendas: number
+  totalEntries: number
 }
 
 export interface ProfessionalSummary {
@@ -31,6 +32,9 @@ export interface ProfessionalSummary {
   nome: string
   tipo: 'Dentista' | 'CRC'
   totalVendas: number
+  totalEntries: number
+  entryPercentage: number
+  commissionRate: number
   totalComissao: number
   qtdeVendas: number
   comissaoAberta: number
@@ -57,16 +61,23 @@ function buildProfessionalSummaries(vendas: ComissaoVenda[]): ProfessionalSummar
         nome: v.dentista_nome,
         tipo: 'Dentista' as const,
         totalVendas: 0,
+        totalEntries: 0,
+        entryPercentage: 0,
+        commissionRate: 0,
         totalComissao: 0,
         qtdeVendas: 0,
         comissaoAberta: 0,
         comissaoPaga: 0,
       }
       existing.totalVendas += v.valor_tratamento
+      existing.totalEntries += v.valor_entrada
+      existing.commissionRate = v.percentual_comissao_dentista
       existing.totalComissao += v.valor_comissao_dentista
       existing.qtdeVendas += 1
       if (v.status_comissao === 'pago') existing.comissaoPaga += v.valor_comissao_dentista
       else existing.comissaoAberta += v.valor_comissao_dentista
+      existing.entryPercentage =
+        existing.totalVendas > 0 ? (existing.totalEntries / existing.totalVendas) * 100 : 0
       map.set(key, existing)
     }
 
@@ -77,21 +88,120 @@ function buildProfessionalSummaries(vendas: ComissaoVenda[]): ProfessionalSummar
         nome: v.crc_nome,
         tipo: 'CRC' as const,
         totalVendas: 0,
+        totalEntries: 0,
+        entryPercentage: 0,
+        commissionRate: 0,
         totalComissao: 0,
         qtdeVendas: 0,
         comissaoAberta: 0,
         comissaoPaga: 0,
       }
       existing.totalVendas += v.valor_tratamento
+      existing.totalEntries += v.valor_entrada
+      existing.commissionRate = v.percentual_comissao_crc
       existing.totalComissao += v.valor_comissao_crc
       existing.qtdeVendas += 1
       if (v.status_comissao === 'pago') existing.comissaoPaga += v.valor_comissao_crc
       else existing.comissaoAberta += v.valor_comissao_crc
+      existing.entryPercentage =
+        existing.totalVendas > 0 ? (existing.totalEntries / existing.totalVendas) * 100 : 0
       map.set(key, existing)
     }
   }
 
   return Array.from(map.values()).sort((a, b) => b.totalComissao - a.totalComissao)
+}
+
+function mapRpcData(rpcData: any[]): ComissaoVenda[] {
+  return rpcData.map((v) => ({
+    id: v.id,
+    paciente_nome: v.paciente_nome || '',
+    data_fechamento: v.data_fechamento,
+    valor_tratamento: Number(v.valor_tratamento) || 0,
+    valor_entrada: Number(v.valor_entrada) || 0,
+    percentual_entrada: Number(v.percentual_entrada) || 0,
+    dentista_avaliador: v.dentista_avaliador || null,
+    dentista_nome: v.dentista_nome || null,
+    crc: v.crc || null,
+    crc_nome: v.crc_nome || null,
+    percentual_comissao_dentista: Number(v.percentual_comissao_dentista) || 0,
+    valor_comissao_dentista: Number(v.valor_comissao_dentista) || 0,
+    percentual_comissao_crc: Number(v.percentual_comissao_crc) || 0,
+    valor_comissao_crc: Number(v.valor_comissao_crc) || 0,
+    status_comissao: v.status_comissao || null,
+  }))
+}
+
+function computeTotals(vendas: ComissaoVenda[]): DashboardTotals {
+  return vendas.reduce(
+    (acc, v) => {
+      acc.totalComissaoDentista += v.valor_comissao_dentista
+      acc.totalComissaoCRC += v.valor_comissao_crc
+      acc.totalVendas += v.valor_tratamento
+      acc.totalEntries += v.valor_entrada
+      return acc
+    },
+    { totalComissaoDentista: 0, totalComissaoCRC: 0, totalVendas: 0, totalEntries: 0 },
+  )
+}
+
+function buildVendasFromFallback(
+  vendasRes: any[],
+  faixasD: FaixaBase[],
+  faixasC: FaixaBase[],
+): ComissaoVenda[] {
+  const dentistaAgg = new Map<string, { sales: number; entries: number }>()
+  const crcAgg = new Map<string, { sales: number; entries: number }>()
+
+  for (const v of vendasRes) {
+    if (v.dentista_avaliador) {
+      const agg = dentistaAgg.get(v.dentista_avaliador) || { sales: 0, entries: 0 }
+      agg.sales += Number(v.valor_tratamento) || 0
+      agg.entries += Number(v.valor_entrada) || 0
+      dentistaAgg.set(v.dentista_avaliador, agg)
+    }
+    if (v.crc) {
+      const agg = crcAgg.get(v.crc) || { sales: 0, entries: 0 }
+      agg.sales += Number(v.valor_tratamento) || 0
+      agg.entries += Number(v.valor_entrada) || 0
+      crcAgg.set(v.crc, agg)
+    }
+  }
+
+  const dentistaRate = new Map<string, number>()
+  for (const [id, agg] of dentistaAgg) {
+    const pct = agg.sales > 0 ? (agg.entries / agg.sales) * 100 : 0
+    dentistaRate.set(id, getPercentual(faixasD, pct))
+  }
+
+  const crcRate = new Map<string, number>()
+  for (const [id, agg] of crcAgg) {
+    const pct = agg.sales > 0 ? (agg.entries / agg.sales) * 100 : 0
+    crcRate.set(id, getPercentual(faixasC, pct))
+  }
+
+  return vendasRes.map((v: any) => {
+    const percD = v.dentista_avaliador ? dentistaRate.get(v.dentista_avaliador) || 0 : 0
+    const percC = v.crc ? crcRate.get(v.crc) || 0 : 0
+    const valorTrat = Number(v.valor_tratamento) || 0
+    return {
+      id: v.id,
+      paciente_nome: v.paciente_nome || '',
+      data_fechamento: v.data_fechamento,
+      valor_tratamento: valorTrat,
+      valor_entrada: Number(v.valor_entrada) || 0,
+      percentual_entrada: valorTrat > 0 ? (Number(v.valor_entrada) / valorTrat) * 100 : 0,
+      dentista_avaliador: v.dentista_avaliador || null,
+      dentista_nome: v.dentistas_avaliadores?.nome || null,
+      crc: v.crc || null,
+      crc_nome: v.crc_comercial?.nome || null,
+      percentual_comissao_dentista: percD,
+      valor_comissao_dentista: (valorTrat * percD) / 100,
+      percentual_comissao_crc: percC,
+      valor_comissao_crc: (valorTrat * percC) / 100,
+      status_comissao: v.status_comissao || null,
+    }
+  })
 }
 
 export async function fetchComissoesPeriodo(mesAno: string): Promise<{
@@ -108,35 +218,9 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
     p_data_fim: fimStr,
   })
 
-  if (!rpcError && rpcData && rpcData.length > 0) {
-    const vendas: ComissaoVenda[] = (rpcData as any[]).map((v) => ({
-      id: v.id,
-      paciente_nome: v.paciente_nome || '',
-      data_fechamento: v.data_fechamento,
-      valor_tratamento: Number(v.valor_tratamento) || 0,
-      valor_entrada: Number(v.valor_entrada) || 0,
-      percentual_entrada: Number(v.percentual_entrada) || 0,
-      dentista_avaliador: v.dentista_avaliador || null,
-      dentista_nome: v.dentista_nome || null,
-      crc: v.crc || null,
-      crc_nome: v.crc_nome || null,
-      percentual_comissao_dentista: Number(v.percentual_comissao_dentista) || 0,
-      valor_comissao_dentista: Number(v.valor_comissao_dentista) || 0,
-      percentual_comissao_crc: Number(v.percentual_comissao_crc) || 0,
-      valor_comissao_crc: Number(v.valor_comissao_crc) || 0,
-      status_comissao: v.status_comissao || null,
-    }))
-
-    const totals: DashboardTotals = vendas.reduce(
-      (acc, v) => {
-        acc.totalComissaoDentista += v.valor_comissao_dentista
-        acc.totalComissaoCRC += v.valor_comissao_crc
-        acc.totalVendas += v.valor_tratamento
-        return acc
-      },
-      { totalComissaoDentista: 0, totalComissaoCRC: 0, totalVendas: 0 },
-    )
-
+  if (!rpcError && rpcData && rpcData.length >= 0) {
+    const vendas = mapRpcData(rpcData as any[])
+    const totals = computeTotals(vendas)
     return { vendas, totals, profissionais: buildProfessionalSummaries(vendas) }
   }
 
@@ -153,39 +237,8 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
 
   const faixasD = (faixasDRes.data || []) as FaixaBase[]
   const faixasC = (faixasCRes.data || []) as FaixaBase[]
-
-  const vendas: ComissaoVenda[] = (vendasRes.data || []).map((v: any) => {
-    const percEntrada = v.valor_tratamento > 0 ? (v.valor_entrada / v.valor_tratamento) * 100 : 0
-    const percD = getPercentual(faixasD, percEntrada)
-    const percC = getPercentual(faixasC, percEntrada)
-    return {
-      id: v.id,
-      paciente_nome: v.paciente_nome || '',
-      data_fechamento: v.data_fechamento,
-      valor_tratamento: Number(v.valor_tratamento) || 0,
-      valor_entrada: Number(v.valor_entrada) || 0,
-      percentual_entrada: percEntrada,
-      dentista_avaliador: v.dentista_avaliador || null,
-      dentista_nome: v.dentistas_avaliadores?.nome || null,
-      crc: v.crc || null,
-      crc_nome: v.crc_comercial?.nome || null,
-      percentual_comissao_dentista: percD,
-      valor_comissao_dentista: ((Number(v.valor_tratamento) || 0) * percD) / 100,
-      percentual_comissao_crc: percC,
-      valor_comissao_crc: ((Number(v.valor_tratamento) || 0) * percC) / 100,
-      status_comissao: v.status_comissao || null,
-    }
-  })
-
-  const totals: DashboardTotals = vendas.reduce(
-    (acc, v) => {
-      acc.totalComissaoDentista += v.valor_comissao_dentista
-      acc.totalComissaoCRC += v.valor_comissao_crc
-      acc.totalVendas += v.valor_tratamento
-      return acc
-    },
-    { totalComissaoDentista: 0, totalComissaoCRC: 0, totalVendas: 0 },
-  )
+  const vendas = buildVendasFromFallback(vendasRes.data || [], faixasD, faixasC)
+  const totals = computeTotals(vendas)
 
   return { vendas, totals, profissionais: buildProfessionalSummaries(vendas) }
 }
