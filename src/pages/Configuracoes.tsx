@@ -12,20 +12,14 @@ import { useAuth } from '@/hooks/use-auth'
 export default function Configuracoes() {
   const { isAdmin, loading, hasPermission } = useAuth()
 
-  const canViewUsuarios = isAdmin || hasPermission('configuracoes_usuarios')
-  const canViewPermissoes = isAdmin || hasPermission('configuracoes_permissoes')
-  const canViewCadastros = isAdmin || hasPermission('configuracoes_parametros')
-  const canViewNegociacao = isAdmin || hasPermission('configuracoes_parametros')
+  const canViewAll = isAdmin || hasPermission('Acessar Parâmetros Gerais')
+  const canViewUsuarios = canViewAll
+  const canViewPermissoes = canViewAll
+  const canViewCadastros = canViewAll
+  const canViewNegociacao = canViewAll
 
-  const hasAnyAccess = canViewUsuarios || canViewPermissoes || canViewCadastros || canViewNegociacao
-
-  const defaultTab = canViewUsuarios
-    ? 'usuarios'
-    : canViewPermissoes
-      ? 'permissoes'
-      : canViewCadastros
-        ? 'cadastros'
-        : 'descontos'
+  const hasAnyAccess = canViewAll
+  const defaultTab = 'usuarios'
 
   if (loading) {
     return (

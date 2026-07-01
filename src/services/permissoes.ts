@@ -16,7 +16,10 @@ export type UsuarioComPermissoes = {
 
 export async function checkIsAdmin() {
   const { data, error } = await supabase.rpc('is_admin')
-  if (error) throw error
+  if (error) {
+    console.error('[permissoes] Error checking admin status:', error)
+    return false
+  }
   return !!data
 }
 
@@ -25,8 +28,11 @@ export async function getCargos() {
     .from('cargos')
     .select('*, cargo_permissoes(permissao_id)')
     .order('nome')
-  if (error) throw error
-  return data as Cargo[]
+  if (error) {
+    console.error('[permissoes] Error fetching cargos:', error)
+    throw error
+  }
+  return (data || []) as Cargo[]
 }
 
 export async function getPermissoes() {
@@ -35,8 +41,11 @@ export async function getPermissoes() {
     .select('*')
     .order('modulo')
     .order('nome')
-  if (error) throw error
-  return data as Permissao[]
+  if (error) {
+    console.error('[permissoes] Error fetching permissoes:', error)
+    throw error
+  }
+  return (data || []) as Permissao[]
 }
 
 export async function getUsuariosComPermissoes() {
@@ -46,8 +55,11 @@ export async function getUsuariosComPermissoes() {
       'id, nome, email, cargo:cargos!usuarios_cargo_id_fkey(nome), usuario_permissoes(permissao_id)',
     )
     .order('nome')
-  if (error) throw error
-  return data as unknown as UsuarioComPermissoes[]
+  if (error) {
+    console.error('[permissoes] Error fetching usuarios with permissoes:', error)
+    throw error
+  }
+  return (data || []) as unknown as UsuarioComPermissoes[]
 }
 
 export async function saveCargo(

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Shield, UserCog, ShieldAlert } from 'lucide-react'
+import { Plus, Shield, UserCog, ShieldAlert, Loader2, AlertCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
-  checkIsAdmin,
   getCargos,
   getPermissoes,
   getUsuariosComPermissoes,
@@ -17,16 +16,18 @@ import { Badge } from '@/components/ui/badge'
 import { CargoDialog } from './CargoDialog'
 import { UsuarioPermissoesDialog } from './UsuarioPermissoesDialog'
 import { getUsuarios } from '@/services/usuarios'
+import { useAuth } from '@/hooks/use-auth'
 
 export function PermissoesTab() {
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { isAdmin } = useAuth()
   const [cargos, setCargos] = useState<Cargo[]>([])
   const [permissoes, setPermissoes] = useState<Permissao[]>([])
   const [usuarios, setUsuarios] = useState<UsuarioComPermissoes[]>([])
   const [loading, setLoading] = useState(true)
+  const [partialError, setPartialError] = useState(false)
   const { toast } = useToast()
 
-  const [cargoDialogOpe, setCargoDialogOpen] = useState(false)
+  const [cargoDialogOpen, setCargoDialogOpen] = useState(false)
   const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null)
 
   const [userDialogOpen, setUserDialogOpen] = useState(false)
@@ -34,17 +35,20 @@ export function PermissoesTab() {
 
   const loadData = async () => {
     setLoading(true)
+    setPartialError(false)
     try {
-      const admin = await checkIsAdmin()
-      setIsAdmin(admin)
-      if (!admin) return
-
-      const [c, p, u, allUsers] = await Promise.all([
+      const results = await Promise.allSettled([
         getCargos(),
         getPermissoes(),
         getUsuariosComPermissoes(),
         getUsuarios(),
       ])
+
+      const c = results[0].status === 'fulfilled' ? results[0].value : []
+      const p = results[1].status === 'fulfilled' ? results[1].value : []
+      const u = results[2].status === 'fulfilled' ? results[2].value : []
+      const allUsers = results[3].status === 'fulfilled' ? results[3].value : []
+
       setCargos(c)
       setPermissoes(p)
 
@@ -52,7 +56,18 @@ export function PermissoesTab() {
         allUsers.filter((user) => user.status === 'ativo').map((user) => user.id),
       )
       setUsuarios(u.filter((user) => activeUserIds.has(user.id)))
+
+      const hasRejection = results.some((r) => r.status === 'rejected')
+      if (hasRejection) {
+        setPartialError(true)
+        toast({
+          title: 'Aviso',
+          description: 'Alguns dados não puderam ser carregados. Tente recarregar.',
+          variant: 'destructive',
+        })
+      }
     } catch (error: any) {
+      setPartialError(true)
       toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
@@ -60,10 +75,14 @@ export function PermissoesTab() {
   }
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (isAdmin) {
+      loadData()
+    } else {
+      setLoading(false)
+    }
+  }, [isAdmin])
 
-  if (!loading && !isAdmin) {
+  if (!isAdmin) {
     return (
       <Card className="border-border/50 shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
@@ -111,9 +130,24 @@ export function PermissoesTab() {
 
           <TabsContent value="cargos" className="space-y-4">
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Carregando cargos...</div>
+              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm">Carregando cargos...</span>
+              </div>
             ) : cargos.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">Nenhum cargo cadastrado.</div>
+              <div className="text-center py-8 text-muted-foreground">
+                {partialError ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <AlertCircle className="size-8 text-amber-500" />
+                    <p>Erro ao carregar cargos. Tente recarregar a página.</p>
+                    <Button variant="outline" size="sm" onClick={loadData} className="mt-2">
+                      Recarregar
+                    </Button>
+                  </div>
+                ) : (
+                  'Nenhum cargo cadastrado.'
+                )}
+              </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 items-start">
                 {cargos.map((cargo) => (
@@ -170,8 +204,15 @@ export function PermissoesTab() {
 
           <TabsContent value="usuarios" className="space-y-4">
             {loading ? (
+              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm">Carregando colaboradores...</span>
+              </div>
+            ) : usuarios.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Carregando colaboradores...
+                {partialError
+                  ? 'Erro ao carregar colaboradores. Tente recarregar.'
+                  : 'Nenhum colaborador encontrado.'}
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 items-start">
@@ -228,20 +269,20 @@ export function PermissoesTab() {
           </TabsContent>
         </Tabs>
 
-        {cargoDialogOpe && (
+        {cargoDialogOpen && (
           <CargoDialog
-            open={cargoDialogOpe}
+            open={cargoDialogOpen}
             onOpenChange={setCargoDialogOpen}
             cargo={selectedCargo}
             permissoes={permissoes}
             onSave={loadData}
           />
         )}
-        {userDialogOpen && (
+        {userDialogOpen && selectedUser && (
           <UsuarioPermissoesDialog
             open={userDialogOpen}
             onOpenChange={setUserDialogOpen}
-            usuario={selectedUser!}
+            usuario={selectedUser}
             permissoes={permissoes}
             onSave={loadData}
           />
