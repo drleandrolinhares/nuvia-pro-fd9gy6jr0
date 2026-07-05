@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { usePageState } from '@/hooks/use-page-state'
 import {
   getTarefas,
   updateTarefaStatus,
@@ -94,12 +95,17 @@ const getCardBg = (cor: string | null) => {
 export default function Parceiros() {
   const { user } = useAuth()
   const [categorias, setCategorias] = useState<TerceiroCategoria[]>([])
-  const [categoriaSlug, setCategoriaSlug] = useState('')
   const [etiquetasGlobais, setEtiquetasGlobais] = useState<TerceiroEtiquetaGlobal[]>([])
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
   const [colunas, setColunas] = useState<TerceiroColuna[]>([])
   const [historico, setHistorico] = useState<TerceiroHistorico[]>([])
   const { toast } = useToast()
+  const [categoriaSlug, setCategoriaSlug] = usePageState(
+    '/operacional/parceiros',
+    'categoriaSlug',
+    '',
+  )
+  const [searchQuery, setSearchQuery] = usePageState('/operacional/parceiros', 'searchQuery', '')
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isNewColModalOpen, setIsNewColModalOpen] = useState(false)
@@ -112,8 +118,6 @@ export default function Parceiros() {
   const [isEditCategoriaModalOpen, setIsEditCategoriaModalOpen] = useState(false)
   const [editingCategoriaId, setEditingCategoriaId] = useState<string | null>(null)
   const [editCategoriaTitle, setEditCategoriaTitle] = useState('')
-
-  const [searchQuery, setSearchQuery] = useState('')
 
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('bg-slate-500')
