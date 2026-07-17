@@ -55,7 +55,7 @@ DECLARE
   v_tenant_id uuid;
 BEGIN
   -- Get the first available tenant
-  SELECT id INTO v_tenant_id FROM public.tenants ORDER BY created_at LIMIT 1;
+  SELECT id INTO v_tenant_id FROM public.tenants ORDER BY criado_em LIMIT 1;
   IF v_tenant_id IS NULL THEN
     v_tenant_id := '00000000-0000-0000-0000-000000000001'::uuid;
   END IF;
