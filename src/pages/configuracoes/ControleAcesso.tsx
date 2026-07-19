@@ -29,6 +29,8 @@ export default function ControleAcesso() {
         setConfig(configData)
       } else {
         setConfig({
+          dom_inicio: '00:00',
+          dom_fim: '00:00',
           seg_inicio: '07:00',
           seg_fim: '19:00',
           ter_inicio: '07:00',
@@ -79,6 +81,7 @@ export default function ControleAcesso() {
   }
 
   const days = [
+    { id: 'dom', label: 'Domingo' },
     { id: 'seg', label: 'Segunda-feira' },
     { id: 'ter', label: 'Terça-feira' },
     { id: 'qua', label: 'Quarta-feira' },
@@ -127,6 +130,12 @@ export default function ControleAcesso() {
                   <span className="font-bold text-slate-100 uppercase tracking-wide text-sm">
                     {day.label}
                   </span>
+                  {day.id === 'dom' && (
+                    <p className="text-xs text-amber-500 mt-1 font-medium">
+                      Domingo: mantenha 00:00 — 00:00 para bloquear. Gerentes Administrativos
+                      possuem acesso irrestrito.
+                    </p>
+                  )}
                   {day.id === 'sab' && (
                     <p className="text-xs text-amber-500 mt-1 font-medium">
                       Aos sábados, apenas a página de Performance ficará acessível.

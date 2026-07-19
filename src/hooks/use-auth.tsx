@@ -17,6 +17,10 @@ export const isAdminRole = (role: string | null | undefined) => {
   return ['admin', 'administrador', 'ceo', 'diretoria', 'diretor', 'gestor'].includes(s)
 }
 
+export const isGerenteAdministrativoRole = (...nomes: (string | null | undefined)[]) => {
+  return nomes.some((nome) => !!nome && normalizeString(nome) === 'gerente administrativo')
+}
+
 interface Profile {
   id: string
   email: string
@@ -40,6 +44,7 @@ interface AuthContextType {
   profile: Profile | null
   permissions: string[]
   isAdmin: boolean
+  isGerenteAdministrativo: boolean
   acessoConfig: any | null
   signUp: (email: string, password: string, nome?: string) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
@@ -64,6 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [permissions, setPermissions] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isGerenteAdministrativo, setIsGerenteAdministrativo] = useState(false)
   const [acessoConfig, setAcessoConfig] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [permissionsLoaded, setPermissionsLoaded] = useState(false)
@@ -160,9 +166,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('[auth] Error fetching permissions:', e)
     }
 
+    const userIsGerenteAdm = isGerenteAdministrativoRole(
+      p.cargo_principal_nome,
+      p.cargo_secundario_nome,
+    )
+
     return {
       profile: p,
       isAdmin: userIsAdmin,
+      isGerenteAdministrativo: userIsGerenteAdm,
       acessoConfig,
       permissions: userPermissions,
     }
@@ -177,6 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data) {
         setProfile(data.profile)
         setIsAdmin(data.isAdmin)
+        setIsGerenteAdministrativo(data.isGerenteAdministrativo)
         setAcessoConfig(data.acessoConfig)
         setPermissions(data.permissions || [])
         setPermissionsLoaded(true)
@@ -208,6 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data && mounted) {
           setProfile(data.profile)
           setIsAdmin(data.isAdmin)
+          setIsGerenteAdministrativo(data.isGerenteAdministrativo)
           setAcessoConfig(data.acessoConfig)
           setPermissions(data.permissions || [])
           setPermissionsLoaded(true)
@@ -217,6 +231,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (mounted) {
           setProfile(null)
           setIsAdmin(false)
+          setIsGerenteAdministrativo(false)
           setAcessoConfig(null)
           setPermissions([])
           setPermissionsLoaded(false)
@@ -236,6 +251,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_OUT') {
         setProfile(null)
         setIsAdmin(false)
+        setIsGerenteAdministrativo(false)
         setAcessoConfig(null)
         setPermissions([])
         setPermissionsLoaded(false)
@@ -307,6 +323,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile,
         permissions,
         isAdmin,
+        isGerenteAdministrativo,
         acessoConfig,
         signUp,
         signIn,

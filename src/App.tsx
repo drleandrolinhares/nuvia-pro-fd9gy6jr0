@@ -92,7 +92,7 @@ const AccessDeniedMessage = ({ message }: { message: string }) => {
 }
 
 const AccessGuard = ({ children }: { children: React.ReactNode }) => {
-  const { profile, acessoConfig, loading, user, isAdmin } = useAuth()
+  const { profile, acessoConfig, loading, user, isAdmin, isGerenteAdministrativo } = useAuth()
   const location = useLocation()
   const [checking, setChecking] = useState(true)
   const [blockReason, setBlockReason] = useState<string | null>(null)
@@ -100,7 +100,7 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading || !user) return
 
-    if (isAdmin) {
+    if (isAdmin || isGerenteAdministrativo) {
       setChecking(false)
       return
     }
@@ -174,7 +174,7 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
     checkAbsences()
 
     return () => clearTimeout(timeoutId)
-  }, [loading, user, profile, isAdmin])
+  }, [loading, user, profile, isAdmin, isGerenteAdministrativo])
 
   if (loading || checking) {
     return (
@@ -184,25 +184,25 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
     )
   }
 
-  if (!isAdmin && blockReason) {
+  if (!isAdmin && !isGerenteAdministrativo && blockReason) {
     return <AccessDeniedMessage message={blockReason} />
   }
 
-  if (!isAdmin && acessoConfig) {
+  if (!isAdmin && !isGerenteAdministrativo && acessoConfig) {
     const now = new Date()
     const day = now.getDay()
     const currentHour = now.getHours()
     const currentMinute = now.getMinutes()
     const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
 
-    if (day === 0) {
-      return <AccessDeniedMessage message="O acesso ao sistema não é permitido aos domingos." />
-    }
-
     let inicio = ''
     let fim = ''
 
     switch (day) {
+      case 0:
+        inicio = acessoConfig.dom_inicio
+        fim = acessoConfig.dom_fim
+        break
       case 1:
         inicio = acessoConfig.seg_inicio
         fim = acessoConfig.seg_fim
