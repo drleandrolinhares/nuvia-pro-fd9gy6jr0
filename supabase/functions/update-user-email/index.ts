@@ -11,24 +11,29 @@ Deno.serve(async (req: Request) => {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } },
     )
 
     // Verify user is logged in
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
     if (userError || !user) throw new Error('Unauthorized')
 
     // Check permission
-    const { data: hasPerm, error: permError } = await supabaseClient.rpc('has_permission', { permission_name: 'Gerenciar Colaboradores' })
+    const { data: hasPerm, error: permError } = await supabaseClient.rpc('has_permission', {
+      permission_name: 'Gerenciar Colaboradores',
+    })
     if (permError) throw permError
-    
+
     if (!hasPerm) {
       throw new Error('Unauthorized: Permission denied')
     }
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
     const { userId, email } = await req.json()
@@ -39,7 +44,7 @@ Deno.serve(async (req: Request) => {
 
     const { data, error } = await adminClient.auth.admin.updateUserById(userId, {
       email: email,
-      email_confirm: true
+      email_confirm: true,
     })
 
     if (error) throw error

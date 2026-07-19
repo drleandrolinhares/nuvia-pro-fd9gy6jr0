@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [permissions] = useState<string[]>([])
+  const [permissions, setPermissions] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [acessoConfig, setAcessoConfig] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,9 +91,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         cargo_secundario: userProfile.cargo_secundario || null,
       }
 
-      const [isAdmRes, acessoRes] = await Promise.all([
+      const [isAdmRes, acessoRes, permsRes] = await Promise.all([
         supabase.rpc('is_admin'),
         supabase.from('configuracoes_acesso').select('*').limit(1).maybeSingle(),
+        supabase.rpc('get_user_permissions', { p_user_id: userId }),
       ])
 
       let userIsAdmin = isAdmRes.data === true
@@ -108,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile: p,
         isAdmin: userIsAdmin,
         acessoConfig: acessoRes.data || null,
+        permissions: (permsRes.data as string[]) || [],
       }
     } catch (err) {
       console.error('Error in fetchProfileData:', err)
@@ -125,6 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(data.profile)
         setIsAdmin(data.isAdmin)
         setAcessoConfig(data.acessoConfig)
+        setPermissions(data.permissions || [])
       }
     }
   }
@@ -154,6 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(data.profile)
           setIsAdmin(data.isAdmin)
           setAcessoConfig(data.acessoConfig)
+          setPermissions(data.permissions || [])
         }
         setupRealtime(currentSession.user.id)
       } else {
@@ -161,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null)
           setIsAdmin(false)
           setAcessoConfig(null)
+          setPermissions([])
         }
         if (userChannel) supabase.removeChannel(userChannel)
       }
@@ -178,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null)
         setIsAdmin(false)
         setAcessoConfig(null)
+        setPermissions([])
         setLoading(false)
         if (userChannel) supabase.removeChannel(userChannel)
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -222,10 +228,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
-  const hasPermission = (_perms: string | string[]) => {
+  const hasPermission = (perms: string | string[]) => {
     if (isAdmin) return true
     if (profile?.status?.toLowerCase() === 'inativo') return false
-    return true
+    const permArray = Array.isArray(perms) ? perms : [perms]
+    return permArray.some((p) => permissions.includes(p))
   }
 
   return (

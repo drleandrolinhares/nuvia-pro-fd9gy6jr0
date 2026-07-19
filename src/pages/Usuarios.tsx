@@ -43,8 +43,10 @@ import {
   GripVertical,
   Settings,
   CalendarClock,
+  KeyRound,
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
+import { resetUserPassword } from '@/services/permissoes'
 import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 import {
   DropdownMenu,
@@ -206,6 +208,18 @@ export default function Usuarios() {
     } catch (error) {
       console.error(error)
       toast.error('Erro ao atualizar permissão')
+    }
+  }
+
+  const handleResetPassword = async (usuario: ExtendedUsuario) => {
+    try {
+      await resetUserPassword(usuario.id)
+      toast.success(
+        `Senha de ${usuario.nome} resetada para 123456. O usuário deverá trocar a senha no próximo login.`,
+      )
+    } catch (error: any) {
+      console.error(error)
+      toast.error(error.message || 'Erro ao resetar senha')
     }
   }
 
@@ -621,6 +635,12 @@ export default function Usuarios() {
                               className="cursor-pointer"
                             >
                               <Edit className="w-4 h-4 mr-2 text-slate-500" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleResetPassword(usuario)}
+                              className="cursor-pointer"
+                            >
+                              <KeyRound className="w-4 h-4 mr-2 text-slate-500" /> Resetar Senha
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

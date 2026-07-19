@@ -43,6 +43,7 @@ import Precificacao from './pages/administrativo/Precificacao'
 import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
+import RecadastrarSenha from './pages/RecadastrarSenha'
 import Chat from './pages/Chat'
 import { Loader2, Lock, Shield } from 'lucide-react'
 import SmartLock from './pages/configuracoes/SmartLock'
@@ -260,13 +261,16 @@ const PermissionDeniedMessage = () => {
 }
 
 const ProtectedRoute = ({
+  allowedPermissions,
   children,
+  openToAll,
 }: {
   allowedPermissions?: string[]
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { loading } = useAuth()
+  const { loading, hasPermission, profile } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -274,6 +278,14 @@ const ProtectedRoute = ({
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
       </div>
     )
+  }
+
+  if (profile?.force_password_change && location.pathname !== '/recadastrar-senha') {
+    return <Navigate to="/recadastrar-senha" replace />
+  }
+
+  if (!openToAll && allowedPermissions && !hasPermission(allowedPermissions)) {
+    return <PermissionDeniedMessage />
   }
 
   return <>{children}</>
@@ -305,9 +317,19 @@ const AppRoutes = () => {
     )
   }
 
+  if (profile?.force_password_change) {
+    return (
+      <Routes>
+        <Route path="/recadastrar-senha" element={<RecadastrarSenha />} />
+        <Route path="*" element={<Navigate to="/recadastrar-senha" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <Routes>
       <Route path="/viewer" element={<DocumentViewer />} />
+      <Route path="/recadastrar-senha" element={<RecadastrarSenha />} />
       <Route
         element={
           <AccessGuard>
@@ -320,6 +342,36 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>
               <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute openToAll={true}>
+              <Perfil />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  )
+}
+=======
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>              <Index />
             </ProtectedRoute>
           }
         />

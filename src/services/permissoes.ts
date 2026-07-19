@@ -3,8 +3,11 @@ import { supabase } from '@/lib/supabase/client'
 export type Permissao = {
   id: string
   nome: string
-  descricao: string | null
+  slug: string
   modulo: string | null
+  descricao: string | null
+  ordem: number
+  ativo: boolean
 }
 
 export type Cargo = {
@@ -45,7 +48,25 @@ export async function getCargos() {
 }
 
 export async function getPermissoes(): Promise<Permissao[]> {
-  return []
+  const { data, error } = await supabase
+    .from('permissoes')
+    .select('*')
+    .eq('ativo', true)
+    .order('ordem')
+  if (error) {
+    console.error('[permissoes] Error fetching permissoes:', error)
+    return []
+  }
+  return (data || []) as Permissao[]
+}
+
+export async function getUsuarioPermissoes(usuarioId: string): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: usuarioId })
+  if (error) {
+    console.error('[permissoes] Error fetching user permissions:', error)
+    return []
+  }
+  return (data || []) as string[]
 }
 
 export async function getUsuariosComPermissoes() {
@@ -57,7 +78,65 @@ export async function getUsuariosComPermissoes() {
     console.error('[permissoes] Error fetching usuarios:', error)
     throw error
   }
-  return (data || []).map((u: any) => ({ ...u, usuario_permissoes: [] })) as UsuarioComPermissoes[]
+
+  const usuarios = (data || []).map((u: any) => ({
+    ...u,
+    usuario_permissoes: [],
+  })) as UsuarioComPermissoes[]
+
+  const { data: userPerms, error: permsError } = await supabase
+    .from('usuario_permissoes')
+    .select('usuario_id, permissao_id')
+
+  if (permsError) {
+    console.error('[permissoes] Error fetching usuario_permissoes:', permsError)
+    return usuarios
+  }
+
+  const permsMap = new Map<string, string[]>()
+  if (userPerms) {
+    userPerms.forEach((up: any) => {
+      if (!permsMap.has(up.usuario_id)) permsMap.set(up.usuario_id, [])
+      permsMap.get(up.usuario_id)!.push(up.permissao_id)
+    })
+  }
+
+  return usuarios.map(
+    (u) =>
+      ({
+        ...u,
+        usuario_permissoes: (permsMap.get(u.id) || []).map((pid) => ({ permissao_id: pid })),
+      }) as UsuarioComPermissoes,
+  )
+}
+
+export async function saveUsuarioPermissoes(usuarioId: string, permissaoIds: string[]) {
+  const { error: deleteError } = await supabase
+    .from('usuario_permissoes')
+    .delete()
+    .eq('usuario_id', usuarioId)
+
+  if (deleteError) throw deleteError
+
+  if (permissaoIds.length > 0) {
+    const inserts = permissaoIds.map((pid) => ({
+      usuario_id: usuarioId,
+      permissao_id: pid,
+    }))
+
+    const { error: insertError } = await supabase.from('usuario_permissoes').insert(inserts)
+
+    if (insertError) throw insertError
+  }
+}
+
+export async function resetUserPassword(usuarioId: string) {
+  const { data, error } = await supabase.functions.invoke('update-user-password', {
+    body: { userId: usuarioId, password: '123456' },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data
 }
 
 export async function saveCargo(
@@ -82,8 +161,4 @@ export async function saveCargo(
   }
 
   return id
-}
-
-export async function saveUsuarioPermissoes(_usuarioId: string, _permissoes: string[]) {
-  // No-op: permissions tables have been removed from the database
 }
