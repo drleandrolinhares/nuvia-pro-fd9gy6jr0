@@ -165,9 +165,12 @@ export default function Usuarios() {
         setUsuarios(extendedUs)
         setCargos(cs)
       }
-    } catch (error) {
-      console.error(error)
-      toast.error('Erro ao carregar usuários')
+    } catch (error: any) {
+      console.error('[Usuarios] Error loading data:', error)
+      const errMsg = error?.message
+        ? `Erro ao carregar usuários: ${error.message}`
+        : 'Erro ao carregar dados. Verifique suas permissões e tente novamente.'
+      toast.error(errMsg)
     } finally {
       setLoading(false)
     }

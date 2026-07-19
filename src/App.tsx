@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { AuthProvider, useAuth, normalizeString } from '@/hooks/use-auth'
+import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { CacheProvider } from '@/hooks/use-cache'
 import { GlobalNormasPopup } from '@/components/normas/global-normas-popup'
 import { SacNotificationPopup } from '@/components/sac/sac-notification-popup'
@@ -355,24 +355,6 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>
-              {' '}
-              <Index />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route
-          path="/perfil"
-          element={
-            <ProtectedRoute openToAll={true}>
-              <Perfil />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/chat"
           element={
             <ProtectedRoute allowedPermissions={['Acessar Chat']}>
@@ -380,45 +362,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Protected Routes */}
-        =======
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        {/* Protected Routes */}
-        =======
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>
-              {' '}
-              <Index />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route
-          path="/perfil"
-          element={
-            <ProtectedRoute openToAll={true}>
-              <Perfil />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        {/* Protected Routes */}
         <Route
           path="/estoque"
           element={
@@ -508,7 +451,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Intranet Routes */}
         <Route
           path="/operacional/performance"
           element={<Navigate to="/intranet/performance" replace />}
@@ -537,7 +479,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Operacional Routes */}
         <Route
           path="/operacional/pedidos"
           element={
@@ -586,7 +527,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Administrativo Routes */}
         <Route
           path="/administrativo/precificacao"
           element={
@@ -595,7 +535,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Diretrizes Routes */}
         <Route
           path="/diretrizes/pro-agenda"
           element={
@@ -612,7 +551,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        {/* Comercial Routes */}
         <Route
           path="/comercial/funil"
           element={

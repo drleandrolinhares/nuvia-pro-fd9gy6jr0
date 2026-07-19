@@ -116,10 +116,13 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
   return userId
 }
 
-export async function checkHasPermission(_permissionName: string) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return false
-  return true
+export async function checkHasPermission(permissionName: string) {
+  const { data, error } = await supabase.rpc('has_permission', {
+    permission_name: permissionName,
+  })
+  if (error) {
+    console.error('[usuarios] Error checking permission:', error)
+    return false
+  }
+  return !!data
 }
