@@ -46,7 +46,6 @@ DROP POLICY IF EXISTS "usuario_permissoes_delete" ON public.usuario_permissoes;
 CREATE POLICY "usuario_permissoes_delete" ON public.usuario_permissoes FOR DELETE TO authenticated USING (true);
 
 -- 7. Update is_admin function to properly check user role
-DROP FUNCTION IF EXISTS public.is_admin();
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -64,7 +63,6 @@ AS $$
 $$;
 
 -- 8. Update has_permission function to check permissions table
-DROP FUNCTION IF EXISTS public.has_permission(text);
 CREATE OR REPLACE FUNCTION public.has_permission(permission_name TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -83,7 +81,6 @@ AS $$
 $$;
 
 -- 9. Update get_user_permissions to return actual permission slugs
-DROP FUNCTION IF EXISTS public.get_user_permissions(uuid);
 CREATE OR REPLACE FUNCTION public.get_user_permissions(p_user_id UUID DEFAULT NULL)
 RETURNS TEXT[]
 LANGUAGE sql

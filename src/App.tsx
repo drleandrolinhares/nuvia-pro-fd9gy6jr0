@@ -355,23 +355,11 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/chat"
-          element={
-            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  )
-}
-=======
-        <Route
           path="/"
           element={
-            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>              <Index />
+            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>
+              {' '}
+              <Index />
             </ProtectedRoute>
           }
         />
@@ -392,7 +380,44 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
+        {/* Protected Routes */}
+        =======
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        {/* Protected Routes */}
+        =======
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Dashboard']}>
+              {' '}
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute openToAll={true}>
+              <Perfil />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Chat']}>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
         {/* Protected Routes */}
         <Route
           path="/estoque"
@@ -483,7 +508,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         {/* Intranet Routes */}
         <Route
           path="/operacional/performance"
@@ -513,7 +537,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         {/* Operacional Routes */}
         <Route
           path="/operacional/pedidos"
@@ -563,7 +586,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         {/* Administrativo Routes */}
         <Route
           path="/administrativo/precificacao"
@@ -573,7 +595,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         {/* Diretrizes Routes */}
         <Route
           path="/diretrizes/pro-agenda"
@@ -591,7 +612,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         {/* Comercial Routes */}
         <Route
           path="/comercial/funil"
