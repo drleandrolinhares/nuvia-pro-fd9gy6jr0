@@ -44,7 +44,33 @@ export async function getCargos() {
     console.error('[permissoes] Error fetching cargos:', error)
     throw error
   }
-  return (data || []).map((c: any) => ({ ...c, cargo_permissoes: [] })) as Cargo[]
+
+  const cargos = (data || []).map((c: any) => ({ ...c, cargo_permissoes: [] })) as Cargo[]
+
+  const { data: cargoPerms, error: permsError } = await supabase
+    .from('cargo_permissoes')
+    .select('cargo_id, permissao_id')
+
+  if (permsError) {
+    console.error('[permissoes] Error fetching cargo_permissoes:', permsError)
+    return cargos
+  }
+
+  const permsMap = new Map<string, string[]>()
+  if (cargoPerms) {
+    cargoPerms.forEach((cp: any) => {
+      if (!permsMap.has(cp.cargo_id)) permsMap.set(cp.cargo_id, [])
+      permsMap.get(cp.cargo_id)!.push(cp.permissao_id)
+    })
+  }
+
+  return cargos.map(
+    (c) =>
+      ({
+        ...c,
+        cargo_permissoes: (permsMap.get(c.id) || []).map((pid) => ({ permissao_id: pid })),
+      }) as Cargo,
+  )
 }
 
 export async function getPermissoes(): Promise<Permissao[]> {
@@ -158,6 +184,21 @@ export async function saveCargo(
       .update({ nome: data.nome, setor: data.setor, descricao: data.descricao })
       .eq('id', id)
     if (error) throw error
+  }
+
+  const { error: deletePermsError } = await supabase
+    .from('cargo_permissoes')
+    .delete()
+    .eq('cargo_id', id)
+  if (deletePermsError) throw deletePermsError
+
+  if (data.permissoes.length > 0) {
+    const inserts = data.permissoes.map((pid) => ({
+      cargo_id: id,
+      permissao_id: pid,
+    }))
+    const { error: insertPermsError } = await supabase.from('cargo_permissoes').insert(inserts)
+    if (insertPermsError) throw insertPermsError
   }
 
   return id
