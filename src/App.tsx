@@ -269,10 +269,23 @@ const ProtectedRoute = ({
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { loading, hasPermission, profile } = useAuth()
+  const { loading, hasPermission, profile, isAdmin } = useAuth()
   const location = useLocation()
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTimeout(false)
+      return
+    }
+    const timer = setTimeout(() => {
+      console.warn('[auth] ProtectedRoute loading timeout — proceeding with available data')
+      setLoadingTimeout(true)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [loading])
+
+  if (loading && !loadingTimeout) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
@@ -284,7 +297,11 @@ const ProtectedRoute = ({
     return <Navigate to="/recadastrar-senha" replace />
   }
 
-  if (!openToAll && allowedPermissions && !hasPermission(allowedPermissions)) {
+  if (isAdmin || openToAll) {
+    return <>{children}</>
+  }
+
+  if (allowedPermissions && !hasPermission(allowedPermissions)) {
     return <PermissionDeniedMessage />
   }
 

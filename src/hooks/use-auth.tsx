@@ -67,53 +67,92 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const fetchProfileData = async (userId: string) => {
+    let userProfile: any = null
+
     try {
-      const { data: userProfile, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('usuarios')
-        .select(`
-          *,
-          cargo_principal:cargos!usuarios_cargo_id_fkey(nome),
-          cargo_secundario:cargos!usuarios_cargo_secundario_id_fkey(nome)
-        `)
+        .select(
+          `*, cargo_principal:cargos!usuarios_cargo_id_fkey(nome), cargo_secundario:cargos!usuarios_cargo_secundario_id_fkey(nome)`,
+        )
         .eq('id', userId)
         .single()
 
-      if (profileError || !userProfile) {
-        console.error('Error fetching profile', profileError)
+      if (!error && data) {
+        userProfile = data
+      }
+    } catch (e) {
+      console.error('[auth] Profile query with joins failed:', e)
+    }
+
+    if (!userProfile) {
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (error || !data) {
+          console.error('[auth] Error fetching profile:', error)
+          return null
+        }
+        userProfile = data
+      } catch (e) {
+        console.error('[auth] Error fetching profile (fallback):', e)
         return null
       }
+    }
 
-      const p: Profile = {
-        ...userProfile,
-        cargo_principal_nome: userProfile.cargo_principal?.nome || null,
-        cargo_secundario_nome: userProfile.cargo_secundario?.nome || null,
-        cargo_principal: userProfile.cargo_principal || null,
-        cargo_secundario: userProfile.cargo_secundario || null,
-      }
+    const p: Profile = {
+      ...userProfile,
+      cargo_principal_nome: userProfile.cargo_principal?.nome || null,
+      cargo_secundario_nome: userProfile.cargo_secundario?.nome || null,
+      cargo_principal: userProfile.cargo_principal || null,
+      cargo_secundario: userProfile.cargo_secundario || null,
+    }
 
-      const [isAdmRes, acessoRes, permsRes] = await Promise.all([
-        supabase.rpc('is_admin'),
-        supabase.from('configuracoes_acesso').select('*').limit(1).maybeSingle(),
-        supabase.rpc('get_user_permissions', { p_user_id: userId }),
-      ])
+    let userIsAdmin = false
+    let acessoConfig: any = null
+    let userPermissions: string[] = []
 
-      let userIsAdmin = isAdmRes.data === true
-      if (!userIsAdmin) {
-        userIsAdmin =
-          isAdminRole(p.role) ||
-          isAdminRole(p.cargo_principal_nome) ||
-          isAdminRole(p.cargo_secundario_nome)
-      }
+    try {
+      const { data, error } = await supabase.rpc('is_admin')
+      if (!error) userIsAdmin = data === true
+    } catch (e) {
+      console.error('[auth] Error checking admin status:', e)
+    }
 
-      return {
-        profile: p,
-        isAdmin: userIsAdmin,
-        acessoConfig: acessoRes.data || null,
-        permissions: (permsRes.data as string[]) || [],
-      }
-    } catch (err) {
-      console.error('Error in fetchProfileData:', err)
-      return null
+    if (!userIsAdmin) {
+      userIsAdmin =
+        isAdminRole(p.role) ||
+        isAdminRole(p.cargo_principal_nome) ||
+        isAdminRole(p.cargo_secundario_nome)
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('configuracoes_acesso')
+        .select('*')
+        .limit(1)
+        .maybeSingle()
+      if (!error) acessoConfig = data || null
+    } catch (e) {
+      console.error('[auth] Error fetching access config:', e)
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: userId })
+      if (!error) userPermissions = (data as string[]) || []
+    } catch (e) {
+      console.error('[auth] Error fetching permissions:', e)
+    }
+
+    return {
+      profile: p,
+      isAdmin: userIsAdmin,
+      acessoConfig,
+      permissions: userPermissions,
     }
   }
 
