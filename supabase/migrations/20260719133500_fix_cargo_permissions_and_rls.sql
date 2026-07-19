@@ -1,6 +1,8 @@
 -- Fix: consistent with post-remove_permissions state (no cargo_permissoes table)
 -- Keep constant pass-through functions matching 20260531235959_remove_permissions.sql
 
+DROP FUNCTION IF EXISTS public.get_user_permissions(uuid);
+
 CREATE OR REPLACE FUNCTION public.get_user_permissions(p_user_id uuid)
 RETURNS text[]
 LANGUAGE sql
