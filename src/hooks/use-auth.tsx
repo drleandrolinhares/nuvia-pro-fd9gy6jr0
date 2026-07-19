@@ -45,6 +45,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
+  permissionsLoaded: boolean
   hasPermission: (perms: string | string[]) => boolean
   refreshProfile: () => Promise<void>
 }
@@ -65,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [acessoConfig, setAcessoConfig] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false)
 
   const fetchProfileData = async (userId: string) => {
     let userProfile: any = null
@@ -93,14 +95,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', userId)
           .single()
 
-        if (error || !data) {
-          console.error('[auth] Error fetching profile:', error)
-          return null
+        if (!error && data) {
+          userProfile = data
         }
-        userProfile = data
       } catch (e) {
         console.error('[auth] Error fetching profile (fallback):', e)
-        return null
+      }
+    }
+
+    if (!userProfile) {
+      userProfile = {
+        id: userId,
+        email: '',
+        nome: '',
+        role: null,
+        status: 'ativo',
+        cargo_id: null,
+        cargo_secundario_id: null,
+        exigir_rotina: false,
       }
     }
 
@@ -167,6 +179,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(data.isAdmin)
         setAcessoConfig(data.acessoConfig)
         setPermissions(data.permissions || [])
+        setPermissionsLoaded(true)
       }
     }
   }
@@ -197,6 +210,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(data.isAdmin)
           setAcessoConfig(data.acessoConfig)
           setPermissions(data.permissions || [])
+          setPermissionsLoaded(true)
         }
         setupRealtime(currentSession.user.id)
       } else {
@@ -205,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(false)
           setAcessoConfig(null)
           setPermissions([])
+          setPermissionsLoaded(false)
         }
         if (userChannel) supabase.removeChannel(userChannel)
       }
@@ -223,6 +238,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(false)
         setAcessoConfig(null)
         setPermissions([])
+        setPermissionsLoaded(false)
         setLoading(false)
         if (userChannel) supabase.removeChannel(userChannel)
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -244,6 +260,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (userChannel) supabase.removeChannel(userChannel)
     }
   }, [])
+
+  useEffect(() => {
+    if (!loading) return
+    const timer = setTimeout(() => {
+      console.warn('[auth] Loading timeout — proceeding with available data')
+      setLoading(false)
+    }, 8000)
+    return () => clearTimeout(timer)
+  }, [loading])
 
   const signUp = async (email: string, password: string, nome?: string) => {
     const { error } = await supabase.auth.signUp({
@@ -287,6 +312,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signIn,
         signOut,
         loading,
+        permissionsLoaded,
         hasPermission,
         refreshProfile,
       }}

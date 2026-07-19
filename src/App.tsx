@@ -100,6 +100,16 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading || !user) return
 
+    if (isAdmin) {
+      setChecking(false)
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      console.warn('[AccessGuard] Absence check timeout — allowing access')
+      setChecking(false)
+    }, 5000)
+
     const checkAbsences = async () => {
       try {
         const now = new Date()
@@ -141,7 +151,6 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
 
           if (fullDayGlobal) {
             setBlockReason(`Sistema em recesso/feriado: ${fullDayGlobal.descricao}`)
-            setChecking(false)
             return
           }
 
@@ -149,23 +158,22 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
             setBlockReason(
               `Acesso restrito: Você está de ${fullDayUser.tipo} (${fullDayUser.descricao})`,
             )
-            setChecking(false)
             return
           }
         }
         setBlockReason(null)
       } catch (error) {
         console.error('Error checking absences', error)
+        setBlockReason(null)
       } finally {
+        clearTimeout(timeoutId)
         setChecking(false)
       }
     }
 
-    if (isAdmin) {
-      setChecking(false)
-    } else {
-      checkAbsences()
-    }
+    checkAbsences()
+
+    return () => clearTimeout(timeoutId)
   }, [loading, user, profile, isAdmin])
 
   if (loading || checking) {
@@ -269,7 +277,7 @@ const ProtectedRoute = ({
   children: React.ReactNode
   openToAll?: boolean
 }) => {
-  const { loading, hasPermission, profile, isAdmin } = useAuth()
+  const { loading, hasPermission, profile, isAdmin, permissionsLoaded } = useAuth()
   const location = useLocation()
   const [loadingTimeout, setLoadingTimeout] = useState(false)
 
@@ -285,7 +293,7 @@ const ProtectedRoute = ({
     return () => clearTimeout(timer)
   }, [loading])
 
-  if (loading && !loadingTimeout) {
+  if ((loading || (!permissionsLoaded && !isAdmin)) && !loadingTimeout) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
@@ -310,8 +318,21 @@ const ProtectedRoute = ({
 
 const AppRoutes = () => {
   const { user, loading, profile } = useAuth()
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTimeout(false)
+      return
+    }
+    const timer = setTimeout(() => {
+      console.warn('[auth] AppRoutes loading timeout — proceeding with available data')
+      setLoadingTimeout(true)
+    }, 8000)
+    return () => clearTimeout(timer)
+  }, [loading])
+
+  if (loading && !loadingTimeout) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center flex-col gap-4">
         <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
@@ -399,7 +420,7 @@ const AppRoutes = () => {
         <Route
           path="/usuarios"
           element={
-            <ProtectedRoute allowedPermissions={['Acessar Usuários']}>
+            <ProtectedRoute allowedPermissions={['Gerenciar Colaboradores']}>
               <Usuarios />
             </ProtectedRoute>
           }

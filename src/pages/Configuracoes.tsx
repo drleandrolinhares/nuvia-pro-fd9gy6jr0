@@ -10,7 +10,7 @@ import DentistasProTab from './configuracoes/DentistasProTab'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Configuracoes() {
-  const { isAdmin, loading, hasPermission } = useAuth()
+  const { isAdmin, loading, hasPermission, permissionsLoaded } = useAuth()
 
   const canViewAll = isAdmin || hasPermission('Acessar Parâmetros Gerais')
   const canViewUsuarios = canViewAll
@@ -20,7 +20,7 @@ export default function Configuracoes() {
   const hasAnyAccess = canViewAll
   const defaultTab = 'usuarios'
 
-  if (loading) {
+  if (loading || (!permissionsLoaded && !isAdmin)) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">

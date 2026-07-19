@@ -4,7 +4,6 @@ import {
   getCargos,
   updateUsuarioStatus,
   updateUsuarioRole,
-  checkHasPermission,
   UsuarioWithCargo,
 } from '@/services/usuarios'
 import { Button } from '@/components/ui/button'
@@ -126,11 +125,11 @@ export default function Usuarios() {
   const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
-  const { profile, isAdmin } = useAuth()
+  const { profile, isAdmin, hasPermission: checkPermission, permissionsLoaded } = useAuth()
 
   const load = async () => {
     try {
-      const permitted = await checkHasPermission('Gerenciar Colaboradores')
+      const permitted = isAdmin || checkPermission('Gerenciar Colaboradores')
       setHasPermission(permitted)
 
       if (permitted) {
@@ -265,7 +264,7 @@ export default function Usuarios() {
     }
   }
 
-  if (loading) {
+  if (loading || !permissionsLoaded) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
