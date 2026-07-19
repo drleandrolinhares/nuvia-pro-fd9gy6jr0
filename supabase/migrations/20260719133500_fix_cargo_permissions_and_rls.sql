@@ -56,7 +56,6 @@ CREATE POLICY "cargo_permissoes_update" ON public.cargo_permissoes
   FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "cargo_permissoes_delete" ON public.cargo_permissoes;
-CREATE POLICY IF EXISTS "cargo_permissoes_delete" ON public.cargo_permissoes;
 CREATE POLICY "cargo_permissoes_delete" ON public.cargo_permissoes
   FOR DELETE TO authenticated USING (true);
 
