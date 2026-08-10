@@ -48,13 +48,47 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
   let userId = data.id
 
   if (!isEdit) {
+    if (!data.cargo_id) {
+      throw new Error(
+        'O Cargo Principal é obrigatório. Selecione um cargo na aba "Profissional" antes de salvar.',
+      )
+    }
+
     const { data: edgeData, error: edgeError } = await supabase.functions.invoke('create-user', {
       body: {
         email: data.email,
         password: data.password,
         nome: data.nome,
+        cpf: data.cpf,
+        data_nascimento: data.data_nascimento || null,
+        telefone: data.telefone,
+        endereco: data.endereco,
+        cargo_id: data.cargo_id,
+        cargo_secundario_id: data.cargo_secundario_id || null,
+        data_admissao: data.data_admissao || null,
+        salario: data.salario || null,
+        status: data.status || 'ativo',
+        horario_entrada: data.horario_entrada || null,
+        horario_saida: data.horario_saida || null,
+        dias_trabalho: data.dias_trabalho || [1, 2, 3, 4, 5],
+        obrigatorio_pp_pdm: data.obrigatorio_pp_pdm ?? false,
+        obrigatorio_bonificacao: data.obrigatorio_bonificacao ?? false,
+        possui_carteira: data.possui_carteira ?? true,
+        exigir_rotina: data.exigir_rotina ?? true,
+        elegivel_ferias: data.elegivel_ferias ?? false,
+        acesso_chat: data.acesso_chat ?? true,
+        pode_realizar_lancamento: data.pode_realizar_lancamento ?? false,
+        banco: data.banco || null,
+        agencia: data.agencia || null,
+        conta: data.conta || null,
+        pix: data.pix || null,
+        ctps: data.ctps || null,
+        pis: data.pis || null,
+        dependentes: data.dependentes ?? 0,
+        beneficiario_emergencia: data.beneficiario_emergencia || null,
       },
     })
+
     if (edgeError) {
       let errorMsg = 'Erro ao criar usuário no servidor'
       try {
@@ -73,8 +107,12 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     if (edgeData?.error) throw new Error(edgeData.error)
     if (!edgeData?.user?.id)
       throw new Error('Resposta inválida do servidor: ID do usuário não retornado')
+
     userId = edgeData.user.id
-  } else if (oldEmail && data.email !== oldEmail) {
+    return userId
+  }
+
+  if (oldEmail && data.email !== oldEmail) {
     const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
       'update-user-email',
       {
@@ -131,7 +169,6 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
 
   return userId
 }
-
 export async function checkHasPermission(permissionName: string) {
   const { data, error } = await supabase.rpc('has_permission', {
     permission_name: permissionName,
