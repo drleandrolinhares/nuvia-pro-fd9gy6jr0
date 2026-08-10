@@ -40,7 +40,21 @@ export default function RegistroUsuarios() {
         body: { email, password, nome },
       })
 
-      if (edgeError) throw edgeError
+      if (edgeError) {
+        let errorMsg = 'Erro ao criar usuário no servidor'
+        try {
+          if (edgeError.context) {
+            const resp = edgeError.context.clone ? edgeError.context.clone() : edgeError.context
+            const body = await resp.json()
+            errorMsg = body.error || body.message || errorMsg
+          } else {
+            errorMsg = edgeError.message || errorMsg
+          }
+        } catch {
+          errorMsg = edgeError.message || errorMsg
+        }
+        throw new Error(errorMsg)
+      }
       if (edgeData?.error) throw new Error(edgeData.error)
 
       const userId = edgeData.user.id

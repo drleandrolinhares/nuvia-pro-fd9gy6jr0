@@ -55,8 +55,24 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
         nome: data.nome,
       },
     })
-    if (edgeError) throw edgeError
+    if (edgeError) {
+      let errorMsg = 'Erro ao criar usuário no servidor'
+      try {
+        if (edgeError.context) {
+          const resp = edgeError.context.clone ? edgeError.context.clone() : edgeError.context
+          const body = await resp.json()
+          errorMsg = body.error || body.message || errorMsg
+        } else {
+          errorMsg = edgeError.message || errorMsg
+        }
+      } catch {
+        errorMsg = edgeError.message || errorMsg
+      }
+      throw new Error(errorMsg)
+    }
     if (edgeData?.error) throw new Error(edgeData.error)
+    if (!edgeData?.user?.id)
+      throw new Error('Resposta inválida do servidor: ID do usuário não retornado')
     userId = edgeData.user.id
   } else if (oldEmail && data.email !== oldEmail) {
     const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
