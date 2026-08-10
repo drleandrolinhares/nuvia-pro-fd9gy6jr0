@@ -17,9 +17,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!serviceRoleKey) {
-      throw new Error(
-        'SUPABASE_SERVICE_ROLE_KEY não configurada no servidor. Contate o administrador.',
-      )
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY não configurada no servidor. Contate o administrador.')
     }
 
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -69,15 +67,8 @@ Deno.serve(async (req: Request) => {
 
     if (error) {
       const errMsg = error.message.toLowerCase()
-      if (
-        errMsg.includes('already') ||
-        errMsg.includes('exists') ||
-        errMsg.includes('registered') ||
-        errMsg.includes('duplicate')
-      ) {
-        throw new Error(
-          `O e-mail "${email}" já está cadastrado no sistema. Utilize outro e-mail ou edite o usuário existente.`,
-        )
+      if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('registered') || errMsg.includes('duplicate')) {
+        throw new Error(`O e-mail "${email}" já está cadastrado no sistema. Utilize outro e-mail ou edite o usuário existente.`)
       }
       throw new Error(error.message)
     }
