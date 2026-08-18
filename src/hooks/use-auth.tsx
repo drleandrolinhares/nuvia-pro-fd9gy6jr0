@@ -311,7 +311,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const hasPermission = (perms: string | string[]) => {
-    if (isAdmin) return true
+    if (isAdmin || isGerenteAdministrativo) return true
     if (profile?.status?.toLowerCase() === 'inativo') return false
     const permArray = Array.isArray(perms) ? perms : [perms]
     return permArray.some((p) => permissions.includes(p))
