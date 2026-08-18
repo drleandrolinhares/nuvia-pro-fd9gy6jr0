@@ -257,8 +257,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setPermissionsLoaded(false)
         setLoading(false)
         if (userChannel) supabase.removeChannel(userChannel)
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        setLoading(true)
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        // Silently update session/user/profile without flipping `loading = true`.
+        // Toggling `loading = true` causes ProtectedRoute / AppRoutes to show "Carregando sistema..."
+        // and unmount/remount page components whenever the tab regains focus or token refreshes.
         loadData(currentSession)
       }
     })
