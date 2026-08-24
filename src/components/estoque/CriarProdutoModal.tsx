@@ -43,8 +43,8 @@ const formSchema = z.object({
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
   embalagem: z.string().optional(),
-  quantidade_minima: z.coerce.number().min(0, 'Valor inválido').optional(),
-  custo_unitario: z.coerce.number().min(0, 'Valor inválido').optional(),
+  quantidade_minima: z.number().min(0, 'Valor inválido').optional(),
+  custo_unitario: z.number().min(0, 'Valor inválido').optional(),
   sala_id: z.string().optional(),
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
   controle_prazo: z.boolean().default(false),
@@ -147,7 +147,7 @@ export function CriarProdutoModal({
     setValoresDinamicos({})
   }, [watchedEspecialidadeId])
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     setLoading(true)
 
     const salaNome =

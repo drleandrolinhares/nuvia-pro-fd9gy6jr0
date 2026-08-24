@@ -71,19 +71,19 @@ const formSchema = z.object({
   embalagem_id: z.string().optional(),
   fornecedor_id: z.string().optional(),
 
-  quantidade_comprada: z.coerce.number().min(1, 'Deve ser maior que zero'),
-  itens_embalagem: z.coerce.number().min(1, 'Deve ser maior que zero'),
-  valor_total: z.coerce.number().min(0, 'Obrigatório'),
+  quantidade_comprada: z.number().min(1, 'Deve ser maior que zero'),
+  itens_embalagem: z.number().min(1, 'Deve ser maior que zero'),
+  valor_total: z.number().min(0, 'Obrigatório'),
 
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
 
-  data_entrada: z.date({ required_error: 'Selecione a data' }),
+  data_entrada: z.date(),
   data_validade: z.string().optional(),
   numero_nfe: z.string().optional(),
 
   sala_id: z.string().optional(),
   numero_armario: z.string().optional(),
-  estoque_minimo: z.coerce.number().min(0).optional(),
+  estoque_minimo: z.number().min(0).optional(),
 
   controle_prazo: z.boolean().default(false),
   alerta_prazo_dias: z.union([z.string(), z.number()]).optional(),

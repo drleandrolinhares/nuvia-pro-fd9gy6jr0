@@ -27,6 +27,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { saveColaborador, getColaboradorDetalhes } from '@/services/usuarios'
 import { supabase } from '@/lib/supabase/client'
 import { colaboradorSchema, ColaboradorFormData } from './colaborador-schema'
+import * as z from 'zod'
 
 const Field = ({ label, error, children }: any) => (
   <div className="space-y-1">
@@ -56,8 +57,8 @@ export default function ColaboradorFormSheet({
     reset,
     control,
     formState: { errors },
-  } = useForm<ColaboradorFormData>({
-    resolver: zodResolver(colaboradorSchema),
+  } = useForm<z.input<typeof colaboradorSchema>>({
+    resolver: zodResolver(colaboradorSchema) as any,
     defaultValues: {
       status: 'ativo',
       possui_carteira: true,
@@ -109,7 +110,7 @@ export default function ColaboradorFormSheet({
     }
   }, [isOpen, isEdit, usuario, reset])
 
-  const onSubmit = async (data: ColaboradorFormData) => {
+  const onSubmit = async (data: any) => {
     try {
       setSaving(true)
       const payload = {

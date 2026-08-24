@@ -43,6 +43,8 @@ import Precificacao from './pages/administrativo/Precificacao'
 import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
+import RecuperarSenha from './pages/RecuperarSenha'
+import RedefinirSenha from './pages/RedefinirSenha'
 import RecadastrarSenha from './pages/RecadastrarSenha'
 import Chat from './pages/Chat'
 import { Loader2, Lock, Shield } from 'lucide-react'
@@ -344,6 +346,8 @@ const AppRoutes = () => {
   if (!user) {
     return (
       <Routes>
+        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route path="*" element={<Login />} />
       </Routes>
     )
@@ -367,6 +371,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/viewer" element={<DocumentViewer />} />
+      <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+      <Route path="/redefinir-senha" element={<RedefinirSenha />} />
       <Route path="/recadastrar-senha" element={<RecadastrarSenha />} />
       <Route
         element={

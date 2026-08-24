@@ -581,7 +581,7 @@ export function FunilDashboard({
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip content={(props: any) => <ChartTooltipContent {...props} />} />
                 </PieChart>
               </ChartContainer>
             ) : (
@@ -620,9 +620,12 @@ export function FunilDashboard({
                     tickFormatter={(value) => `R$ ${value / 1000}k`}
                   />
                   <ChartTooltip
-                    content={
-                      <ChartTooltipContent formatter={(value) => formatBrl(Number(value))} />
-                    }
+                    content={(props: any) => (
+                      <ChartTooltipContent
+                        {...props}
+                        formatter={(value) => formatBrl(Number(value))}
+                      />
+                    )}
                   />
                   <Bar
                     dataKey="investimento"

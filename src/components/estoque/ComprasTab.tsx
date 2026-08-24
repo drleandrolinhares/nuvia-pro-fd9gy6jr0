@@ -62,7 +62,7 @@ export function ComprasTab() {
         variant: 'destructive',
       })
     } else {
-      setCompras(data || [])
+      setCompras((data as any) || [])
     }
     setLoading(false)
   }

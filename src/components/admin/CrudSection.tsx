@@ -139,7 +139,9 @@ export function CrudSection({
                 <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
                   <TableCell className="font-semibold">{item.nome}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {item.criado_em ? format(new Date(item.criado_em), 'dd/MM/yyyy HH:mm') : '-'}
+                    {item.data_criacao
+                      ? format(new Date(item.data_criacao), 'dd/MM/yyyy HH:mm')
+                      : '-'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">

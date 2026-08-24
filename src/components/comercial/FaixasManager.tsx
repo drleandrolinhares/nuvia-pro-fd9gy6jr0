@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 
@@ -21,15 +19,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -39,19 +30,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { FaixaBase } from '@/services/comissoes'
-
-const schema = z
-  .object({
-    id: z.string().optional(),
-    faixa_entrada_minima: z.coerce.number().min(0, 'Mínimo 0'),
-    faixa_entrada_maxima: z.coerce.number().min(0, 'Mínimo 0'),
-    percentual_comissao: z.coerce.number().min(0, 'Mínimo 0'),
-    status: z.string().default('ativo'),
-  })
-  .refine((data) => data.faixa_entrada_maxima > data.faixa_entrada_minima, {
-    message: 'Máxima > Mínima',
-    path: ['faixa_entrada_maxima'],
-  })
 
 interface ManagerProps {
   service: {
@@ -67,14 +45,11 @@ export function FaixasManager({ service }: ManagerProps) {
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      faixa_entrada_minima: 0,
-      faixa_entrada_maxima: 0,
-      percentual_comissao: 0,
-      status: 'ativo',
-    },
+  const [formData, setFormData] = useState({
+    faixa_entrada_minima: 0,
+    faixa_entrada_maxima: 0,
+    percentual_comissao: 0,
+    status: 'ativo',
   })
 
   const loadFaixas = async () => {
@@ -93,9 +68,21 @@ export function FaixasManager({ service }: ManagerProps) {
     loadFaixas()
   }, [])
 
-  const onSubmit = async (values: z.infer<typeof schema>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formData.faixa_entrada_maxima <= formData.faixa_entrada_minima) {
+      toast.error('A faixa máxima deve ser maior que a mínima')
+      return
+    }
+
     try {
-      await service.save(values)
+      await service.save({
+        id: editingId || undefined,
+        faixa_entrada_minima: Number(formData.faixa_entrada_minima),
+        faixa_entrada_maxima: Number(formData.faixa_entrada_maxima),
+        percentual_comissao: Number(formData.percentual_comissao),
+        status: formData.status,
+      })
       toast.success(editingId ? 'Faixa atualizada com sucesso' : 'Faixa criada com sucesso')
       setOpen(false)
       loadFaixas()
@@ -117,8 +104,7 @@ export function FaixasManager({ service }: ManagerProps) {
 
   const openEdit = (f: FaixaBase) => {
     setEditingId(f.id!)
-    form.reset({
-      id: f.id,
+    setFormData({
       faixa_entrada_minima: f.faixa_entrada_minima || 0,
       faixa_entrada_maxima: f.faixa_entrada_maxima || 0,
       percentual_comissao: f.percentual_comissao || 0,
@@ -129,7 +115,7 @@ export function FaixasManager({ service }: ManagerProps) {
 
   const openAdd = () => {
     setEditingId(null)
-    form.reset({
+    setFormData({
       faixa_entrada_minima: 0,
       faixa_entrada_maxima: 0,
       percentual_comissao: 0,
@@ -200,79 +186,77 @@ export function FaixasManager({ service }: ManagerProps) {
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar Faixa' : 'Nova Faixa'}</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="faixa_entrada_minima"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mínima (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="faixa_entrada_maxima"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Máxima (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Mínima (%)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.faixa_entrada_minima}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      faixa_entrada_minima: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="percentual_comissao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comissão (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="inativo">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="space-y-2">
+                <Label>Máxima (%)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.faixa_entrada_maxima}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      faixa_entrada_maxima: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  required
                 />
               </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto">
-                  Salvar
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Comissão (%)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.percentual_comissao}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      percentual_comissao: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(val) => setFormData({ ...formData, status: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto">
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
