@@ -80,7 +80,7 @@ export function CriarProdutoModal({
   const [mostrarEstimativa, setMostrarEstimativa] = useState(false)
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       codigo_barras: '',
       nome: initialNome,

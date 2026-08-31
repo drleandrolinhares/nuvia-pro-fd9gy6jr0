@@ -34,7 +34,7 @@ import { QuantidadeVendasWidget } from '@/components/financeiro/quantidade-venda
 export default function Vendas() {
   const { toast } = useToast()
   const { profile, hasPermission } = useAuth()
-  const canEdit = profile?.role === 'crc_comercial' || hasPermission('Gerenciar Vendas')
+  const canEdit = hasPermission('Acessar Gestão de Vendas')
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
   const [loading, setLoading] = useState(true)
   const [dentistas, setDentistas] = useState<any[]>([])
