@@ -36,8 +36,13 @@ export default function RegistroUsuarios() {
     setIsLoading(true)
 
     try {
+      const sessionRes = await supabase.auth.getSession()
+      const tenantId =
+        sessionRes.data.session?.user?.app_metadata?.tenant_id ||
+        '00000000-0000-0000-0000-000000000001'
+
       const { data: edgeData, error: edgeError } = await supabase.functions.invoke('create-user', {
-        body: { email, password, nome },
+        body: { email, password, nome, tenant_id: tenantId },
       })
 
       if (edgeError) {
@@ -65,6 +70,7 @@ export default function RegistroUsuarios() {
         nome,
         role,
         status: 'ativo',
+        tenant_id: tenantId,
       })
 
       if (userError) throw userError

@@ -81,6 +81,7 @@ Deno.serve(async (req: Request) => {
       pis,
       dependentes,
       beneficiario_emergencia,
+      tenant_id,
     } = body
 
     if (!email || !password || !nome) {
@@ -91,12 +92,43 @@ Deno.serve(async (req: Request) => {
       throw new Error('A senha deve ter no mínimo 6 caracteres')
     }
 
-    // 1. Create the user in Supabase Auth
+    // Determine target tenant_id:
+    // 1) explicitly passed tenant_id in body
+    // 2) creator user's app_metadata.tenant_id
+    // 3) creator user's tenant_id from public.usuarios
+    // 4) fallback default clinic tenant '00000000-0000-0000-0000-000000000001'
+    const defaultClinicTenant = '00000000-0000-0000-0000-000000000001'
+    let resolvedTenantId = tenant_id || user.app_metadata?.tenant_id
+
+    if (!resolvedTenantId) {
+      const { data: creatorProfile } = await adminClient
+        .from('usuarios')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (creatorProfile?.tenant_id) {
+        resolvedTenantId = creatorProfile.tenant_id
+      }
+    }
+
+    if (!resolvedTenantId) {
+      resolvedTenantId = defaultClinicTenant
+    }
+
+    // 1. Create the user in Supabase Auth with tenant_id in app_metadata
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { name: nome },
+      app_metadata: {
+        tenant_id: resolvedTenantId,
+        provider: 'email',
+        providers: ['email'],
+      },
+      user_metadata: {
+        name: nome,
+        tenant_id: resolvedTenantId,
+      },
     })
 
     if (authError) {
@@ -143,6 +175,7 @@ Deno.serve(async (req: Request) => {
         elegivel_ferias: elegivel_ferias ?? false,
         acesso_chat: acesso_chat ?? true,
         pode_realizar_lancamento: pode_realizar_lancamento ?? false,
+        tenant_id: resolvedTenantId,
       },
       { onConflict: 'id' },
     )

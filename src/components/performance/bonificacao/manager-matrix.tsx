@@ -119,7 +119,7 @@ export function ManagerBonificacaoMatrix() {
     let newMatrix: Record<string, string[]> = {}
 
     if (rData) {
-      (rData as any[]).forEach((r) => {
+      ;(rData as any[]).forEach((r) => {
         newMatrix[r.usuario_id] = r.itens_marcados || []
       })
     }
@@ -137,7 +137,8 @@ export function ManagerBonificacaoMatrix() {
 
         if (ppItem && u.obrigatorio_pp_pdm) {
           const alreadyChecked =
-            userItems.includes(ppItem.id) || userItems.includes((iData as any[]).indexOf(ppItem) as any)
+            userItems.includes(ppItem.id) ||
+            userItems.includes((iData as any[]).indexOf(ppItem) as any)
           if (!alreadyChecked) {
             let missed = false
             for (const sat of pastSaturdays) {

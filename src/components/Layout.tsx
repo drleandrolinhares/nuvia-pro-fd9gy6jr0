@@ -4,7 +4,8 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { AppHeader } from './app-header'
 import { cn } from '@/lib/utils'
-import { AlertCircle, Home, RefreshCcw } from 'lucide-react'
+import { AlertCircle, Home, RefreshCcw, ShieldAlert } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -63,6 +64,7 @@ class ErrorBoundary extends Component<
 
 export default function Layout() {
   const location = useLocation()
+  const { user, hasTenant, loading } = useAuth()
   const isViewer = location.pathname.includes('/viewer')
   const isFullWidth =
     location.pathname.includes('/precificacao') ||
@@ -76,6 +78,17 @@ export default function Layout() {
       <AppSidebar />
       <SidebarInset className="bg-background flex flex-col h-dvh w-full overflow-hidden">
         <AppHeader />
+        {user && !loading && !hasTenant && (
+          <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-4 py-2 text-xs flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>Atenção:</strong> Sua conta ainda não está formalmente vinculada ao tenant
+                da clínica. Alguns dados podem não carregar. Contate o administrador do sistema.
+              </span>
+            </div>
+          </div>
+        )}
         <main
           className={cn(
             'flex-1 overflow-x-hidden',

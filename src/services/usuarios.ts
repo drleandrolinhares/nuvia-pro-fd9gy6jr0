@@ -54,6 +54,13 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
       )
     }
 
+    // Ensure tenant_id is forwarded from the active session or data
+    const sessionRes = await supabase.auth.getSession()
+    const activeTenantId =
+      data.tenant_id ||
+      sessionRes.data.session?.user?.app_metadata?.tenant_id ||
+      '00000000-0000-0000-0000-000000000001'
+
     const { data: edgeData, error: edgeError } = await supabase.functions.invoke('create-user', {
       body: {
         email: data.email,
@@ -86,6 +93,7 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
         pis: data.pis || null,
         dependentes: data.dependentes ?? 0,
         beneficiario_emergencia: data.beneficiario_emergencia || null,
+        tenant_id: activeTenantId,
       },
     })
 
@@ -152,6 +160,7 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     fim_lanche_tarde: data.fim_lanche_tarde || null,
     horario_saida: data.horario_saida || null,
     dias_trabalho: data.dias_trabalho || [1, 2, 3, 4, 5],
+    ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
   })
   if (userError) throw userError
 

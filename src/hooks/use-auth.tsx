@@ -35,6 +35,7 @@ interface Profile {
   cargo_principal?: { nome: string } | null
   cargo_secundario?: { nome: string } | null
   avatar_url?: string | null
+  tenant_id?: string | null
   [key: string]: any
 }
 
@@ -53,6 +54,7 @@ interface AuthContextType {
   permissionsLoaded: boolean
   hasPermission: (perms: string | string[]) => boolean
   refreshProfile: () => Promise<void>
+  hasTenant: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -317,6 +319,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return permArray.some((p) => permissions.includes(p))
   }
 
+  // Tenant is valid if present in profile or in user's app_metadata
+  const hasTenant = Boolean(
+    profile?.tenant_id ||
+    (user?.app_metadata && (user.app_metadata.tenant_id as string | undefined)),
+  )
+
   return (
     <AuthContext.Provider
       value={{
@@ -334,6 +342,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         permissionsLoaded,
         hasPermission,
         refreshProfile,
+        hasTenant,
       }}
     >
       {children}
