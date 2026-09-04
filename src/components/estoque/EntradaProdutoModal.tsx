@@ -134,7 +134,7 @@ export function EntradaProdutoModal({
   const { toast } = useToast()
 
   const form = useForm<EntradaFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       codigo_barras: '',
       nome_material: '',

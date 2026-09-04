@@ -51,11 +51,11 @@ export function RankingBonificacaoView() {
 
     if (uData) {
       const activeUsers = uData.filter(
-        (u) => u.obrigatorio_bonificacao || rData?.some((r) => r.usuario_id === u.id),
+        (u) => u.obrigatorio_bonificacao || (rData as any[])?.some((r) => r.usuario_id === u.id),
       )
       setUsers(activeUsers)
     }
-    if (rData) setRecords(rData)
+    if (rData) setRecords(rData as any[])
 
     setLoading(false)
   }

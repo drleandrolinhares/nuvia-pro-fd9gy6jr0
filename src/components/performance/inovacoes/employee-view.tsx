@@ -40,14 +40,15 @@ export function EmployeeInovacoesView() {
       const { data } = await supabase
         .from('performance_pp_pdm' as any)
         .select('id, inovacoes, inovacao_validada')
-        .eq('usuario_id', user?.id)
+        .eq('usuario_id', user?.id as any)
         .eq('data_registro', weekRef)
         .maybeSingle()
 
-      if (data) {
-        setRecordId(data.id)
-        setInovacoes(data.inovacoes || '')
-        setInovacaoValidada(data.inovacao_validada || false)
+      const record = data as any
+      if (record) {
+        setRecordId(record.id)
+        setInovacoes(record.inovacoes || '')
+        setInovacaoValidada(record.inovacao_validada || false)
       } else {
         setRecordId(null)
         setInovacoes('')
@@ -76,12 +77,13 @@ export function EmployeeInovacoesView() {
         .eq('data_registro', weekRef)
         .maybeSingle()
 
-      if (existing) {
+      const existingRecord = existing as any
+      if (existingRecord) {
         await supabase
           .from('performance_pp_pdm' as any)
-          .update({ inovacoes, atualizado_em: new Date().toISOString() })
-          .eq('id', existing.id)
-        setRecordId(existing.id)
+          .update({ inovacoes, atualizado_em: new Date().toISOString() } as any)
+          .eq('id', existingRecord.id)
+        setRecordId(existingRecord.id)
       } else {
         const { data: inserted } = await supabase
           .from('performance_pp_pdm' as any)
@@ -93,10 +95,10 @@ export function EmployeeInovacoesView() {
             pontos_melhoria: '',
             nota_pdm: 0,
             atualizado_em: new Date().toISOString(),
-          })
+          } as any)
           .select('id')
           .single()
-        if (inserted) setRecordId(inserted.id)
+        if (inserted) setRecordId((inserted as any).id)
       }
 
       toast.success('Inovações salvas com sucesso!')

@@ -34,19 +34,41 @@ export function EditarVendaModal({ open, onOpenChange, venda, onSaved }: any) {
   useEffect(() => {
     if (!open) return
     const fetchSelects = async () => {
-      const [origensRes, dentistasRes, crcsRes] = await Promise.all([
-        supabase.from('funil_origens').select('id, nome').eq('ativo', true).order('nome'),
-        supabase
-          .from('dentistas_avaliadores')
-          .select('id, nome')
-          .eq('status', 'ativo')
-          .order('nome'),
-        supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo').order('nome'),
-      ])
+      try {
+        const [origensRes, dentistasRes, crcsRes] = await Promise.all([
+          supabase.from('funil_origens').select('id, nome').eq('ativo', true).order('nome'),
+          supabase
+            .from('dentistas_avaliadores')
+            .select('id, nome')
+            .eq('status', 'ativo')
+            .order('nome'),
+          supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo').order('nome'),
+        ])
 
-      setOrigens(origensRes.data || [])
-      setDentistas(dentistasRes.data || [])
-      setCrcs(crcsRes.data || [])
+        if (dentistasRes.error) {
+          console.error('Erro ao carregar dentistas avaliadores:', dentistasRes.error)
+          toast.warning(
+            'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+          )
+        } else if (dentistasRes.data) {
+          setDentistas(dentistasRes.data)
+        }
+
+        if (crcsRes.error) {
+          console.error('Erro ao carregar CRC comercial:', crcsRes.error)
+        } else if (crcsRes.data) {
+          setCrcs(crcsRes.data)
+        }
+
+        if (origensRes.data) {
+          setOrigens(origensRes.data)
+        }
+      } catch (err) {
+        console.error('Erro ao buscar dados complementares da venda:', err)
+        toast.warning(
+          'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+        )
+      }
     }
     fetchSelects()
   }, [open])

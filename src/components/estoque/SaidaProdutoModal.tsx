@@ -86,7 +86,7 @@ export function SaidaProdutoModal({
   const { user } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       produto_id: '',
       quantidade: 1,

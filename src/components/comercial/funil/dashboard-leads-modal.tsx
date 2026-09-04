@@ -68,14 +68,40 @@ export function DashboardLeadsModal({
   }, [isOpen, type, origens, mesReferencia])
 
   const fetchOptions = async () => {
-    const [dRes, cRes, oRes] = await Promise.all([
-      supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
-      supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
-      supabase.from('funil_origens').select('id, nome'),
-    ])
-    setDentistas(dRes.data || [])
-    setCrcs(cRes.data || [])
-    setOrigensList(oRes.data || [])
+    try {
+      const [dRes, cRes, oRes] = await Promise.all([
+        supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
+        supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'),
+        supabase.from('funil_origens').select('id, nome'),
+      ])
+
+      if (dRes.error) {
+        console.error('Erro ao carregar dentistas avaliadores:', dRes.error)
+        toast({
+          title: 'Aviso',
+          description:
+            'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+        })
+      } else {
+        setDentistas(dRes.data || [])
+      }
+
+      if (cRes.error) {
+        console.error('Erro ao carregar CRC comercial:', cRes.error)
+      } else {
+        setCrcs(cRes.data || [])
+      }
+
+      if (oRes.data) {
+        setOrigensList(oRes.data)
+      }
+    } catch (err) {
+      console.error('Exceção ao buscar opções de avaliadores/crc:', err)
+      toast({
+        title: 'Aviso',
+        description: 'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+      })
+    }
   }
 
   const fetchData = async () => {

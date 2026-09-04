@@ -333,6 +333,8 @@ export function VendasTabela({
             setAvaliacaoSelecionada(null)
           }}
           avaliacao={avaliacaoSelecionada}
+          dentistas={dentistas}
+          crcs={crcs}
         />
       )}
 

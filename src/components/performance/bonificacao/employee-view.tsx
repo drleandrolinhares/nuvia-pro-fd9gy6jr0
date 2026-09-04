@@ -54,9 +54,9 @@ export function EmployeeBonificacaoView() {
         .maybeSingle(),
     ])
 
-    if (iData) setItems(iData)
+    if (iData) setItems(iData as any)
     if (rData) {
-      setCheckedItems(rData.itens_marcados || [])
+      setCheckedItems((rData as any).itens_marcados || [])
     } else {
       setCheckedItems([])
     }

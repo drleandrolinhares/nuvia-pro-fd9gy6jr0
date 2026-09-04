@@ -81,19 +81,21 @@ export function VendasModal({
 
   const [formData, setFormData] = useState(initialForm)
 
+  const formatListWithConversaoDireta = (list: any[]) => {
+    const direta = list.find((item) => item.nome === 'CONVERSÃO DIRETA')
+    const others = list.filter((item) => item.nome !== 'CONVERSÃO DIRETA')
+    return direta ? [direta, ...others] : list
+  }
+
   useEffect(() => {
     if (dentistas && dentistas.length > 0) {
-      const direta = dentistas.find((d) => d.nome === 'CONVERSÃO DIRETA')
-      const others = dentistas.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
-      setAvaliadoresList(direta ? [direta, ...others] : dentistas)
+      setAvaliadoresList(formatListWithConversaoDireta(dentistas))
     }
   }, [dentistas])
 
   useEffect(() => {
     if (crcs && crcs.length > 0) {
-      const direta = crcs.find((c) => c.nome === 'CONVERSÃO DIRETA')
-      const others = crcs.filter((c) => c.nome !== 'CONVERSÃO DIRETA')
-      setCrcsList(direta ? [direta, ...others] : crcs)
+      setCrcsList(formatListWithConversaoDireta(crcs))
     }
   }, [crcs])
 
@@ -105,11 +107,40 @@ export function VendasModal({
         .select('id, nome, especialidade')
         .or('status.eq.ativo,status.eq.Ativo,status.is.null')
         .order('nome')
-        .then(({ data }) => {
-          if (data) {
-            const direta = data.find((d) => d.nome === 'CONVERSÃO DIRETA')
-            const others = data.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
-            setAvaliadoresList(direta ? [direta, ...others] : data)
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Erro ao carregar dentistas avaliadores:', error)
+            toast({
+              title: 'Aviso',
+              description:
+                'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+              variant: 'default',
+            })
+            if (dentistas && dentistas.length > 0) {
+              setAvaliadoresList(formatListWithConversaoDireta(dentistas))
+            }
+            return
+          }
+
+          if (data && data.length > 0) {
+            setAvaliadoresList(formatListWithConversaoDireta(data))
+          } else {
+            // Se lista vier vazia, tentar fallback das props
+            if (dentistas && dentistas.length > 0) {
+              setAvaliadoresList(formatListWithConversaoDireta(dentistas))
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('Exceção ao consultar dentistas avaliadores:', err)
+          toast({
+            title: 'Aviso',
+            description:
+              'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+            variant: 'default',
+          })
+          if (dentistas && dentistas.length > 0) {
+            setAvaliadoresList(formatListWithConversaoDireta(dentistas))
           }
         })
 
@@ -118,13 +149,30 @@ export function VendasModal({
         .select('id, nome')
         .or('status.eq.ativo,status.eq.Ativo,status.is.null')
         .order('nome')
-        .then(({ data }) => {
-          if (data) {
-            const direta = data.find((d) => d.nome === 'CONVERSÃO DIRETA')
-            const others = data.filter((d) => d.nome !== 'CONVERSÃO DIRETA')
-            setCrcsList(direta ? [direta, ...others] : data)
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Erro ao carregar CRC comercial:', error)
+            if (crcs && crcs.length > 0) {
+              setCrcsList(formatListWithConversaoDireta(crcs))
+            }
+            return
+          }
+
+          if (data && data.length > 0) {
+            setCrcsList(formatListWithConversaoDireta(data))
+          } else {
+            if (crcs && crcs.length > 0) {
+              setCrcsList(formatListWithConversaoDireta(crcs))
+            }
           }
         })
+        .catch((err) => {
+          console.error('Exceção ao consultar CRC comercial:', err)
+          if (crcs && crcs.length > 0) {
+            setCrcsList(formatListWithConversaoDireta(crcs))
+          }
+        })
+
       supabase
         .from('funil_origens')
         .select('id, nome')

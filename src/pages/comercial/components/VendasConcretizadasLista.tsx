@@ -140,12 +140,42 @@ export function VendasConcretizadasLista({
       .from('dentistas_avaliadores')
       .select('id, nome')
       .eq('status', 'ativo')
-      .then(({ data }) => setDentistas(data || []))
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Erro ao carregar dentistas avaliadores:', error)
+          toast({
+            title: 'Aviso',
+            description:
+              'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+          })
+          return
+        }
+        setDentistas(data || [])
+      })
+      .catch((err) => {
+        console.error('Exceção ao consultar dentistas avaliadores:', err)
+        toast({
+          title: 'Aviso',
+          description:
+            'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+        })
+      })
+
     supabase
       .from('crc_comercial')
       .select('id, nome')
       .eq('status', 'ativo')
-      .then(({ data }) => setCrcs(data || []))
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Erro ao carregar CRC comercial:', error)
+          return
+        }
+        setCrcs(data || [])
+      })
+      .catch((err) => {
+        console.error('Exceção ao consultar CRC comercial:', err)
+      })
+
     supabase
       .from('funil_origens')
       .select('id, nome')

@@ -25,13 +25,21 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   avaliacao: any
+  dentistas?: any[]
+  crcs?: any[]
 }
 
-export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
+export function ConfirmacaoVendaModal({
+  isOpen,
+  onClose,
+  avaliacao,
+  dentistas: propDentistas,
+  crcs: propCrcs,
+}: Props) {
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
-  const [dentistas, setDentistas] = useState<any[]>([])
-  const [crcs, setCrcs] = useState<any[]>([])
+  const [dentistas, setDentistas] = useState<any[]>(propDentistas || [])
+  const [crcs, setCrcs] = useState<any[]>(propCrcs || [])
 
   const [formData, setFormData] = useState({
     valor_tratamento: '',
@@ -45,17 +53,84 @@ export function ConfirmacaoVendaModal({ isOpen, onClose, avaliacao }: Props) {
   })
 
   useEffect(() => {
+    if (propDentistas && propDentistas.length > 0) {
+      setDentistas(propDentistas)
+    }
+  }, [propDentistas])
+
+  useEffect(() => {
+    if (propCrcs && propCrcs.length > 0) {
+      setCrcs(propCrcs)
+    }
+  }, [propCrcs])
+
+  useEffect(() => {
     if (isOpen && avaliacao) {
       supabase
         .from('dentistas_avaliadores')
         .select('id, nome')
         .eq('status', 'ativo')
-        .then(({ data }) => setDentistas(data || []))
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Erro ao carregar dentistas avaliadores:', error)
+            toast({
+              title: 'Aviso',
+              description:
+                'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+              variant: 'default',
+            })
+            if (propDentistas && propDentistas.length > 0) {
+              setDentistas(propDentistas)
+            }
+            return
+          }
+          if (data && data.length > 0) {
+            setDentistas(data)
+          } else if (propDentistas && propDentistas.length > 0) {
+            setDentistas(propDentistas)
+          } else {
+            setDentistas([])
+          }
+        })
+        .catch((err) => {
+          console.error('Exceção ao consultar dentistas avaliadores:', err)
+          toast({
+            title: 'Aviso',
+            description:
+              'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
+            variant: 'default',
+          })
+          if (propDentistas && propDentistas.length > 0) {
+            setDentistas(propDentistas)
+          }
+        })
+
       supabase
         .from('crc_comercial')
         .select('id, nome')
         .eq('status', 'ativo')
-        .then(({ data }) => setCrcs(data || []))
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Erro ao carregar CRC comercial:', error)
+            if (propCrcs && propCrcs.length > 0) {
+              setCrcs(propCrcs)
+            }
+            return
+          }
+          if (data && data.length > 0) {
+            setCrcs(data)
+          } else if (propCrcs && propCrcs.length > 0) {
+            setCrcs(propCrcs)
+          } else {
+            setCrcs([])
+          }
+        })
+        .catch((err) => {
+          console.error('Exceção ao consultar CRC comercial:', err)
+          if (propCrcs && propCrcs.length > 0) {
+            setCrcs(propCrcs)
+          }
+        })
 
       const orcamentoMax = avaliacao.orcamentos?.length
         ? Math.max(...avaliacao.orcamentos.map((o: any) => Number(o.valor)))

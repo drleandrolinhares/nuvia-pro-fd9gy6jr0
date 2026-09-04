@@ -65,22 +65,23 @@ export function EmployeePPDMView() {
       const { data } = await supabase
         .from('performance_pp_pdm' as any)
         .select('*')
-        .eq('usuario_id', user?.id)
+        .eq('usuario_id', user?.id as any)
         .eq('data_registro', weekRef)
         .maybeSingle()
 
-      if (data) {
-        setRecordId(data.id)
-        setPp(data.pontos_positivos || '')
-        setPpValidado(data.pp_validado || false)
-        if (data.pdm_itens && Array.isArray(data.pdm_itens) && data.pdm_itens.length > 0) {
-          setPdmItems(data.pdm_itens)
-          setNotaFinal(data.nota_pdm)
+      const record = data as any
+      if (record) {
+        setRecordId(record.id)
+        setPp(record.pontos_positivos || '')
+        setPpValidado(record.pp_validado || false)
+        if (record.pdm_itens && Array.isArray(record.pdm_itens) && record.pdm_itens.length > 0) {
+          setPdmItems(record.pdm_itens)
+          setNotaFinal(record.nota_pdm)
         } else if (
-          data.pontos_melhoria &&
-          data.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
+          record.pontos_melhoria &&
+          record.pontos_melhoria !== 'Nenhum ponto de melhoria registrado.'
         ) {
-          setPdmLegacy(data.pontos_melhoria)
+          setPdmLegacy(record.pontos_melhoria)
         }
       } else {
         setRecordId(null)
@@ -174,19 +175,20 @@ export function EmployeePPDMView() {
         atualizado_em: new Date().toISOString(),
       }
 
-      if (existing) {
+      const existingRecord = existing as any
+      if (existingRecord) {
         await supabase
           .from('performance_pp_pdm' as any)
-          .update(payload)
-          .eq('id', existing.id)
-        setRecordId(existing.id)
+          .update(payload as any)
+          .eq('id', existingRecord.id)
+        setRecordId(existingRecord.id)
       } else {
         const { data: inserted } = await supabase
           .from('performance_pp_pdm' as any)
-          .insert({ usuario_id: user.id, data_registro: weekRef, ...payload })
+          .insert({ usuario_id: user.id, data_registro: weekRef, ...payload } as any)
           .select('id')
           .single()
-        if (inserted) setRecordId(inserted.id)
+        if (inserted) setRecordId((inserted as any).id)
       }
 
       setNotaFinal(nota)

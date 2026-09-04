@@ -37,6 +37,7 @@ export function VisualizarCompraModal({
   compra,
   onEdit,
   onDelete,
+  onSuccess,
 }: VisualizarCompraModalProps) {
   const [itens, setItens] = useState<any[]>([])
   const [loading, setLoading] = useState(false)

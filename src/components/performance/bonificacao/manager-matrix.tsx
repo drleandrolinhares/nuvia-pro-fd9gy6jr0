@@ -113,18 +113,18 @@ export function ManagerBonificacaoMatrix() {
     if (uData) setUsers(uData)
     if (iData) setItems(iData)
 
-    let fetchedRecords = rData || []
+    let fetchedRecords: any[] = (rData as any[]) || []
     setRecords(fetchedRecords)
 
     let newMatrix: Record<string, string[]> = {}
 
     if (rData) {
-      rData.forEach((r) => {
+      (rData as any[]).forEach((r) => {
         newMatrix[r.usuario_id] = r.itens_marcados || []
       })
     }
 
-    const ppItem = iData?.find(
+    const ppItem = (iData as any[])?.find(
       (i) => i.descricao.toLowerCase().includes('pp') && i.descricao.toLowerCase().includes('pdm'),
     )
     let needsAutoSave = false
@@ -137,11 +137,11 @@ export function ManagerBonificacaoMatrix() {
 
         if (ppItem && u.obrigatorio_pp_pdm) {
           const alreadyChecked =
-            userItems.includes(ppItem.id) || userItems.includes(iData.indexOf(ppItem) as any)
+            userItems.includes(ppItem.id) || userItems.includes((iData as any[]).indexOf(ppItem) as any)
           if (!alreadyChecked) {
             let missed = false
             for (const sat of pastSaturdays) {
-              const sub = ppData?.find((s) => s.usuario_id === u.id && s.data_registro === sat)
+              const sub = ppData?.find((s: any) => s.usuario_id === u.id && s.data_registro === sat)
               if (!isValidSubmission(sub)) {
                 missed = true
                 break
