@@ -202,7 +202,7 @@ export default function ConfiguracaoRotinas() {
           .order('horario_inicio', { ascending: true, nullsFirst: false })
           .order('numero_sequencia', { ascending: true })
 
-        setCurrentTasks(tasks || [])
+        setCurrentTasks((tasks as any[]) || [])
       } else {
         setCurrentTasks([])
       }

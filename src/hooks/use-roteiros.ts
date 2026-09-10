@@ -41,8 +41,8 @@ export function useRoteiros() {
       if (setoresData.error) throw setoresData.error
       if (roteirosData.error) throw roteirosData.error
 
-      setSetores(setoresData.data || [])
-      setRoteiros(roteirosData.data || [])
+      setSetores((setoresData.data as any[]) || [])
+      setRoteiros((roteirosData.data as any[]) || [])
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar roteiros',

@@ -44,9 +44,9 @@ export function CustoHoraClinica() {
     ])
 
     if (custosData) {
-      const mapped = custosData.map((c) => ({
+      const mapped = (custosData as any[]).map((c) => ({
         ...c,
-        detalhes: (detalhesData || []).filter((d: any) => d.custo_fixo_id === c.id),
+        detalhes: ((detalhesData as any[]) || []).filter((d: any) => d.custo_fixo_id === c.id),
       }))
       setCustos(mapped)
     }

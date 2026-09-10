@@ -714,12 +714,12 @@ export function ManagerPPDMView() {
 
     const last4 = pastWeeks.slice(0, 4)
     if (uData) {
-      const { data: sData4 } = await supabase
+      const { data: sData4 } = await (supabase
         .from('performance_pp_pdm' as any)
         .select('usuario_id, data_registro, nota_pdm')
-        .in('data_registro', last4)
+        .in('data_registro', last4) as any)
       const scores = uData.map((u) => {
-        const userSubs = sData4?.filter((s) => s.usuario_id === u.id) || []
+        const userSubs = (sData4 as any[])?.filter((s) => s.usuario_id === u.id) || []
         const count = userSubs.length
         const totalNotas = userSubs.reduce((acc, s) => acc + (s.nota_pdm || 0), 0)
         const mediaNota = count > 0 ? (totalNotas / count).toFixed(1) : 0

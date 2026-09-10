@@ -257,7 +257,8 @@ function RotinaEspelhoContent({ usuarioId, dateStr }: { usuarioId: string; dateS
           supabase.from('ausencias').select('*').gte('data', dateStr).lte('data', next15DaysStr),
         ])
 
-        const diasTrabalho = usuario?.dias_trabalho || [1, 2, 3, 4, 5]
+        const rawDias = (usuario as any)?.dias_trabalho
+        const diasTrabalho: number[] = Array.isArray(rawDias) ? rawDias : [1, 2, 3, 4, 5]
 
         const isFeriadoGlobal = ausencias?.find((a: any) => !a.usuario_id && a.data === dateStr)
         const isAusenciaUsuario = ausencias?.find(
@@ -1675,7 +1676,9 @@ export function RelatorioRotinasTab() {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleReabrirRotina(selectedDetails.usuario_id)}
+                                  onClick={() =>
+                                    handleReabrirRotina((selectedDetails as any).usuario_id)
+                                  }
                                 >
                                   Sim, Reabrir
                                 </AlertDialogAction>
@@ -1736,7 +1739,7 @@ export function RelatorioRotinasTab() {
                     />
                     <ChartTooltip
                       cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                      content={<ChartTooltipContent />}
+                      content={(props: any) => <ChartTooltipContent {...props} />}
                     />
                     <Bar dataKey="quantidade" radius={[6, 6, 0, 0]} maxBarSize={60}>
                       {chartData.map((entry, index) => (

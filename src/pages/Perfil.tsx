@@ -101,7 +101,7 @@ export default function Perfil() {
   async function loadPerfil() {
     try {
       setLoading(true)
-      const data = await getMeuPerfil(user!.id)
+      const data = (await getMeuPerfil(user!.id)) as any
       const userData = data || {}
       setPerfilData(userData)
 

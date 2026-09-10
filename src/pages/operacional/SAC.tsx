@@ -122,7 +122,7 @@ export default function SACPage() {
   const { toast } = useToast()
 
   const form = useForm<DemandaFormValues>({
-    resolver: zodResolver(demandaSchema),
+    resolver: zodResolver(demandaSchema) as any,
     defaultValues: {
       tipo: 'reclamacao',
       setor: '',
@@ -167,11 +167,12 @@ export default function SACPage() {
       setDemandas(demandasRes.data || [])
 
       if (configRes.data) {
-        setOrientacao(configRes.data.orientacao_status)
-        setTempOrientacao(configRes.data.orientacao_status)
+        const cData = configRes.data as any
+        setOrientacao(cData.orientacao_status)
+        setTempOrientacao(cData.orientacao_status)
 
         const dataSolucaoVal =
-          configRes.data.orientacao_data_solucao ||
+          cData.orientacao_data_solucao ||
           'Se o status do caso estiver como SENDO TRATADO, esta data representará a data prevista para a solução.\nSe o status estiver como RESOLVIDO, a data significará a data da solução do caso.'
         setOrientacaoDataSolucao(dataSolucaoVal)
         setTempOrientacaoDataSolucao(dataSolucaoVal)
@@ -389,7 +390,7 @@ export default function SACPage() {
         }
         toast({ title: 'Atualizado com sucesso' })
       } else {
-        const { data: newDemanda, error } = await supabase
+        const { data: newDemandaData, error } = await (supabase
           .from('sac_demandas' as any)
           .insert({
             ...payload,
@@ -397,9 +398,10 @@ export default function SACPage() {
             limite_primeiro_contato: format(limite, 'yyyy-MM-dd'),
           })
           .select()
-          .single()
+          .single() as any)
 
         if (error) throw error
+        const newDemanda = newDemandaData as any
 
         if (values.acoes && values.acoes.length > 0) {
           const acoesToInsert = values.acoes.map((a) => ({

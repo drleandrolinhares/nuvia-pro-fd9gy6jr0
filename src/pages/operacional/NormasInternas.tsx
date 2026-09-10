@@ -78,17 +78,17 @@ export default function NormasInternas() {
         const [resNormas, resAceites, resUsuarios] = await Promise.all([
           supabase.from('normas_internas').select('*').order('criado_em', { ascending: false }),
           supabase.from('normas_aceites').select('*'),
-          supabase.from('usuarios').select('id, nome, email, status').eq('status', 'ativo'),
+          supabase.from('usuarios').select('id, nome, email, status').eq('status', 'ativo') as any,
         ])
-        if (resNormas.data) setNormas(resNormas.data)
-        if (resAceites.data) setAceites(resAceites.data)
-        if (resUsuarios.data) setUsuarios(resUsuarios.data)
+        if (resNormas.data) setNormas(resNormas.data as any[])
+        if (resAceites.data) setAceites(resAceites.data as any[])
+        if (resUsuarios.data) setUsuarios(resUsuarios.data as any[])
       } else {
-        const resAceites = await supabase
+        const resAceites = await (supabase
           .from('normas_aceites')
           .select('*, norma:normas_internas(*)')
-          .eq('usuario_id', user?.id)
-        if (resAceites.data) setAceites(resAceites.data)
+          .eq('usuario_id', user?.id) as any)
+        if (resAceites.data) setAceites(resAceites.data as any[])
       }
     } catch (error) {
       console.error(error)

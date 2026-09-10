@@ -143,11 +143,16 @@ export function EstruturaPrecificacao() {
     if (resGlob.data) setGlobals(resGlob.data as any)
     if (resOcupacao.data) {
       setHorasTrabalhadas(
-        resOcupacao.data.reduce((acc, curr) => acc + (Number(curr.horas_trabalhadas) || 0), 0),
+        (resOcupacao.data as any[]).reduce(
+          (acc, curr) => acc + (Number(curr.horas_trabalhadas) || 0),
+          0,
+        ),
       )
     }
     if (resCustos.data) {
-      setCustosFixos(resCustos.data.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0))
+      setCustosFixos(
+        (resCustos.data as any[]).reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0),
+      )
     }
     setLoading(false)
   }

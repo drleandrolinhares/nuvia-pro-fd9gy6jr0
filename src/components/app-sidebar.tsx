@@ -307,7 +307,7 @@ export function AppSidebar() {
     const fetchCounts = async () => {
       if (!user?.id) return
 
-      let newBadges = { pedidos: 0, comunicados: 0, sac: 0, chat: 0 }
+      let newBadges = { pedidos: 0, comunicados: 0, sac: 0, chat: 0, laboratorios: 0 }
 
       try {
         const { count } = await supabase

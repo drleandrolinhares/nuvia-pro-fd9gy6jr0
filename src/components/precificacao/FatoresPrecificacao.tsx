@@ -23,8 +23,12 @@ export function FatoresPrecificacao() {
       if (errorCustos) throw errorCustos
 
       const totalHoras =
-        ocupacao?.reduce((acc, curr) => acc + (Number(curr.horas_trabalhadas) || 0), 0) || 0
-      const totalCustos = custos?.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0) || 0
+        (ocupacao as any[])?.reduce(
+          (acc, curr) => acc + (Number(curr.horas_trabalhadas) || 0),
+          0,
+        ) || 0
+      const totalCustos =
+        (custos as any[])?.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0) || 0
 
       setHorasTrabalhadas(totalHoras)
       setCustosFixos(totalCustos)

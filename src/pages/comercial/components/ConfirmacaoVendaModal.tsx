@@ -66,19 +66,12 @@ export function ConfirmacaoVendaModal({
 
   useEffect(() => {
     if (isOpen && avaliacao) {
-      supabase
-        .from('dentistas_avaliadores')
-        .select('id, nome')
-        .eq('status', 'ativo')
-        .then(({ data, error }) => {
+      Promise.resolve(
+        supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'),
+      )
+        .then(({ data, error }: any) => {
           if (error) {
             console.error('Erro ao carregar dentistas avaliadores:', error)
-            toast({
-              title: 'Aviso',
-              description:
-                'Não foi possível carregar os avaliadores do servidor. Usando dados em cache.',
-              variant: 'default',
-            })
             if (propDentistas && propDentistas.length > 0) {
               setDentistas(propDentistas)
             }
@@ -105,11 +98,8 @@ export function ConfirmacaoVendaModal({
           }
         })
 
-      supabase
-        .from('crc_comercial')
-        .select('id, nome')
-        .eq('status', 'ativo')
-        .then(({ data, error }) => {
+      Promise.resolve(supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'))
+        .then(({ data, error }: any) => {
           if (error) {
             console.error('Erro ao carregar CRC comercial:', error)
             if (propCrcs && propCrcs.length > 0) {
@@ -123,6 +113,12 @@ export function ConfirmacaoVendaModal({
             setCrcs(propCrcs)
           } else {
             setCrcs([])
+          }
+        })
+        .catch((err) => {
+          console.error('Exceção ao consultar CRC comercial:', err)
+          if (propCrcs && propCrcs.length > 0) {
+            setCrcs(propCrcs)
           }
         })
         .catch((err) => {

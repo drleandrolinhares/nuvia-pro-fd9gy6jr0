@@ -200,7 +200,8 @@ export async function fetchLaboratoriosTrabalhos(
   // Ordenação: data de previsão mais próxima primeiro (nulos no fim)
   query = query
     .order('data_previsao_entrega', { ascending: true, nullsFirst: false })
-    .order('criado_em', { ascending: false })
+    .order('horario_previsto', { ascending: true, nullsFirst: false })
+    .order('criado_em', { ascending: true })
 
   const { data, error } = await query
 

@@ -61,7 +61,7 @@ import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useAuth, isAdminRole } from '@/hooks/use-auth'
 
-export interface ExtendedUsuario extends UsuarioWithCargo {
+export type ExtendedUsuario = UsuarioWithCargo & {
   ordem?: number
   saldo_carteira?: number
   horario_entrada?: string | null

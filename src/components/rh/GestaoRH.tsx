@@ -258,7 +258,7 @@ export function GestaoRH() {
       }
 
       setUsuarios(usersData || [])
-      setPeriodos(fetchedPeriodos)
+      setPeriodos(fetchedPeriodos as any[])
     } catch (error) {
       console.error('Error loading RH data', error)
     } finally {

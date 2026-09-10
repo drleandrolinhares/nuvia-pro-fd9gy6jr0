@@ -102,12 +102,14 @@ export function VendasModal({
   useEffect(() => {
     if (open) {
       // Sempre buscar para garantir dados atualizados e contornar filtros incorretos do componente pai
-      supabase
-        .from('dentistas_avaliadores')
-        .select('id, nome, especialidade')
-        .or('status.eq.ativo,status.eq.Ativo,status.is.null')
-        .order('nome')
-        .then(({ data, error }) => {
+      Promise.resolve(
+        supabase
+          .from('dentistas_avaliadores')
+          .select('id, nome, especialidade')
+          .or('status.eq.ativo,status.eq.Ativo,status.is.null')
+          .order('nome'),
+      )
+        .then(({ data, error }: any) => {
           if (error) {
             console.error('Erro ao carregar dentistas avaliadores:', error)
             toast({
@@ -144,12 +146,14 @@ export function VendasModal({
           }
         })
 
-      supabase
-        .from('crc_comercial')
-        .select('id, nome')
-        .or('status.eq.ativo,status.eq.Ativo,status.is.null')
-        .order('nome')
-        .then(({ data, error }) => {
+      Promise.resolve(
+        supabase
+          .from('crc_comercial')
+          .select('id, nome')
+          .or('status.eq.ativo,status.eq.Ativo,status.is.null')
+          .order('nome'),
+      )
+        .then(({ data, error }: any) => {
           if (error) {
             console.error('Erro ao carregar CRC comercial:', error)
             if (crcs && crcs.length > 0) {

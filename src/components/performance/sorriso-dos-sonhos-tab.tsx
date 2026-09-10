@@ -140,14 +140,15 @@ export function SorrisoDosSonhosTab() {
       setUsuarios(usuRes.data || [])
 
       if (configRes.data) {
+        const cData = configRes.data as any
         setConfig({
-          ...configRes.data,
-          usuarios_elegiveis: configRes.data.usuarios_elegiveis || [],
+          ...cData,
+          usuarios_elegiveis: cData.usuarios_elegiveis || [],
         })
         setEditConfig({
-          valor_bonus: configRes.data.valor_bonus,
-          meta_indicacoes: configRes.data.meta_indicacoes,
-          usuarios_elegiveis: configRes.data.usuarios_elegiveis || [],
+          valor_bonus: cData.valor_bonus,
+          meta_indicacoes: cData.meta_indicacoes,
+          usuarios_elegiveis: cData.usuarios_elegiveis || [],
         })
       }
     } catch (error: any) {
@@ -299,8 +300,9 @@ export function SorrisoDosSonhosTab() {
       },
       {} as Record<string, number>,
     )
-  const bonusTotal = Object.values(fechadasPorColab).reduce(
-    (sum, count) => sum + Math.floor(count / config.meta_indicacoes) * config.valor_bonus,
+  const bonusTotal: number = (Object.values(fechadasPorColab) as number[]).reduce(
+    (sum: number, count: number) =>
+      sum + Math.floor(count / (config.meta_indicacoes || 1)) * (config.valor_bonus || 0),
     0,
   )
 
@@ -526,7 +528,7 @@ export function SorrisoDosSonhosTab() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={(props: any) => <ChartTooltipContent {...props} />} />
                 <ChartLegend content={<ChartLegendContent />} />
                 <Bar dataKey="indicadas" fill="var(--color-indicadas)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="fechadas" fill="var(--color-fechadas)" radius={[4, 4, 0, 0]} />

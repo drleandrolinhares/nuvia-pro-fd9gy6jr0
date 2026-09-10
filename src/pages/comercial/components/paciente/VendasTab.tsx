@@ -18,17 +18,18 @@ export function VendasTab({ pacienteId }: { pacienteId: string }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('vendas_concretizadas')
-      .select(
-        '*, avaliacoes!inner(paciente_id), comissoes_crc(valor_comissao), comissoes_dentista(valor_comissao)',
-      )
-      .eq('avaliacoes.paciente_id', pacienteId)
-      .order('data_concretizacao', { ascending: false })
-      .then(({ data }) => {
-        if (data) setVendas(data)
-        setLoading(false)
-      })
+    ;(
+      supabase
+        .from('vendas_concretizadas' as any)
+        .select(
+          '*, avaliacoes!inner(paciente_id), comissoes_crc(valor_comissao), comissoes_dentista(valor_comissao)',
+        )
+        .eq('avaliacoes.paciente_id', pacienteId)
+        .order('data_concretizacao', { ascending: false }) as any
+    ).then(({ data }: any) => {
+      if (data) setVendas(data)
+      setLoading(false)
+    })
   }, [pacienteId])
 
   const formatBRL = (val: number) =>

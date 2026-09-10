@@ -24,9 +24,9 @@ export function TreinamentosAdmin({ cursos, modulos, cargos, onRefresh }: any) {
   const saveCurso = async (e: any) => {
     e.preventDefault()
     const fd = new FormData(e.target)
-    const payload = {
-      titulo: fd.get('titulo'),
-      descricao: fd.get('descricao'),
+    const payload: any = {
+      titulo: String(fd.get('titulo') || ''),
+      descricao: String(fd.get('descricao') || ''),
       setor: selectedSetor === 'todos' ? null : selectedSetor,
       ativo: true,
     }
@@ -35,7 +35,7 @@ export function TreinamentosAdmin({ cursos, modulos, cargos, onRefresh }: any) {
       await supabase.from('intranet_treinamentos_cursos').update(payload).eq('id', cursoEdit.id)
       toast.success('Curso atualizado')
     } else {
-      await supabase.from('intranet_treinamentos_cursos').insert([payload])
+      await supabase.from('intranet_treinamentos_cursos').insert([payload] as any)
       toast.success('Curso criado')
     }
     setCursoEdit(null)

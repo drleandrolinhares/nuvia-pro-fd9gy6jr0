@@ -85,11 +85,8 @@ export function PacienteActions({
   }, [pacienteId])
 
   useEffect(() => {
-    supabase
-      .from('dentistas_avaliadores')
-      .select('id, nome')
-      .eq('status', 'ativo')
-      .then(({ data, error }) => {
+    Promise.resolve(supabase.from('dentistas_avaliadores').select('id, nome').eq('status', 'ativo'))
+      .then(({ data, error }: any) => {
         if (error) {
           console.error('Erro ao carregar dentistas avaliadores:', error)
           toast({
@@ -110,11 +107,8 @@ export function PacienteActions({
         })
       })
 
-    supabase
-      .from('crc_comercial')
-      .select('id, nome')
-      .eq('status', 'ativo')
-      .then(({ data, error }) => {
+    Promise.resolve(supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo'))
+      .then(({ data, error }: any) => {
         if (error) {
           console.error('Erro ao carregar CRC comercial:', error)
           return
