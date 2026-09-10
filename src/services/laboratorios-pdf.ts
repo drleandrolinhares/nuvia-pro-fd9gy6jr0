@@ -434,7 +434,7 @@ export function exportarLaboratoriosPdf({
 
     // Atualiza startY para o próximo grupo
     const lastAutoTable = (doc as any).lastAutoTable
-    startY = (lastAutoTable ? lastAutoTable.finalY : startY) + 7
+    startY = (lastAutoTable?.finalY ? lastAutoTable.finalY : startY) + 7
   })
 
   // Rodapé em todas as páginas com numeração de página "Página X de Y" e marca Nuvia

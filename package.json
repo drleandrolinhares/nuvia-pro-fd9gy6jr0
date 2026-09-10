@@ -67,8 +67,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
-    "jspdf": "^2.5.2",
-    "jspdf-autotable": "^3.8.4",
+    "jspdf": "^3.0.0",
+    "jspdf-autotable": "^5.0.2",
     "vaul": "^1.1.2",
     "zod": "^4.3.6"
   },
