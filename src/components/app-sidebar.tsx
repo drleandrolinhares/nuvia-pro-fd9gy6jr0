@@ -32,6 +32,7 @@ import {
   Calculator,
   UserPlus,
   GraduationCap,
+  FlaskConical,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -114,6 +115,12 @@ export const navData = [
         url: '/operacional/sac',
         icon: MessageSquare,
         permission: ['Acessar SAC'],
+      },
+      {
+        title: 'LABORATÓRIOS',
+        url: '/operacional/laboratorios',
+        icon: FlaskConical,
+        permission: ['Acessar Laboratórios', 'Acessar Gestão de Terceiros'],
       },
       {
         title: 'PARCEIROS',
@@ -276,6 +283,7 @@ export function AppSidebar() {
     comunicados: 0,
     sac: 0,
     chat: 0,
+    laboratorios: 0,
   })
 
   const fetchChatCountStandalone = async () => {
@@ -342,6 +350,22 @@ export function AppSidebar() {
         newBadges.chat = data || 0
       } catch (e) {
         console.error('Erro chat', e)
+      }
+
+      try {
+        // Alerta de laboratórios: trabalhos pendentes que vencem hoje/amanhã ou atrasados
+        const hoje = new Date()
+        const d1 = new Date(hoje.getTime() + 24 * 60 * 60 * 1000)
+        const d1Str = d1.toISOString().split('T')[0]
+        const { count } = await supabase
+          .from('laboratorios_trabalhos')
+          .select('*', { count: 'exact', head: true })
+          .eq('entregue', false)
+          .not('data_previsao_entrega', 'is', null)
+          .lte('data_previsao_entrega', d1Str)
+        newBadges.laboratorios = count || 0
+      } catch (e) {
+        console.error('Erro badges laboratorios', e)
       }
 
       setBadges(newBadges)
@@ -413,6 +437,7 @@ export function AppSidebar() {
     if (title === 'COMUNICADOS' && badges.comunicados > 0) return badges.comunicados
     if (title === 'SAC' && badges.sac > 0) return badges.sac
     if (title === 'CHAT' && badges.chat > 0) return badges.chat
+    if (title === 'LABORATÓRIOS' && badges.laboratorios > 0) return badges.laboratorios
     return null
   }
 

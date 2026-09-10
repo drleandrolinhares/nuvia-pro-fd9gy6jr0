@@ -32,6 +32,7 @@ import ProAgenda from './pages/operacional/ProAgenda'
 import Roteiros from './pages/diretrizes/Roteiros'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
+import Laboratorios from './pages/operacional/Laboratorios'
 import Onboarding from './pages/intranet/Onboarding'
 import Treinamentos from './pages/intranet/Treinamentos'
 import Negociacao from './pages/comercial/Negociacao'
@@ -566,8 +567,20 @@ const AppRoutes = () => {
         <Route
           path="/operacional/parceiros"
           element={
-            <ProtectedRoute allowedPermissions={['Acessar Gestão de Terceiros']}>
+            <ProtectedRoute
+              allowedPermissions={['Acessar Gestão de Terceiros', 'Acessar Laboratórios']}
+            >
               <Parceiros />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/laboratorios"
+          element={
+            <ProtectedRoute
+              allowedPermissions={['Acessar Laboratórios', 'Acessar Gestão de Terceiros']}
+            >
+              <Laboratorios />
             </ProtectedRoute>
           }
         />

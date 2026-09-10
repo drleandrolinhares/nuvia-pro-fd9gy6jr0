@@ -1,13 +1,13 @@
 {
   "_versions": {
-    "create-user": 14,
+    "create-user": 15,
     "calcular-opcoes-pagamento": 6,
-    "ativar_cascata_dentista_avaliador": 15,
+    "ativar_cascata_dentista_avaliador": 16,
     "calcular-entrada-venda": 3,
     "update-user-password": 2,
     "calcular_criticidade": 4,
     "validar_conclusao_tarefa": 6,
-    "update-user-email": 14,
+    "update-user-email": 15,
     "proxy-document": 1
   }
 }
