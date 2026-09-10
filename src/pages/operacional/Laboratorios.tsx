@@ -64,11 +64,16 @@ import {
   Calendar,
   Layers,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   FileSpreadsheet,
   RotateCcw,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+type SortColumn = 'data_envio' | 'data_previsao_entrega' | 'dias_uteis' | 'dias_atraso'
+type SortDirection = 'asc' | 'desc'
 
 export default function Laboratorios() {
   const { user, profile } = useAuth()
@@ -90,6 +95,18 @@ export default function Laboratorios() {
     '/operacional/laboratorios',
     'statusFiltro',
     'todos',
+  )
+
+  // Ordenação clicável tipo Excel persistida
+  const [sortColumn, setSortColumn] = usePageState<SortColumn>(
+    '/operacional/laboratorios',
+    'sortColumn',
+    'data_previsao_entrega',
+  )
+  const [sortDirection, setSortDirection] = usePageState<SortDirection>(
+    '/operacional/laboratorios',
+    'sortDirection',
+    'asc',
   )
 
   // Dados
@@ -150,9 +167,30 @@ export default function Laboratorios() {
     carregarDados()
   }, [labFiltro, mostrarEntregues])
 
+  // Manipulador de clique nos cabeçalhos ordenáveis tipo Excel
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else {
+        // Se já está desc, retorna ao padrão do sistema (previsão de entrega asc) se for outra coluna, ou alterna para asc
+        if (column === 'data_previsao_entrega') {
+          setSortDirection('asc')
+        } else {
+          setSortColumn('data_previsao_entrega')
+          setSortDirection('asc')
+        }
+      }
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
   // Filtragem e Ordenação
   const trabalhosFiltrados = useMemo(() => {
-    return trabalhos.filter((t) => {
+    // 1. Filtragem
+    const filtrados = trabalhos.filter((t) => {
       // Busca textual
       if (busca.trim()) {
         const q = busca.toLowerCase()
@@ -177,7 +215,89 @@ export default function Laboratorios() {
 
       return true
     })
-  }, [trabalhos, busca, statusFiltro])
+
+    // 2. Pré-computar valores calculados para ordenação estável e rápida
+    const itensComValores = filtrados.map((item) => {
+      const diasUteis = calcularDiasUteis(item.data_envio, item.data_previsao_entrega)
+      const diasAtraso = calcularDiasAtraso(
+        item.data_previsao_entrega,
+        item.entregue,
+        item.delivered_at,
+      )
+      const hasPrevisao = !!item.data_previsao_entrega
+      return {
+        item,
+        diasUteis,
+        diasAtraso,
+        hasPrevisao,
+      }
+    })
+
+    // 3. Ordenação com REGRA MANDATÓRIA: registros sem data de previsão ("A CONFIRMAR" / "SEM DATA") sempre vão para o FINAL
+    itensComValores.sort((a, b) => {
+      // Regra de ouro: se um não tem previsão de entrega ("SEM DATA" / "A CONFIRMAR"), vai para o final
+      if (a.hasPrevisao !== b.hasPrevisao) {
+        return a.hasPrevisao ? -1 : 1
+      }
+
+      // Se ambos não têm previsão de entrega, ordenar de forma consistente pelo envio, nome ou criação
+      if (!a.hasPrevisao && !b.hasPrevisao) {
+        if (a.item.data_envio && b.item.data_envio) {
+          const diff = a.item.data_envio.localeCompare(b.item.data_envio)
+          if (diff !== 0) return diff
+        }
+        return a.item.paciente.localeCompare(b.item.paciente)
+      }
+
+      // Ambos possuem data de previsão: aplicar ordenação pela coluna selecionada
+      let cmp = 0
+      if (sortColumn === 'data_envio') {
+        const vA = a.item.data_envio || ''
+        const vB = b.item.data_envio || ''
+        if (!vA && !vB) cmp = 0
+        else if (!vA)
+          cmp = 1 // sem data de envio vai para depois dos com envio
+        else if (!vB) cmp = -1
+        else cmp = vA.localeCompare(vB)
+      } else if (sortColumn === 'data_previsao_entrega') {
+        const vA = a.item.data_previsao_entrega || ''
+        const vB = b.item.data_previsao_entrega || ''
+        cmp = vA.localeCompare(vB)
+        // Se mesma data de previsão, desempatar por horário
+        if (cmp === 0) {
+          const hA = a.item.horario_previsto || '17:00'
+          const hB = b.item.horario_previsto || '17:00'
+          cmp = hA.localeCompare(hB)
+        }
+      } else if (sortColumn === 'dias_uteis') {
+        const vA = a.diasUteis
+        const vB = b.diasUteis
+        if (vA === null && vB === null) cmp = 0
+        else if (vA === null) cmp = 1
+        else if (vB === null) cmp = -1
+        else cmp = vA - vB
+      } else if (sortColumn === 'dias_atraso') {
+        const vA = a.diasAtraso
+        const vB = b.diasAtraso
+        cmp = vA - vB
+      }
+
+      // Se houve critério e direção decrescente, inverte
+      if (cmp !== 0) {
+        return sortDirection === 'asc' ? cmp : -cmp
+      }
+
+      // Desempate estável secundário: sempre pela data de previsão asc, depois criação
+      const fallbackPrev = (a.item.data_previsao_entrega || '').localeCompare(
+        b.item.data_previsao_entrega || '',
+      )
+      if (fallbackPrev !== 0) return fallbackPrev
+
+      return (a.item.criado_em || '').localeCompare(b.item.criado_em || '')
+    })
+
+    return itensComValores.map((x) => x.item)
+  }, [trabalhos, busca, statusFiltro, sortColumn, sortDirection])
 
   // Contadores rápidos (Cards do topo)
   const metricas = useMemo(() => {
@@ -637,23 +757,102 @@ export default function Laboratorios() {
                 <th className="py-2.5 px-2 w-[120px] border-r border-slate-700/60">Laboratório</th>
                 <th className="py-2.5 px-2.5 w-[190px] border-r border-slate-700/60">PACIENTE</th>
                 <th className="py-2.5 px-2.5 border-r border-slate-700/60">TRABALHO</th>
-                <th className="py-2.5 px-1.5 w-[92px] border-r border-slate-700/60 text-center">
-                  DATA ENVIO
-                </th>
-                <th className="py-2.5 px-1.5 w-[116px] border-r border-slate-700/60 text-center">
+                {/* DATA ENVIO - Clicável */}
+                <th
+                  onClick={() => handleSort('data_envio')}
+                  title="Clique para ordenar por data de envio (mais antigos / mais recentes)"
+                  className={cn(
+                    'py-2 px-1.5 w-[98px] border-r border-slate-700/60 text-center cursor-pointer select-none transition-colors group hover:bg-slate-700/70',
+                    sortColumn === 'data_envio' && 'bg-amber-500/10 text-amber-400 font-extrabold',
+                  )}
+                >
                   <div className="flex items-center justify-center gap-1">
-                    <span>PREVISÃO DE ENTREGA</span>
-                    <ArrowUpDown className="w-3 h-3 text-amber-500 shrink-0" />
+                    <span className="truncate">DATA ENVIO</span>
+                    {sortColumn === 'data_envio' ? (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-slate-300 shrink-0 opacity-60" />
+                    )}
                   </div>
                 </th>
-                <th className="py-2.5 px-1.5 w-[76px] border-r border-slate-700/60 text-center">
-                  DIAS ÚTEIS
+
+                {/* PREVISÃO DE ENTREGA - Clicável */}
+                <th
+                  onClick={() => handleSort('data_previsao_entrega')}
+                  title="Clique para ordenar por previsão de entrega (mais próximos / mais distantes)"
+                  className={cn(
+                    'py-2 px-1.5 w-[118px] border-r border-slate-700/60 text-center cursor-pointer select-none transition-colors group hover:bg-slate-700/70',
+                    sortColumn === 'data_previsao_entrega' &&
+                      'bg-amber-500/10 text-amber-400 font-extrabold',
+                  )}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="truncate">PREVISÃO DE ENTREGA</span>
+                    {sortColumn === 'data_previsao_entrega' ? (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-slate-300 shrink-0 opacity-60" />
+                    )}
+                  </div>
                 </th>
+
+                {/* DIAS ÚTEIS - Clicável */}
+                <th
+                  onClick={() => handleSort('dias_uteis')}
+                  title="Clique para ordenar por dias úteis (prazos mais curtos / mais longos)"
+                  className={cn(
+                    'py-2 px-1.5 w-[78px] border-r border-slate-700/60 text-center cursor-pointer select-none transition-colors group hover:bg-slate-700/70',
+                    sortColumn === 'dias_uteis' && 'bg-amber-500/10 text-amber-400 font-extrabold',
+                  )}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="truncate">DIAS ÚTEIS</span>
+                    {sortColumn === 'dias_uteis' ? (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-slate-300 shrink-0 opacity-60" />
+                    )}
+                  </div>
+                </th>
+
+                {/* STATUS - Fixo */}
                 <th className="py-2.5 px-1.5 w-[92px] border-r border-slate-700/60 text-center">
                   STATUS
                 </th>
-                <th className="py-2.5 px-1.5 w-[76px] border-r border-slate-700/60 text-center">
-                  DIAS DE ATRASO
+
+                {/* DIAS DE ATRASO - Clicável */}
+                <th
+                  onClick={() => handleSort('dias_atraso')}
+                  title="Clique para ordenar por dias de atraso (mais atrasados no topo)"
+                  className={cn(
+                    'py-2 px-1.5 w-[80px] border-r border-slate-700/60 text-center cursor-pointer select-none transition-colors group hover:bg-slate-700/70',
+                    sortColumn === 'dias_atraso' && 'bg-amber-500/10 text-amber-400 font-extrabold',
+                  )}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="truncate">DIAS DE ATRASO</span>
+                    {sortColumn === 'dias_atraso' ? (
+                      sortDirection === 'asc' ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-amber-400 shrink-0 stroke-[2.5]" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-slate-300 shrink-0 opacity-60" />
+                    )}
+                  </div>
                 </th>
                 <th className="py-2.5 px-2 w-[156px] border-r border-slate-700/60">
                   CONFIRMAÇÃO COM LABORATÓRIO
@@ -946,7 +1145,7 @@ export default function Laboratorios() {
 
         {/* Rodapé da Grade */}
         <div className="p-3 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-slate-300">
               Mostrando {trabalhosFiltrados.length} de {trabalhos.length} trabalhos
             </span>
@@ -955,6 +1154,19 @@ export default function Laboratorios() {
                 Incluindo histórico de entregues
               </span>
             )}
+            <span className="text-[11px] text-slate-500 flex items-center gap-1 border-l border-slate-700 pl-2">
+              Ordenado por:{' '}
+              <span className="text-amber-400 font-bold uppercase">
+                {sortColumn === 'data_envio'
+                  ? 'Data Envio'
+                  : sortColumn === 'data_previsao_entrega'
+                    ? 'Previsão de Entrega'
+                    : sortColumn === 'dias_uteis'
+                      ? 'Dias Úteis'
+                      : 'Dias de Atraso'}{' '}
+                ({sortDirection === 'asc' ? 'Crescente ↗' : 'Decrescente ↘'})
+              </span>
+            </span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-500">
             <span className="flex items-center gap-1.5">
