@@ -68,9 +68,11 @@ import {
   ArrowDown,
   FileSpreadsheet,
   RotateCcw,
+  FileDown,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { exportarLaboratoriosPdf } from '@/services/laboratorios-pdf'
 
 type SortColumn = 'data_envio' | 'data_previsao_entrega' | 'dias_uteis' | 'dias_atraso'
 type SortDirection = 'asc' | 'desc'
@@ -507,6 +509,40 @@ export default function Laboratorios() {
     return format(d, 'dd/MM/yyyy')
   }
 
+  // Handler de Exportação para PDF
+  const handleExportarPdf = () => {
+    try {
+      const sortColumnTitle =
+        sortColumn === 'data_envio'
+          ? 'Data Envio'
+          : sortColumn === 'data_previsao_entrega'
+            ? 'Previsão de Entrega'
+            : sortColumn === 'dias_uteis'
+              ? 'Dias Úteis'
+              : 'Dias de Atraso'
+      const sortDirectionText = sortDirection === 'asc' ? 'Crescente' : 'Decrescente'
+
+      exportarLaboratoriosPdf({
+        trabalhos: trabalhosFiltrados,
+        labFiltro,
+        sortColumnTitle,
+        sortDirectionText,
+      })
+
+      toast({
+        title: 'PDF Exportado com Sucesso',
+        description: 'O relatório em PDF foi gerado e baixado no seu dispositivo.',
+      })
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF:', err)
+      toast({
+        title: 'Erro ao exportar PDF',
+        description: err.message || 'Ocorreu uma falha ao gerar o arquivo PDF.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   return (
     <div className="p-2 sm:p-3 lg:p-4 space-y-4 w-full bg-slate-950 text-slate-100 min-h-[calc(100vh-4rem)]">
       {/* Header com identidade Nuvia */}
@@ -532,6 +568,22 @@ export default function Laboratorios() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportarPdf}
+            disabled={carregando || trabalhosFiltrados.length === 0}
+            title={
+              trabalhosFiltrados.length === 0
+                ? 'Nenhum trabalho na visualização atual para exportar'
+                : 'Exportar lista atual para PDF de acordo com o laboratório e ordenação selecionados'
+            }
+            className="border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
+          >
+            <FileDown className="w-4 h-4 mr-1.5" />
+            Exportar PDF
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
