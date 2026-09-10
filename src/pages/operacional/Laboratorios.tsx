@@ -388,7 +388,7 @@ export default function Laboratorios() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-slate-950 text-slate-100 min-h-[calc(100vh-4rem)]">
+    <div className="p-2 sm:p-3 lg:p-4 space-y-4 w-full bg-slate-950 text-slate-100 min-h-[calc(100vh-4rem)]">
       {/* Header com identidade Nuvia */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-5 sm:p-6 rounded-xl shadow-lg border-l-4 border-l-amber-500">
         <div className="flex items-center gap-4">
@@ -625,46 +625,40 @@ export default function Laboratorios() {
       </div>
 
       {/* Grade tipo Excel */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 shadow-xl overflow-hidden w-full">
+        <div className="w-full">
+          <table className="w-full table-fixed border-collapse text-left text-xs">
             {/* Cabeçalho tipo Planilha */}
             <thead>
-              <tr className="bg-slate-800/90 text-slate-300 border-b border-slate-700 font-bold uppercase tracking-wider">
-                <th className="py-3 px-3.5 w-12 text-center text-slate-400 border-r border-slate-700/60">
+              <tr className="bg-slate-800/90 text-slate-300 border-b border-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                <th className="py-2.5 px-1.5 w-[36px] text-center text-slate-400 border-r border-slate-700/60">
                   #
                 </th>
-                <th className="py-3 px-3.5 border-r border-slate-700/60 min-w-[130px]">
-                  Laboratório
+                <th className="py-2.5 px-2 w-[120px] border-r border-slate-700/60">Laboratório</th>
+                <th className="py-2.5 px-2.5 w-[190px] border-r border-slate-700/60">PACIENTE</th>
+                <th className="py-2.5 px-2.5 border-r border-slate-700/60">TRABALHO</th>
+                <th className="py-2.5 px-1.5 w-[92px] border-r border-slate-700/60 text-center">
+                  DATA ENVIO
                 </th>
-                <th className="py-3 px-3.5 border-r border-slate-700/60 min-w-[200px]">
-                  C1: Paciente
-                </th>
-                <th className="py-3 px-3.5 border-r border-slate-700/60 min-w-[230px]">
-                  C2: Trabalho
-                </th>
-                <th className="py-3 px-3 border-r border-slate-700/60 text-center min-w-[110px]">
-                  C3: Data Envio
-                </th>
-                <th className="py-3 px-3 border-r border-slate-700/60 text-center min-w-[150px]">
+                <th className="py-2.5 px-1.5 w-[116px] border-r border-slate-700/60 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <span>C4: Previsão Entrega</span>
-                    <ArrowUpDown className="w-3 h-3 text-amber-500" />
+                    <span>PREVISÃO DE ENTREGA</span>
+                    <ArrowUpDown className="w-3 h-3 text-amber-500 shrink-0" />
                   </div>
                 </th>
-                <th className="py-3 px-3 border-r border-slate-700/60 text-center min-w-[110px]">
-                  C5: Dias Úteis
+                <th className="py-2.5 px-1.5 w-[76px] border-r border-slate-700/60 text-center">
+                  DIAS ÚTEIS
                 </th>
-                <th className="py-3 px-3.5 border-r border-slate-700/60 text-center min-w-[110px]">
-                  C6: STATUS
+                <th className="py-2.5 px-1.5 w-[92px] border-r border-slate-700/60 text-center">
+                  STATUS
                 </th>
-                <th className="py-3 px-3 border-r border-slate-700/60 text-center min-w-[100px]">
-                  C7: Atraso
+                <th className="py-2.5 px-1.5 w-[76px] border-r border-slate-700/60 text-center">
+                  DIAS DE ATRASO
                 </th>
-                <th className="py-3 px-3.5 border-r border-slate-700/60 min-w-[220px]">
-                  Confirmação com Laboratório
+                <th className="py-2.5 px-2 w-[156px] border-r border-slate-700/60">
+                  CONFIRMAÇÃO COM LABORATÓRIO
                 </th>
-                <th className="py-3 px-3 text-center min-w-[160px]">Ações</th>
+                <th className="py-2.5 px-1.5 w-[142px] text-center">Ações</th>
               </tr>
             </thead>
 
@@ -717,16 +711,17 @@ export default function Laboratorios() {
                       )}
                     >
                       {/* Numeração */}
-                      <td className="py-2.5 px-3.5 text-center text-slate-500 font-mono text-[11px] border-r border-slate-800/80">
+                      <td className="py-2 px-1 text-center text-slate-500 font-mono text-[11px] border-r border-slate-800/80">
                         {index + 1}
                       </td>
 
                       {/* Laboratório */}
-                      <td className="py-2.5 px-3.5 border-r border-slate-800/80 whitespace-nowrap">
+                      <td className="py-2 px-2 border-r border-slate-800/80 truncate">
                         <Badge
                           variant="outline"
+                          title={labInfo.label}
                           className={cn(
-                            'text-[10px] font-bold uppercase tracking-wider',
+                            'text-[10px] font-bold uppercase tracking-wider truncate max-w-full',
                             labInfo.corBadge,
                           )}
                         >
@@ -734,13 +729,16 @@ export default function Laboratorios() {
                         </Badge>
                       </td>
 
-                      {/* C1: Paciente */}
-                      <td className="py-2.5 px-3.5 border-r border-slate-800/80 font-bold text-white text-[13px]">
-                        <div className="flex items-center gap-1.5">
+                      {/* PACIENTE (antigo C1: Paciente) */}
+                      <td
+                        className="py-2 px-2.5 border-r border-slate-800/80 font-bold text-white text-[12px] truncate"
+                        title={item.paciente}
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <span className="truncate uppercase">{item.paciente}</span>
                           {item.observacoes && (
                             <span
-                              className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-normal shrink-0"
+                              className="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded font-normal shrink-0"
                               title={item.observacoes}
                             >
                               Obs
@@ -749,28 +747,38 @@ export default function Laboratorios() {
                         </div>
                       </td>
 
-                      {/* C2: Trabalho */}
-                      <td className="py-2.5 px-3.5 border-r border-slate-800/80 font-semibold text-slate-200">
-                        <span className="uppercase tracking-tight">{item.trabalho}</span>
-                        {item.observacoes && (
-                          <p className="text-[11px] text-amber-300/80 italic font-normal mt-0.5 line-clamp-1">
-                            {item.observacoes}
-                          </p>
-                        )}
+                      {/* TRABALHO (antigo C2: Trabalho) */}
+                      <td
+                        className="py-2 px-2.5 border-r border-slate-800/80 font-semibold text-slate-200 text-[12px] truncate"
+                        title={item.trabalho}
+                      >
+                        <div className="min-w-0">
+                          <span className="uppercase tracking-tight truncate block">
+                            {item.trabalho}
+                          </span>
+                          {item.observacoes && (
+                            <p
+                              className="text-[10px] text-amber-300/80 italic font-normal truncate"
+                              title={item.observacoes}
+                            >
+                              {item.observacoes}
+                            </p>
+                          )}
+                        </div>
                       </td>
 
-                      {/* C3: Data Envio */}
-                      <td className="py-2.5 px-3 text-center border-r border-slate-800/80 font-mono text-slate-300">
+                      {/* DATA ENVIO (antigo C3: Data Envio) */}
+                      <td className="py-2 px-1 text-center border-r border-slate-800/80 font-mono text-slate-300 text-[11px] whitespace-nowrap">
                         {item.data_envio ? formatarDataVisual(item.data_envio) : '—'}
                       </td>
 
-                      {/* C4: Data Previsão de Entrega */}
-                      <td className="py-2.5 px-3 text-center border-r border-slate-800/80">
+                      {/* PREVISÃO DE ENTREGA (antigo C4: Previsão Entrega) */}
+                      <td className="py-2 px-1 text-center border-r border-slate-800/80 whitespace-nowrap">
                         {item.data_previsao_entrega ? (
-                          <div className="flex flex-col items-center">
+                          <div className="flex flex-col items-center leading-tight">
                             <span
                               className={cn(
-                                'font-mono font-bold text-[13px]',
+                                'font-mono font-bold text-[12px]',
                                 status === 'ATRASADO'
                                   ? 'text-red-400'
                                   : piscar
@@ -781,7 +789,7 @@ export default function Laboratorios() {
                               {formatarDataVisual(item.data_previsao_entrega)}
                             </span>
                             {item.horario_previsto && (
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="text-[9px] text-slate-500 font-mono">
                                 às {item.horario_previsto.substring(0, 5)}
                               </span>
                             )}
@@ -789,72 +797,75 @@ export default function Laboratorios() {
                         ) : (
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-slate-500 border-slate-700"
+                            className="text-[9px] text-slate-500 border-slate-700 px-1 py-0"
                           >
                             A confirmar
                           </Badge>
                         )}
                       </td>
 
-                      {/* C5: Quantidade de Dias Úteis */}
-                      <td className="py-2.5 px-3 text-center border-r border-slate-800/80 font-mono">
+                      {/* DIAS ÚTEIS (antigo C5: Quantidade de Dias Úteis) */}
+                      <td className="py-2 px-1 text-center border-r border-slate-800/80 font-mono whitespace-nowrap">
                         {diasUteis !== null ? (
-                          <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs">
-                            {diasUteis} {diasUteis === 1 ? 'dia útil' : 'dias úteis'}
+                          <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-200 font-bold text-[11px]">
+                            {diasUteis} {diasUteis === 1 ? 'útil' : 'úteis'}
                           </span>
                         ) : (
-                          <span className="text-slate-500">—</span>
+                          <span className="text-slate-500 text-[11px]">—</span>
                         )}
                       </td>
 
-                      {/* C6: STATUS */}
-                      <td className="py-2.5 px-3.5 text-center border-r border-slate-800/80 whitespace-nowrap">
+                      {/* STATUS (antigo C6: STATUS) */}
+                      <td className="py-2 px-1 text-center border-r border-slate-800/80 whitespace-nowrap">
                         {status === 'ENTREGUE' ? (
-                          <Badge className="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] font-extrabold tracking-wider">
+                          <Badge className="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[9px] font-extrabold tracking-wider px-1.5 py-0.5">
                             ENTREGUE
                           </Badge>
                         ) : status === 'ATRASADO' ? (
-                          <Badge className="bg-red-500/20 text-red-300 border border-red-500/50 text-[10px] font-extrabold tracking-wider animate-pulse">
+                          <Badge className="bg-red-500/20 text-red-300 border border-red-500/50 text-[9px] font-extrabold tracking-wider animate-pulse px-1.5 py-0.5">
                             ATRASADO
                           </Badge>
                         ) : status === 'NO PRAZO' ? (
-                          <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold tracking-wider">
+                          <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold tracking-wider px-1.5 py-0.5">
                             NO PRAZO
                           </Badge>
                         ) : (
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-slate-400 border-slate-700"
+                            className="text-[9px] text-slate-400 border-slate-700 px-1.5 py-0.5"
                           >
                             SEM DATA
                           </Badge>
                         )}
                       </td>
 
-                      {/* C7: Dias de Atraso */}
-                      <td className="py-2.5 px-3 text-center border-r border-slate-800/80 font-mono">
+                      {/* DIAS DE ATRASO (antigo C7: Dias de Atraso) */}
+                      <td className="py-2 px-1 text-center border-r border-slate-800/80 font-mono whitespace-nowrap">
                         {diasAtraso > 0 ? (
-                          <span className="px-2 py-0.5 rounded bg-red-950/70 border border-red-800 text-red-400 font-bold text-xs">
+                          <span className="px-1.5 py-0.5 rounded bg-red-950/70 border border-red-800 text-red-400 font-bold text-[11px]">
                             +{diasAtraso} {diasAtraso === 1 ? 'dia' : 'dias'}
                           </span>
                         ) : (
-                          <span className="text-slate-500 font-normal">0</span>
+                          <span className="text-slate-500 font-normal text-[11px]">0</span>
                         )}
                       </td>
 
-                      {/* Confirmação com Laboratório (Etiqueta + Botão) */}
-                      <td className="py-2.5 px-3.5 border-r border-slate-800/80">
+                      {/* CONFIRMAÇÃO COM LABORATÓRIO (Etiqueta + Botão) */}
+                      <td className="py-2 px-2 border-r border-slate-800/80">
                         {item.confirmado_por ? (
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-1.5">
+                          <div className="flex flex-col gap-0.5 leading-tight truncate">
+                            <div className="flex items-center gap-1 min-w-0">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                              <span className="text-emerald-300 font-bold text-[11px] truncate uppercase">
+                              <span
+                                className="text-emerald-300 font-bold text-[10px] truncate uppercase"
+                                title={item.confirmado_por}
+                              >
                                 {item.confirmado_por}
                               </span>
                             </div>
                             {item.confirmado_em && (
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {format(new Date(item.confirmado_em), "dd/MM/yyyy 'às' HH:mm", {
+                              <span className="text-[9px] text-slate-400 font-mono truncate">
+                                {format(new Date(item.confirmado_em), "dd/MM 'às' HH:mm", {
                                   locale: ptBR,
                                 })}
                               </span>
@@ -866,30 +877,30 @@ export default function Laboratorios() {
                             variant="outline"
                             onClick={() => handleConfirmarLaboratorio(item)}
                             className={cn(
-                              'h-7 px-2.5 text-[10px] font-bold uppercase tracking-wider transition-all',
+                              'h-6 w-full px-1.5 text-[9px] font-bold uppercase tracking-wider transition-all truncate',
                               piscar && !item.entregue
                                 ? 'bg-rose-500 hover:bg-rose-600 text-white border-rose-400 shadow-md animate-pulse-badge'
                                 : 'border-slate-700 bg-slate-800 text-slate-300 hover:bg-amber-500 hover:text-slate-950',
                             )}
                           >
-                            <PhoneCall className="w-3 h-3 mr-1" />
-                            Confirmar com Lab
+                            <PhoneCall className="w-2.5 h-2.5 mr-1 shrink-0" />
+                            <span className="truncate">Confirmar com Lab</span>
                           </Button>
                         )}
                       </td>
 
                       {/* Ações (Entregue, Editar, Excluir) */}
-                      <td className="py-2.5 px-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="py-2 px-1 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-0.5">
                           {item.entregue ? (
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleReabrir(item)}
                               title="Reabrir trabalho (voltar para a lista ativa)"
-                              className="h-7 px-2 text-[11px] text-sky-400 hover:bg-sky-500/10 hover:text-sky-300"
+                              className="h-6 px-1.5 text-[10px] text-sky-400 hover:bg-sky-500/10 hover:text-sky-300"
                             >
-                              <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                              <RotateCcw className="w-3 h-3 mr-1" />
                               Reabrir
                             </Button>
                           ) : (
@@ -897,9 +908,9 @@ export default function Laboratorios() {
                               size="sm"
                               onClick={() => handleEntregar(item)}
                               title="Marcar como entregue (retira da grade ativa)"
-                              className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider shadow"
+                              className="h-6 px-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider shadow"
                             >
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
                               Entregue
                             </Button>
                           )}
@@ -909,9 +920,9 @@ export default function Laboratorios() {
                             variant="ghost"
                             onClick={() => abrirEdicao(item)}
                             title="Editar informações"
-                            className="h-7 w-7 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
+                            className="h-6 w-6 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3 h-3" />
                           </Button>
 
                           <Button
@@ -919,9 +930,9 @@ export default function Laboratorios() {
                             variant="ghost"
                             onClick={() => setDeleteId(item.id)}
                             title="Excluir trabalho"
-                            className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                            className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </td>

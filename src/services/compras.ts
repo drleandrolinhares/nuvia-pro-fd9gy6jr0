@@ -63,7 +63,7 @@ export const createCompra = async (
 
   if (itens && itens.length > 0) {
     const itensPayload = itens.map((i) => ({
-      compra_id: data.id,
+      compra_id: (data as any)?.id,
       produto_id: i.produto_id,
       valor_total: i.valor_total,
       qtd_comprada: i.qtd_comprada,

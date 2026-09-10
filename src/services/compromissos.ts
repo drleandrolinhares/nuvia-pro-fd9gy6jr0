@@ -60,8 +60,7 @@ export const getCompromissos = async (setor: string = 'operacional') => {
 export const createCompromisso = async (compromisso: Partial<Compromisso>) => {
   if (!compromisso.setor) compromisso.setor = 'operacional'
 
-  const { data, error } = await supabase
-    .from('compromissos')
+  const { data, error } = await (supabase.from('compromissos') as any)
     .insert([compromisso])
     .select()
     .single()
@@ -71,8 +70,7 @@ export const createCompromisso = async (compromisso: Partial<Compromisso>) => {
 }
 
 export const updateCompromisso = async (id: string, compromisso: Partial<Compromisso>) => {
-  const { data, error } = await supabase
-    .from('compromissos')
+  const { data, error } = await (supabase.from('compromissos') as any)
     .update(compromisso)
     .eq('id', id)
     .select()

@@ -60,7 +60,7 @@ export const getCategorias = async () => {
     .order('ordem', { ascending: true })
 
   if (error) throw error
-  return data as TerceiroCategoria[]
+  return data as unknown as TerceiroCategoria[]
 }
 
 export const createCategoria = async (nome: string) => {
@@ -77,7 +77,7 @@ export const createCategoria = async (nome: string) => {
     .single()
 
   if (error) throw error
-  return data as TerceiroCategoria
+  return data as unknown as TerceiroCategoria
 }
 
 export const updateCategoria = async (id: string, nome: string) => {
@@ -89,7 +89,7 @@ export const updateCategoria = async (id: string, nome: string) => {
     .single()
 
   if (error) throw error
-  return data as TerceiroCategoria
+  return data as unknown as TerceiroCategoria
 }
 
 export const createColuna = async (coluna: Partial<TerceiroColuna>) => {
@@ -100,7 +100,7 @@ export const createColuna = async (coluna: Partial<TerceiroColuna>) => {
     .single()
 
   if (error) throw error
-  return data as TerceiroColuna
+  return data as unknown as TerceiroColuna
 }
 
 export const getColunas = async (categoriaSlug: string) => {
@@ -111,7 +111,7 @@ export const getColunas = async (categoriaSlug: string) => {
     .order('ordem', { ascending: true })
 
   if (error) throw error
-  return data as TerceiroColuna[]
+  return data as unknown as TerceiroColuna[]
 }
 
 export const updateColuna = async (id: string, titulo: string) => {
@@ -123,7 +123,7 @@ export const updateColuna = async (id: string, titulo: string) => {
     .single()
 
   if (error) throw error
-  return data as TerceiroColuna
+  return data as unknown as TerceiroColuna
 }
 
 export const getTarefas = async (categoriaSlug: string) => {
@@ -135,7 +135,7 @@ export const getTarefas = async (categoriaSlug: string) => {
     .order('criado_em', { ascending: false })
 
   if (error) throw error
-  return data as TarefaTerceiro[]
+  return data as unknown as TarefaTerceiro[]
 }
 
 export const updateTarefaStatus = async (id: string, status: string) => {
@@ -147,7 +147,7 @@ export const updateTarefaStatus = async (id: string, status: string) => {
     .single()
 
   if (error) throw error
-  return data as TarefaTerceiro
+  return data as unknown as TarefaTerceiro
 }
 
 export const createTarefa = async (tarefa: Partial<TarefaTerceiro>) => {
@@ -158,7 +158,7 @@ export const createTarefa = async (tarefa: Partial<TarefaTerceiro>) => {
     .single()
 
   if (error) throw error
-  return data as TarefaTerceiro
+  return data as unknown as TarefaTerceiro
 }
 
 export const updateTarefa = async (id: string, tarefa: Partial<TarefaTerceiro>) => {
@@ -170,7 +170,7 @@ export const updateTarefa = async (id: string, tarefa: Partial<TarefaTerceiro>) 
     .single()
 
   if (error) throw error
-  return data as TarefaTerceiro
+  return data as unknown as TarefaTerceiro
 }
 
 export const deleteTarefa = async (id: string) => {
@@ -190,7 +190,7 @@ export const getHistorico = async (tarefaId: string) => {
     .order('criado_em', { ascending: false })
 
   if (error) throw error
-  return data as TerceiroHistorico[]
+  return data as unknown as TerceiroHistorico[]
 }
 
 export const createHistorico = async (historico: {
@@ -212,7 +212,7 @@ export const getEtiquetasGlobais = async () => {
     .order('nome', { ascending: true })
 
   if (error) throw error
-  return data as TerceiroEtiquetaGlobal[]
+  return data as unknown as TerceiroEtiquetaGlobal[]
 }
 
 export const createEtiquetaGlobal = async (etiqueta: { nome: string; cor: string }) => {
@@ -223,5 +223,5 @@ export const createEtiquetaGlobal = async (etiqueta: { nome: string; cor: string
     .single()
 
   if (error) throw error
-  return data as TerceiroEtiquetaGlobal
+  return data as unknown as TerceiroEtiquetaGlobal
 }

@@ -21,8 +21,7 @@ export const faturamentoService = {
     const fim = faturamento_comissoes.periodo_fim
 
     if (tipo_profissional === 'Dentista Avaliador') {
-      const { data, error } = await supabase
-        .from('comissoes_dentista')
+      const { data, error } = await (supabase.from('comissoes_dentista' as any) as any)
         .select(`
           *, 
           vendas_concretizadas!inner(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
@@ -35,8 +34,7 @@ export const faturamentoService = {
       if (error) throw error
       return data
     } else {
-      const { data, error } = await supabase
-        .from('comissoes_crc')
+      const { data, error } = await (supabase.from('comissoes_crc' as any) as any)
         .select(`
           *, 
           vendas_concretizadas!inner(valor_total_tratamento, data_concretizacao, avaliacoes(pacientes(nome))), 
@@ -53,8 +51,9 @@ export const faturamentoService = {
 
   async faturar(inicio: string, fim: string, pagamentoPrevisto: string) {
     // 1. Obter comissoes do periodo
-    const { data: cDentista, error: errD } = await supabase
-      .from('comissoes_dentista')
+    const { data: cDentista, error: errD } = await (
+      supabase.from('comissoes_dentista' as any) as any
+    )
       .select(
         '*, vendas_concretizadas!inner(data_concretizacao), dentistas_avaliadores!inner(usuario_id)',
       )
@@ -64,8 +63,7 @@ export const faturamentoService = {
 
     if (errD) throw errD
 
-    const { data: cCrc, error: errC } = await supabase
-      .from('comissoes_crc')
+    const { data: cCrc, error: errC } = await (supabase.from('comissoes_crc' as any) as any)
       .select('*, vendas_concretizadas!inner(data_concretizacao), crc_comercial!inner(usuario_id)')
       .gte('vendas_concretizadas.data_concretizacao', inicio)
       .lte('vendas_concretizadas.data_concretizacao', fim)
@@ -90,7 +88,7 @@ export const faturamentoService = {
 
     let totalGeral = 0
 
-    for (const c of cDentista || []) {
+    for (const c of (cDentista || []) as any[]) {
       const uId = c.dentistas_avaliadores?.usuario_id
       if (!uId) continue
       const key = `${uId}-Dentista`
@@ -109,7 +107,7 @@ export const faturamentoService = {
       f.comissoesIds.push(c.id)
     }
 
-    for (const c of cCrc || []) {
+    for (const c of (cCrc || []) as any[]) {
       const uId = c.crc_comercial?.usuario_id
       if (!uId) continue
       const key = `${uId}-CRC`
@@ -148,7 +146,7 @@ export const faturamentoService = {
 
     // 4. Criar as faturas individuais
     const faturasInserts = Array.from(faturasToCreate.values()).map((f) => ({
-      faturamento_id: faturamento.id,
+      faturamento_id: (faturamento as any)?.id,
       profissional_id: f.profissional_id,
       tipo_profissional: f.tipo_profissional,
       valor_total_comissao: f.valor_total_comissao,
@@ -168,13 +166,14 @@ export const faturamentoService = {
       .flatMap((f) => f.comissoesIds)
 
     if (dentistaIds.length > 0) {
-      await supabase
-        .from('comissoes_dentista')
+      await (supabase.from('comissoes_dentista' as any) as any)
         .update({ status_pagamento: 'faturado' })
         .in('id', dentistaIds)
     }
     if (crcIds.length > 0) {
-      await supabase.from('comissoes_crc').update({ status_pagamento: 'faturado' }).in('id', crcIds)
+      await (supabase.from('comissoes_crc' as any) as any)
+        .update({ status_pagamento: 'faturado' })
+        .in('id', crcIds)
     }
 
     return {

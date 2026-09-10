@@ -51,7 +51,9 @@ export default function ItensEmFalta() {
     {} as Record<string, any>,
   )
 
-  const gruposArray = Object.values(agrupados).sort((a, b) => b.total - a.total)
+  const gruposArray = (Object.values(agrupados) as any[]).sort(
+    (a: any, b: any) => b.total - a.total,
+  )
 
   if (loading) return <div className="p-8 text-center text-slate-400">Carregando...</div>
 

@@ -66,10 +66,12 @@ export default function Layout() {
   const location = useLocation()
   const { user, hasTenant, loading } = useAuth()
   const isViewer = location.pathname.includes('/viewer')
+  const isLaboratorios = location.pathname.startsWith('/operacional/laboratorios')
   const isFullWidth =
     location.pathname.includes('/precificacao') ||
     location.pathname.includes('/intranet/onboarding') ||
     location.pathname.includes('/intranet/treinamentos') ||
+    isLaboratorios ||
     isViewer
   const isChat = location.pathname.startsWith('/chat')
 
@@ -93,14 +95,14 @@ export default function Layout() {
           className={cn(
             'flex-1 overflow-x-hidden',
             isChat ? 'overflow-hidden' : 'overflow-y-auto',
-            !isChat && !isViewer && 'p-4 md:p-8',
+            isLaboratorios ? 'p-2 sm:p-3' : !isChat && !isViewer && 'p-4 md:p-8',
             isViewer && 'p-0',
           )}
         >
           <div
             className={cn(
               'mx-auto w-full h-full',
-              !isChat && !isViewer && 'pb-16',
+              !isChat && !isViewer && (isLaboratorios ? 'pb-6' : 'pb-16'),
               !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1600px]'),
             )}
           >

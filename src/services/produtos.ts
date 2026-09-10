@@ -117,8 +117,7 @@ export const fetchSalas = async () => {
 }
 
 export const createProduto = async (produto: Partial<Produto>) => {
-  const { data, error } = await supabase
-    .from('produtos')
+  const { data, error } = await (supabase.from('produtos') as any)
     .insert([produto])
     .select(`
       *,
@@ -138,8 +137,7 @@ export const createProduto = async (produto: Partial<Produto>) => {
 }
 
 export const updateProduto = async (id: string, updates: Partial<Produto>) => {
-  const { data, error } = await supabase
-    .from('produtos')
+  const { data, error } = await (supabase.from('produtos') as any)
     .update(updates)
     .eq('id', id)
     .select()

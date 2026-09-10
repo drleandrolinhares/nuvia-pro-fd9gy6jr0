@@ -21,13 +21,15 @@ export const fetchFornecedores = async () => {
 }
 
 export const createFornecedor = async (fornecedor: Partial<Fornecedor>) => {
-  const { data, error } = await supabase.from('fornecedores').insert(fornecedor).select().single()
+  const { data, error } = await (supabase.from('fornecedores') as any)
+    .insert(fornecedor)
+    .select()
+    .single()
   return { data: data as Fornecedor | null, error }
 }
 
 export const updateFornecedor = async (id: string, fornecedor: Partial<Fornecedor>) => {
-  const { data, error } = await supabase
-    .from('fornecedores')
+  const { data, error } = await (supabase.from('fornecedores') as any)
     .update(fornecedor)
     .eq('id', id)
     .select()
