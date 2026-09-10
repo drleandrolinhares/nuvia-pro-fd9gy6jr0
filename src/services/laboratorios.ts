@@ -45,6 +45,43 @@ export interface UpdateLaboratorioTrabalho {
   observacoes?: string | null
 }
 
+export type LaboratorioLogAcao =
+  | 'ADICIONADO'
+  | 'EDITADO'
+  | 'REMOVIDO'
+  | 'ENTREGUE'
+  | 'REABERTO'
+  | 'CONFIRMADO_LAB'
+
+export interface LaboratorioLog {
+  id: string
+  tenant_id?: string
+  trabalho_id?: string | null
+  paciente: string | null
+  trabalho: string | null
+  laboratorio: string | null
+  acao: LaboratorioLogAcao | string
+  detalhes: string | null
+  dados_anteriores?: Record<string, any> | null
+  dados_novos?: Record<string, any> | null
+  usuario_id?: string | null
+  usuario_nome: string
+  criado_em: string
+}
+
+export interface RegistrarLogInput {
+  trabalho_id?: string | null
+  paciente?: string | null
+  trabalho?: string | null
+  laboratorio?: string | null
+  acao: LaboratorioLogAcao
+  detalhes?: string | null
+  dados_anteriores?: Record<string, any> | null
+  dados_novos?: Record<string, any> | null
+  usuario_id?: string | null
+  usuario_nome: string
+}
+
 export const LABORATORIOS_CONFIG: Record<
   LaboratorioTipo,
   { label: string; shortLabel: string; corBadge: string; corBorda: string }
@@ -299,4 +336,86 @@ export async function deleteLaboratorioTrabalho(id: string): Promise<void> {
     console.error('Erro ao excluir trabalho de laboratório:', error)
     throw error
   }
+}
+
+// ---------------------------------------------------------------------------
+// AUDITORIA / LOGS DE INTERAÇÃO
+// ---------------------------------------------------------------------------
+
+/**
+ * Registra uma entrada na tabela laboratorios_logs.
+ * Não lança erro fatal para não travar a ação principal do usuário em caso de falha de rede isolada.
+ */
+export async function registrarLaboratorioLog(
+  input: RegistrarLogInput,
+): Promise<LaboratorioLog | null> {
+  try {
+    const payload: any = {
+      trabalho_id: input.trabalho_id || null,
+      paciente: input.paciente?.trim() || null,
+      trabalho: input.trabalho?.trim() || null,
+      laboratorio: input.laboratorio || null,
+      acao: input.acao,
+      detalhes: input.detalhes || null,
+      dados_anteriores: input.dados_anteriores || null,
+      dados_novos: input.dados_novos || null,
+      usuario_id: input.usuario_id || null,
+      usuario_nome: input.usuario_nome?.trim() || 'Usuário Desconhecido',
+    }
+
+    const { data, error } = await (supabase.from('laboratorios_logs' as any) as any)
+      .insert(payload)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Erro ao registrar log de laboratório:', error)
+      return null
+    }
+
+    return data as LaboratorioLog
+  } catch (err) {
+    console.error('Exceção ao registrar log de laboratório:', err)
+    return null
+  }
+}
+
+/**
+ * Busca o histórico de logs de laboratórios em ordem cronológica decrescente.
+ */
+export async function fetchLaboratoriosLogs(filtros?: {
+  trabalhoId?: string
+  acao?: string
+  busca?: string
+  limite?: number
+}): Promise<LaboratorioLog[]> {
+  let query: any = (supabase.from('laboratorios_logs' as any) as any)
+    .select('*')
+    .order('criado_em', { ascending: false })
+
+  if (filtros?.trabalhoId) {
+    query = query.eq('trabalho_id', filtros.trabalhoId)
+  }
+
+  if (filtros?.acao && filtros.acao !== 'TODAS') {
+    query = query.eq('acao', filtros.acao)
+  }
+
+  if (filtros?.busca && filtros.busca.trim()) {
+    const q = filtros.busca.trim()
+    query = query.or(
+      `paciente.ilike.%${q}%,trabalho.ilike.%${q}%,usuario_nome.ilike.%${q}%,detalhes.ilike.%${q}%`,
+    )
+  }
+
+  query = query.limit(filtros?.limite || 150)
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('Erro ao buscar logs de laboratório:', error)
+    throw error
+  }
+
+  return (data as LaboratorioLog[]) || []
 }

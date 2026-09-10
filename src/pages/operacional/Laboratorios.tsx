@@ -19,7 +19,9 @@ import {
   reabrirTrabalho,
   confirmarComLaboratorio,
   deleteLaboratorioTrabalho,
+  registrarLaboratorioLog,
 } from '@/services/laboratorios'
+import { LaboratoriosLogsModal } from '@/components/operacional/LaboratoriosLogsModal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -69,6 +71,7 @@ import {
   FileSpreadsheet,
   RotateCcw,
   FileDown,
+  History,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -123,6 +126,11 @@ export default function Laboratorios() {
   // Confirmação de exclusão
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
+
+  // Modal de Logs de Auditoria
+  const [logsModalOpen, setLogsModalOpen] = useState(false)
+  const [logTrabalhoFiltro, setLogTrabalhoFiltro] = useState<string | null>(null)
+  const [logPacienteFiltro, setLogPacienteFiltro] = useState<string | null>(null)
 
   // Form
   const [formData, setFormData] = useState<NovoLaboratorioTrabalho>({
@@ -367,7 +375,70 @@ export default function Laboratorios() {
     setSalvando(true)
     try {
       if (editando) {
-        await updateLaboratorioTrabalho(editando.id, {
+        // Detectar mudanças para detalhar no log
+        const alteracoes: string[] = []
+        const prevDados: Record<string, any> = {}
+        const novosDados: Record<string, any> = {}
+
+        if (editando.laboratorio !== formData.laboratorio) {
+          const lAntigo =
+            LABORATORIOS_CONFIG[editando.laboratorio]?.shortLabel || editando.laboratorio
+          const lNovo =
+            LABORATORIOS_CONFIG[formData.laboratorio]?.shortLabel || formData.laboratorio
+          alteracoes.push(`Laboratório: "${lAntigo}" → "${lNovo}"`)
+          prevDados.laboratorio = editando.laboratorio
+          novosDados.laboratorio = formData.laboratorio
+        }
+
+        if (editando.paciente !== formData.paciente.trim()) {
+          alteracoes.push(`Paciente: "${editando.paciente}" → "${formData.paciente.trim()}"`)
+          prevDados.paciente = editando.paciente
+          novosDados.paciente = formData.paciente.trim()
+        }
+
+        if (editando.trabalho !== formData.trabalho.trim()) {
+          alteracoes.push(`Trabalho: "${editando.trabalho}" → "${formData.trabalho.trim()}"`)
+          prevDados.trabalho = editando.trabalho
+          novosDados.trabalho = formData.trabalho.trim()
+        }
+
+        const dataEnvioAntiga = editando.data_envio || ''
+        const dataEnvioNova = formData.data_envio || ''
+        if (dataEnvioAntiga !== dataEnvioNova) {
+          alteracoes.push(
+            `Data Envio: ${dataEnvioAntiga ? formatarDataVisual(dataEnvioAntiga) : '—'} → ${dataEnvioNova ? formatarDataVisual(dataEnvioNova) : '—'}`,
+          )
+          prevDados.data_envio = dataEnvioAntiga || null
+          novosDados.data_envio = dataEnvioNova || null
+        }
+
+        const prevEntregaAntiga = editando.data_previsao_entrega || ''
+        const prevEntregaNova = formData.data_previsao_entrega || ''
+        if (prevEntregaAntiga !== prevEntregaNova) {
+          alteracoes.push(
+            `Previsão Entrega: ${prevEntregaAntiga ? formatarDataVisual(prevEntregaAntiga) : 'A confirmar'} → ${prevEntregaNova ? formatarDataVisual(prevEntregaNova) : 'A confirmar'}`,
+          )
+          prevDados.data_previsao_entrega = prevEntregaAntiga || null
+          novosDados.data_previsao_entrega = prevEntregaNova || null
+        }
+
+        const horarioAntigo = (editando.horario_previsto || '17:00').substring(0, 5)
+        const horarioNovo = (formData.horario_previsto || '17:00').substring(0, 5)
+        if (horarioAntigo !== horarioNovo) {
+          alteracoes.push(`Horário: ${horarioAntigo} → ${horarioNovo}`)
+          prevDados.horario_previsto = horarioAntigo
+          novosDados.horario_previsto = horarioNovo
+        }
+
+        const obsAntiga = editando.observacoes || ''
+        const obsNova = formData.observacoes?.trim() || ''
+        if (obsAntiga !== obsNova) {
+          alteracoes.push(`Observações: "${obsAntiga || '(vazio)'}" → "${obsNova || '(vazio)'}"`)
+          prevDados.observacoes = obsAntiga || null
+          novosDados.observacoes = obsNova || null
+        }
+
+        const atualizado = await updateLaboratorioTrabalho(editando.id, {
           laboratorio: formData.laboratorio,
           paciente: formData.paciente.trim(),
           trabalho: formData.trabalho.trim(),
@@ -376,9 +447,29 @@ export default function Laboratorios() {
           horario_previsto: formData.horario_previsto || '17:00',
           observacoes: formData.observacoes?.trim() || null,
         })
+
+        // Gravar log de edição com resumo das alterações
+        const resumoDetalhes =
+          alteracoes.length > 0
+            ? `Alterações: ${alteracoes.join('; ')}`
+            : 'Edição salva sem alteração de campos chave.'
+
+        await registrarLaboratorioLog({
+          trabalho_id: atualizado.id,
+          paciente: atualizado.paciente,
+          trabalho: atualizado.trabalho,
+          laboratorio: atualizado.laboratorio,
+          acao: 'EDITADO',
+          detalhes: resumoDetalhes,
+          dados_anteriores: prevDados,
+          dados_novos: novosDados,
+          usuario_id: user?.id,
+          usuario_nome: nomeUsuarioLogado,
+        })
+
         toast({ title: 'Sucesso', description: 'Trabalho atualizado com sucesso.' })
       } else {
-        await createLaboratorioTrabalho(
+        const criado = await createLaboratorioTrabalho(
           {
             laboratorio: formData.laboratorio,
             paciente: formData.paciente.trim(),
@@ -390,6 +481,31 @@ export default function Laboratorios() {
           },
           user?.id,
         )
+
+        // Gravar log de criação
+        const labNome = LABORATORIOS_CONFIG[criado.laboratorio]?.shortLabel || criado.laboratorio
+        const detalhesCriacao = `Trabalho cadastrado para ${criado.paciente} (${criado.trabalho}) no laboratório ${labNome}. Envio: ${criado.data_envio ? formatarDataVisual(criado.data_envio) : 'Não informado'}, Previsão: ${criado.data_previsao_entrega ? formatarDataVisual(criado.data_previsao_entrega) : 'A confirmar'}.`
+
+        await registrarLaboratorioLog({
+          trabalho_id: criado.id,
+          paciente: criado.paciente,
+          trabalho: criado.trabalho,
+          laboratorio: criado.laboratorio,
+          acao: 'ADICIONADO',
+          detalhes: detalhesCriacao,
+          dados_novos: {
+            paciente: criado.paciente,
+            trabalho: criado.trabalho,
+            laboratorio: criado.laboratorio,
+            data_envio: criado.data_envio,
+            data_previsao_entrega: criado.data_previsao_entrega,
+            horario_previsto: criado.horario_previsto,
+            observacoes: criado.observacoes,
+          },
+          usuario_id: user?.id,
+          usuario_nome: nomeUsuarioLogado,
+        })
+
         toast({ title: 'Sucesso', description: 'Novo trabalho adicionado à grade.' })
       }
       setModalOpen(false)
@@ -409,6 +525,21 @@ export default function Laboratorios() {
   const handleEntregar = async (item: LaboratorioTrabalho) => {
     try {
       await marcarComoEntregue(item.id)
+
+      // Gravar log de entrega
+      await registrarLaboratorioLog({
+        trabalho_id: item.id,
+        paciente: item.paciente,
+        trabalho: item.trabalho,
+        laboratorio: item.laboratorio,
+        acao: 'ENTREGUE',
+        detalhes: `Trabalho de "${item.paciente}" marcado como entregue pelo usuário.`,
+        dados_anteriores: { entregue: false },
+        dados_novos: { entregue: true, delivered_at: new Date().toISOString() },
+        usuario_id: user?.id,
+        usuario_nome: nomeUsuarioLogado,
+      })
+
       toast({
         title: 'Trabalho Entregue!',
         description: `${item.paciente} marcado como entregue e retirado da lista ativa.`,
@@ -436,6 +567,21 @@ export default function Laboratorios() {
   const handleReabrir = async (item: LaboratorioTrabalho) => {
     try {
       await reabrirTrabalho(item.id)
+
+      // Gravar log de reabertura
+      await registrarLaboratorioLog({
+        trabalho_id: item.id,
+        paciente: item.paciente,
+        trabalho: item.trabalho,
+        laboratorio: item.laboratorio,
+        acao: 'REABERTO',
+        detalhes: `Trabalho de "${item.paciente}" reaberto e retornado à grade ativa.`,
+        dados_anteriores: { entregue: true },
+        dados_novos: { entregue: false, delivered_at: null },
+        usuario_id: user?.id,
+        usuario_nome: nomeUsuarioLogado,
+      })
+
       toast({
         title: 'Trabalho Reaberto',
         description: `${item.paciente} retornou à lista ativa.`,
@@ -456,6 +602,24 @@ export default function Laboratorios() {
   const handleConfirmarLaboratorio = async (item: LaboratorioTrabalho) => {
     try {
       const atualizado = await confirmarComLaboratorio(item.id, nomeUsuarioLogado)
+
+      // Gravar log de confirmação com laboratório
+      const labNome = LABORATORIOS_CONFIG[item.laboratorio]?.shortLabel || item.laboratorio
+      await registrarLaboratorioLog({
+        trabalho_id: item.id,
+        paciente: item.paciente,
+        trabalho: item.trabalho,
+        laboratorio: item.laboratorio,
+        acao: 'CONFIRMADO_LAB',
+        detalhes: `Confirmação de prazo realizada com o laboratório ${labNome} para o caso de "${item.paciente}".`,
+        dados_novos: {
+          confirmado_por: nomeUsuarioLogado,
+          confirmado_em: atualizado.confirmado_em,
+        },
+        usuario_id: user?.id,
+        usuario_nome: nomeUsuarioLogado,
+      })
+
       toast({
         title: 'Confirmação Registrada',
         description: `Confirmado com o laboratório por ${nomeUsuarioLogado}.`,
@@ -483,9 +647,36 @@ export default function Laboratorios() {
   // Ação Excluir
   const handleExcluir = async () => {
     if (!deleteId) return
+    const itemParaExcluir = trabalhos.find((t) => t.id === deleteId)
     setExcluindo(true)
     try {
       await deleteLaboratorioTrabalho(deleteId)
+
+      // Gravar log de exclusão antes de limpar
+      if (itemParaExcluir) {
+        const labNome =
+          LABORATORIOS_CONFIG[itemParaExcluir.laboratorio]?.shortLabel ||
+          itemParaExcluir.laboratorio
+        await registrarLaboratorioLog({
+          trabalho_id: itemParaExcluir.id,
+          paciente: itemParaExcluir.paciente,
+          trabalho: itemParaExcluir.trabalho,
+          laboratorio: itemParaExcluir.laboratorio,
+          acao: 'REMOVIDO',
+          detalhes: `Trabalho "${itemParaExcluir.trabalho}" do paciente "${itemParaExcluir.paciente}" (${labNome}) excluído permanentemente da grade.`,
+          dados_anteriores: {
+            paciente: itemParaExcluir.paciente,
+            trabalho: itemParaExcluir.trabalho,
+            laboratorio: itemParaExcluir.laboratorio,
+            data_envio: itemParaExcluir.data_envio,
+            data_previsao_entrega: itemParaExcluir.data_previsao_entrega,
+            observacoes: itemParaExcluir.observacoes,
+          },
+          usuario_id: user?.id,
+          usuario_nome: nomeUsuarioLogado,
+        })
+      }
+
       toast({ title: 'Excluído', description: 'Registro removido com sucesso.' })
       setTrabalhos((prev) => prev.filter((t) => t.id !== deleteId))
       setDeleteId(null)
@@ -568,6 +759,21 @@ export default function Laboratorios() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setLogTrabalhoFiltro(null)
+              setLogPacienteFiltro(null)
+              setLogsModalOpen(true)
+            }}
+            title="Visualizar histórico completo de auditoria e ações realizadas neste setor"
+            className="border-slate-700 bg-slate-800/90 text-amber-400 hover:bg-slate-700 hover:text-amber-300 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
+          >
+            <History className="w-4 h-4 mr-1.5 text-amber-400" />
+            Histórico / Logs
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -1169,6 +1375,20 @@ export default function Laboratorios() {
                           <Button
                             size="icon"
                             variant="ghost"
+                            onClick={() => {
+                              setLogTrabalhoFiltro(item.id)
+                              setLogPacienteFiltro(item.paciente)
+                              setLogsModalOpen(true)
+                            }}
+                            title={`Ver logs de alterações de ${item.paciente}`}
+                            className="h-6 w-6 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
+                          >
+                            <History className="w-3 h-3" />
+                          </Button>
+
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={() => abrirEdicao(item)}
                             title="Editar informações"
                             className="h-6 w-6 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
@@ -1416,6 +1636,20 @@ export default function Laboratorios() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Logs de Auditoria */}
+      <LaboratoriosLogsModal
+        open={logsModalOpen}
+        onOpenChange={(open) => {
+          setLogsModalOpen(open)
+          if (!open) {
+            setLogTrabalhoFiltro(null)
+            setLogPacienteFiltro(null)
+          }
+        }}
+        trabalhoIdFiltro={logTrabalhoFiltro}
+        pacienteNomeFiltro={logPacienteFiltro}
+      />
     </div>
   )
 }
