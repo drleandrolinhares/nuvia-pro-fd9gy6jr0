@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
-import { usePageState } from '@/hooks/use-page-state'
 import {
   getTarefas,
   updateTarefaStatus,
@@ -17,10 +16,6 @@ import {
   getHistorico,
   createHistorico,
   TerceiroHistorico,
-  getCategorias,
-  createCategoria,
-  updateCategoria,
-  TerceiroCategoria,
   getEtiquetasGlobais,
   createEtiquetaGlobal,
   TerceiroEtiquetaGlobal,
@@ -30,14 +25,13 @@ import {
   Plus,
   GripVertical,
   Calendar,
-  User,
   Building2,
   Trash2,
   Pencil,
   Check,
   X,
   History,
-  Search,
+  RefreshCw,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import {
@@ -58,9 +52,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-const CARD_COLORS = [
+export const CARD_COLORS = [
   { value: 'bg-slate-700', label: 'Padrão' },
   { value: 'bg-blue-600', label: 'Azul' },
   { value: 'bg-emerald-600', label: 'Verde' },
@@ -71,7 +64,7 @@ const CARD_COLORS = [
   { value: 'bg-pink-600', label: 'Rosa' },
 ]
 
-const TAG_COLORS = [
+export const TAG_COLORS = [
   { value: 'bg-slate-500', label: 'Cinza' },
   { value: 'bg-blue-500', label: 'Azul' },
   { value: 'bg-emerald-500', label: 'Verde' },
@@ -82,7 +75,7 @@ const TAG_COLORS = [
   { value: 'bg-pink-500', label: 'Rosa' },
 ]
 
-const getCardBg = (cor: string | null) => {
+export const getCardBg = (cor: string | null) => {
   if (!cor) return 'bg-slate-700'
   if (cor.startsWith('border-')) {
     const base = cor.replace('border-', '')
@@ -92,39 +85,50 @@ const getCardBg = (cor: string | null) => {
   return cor
 }
 
-export default function Parceiros() {
+export interface TerceirosKanbanBoardProps {
+  categoriaSlug: string
+  searchQuery?: string
+  defaultTerceiroNome?: string
+  prestadorLabel?: string
+  prestadorPlaceholder?: string
+  servicoPlaceholder?: string
+  isModalOpen: boolean
+  setIsModalOpen: (open: boolean) => void
+  onRefreshReady?: (reloadFn: () => void) => void
+}
+
+export function TerceirosKanbanBoard({
+  categoriaSlug,
+  searchQuery = '',
+  defaultTerceiroNome = '',
+  prestadorLabel = 'Prestador',
+  prestadorPlaceholder = 'Nome do laboratório ou clínica',
+  servicoPlaceholder = 'Ex: Protocolo superior, Tomografia...',
+  isModalOpen,
+  setIsModalOpen,
+  onRefreshReady,
+}: TerceirosKanbanBoardProps) {
   const { user } = useAuth()
-  const [categorias, setCategorias] = useState<TerceiroCategoria[]>([])
-  const [etiquetasGlobais, setEtiquetasGlobais] = useState<TerceiroEtiquetaGlobal[]>([])
+  const { toast } = useToast()
+
   const [tarefas, setTarefas] = useState<TarefaTerceiro[]>([])
   const [colunas, setColunas] = useState<TerceiroColuna[]>([])
+  const [etiquetasGlobais, setEtiquetasGlobais] = useState<TerceiroEtiquetaGlobal[]>([])
   const [historico, setHistorico] = useState<TerceiroHistorico[]>([])
-  const { toast } = useToast()
-  const [categoriaSlug, setCategoriaSlug] = usePageState(
-    '/operacional/parceiros',
-    'categoriaSlug',
-    '',
-  )
-  const [searchQuery, setSearchQuery] = usePageState('/operacional/parceiros', 'searchQuery', '')
+  const [carregando, setCarregando] = useState(true)
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isNewColModalOpen, setIsNewColModalOpen] = useState(false)
   const [editingTarefa, setEditingTarefa] = useState<TarefaTerceiro | null>(null)
+  const [isNewColModalOpen, setIsNewColModalOpen] = useState(false)
   const [editingColId, setEditingColId] = useState<string | null>(null)
   const [editColTitle, setEditColTitle] = useState('')
   const [newColTitle, setNewColTitle] = useState('')
-  const [isNewCategoriaModalOpen, setIsNewCategoriaModalOpen] = useState(false)
-  const [newCategoriaTitle, setNewCategoriaTitle] = useState('')
-  const [isEditCategoriaModalOpen, setIsEditCategoriaModalOpen] = useState(false)
-  const [editingCategoriaId, setEditingCategoriaId] = useState<string | null>(null)
-  const [editCategoriaTitle, setEditCategoriaTitle] = useState('')
 
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('bg-slate-500')
 
   const [formData, setFormData] = useState({
     pacienteNome: '',
-    terceiroNome: '',
+    terceiroNome: defaultTerceiroNome,
     titulo: '',
     dataPrevista: '',
     descricao: '',
@@ -133,34 +137,9 @@ export default function Parceiros() {
     etiquetas: [] as { nome: string; cor: string }[],
   })
 
-  const loadCategorias = async () => {
-    try {
-      let data = await getCategorias()
-      if (data.length === 0) {
-        await createCategoria('Laboratórios')
-        await createCategoria('Radiologia')
-        await createCategoria('Outros')
-        data = await getCategorias()
-      }
-      // A aba INVISALIGN foi migrada para o menu próprio /operacional/invisalign
-      // Filtramos para não exibir INVISALIGN em Parceiros
-      const filtered = data.filter(
-        (c) => c.slug !== 'invisalign' && c.nome.trim().toUpperCase() !== 'INVISALIGN',
-      )
-      setCategorias(filtered)
-      if (filtered.length > 0) {
-        const isCurrentInFiltered = filtered.some((c) => c.slug === categoriaSlug)
-        if (!categoriaSlug || !isCurrentInFiltered) {
-          setCategoriaSlug(filtered[0].slug)
-        }
-      }
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
   const loadData = async () => {
     if (!categoriaSlug) return
+    setCarregando(true)
     try {
       const [tData, cData] = await Promise.all([
         getTarefas(categoriaSlug),
@@ -170,6 +149,8 @@ export default function Parceiros() {
       setColunas(cData)
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setCarregando(false)
     }
   }
 
@@ -183,12 +164,19 @@ export default function Parceiros() {
   }
 
   useEffect(() => {
-    loadCategorias()
     loadEtiquetasGlobais()
   }, [])
 
   useEffect(() => {
     if (categoriaSlug) loadData()
+  }, [categoriaSlug])
+
+  useEffect(() => {
+    if (onRefreshReady) {
+      onRefreshReady(() => {
+        loadData()
+      })
+    }
   }, [categoriaSlug])
 
   const onDragStart = (e: React.DragEvent, id: string) => e.dataTransfer.setData('id', id)
@@ -228,7 +216,7 @@ export default function Parceiros() {
     setEditingTarefa(t || null)
     setFormData({
       pacienteNome: t?.paciente_nome || '',
-      terceiroNome: t?.terceiro_nome || '',
+      terceiroNome: t?.terceiro_nome || defaultTerceiroNome,
       titulo: t?.titulo || '',
       dataPrevista: t?.data_prevista || '',
       descricao: t?.descricao || '',
@@ -253,6 +241,23 @@ export default function Parceiros() {
       setHistorico([])
     }
   }
+
+  // Se o componente pai mandar abrir sem tarefa específica (novo registro)
+  useEffect(() => {
+    if (isModalOpen && !editingTarefa && !formData.pacienteNome && !formData.titulo) {
+      setFormData({
+        pacienteNome: '',
+        terceiroNome: defaultTerceiroNome,
+        titulo: '',
+        dataPrevista: '',
+        descricao: '',
+        criadoEm: format(new Date(), 'yyyy-MM-dd'),
+        cor: 'bg-slate-700',
+        etiquetas: [],
+      })
+      setHistorico([])
+    }
+  }, [isModalOpen])
 
   const handleCreateGlobalTag = async () => {
     if (!tagInput.trim()) return
@@ -298,7 +303,7 @@ export default function Parceiros() {
         categoria_slug: categoriaSlug,
         titulo: formData.titulo,
         paciente_nome: formData.pacienteNome,
-        terceiro_nome: formData.terceiroNome,
+        terceiro_nome: formData.terceiroNome || null,
         data_prevista: formData.dataPrevista || null,
         descricao: formData.descricao,
         cor: formData.cor,
@@ -391,36 +396,6 @@ export default function Parceiros() {
     }
   }
 
-  const handleCreateCategoria = async () => {
-    if (!newCategoriaTitle.trim()) return
-    try {
-      const nova = await createCategoria(newCategoriaTitle)
-      setIsNewCategoriaModalOpen(false)
-      setNewCategoriaTitle('')
-      setCategorias((prev) => [...prev, nova])
-      setCategoriaSlug(nova.slug)
-      toast({ title: 'Sucesso', description: 'Novo tipo de parceiro criado.' })
-    } catch (error: any) {
-      toast({ title: 'Erro', description: 'Falha ao criar tipo.', variant: 'destructive' })
-    }
-  }
-
-  const handleEditCategoria = async () => {
-    if (!editCategoriaTitle.trim() || !editingCategoriaId) return
-    try {
-      const updated = await updateCategoria(editingCategoriaId, editCategoriaTitle)
-      setCategorias((prev) =>
-        prev.map((c) => (c.id === editingCategoriaId ? { ...c, nome: updated.nome } : c)),
-      )
-      setIsEditCategoriaModalOpen(false)
-      setEditingCategoriaId(null)
-      toast({ title: 'Sucesso', description: 'Tipo atualizado com sucesso.' })
-    } catch (error: any) {
-      console.error(error)
-      toast({ title: 'Erro', description: 'Falha ao atualizar tipo.', variant: 'destructive' })
-    }
-  }
-
   const filteredTarefas = tarefas.filter((t) => {
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
@@ -432,87 +407,27 @@ export default function Parceiros() {
   })
 
   return (
-    <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm mb-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <User className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">PARCEIROS</h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Gerencie trabalhos e serviços externos (laboratórios, clínicas).
-            </p>
-          </div>
+    <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
+      {carregando && colunas.length === 0 ? (
+        <div className="h-64 flex items-center justify-center text-slate-400 gap-2">
+          <RefreshCw className="w-5 h-5 animate-spin text-amber-500" />
+          <span>Carregando colunas e cartões...</span>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar paciente ou serviço..."
-              className="pl-9 bg-slate-800 border-slate-700 text-slate-200 h-10 text-sm min-w-[250px]"
-            />
-          </div>
-          <Button
-            onClick={() => openModal()}
-            className="bg-slate-200 w-full sm:w-auto text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm h-10"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Registro
-          </Button>
-        </div>
-      </div>
-
-      <Tabs
-        value={categoriaSlug}
-        onValueChange={setCategoriaSlug}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
-        <TabsList className="flex w-full overflow-x-auto max-w-4xl mb-4 bg-slate-200/50 p-1 rounded-lg shrink-0 custom-scrollbar justify-start">
-          {categorias.map((c) => (
-            <TabsTrigger
-              key={c.slug}
-              value={c.slug}
-              className="flex-1 min-w-[120px] whitespace-nowrap px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all h-8 flex items-center justify-center gap-2 group"
-            >
-              <span>{c.nome}</span>
-              {categoriaSlug === c.slug && (
-                <div
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setEditingCategoriaId(c.id)
-                    setEditCategoriaTitle(c.nome)
-                    setIsEditCategoriaModalOpen(true)
-                  }}
-                  className="cursor-pointer text-white/70 hover:text-white"
-                  title="Renomear Categoria"
-                >
-                  <Pencil className="w-3 h-3" />
-                </div>
-              )}
-            </TabsTrigger>
-          ))}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsNewCategoriaModalOpen(true)}
-            className="h-8 px-3 ml-2 text-slate-600 hover:text-amber-600 hover:bg-slate-200/80 font-bold text-xs uppercase"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Novo Tipo
-          </Button>
-        </TabsList>
-
-        <div className="flex-1 overflow-x-auto pb-4">
-          <div className="flex gap-6 h-full min-w-max">
-            {colunas.map((col) => (
+      ) : (
+        <div className="flex gap-6 h-full min-w-max">
+          {colunas.map((col) => {
+            const colTarefas = filteredTarefas.filter((t) => t.status === col.id)
+            return (
               <div
                 key={col.id}
-                className={`w-[320px] shrink-0 flex flex-col rounded-xl border ${col.cor} p-4`}
+                className={cn(
+                  'w-[320px] shrink-0 flex flex-col rounded-xl border p-4 shadow-lg backdrop-blur-sm',
+                  col.cor || 'border-slate-800 bg-slate-900/60',
+                )}
                 onDrop={(e) => onDrop(e, col.id)}
                 onDragOver={onDragOver}
               >
+                {/* Header da coluna estilo Nuvia */}
                 <div className="flex justify-between items-center mb-4 group min-h-12 bg-[#0a1128] rounded-md px-4 py-2 border border-[#1e293b] shadow-md">
                   {editingColId === col.id ? (
                     <div className="flex items-center gap-1 w-full">
@@ -550,158 +465,94 @@ export default function Parceiros() {
                             setEditColTitle(col.titulo)
                           }}
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-[#d4af37]/70 hover:text-[#d4af37]"
+                          title="Renomear etapa"
                         >
                           <Pencil className="w-3 h-3" />
                         </button>
                       </h3>
-                      <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-medium border border-blue-800/50">
-                        {filteredTarefas.filter((t) => t.status === col.id).length}
+                      <span className="bg-blue-900/50 px-2 py-0.5 rounded text-xs text-[#d4af37] font-semibold border border-blue-800/50">
+                        {colTarefas.length}
                       </span>
                     </>
                   )}
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                  {filteredTarefas
-                    .filter((t) => t.status === col.id)
-                    .map((t) => (
-                      <div
-                        key={t.id}
-                        draggable
-                        onDragStart={(e) => onDragStart(e, t.id)}
-                        onClick={() => openModal(t)}
-                        className={cn(
-                          'p-4 rounded-lg cursor-grab hover:brightness-110 transition-all shadow-md flex flex-col gap-1',
-                          getCardBg(t.cor),
-                        )}
-                      >
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <h4 className="font-bold text-white text-base leading-tight line-clamp-2 flex-1 uppercase">
-                            {t.paciente_nome || 'SEM PACIENTE'}
-                          </h4>
-                          <GripVertical className="w-4 h-4 text-white/50 shrink-0" />
-                        </div>
 
-                        {t.titulo && (
-                          <div className="text-sm text-white/90 mb-2 font-medium line-clamp-2">
-                            {t.titulo}
-                          </div>
-                        )}
-
-                        {t.etiquetas && t.etiquetas.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {t.etiquetas.map((tag, idx) => (
-                              <span
-                                key={idx}
-                                className={cn(
-                                  'text-[10px] px-1.5 py-0.5 rounded font-medium text-white shadow-sm border border-white/10',
-                                  tag.cor,
-                                )}
-                              >
-                                {tag.nome}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {t.terceiro_nome && (
-                          <div className="flex items-center text-xs text-white/80 mb-1 mt-1">
-                            <Building2 className="w-3 h-3 mr-1 shrink-0" />
-                            <span className="truncate">{t.terceiro_nome}</span>
-                          </div>
-                        )}
-
-                        {t.data_prevista && (
-                          <div className="flex items-center mt-2 pt-2 border-t border-white/20 text-xs text-white/90 font-medium">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            Agendado:{' '}
-                            {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
-                          </div>
-                        )}
+                {/* Lista de cartões */}
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar min-h-[120px]">
+                  {colTarefas.map((t) => (
+                    <div
+                      key={t.id}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, t.id)}
+                      onClick={() => openModal(t)}
+                      className={cn(
+                        'p-4 rounded-lg cursor-grab hover:brightness-110 transition-all shadow-md flex flex-col gap-1 border border-white/10 select-none',
+                        getCardBg(t.cor),
+                      )}
+                    >
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h4 className="font-bold text-white text-base leading-tight line-clamp-2 flex-1 uppercase tracking-tight">
+                          {t.paciente_nome || 'SEM PACIENTE'}
+                        </h4>
+                        <GripVertical className="w-4 h-4 text-white/50 shrink-0" />
                       </div>
-                    ))}
+
+                      {t.titulo && (
+                        <div className="text-sm text-white/90 mb-2 font-medium line-clamp-2">
+                          {t.titulo}
+                        </div>
+                      )}
+
+                      {t.etiquetas && t.etiquetas.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {t.etiquetas.map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded font-medium text-white shadow-sm border border-white/10 uppercase tracking-wide',
+                                tag.cor,
+                              )}
+                            >
+                              {tag.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {t.terceiro_nome && (
+                        <div className="flex items-center text-xs text-white/80 mb-1 mt-1 font-medium">
+                          <Building2 className="w-3 h-3 mr-1 shrink-0" />
+                          <span className="truncate uppercase">{t.terceiro_nome}</span>
+                        </div>
+                      )}
+
+                      {t.data_prevista && (
+                        <div className="flex items-center mt-2 pt-2 border-t border-white/20 text-xs text-white/90 font-medium">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          Agendado: {format(new Date(t.data_prevista + 'T12:00:00'), 'dd/MM/yyyy')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )
+          })}
 
-            <div
-              onClick={() => setIsNewColModalOpen(true)}
-              className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-300 bg-slate-100/50 hover:bg-slate-200/50 hover:border-slate-400 transition-colors cursor-pointer items-center justify-center min-h-[150px] opacity-70 hover:opacity-100"
-            >
-              <Plus className="w-8 h-8 text-slate-500 mb-2" />
-              <span className="text-slate-500 font-medium">Nova Etapa</span>
-            </div>
+          {/* Botão de adicionar etapa */}
+          <div
+            onClick={() => setIsNewColModalOpen(true)}
+            className="w-[320px] shrink-0 flex flex-col rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:bg-slate-900/70 hover:border-amber-500/50 transition-colors cursor-pointer items-center justify-center min-h-[160px] opacity-70 hover:opacity-100 group"
+          >
+            <Plus className="w-8 h-8 text-slate-400 group-hover:text-amber-400 transition-colors mb-2" />
+            <span className="text-slate-300 font-semibold group-hover:text-amber-300 transition-colors uppercase tracking-wider text-xs">
+              Nova Etapa
+            </span>
           </div>
         </div>
-      </Tabs>
+      )}
 
-      <Dialog open={isEditCategoriaModalOpen} onOpenChange={setIsEditCategoriaModalOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Renomear Tipo de Parceiro</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Label>Nome do Tipo</Label>
-            <Input
-              value={editCategoriaTitle}
-              onChange={(e) => setEditCategoriaTitle(e.target.value)}
-              placeholder="Ex: Ortodontia, Fornecedor..."
-              className="bg-slate-950 border-slate-800"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleEditCategoria()}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditCategoriaModalOpen(false)}
-              className="border-slate-700 hover:bg-slate-800 text-slate-300"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleEditCategoria}
-              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-            >
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isNewCategoriaModalOpen} onOpenChange={setIsNewCategoriaModalOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Novo Tipo de Parceiro</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Label>Nome do Tipo</Label>
-            <Input
-              value={newCategoriaTitle}
-              onChange={(e) => setNewCategoriaTitle(e.target.value)}
-              placeholder="Ex: Ortodontia, Fornecedor..."
-              className="bg-slate-950 border-slate-800"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateCategoria()}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsNewCategoriaModalOpen(false)}
-              className="border-slate-700 hover:bg-slate-800"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleCreateCategoria}
-              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-            >
-              Criar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      {/* Modal Nova Coluna */}
       <Dialog open={isNewColModalOpen} onOpenChange={setIsNewColModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-sm">
           <DialogHeader>
@@ -713,7 +564,7 @@ export default function Parceiros() {
               value={newColTitle}
               onChange={(e) => setNewColTitle(e.target.value)}
               placeholder="Ex: Em Prova, Finalizado..."
-              className="bg-slate-950 border-slate-800"
+              className="bg-slate-950 border-slate-800 text-slate-100"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreateCol()}
             />
@@ -722,13 +573,13 @@ export default function Parceiros() {
             <Button
               variant="outline"
               onClick={() => setIsNewColModalOpen(false)}
-              className="border-slate-700 hover:bg-slate-800"
+              className="border-slate-700 hover:bg-slate-800 text-slate-300"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleCreateCol}
-              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
             >
               Criar Etapa
             </Button>
@@ -736,44 +587,58 @@ export default function Parceiros() {
         </DialogContent>
       </Dialog>
 
+      {/* Modal Criar / Editar Card */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-4xl p-0 flex flex-col h-[90vh] md:h-[80vh]">
           <DialogHeader className="p-6 pb-4 border-b border-slate-800 shrink-0">
-            <DialogTitle>{editingTarefa ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-white uppercase tracking-wider">
+              {editingTarefa ? 'Editar Registro' : 'Novo Registro'}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
             {/* Esquerda: Form */}
             <div className="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-4">
               <div className="space-y-1">
-                <Label>Nome do paciente *</Label>
+                <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                  Nome do paciente *
+                </Label>
                 <Input
                   value={formData.pacienteNome}
                   onChange={(e) => setFormData({ ...formData, pacienteNome: e.target.value })}
-                  className="bg-slate-950 border-slate-800 font-bold"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Serviço a ser executado *</Label>
-                <Input
-                  value={formData.titulo}
-                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  placeholder="Ex: Protocolo superior, Tomografia..."
-                  className="bg-slate-950 border-slate-800"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Prestador</Label>
-                <Input
-                  value={formData.terceiroNome}
-                  onChange={(e) => setFormData({ ...formData, terceiroNome: e.target.value })}
-                  placeholder="Nome do laboratório ou clínica"
-                  className="bg-slate-950 border-slate-800"
+                  placeholder="Nome completo do paciente"
+                  className="bg-slate-950 border-slate-800 font-bold text-slate-100 uppercase"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label>Cor do Card (Laboratório/Prestador)</Label>
+                <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                  Serviço a ser executado *
+                </Label>
+                <Input
+                  value={formData.titulo}
+                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                  placeholder={servicoPlaceholder}
+                  className="bg-slate-950 border-slate-800 text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                  {prestadorLabel}
+                </Label>
+                <Input
+                  value={formData.terceiroNome}
+                  onChange={(e) => setFormData({ ...formData, terceiroNome: e.target.value })}
+                  placeholder={prestadorPlaceholder}
+                  className="bg-slate-950 border-slate-800 text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                  Cor do Card
+                </Label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {CARD_COLORS.map((c) => (
                     <button
@@ -783,7 +648,7 @@ export default function Parceiros() {
                         'w-8 h-8 rounded-md transition-transform border-2 shadow-sm',
                         c.value,
                         formData.cor === c.value
-                          ? 'border-white scale-110'
+                          ? 'border-white scale-110 ring-2 ring-amber-500/50'
                           : 'border-transparent hover:scale-105',
                       )}
                       title={c.label}
@@ -794,11 +659,11 @@ export default function Parceiros() {
               </div>
 
               <div className="space-y-3 pt-4 border-t border-slate-800">
-                <Label className="flex items-center justify-between text-slate-300">
+                <Label className="flex items-center justify-between text-slate-300 font-semibold text-xs uppercase tracking-wider">
                   <span>Etiquetas (Clique para selecionar/remover)</span>
                 </Label>
 
-                <div className="flex flex-wrap gap-2 p-3 bg-slate-950/50 rounded-md border border-slate-800/50 max-h-36 overflow-y-auto custom-scrollbar">
+                <div className="flex flex-wrap gap-2 p-3 bg-slate-950/60 rounded-md border border-slate-800 max-h-36 overflow-y-auto custom-scrollbar">
                   {(() => {
                     const globalNames = etiquetasGlobais.map((e) => e.nome.toLowerCase())
                     const extraTags = formData.etiquetas.filter(
@@ -843,7 +708,7 @@ export default function Parceiros() {
                             'cursor-pointer border border-transparent transition-all px-2.5 py-1',
                             eg.cor,
                             isSelected
-                              ? 'opacity-100 ring-2 ring-white/50 shadow-[0_0_10px_rgba(255,255,255,0.1)] text-white'
+                              ? 'opacity-100 ring-2 ring-white/60 shadow-[0_0_10px_rgba(255,255,255,0.15)] text-white'
                               : 'opacity-40 hover:opacity-80 text-white',
                           )}
                         >
@@ -860,21 +725,21 @@ export default function Parceiros() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     placeholder="Nome da nova etiqueta..."
-                    className="bg-slate-950 border-slate-800 flex-1 h-9"
+                    className="bg-slate-950 border-slate-800 flex-1 h-9 text-slate-100 text-xs"
                     onKeyDown={(e) =>
                       e.key === 'Enter' && (e.preventDefault(), handleCreateGlobalTag())
                     }
                   />
                   <Select value={tagColor} onValueChange={setTagColor}>
-                    <SelectTrigger className="w-[110px] bg-slate-950 border-slate-800 h-9">
+                    <SelectTrigger className="w-[110px] bg-slate-950 border-slate-800 h-9 text-xs">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-slate-900 border-slate-800">
                       {TAG_COLORS.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
+                        <SelectItem key={c.value} value={c.value} className="text-xs">
                           <div className="flex items-center gap-2">
                             <div className={cn('w-3 h-3 rounded-full', c.value)} />
-                            <span className="text-xs">{c.label}</span>
+                            <span>{c.label}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -884,7 +749,7 @@ export default function Parceiros() {
                     type="button"
                     onClick={handleCreateGlobalTag}
                     variant="secondary"
-                    className="shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 h-9"
+                    className="shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 h-9 text-xs"
                   >
                     Salvar no Sistema
                   </Button>
@@ -893,40 +758,47 @@ export default function Parceiros() {
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
                 <div className="space-y-1">
-                  <Label>Data inclusão sistema</Label>
+                  <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                    Data inclusão sistema
+                  </Label>
                   <Input
                     type="date"
                     value={formData.criadoEm}
                     onChange={(e) => setFormData({ ...formData, criadoEm: e.target.value })}
-                    className="bg-slate-950 border-slate-800 [color-scheme:dark]"
+                    className="bg-slate-950 border-slate-800 [color-scheme:dark] text-slate-100"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Data agendamento</Label>
+                  <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                    Data agendamento
+                  </Label>
                   <Input
                     type="date"
                     value={formData.dataPrevista}
                     onChange={(e) => setFormData({ ...formData, dataPrevista: e.target.value })}
-                    className="bg-slate-950 border-slate-800 [color-scheme:dark]"
+                    className="bg-slate-950 border-slate-800 [color-scheme:dark] text-slate-100"
                   />
                 </div>
               </div>
+
               <div className="space-y-1">
-                <Label>Observações</Label>
+                <Label className="text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                  Observações
+                </Label>
                 <Textarea
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="bg-slate-950 border-slate-800 resize-none"
+                  className="bg-slate-950 border-slate-800 resize-none text-slate-100"
                   rows={3}
                 />
               </div>
             </div>
 
-            {/* Direita: Historico (Apenas Edição) */}
+            {/* Direita: Histórico (apenas edição) */}
             {editingTarefa && (
-              <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-800 bg-slate-950/50 p-6 flex flex-col h-64 md:h-auto">
+              <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-slate-800 bg-slate-950/60 p-6 flex flex-col h-64 md:h-auto">
                 <h4 className="text-sm font-bold uppercase text-slate-400 mb-4 shrink-0 flex items-center gap-2">
-                  <History className="w-4 h-4" /> Histórico de Atividades
+                  <History className="w-4 h-4 text-amber-500" /> Histórico de Atividades
                 </h4>
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                   {historico.length === 0 ? (
@@ -960,7 +832,7 @@ export default function Parceiros() {
               {editingTarefa && (
                 <Button
                   variant="ghost"
-                  className="text-destructive hover:bg-destructive/10 hover:text-destructive px-3"
+                  className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 px-3"
                   onClick={() => handleDelete(editingTarefa.id)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Excluir
@@ -977,7 +849,7 @@ export default function Parceiros() {
               </Button>
               <Button
                 onClick={handleSave}
-                className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
               >
                 Salvar Alterações
               </Button>
