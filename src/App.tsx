@@ -33,6 +33,7 @@ import Roteiros from './pages/diretrizes/Roteiros'
 import Performance from './pages/operacional/Performance'
 import Parceiros from './pages/operacional/Parceiros'
 import Laboratorios from './pages/operacional/Laboratorios'
+import Invisalign from './pages/operacional/Invisalign'
 import Onboarding from './pages/intranet/Onboarding'
 import Treinamentos from './pages/intranet/Treinamentos'
 import Negociacao from './pages/comercial/Negociacao'
@@ -581,6 +582,16 @@ const AppRoutes = () => {
               allowedPermissions={['Acessar Laboratórios', 'Acessar Gestão de Terceiros']}
             >
               <Laboratorios />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/operacional/invisalign"
+          element={
+            <ProtectedRoute
+              allowedPermissions={['Acessar Gestão de Terceiros', 'Acessar Laboratórios']}
+            >
+              <Invisalign />
             </ProtectedRoute>
           }
         />

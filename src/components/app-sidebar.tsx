@@ -33,6 +33,7 @@ import {
   UserPlus,
   GraduationCap,
   FlaskConical,
+  Sparkles,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -121,6 +122,12 @@ export const navData = [
         url: '/operacional/laboratorios',
         icon: FlaskConical,
         permission: ['Acessar Laboratórios', 'Acessar Gestão de Terceiros'],
+      },
+      {
+        title: 'INVISALIGN',
+        url: '/operacional/invisalign',
+        icon: Sparkles,
+        permission: ['Acessar Gestão de Terceiros', 'Acessar Laboratórios'],
       },
       {
         title: 'PARCEIROS',
