@@ -12,7 +12,6 @@ import {
   Clock,
   Layers,
   Info,
-  CalendarCheck2,
   Copy,
   Check,
 } from 'lucide-react'
@@ -315,7 +314,7 @@ export function InvisalignCalculadoraDatas() {
         </Card>
 
         {/* Resumo Dinâmico do Tratamento Entregue */}
-        <div className="lg:col-span-7 flex flex-col space-y-4">
+        <div className="lg:col-span-7 flex flex-col justify-start">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Próxima Troca (Destaque Principal) */}
             <div className="bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-900 border-2 border-amber-500/50 p-4 rounded-xl shadow-lg relative overflow-hidden">
@@ -363,32 +362,10 @@ export function InvisalignCalculadoraDatas() {
               </div>
             </div>
           </div>
-
-          {/* Dica de Exemplo / Regra de Negócio */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-xs text-slate-300 flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 shrink-0">
-              <CalendarCheck2 className="w-4 h-4" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-[#d4af37] uppercase tracking-wide text-[11px]">
-                Regra de Troca Contínua
-              </h4>
-              <p className="text-slate-400 leading-relaxed">
-                Cada alinhador lançado tem sua data exata calculada somando os dias corridos à data
-                base inicial. Por exemplo, se hoje for{' '}
-                <span className="text-slate-200 font-semibold">
-                  {format(dataBase, 'dd/MM/yyyy')}
-                </span>{' '}
-                com 10 dias de uso, a 1ª troca acontece em {proximaTroca?.dataFormatada || '...'}{' '}
-                (início do alinhador #2), a 2ª troca em {cronograma[1]?.dataFormatada || '...'}{' '}
-                (início do alinhador #3), e assim sucessivamente.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Grade de Trocas Calculadas */}
+      {/* Lista Vertical de Trocas Calculadas */}
       <Card className="bg-slate-900 border-slate-800 shadow-xl overflow-hidden">
         <CardHeader className="pb-3 border-b border-slate-800 flex flex-row items-center justify-between">
           <div>
@@ -398,7 +375,7 @@ export function InvisalignCalculadoraDatas() {
             </CardTitle>
             <CardDescription className="text-slate-400 text-xs">
               {cronograma.length > 0
-                ? `${cronograma.length} ${cronograma.length === 1 ? 'troca programada' : 'trocas programadas'} sequenciais`
+                ? `${cronograma.length} ${cronograma.length === 1 ? 'troca programada' : 'trocas programadas'} sequenciais (leitura vertical sequencial)`
                 : 'Nenhuma data calculada no momento.'}
             </CardDescription>
           </div>
@@ -419,48 +396,52 @@ export function InvisalignCalculadoraDatas() {
               <p className="text-xs text-slate-500">Mínimo de 1 alinhador e 1 dia de uso.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="flex flex-col space-y-2.5">
               {cronograma.map((item) => (
                 <div
                   key={item.numero}
-                  className={`p-3.5 rounded-xl border transition-all ${
+                  className={`p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
                     item.isProxima
-                      ? 'bg-gradient-to-b from-amber-500/15 via-slate-950 to-slate-950 border-amber-500/60 shadow-lg ring-1 ring-amber-500/30'
+                      ? 'bg-gradient-to-r from-amber-500/15 via-slate-950 to-slate-950 border-amber-500/60 shadow-lg ring-1 ring-amber-500/30'
                       : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`text-xs font-extrabold px-2 py-0.5 rounded ${
-                          item.isProxima
-                            ? 'bg-amber-500 text-slate-950'
-                            : 'bg-slate-800 text-slate-300 border border-slate-700'
-                        }`}
-                      >
-                        {item.numero}ª Troca
+                  {/* Lado esquerdo: Identificação da Troca e Status Próxima */}
+                  <div className="flex items-center gap-2.5 min-w-[170px]">
+                    <span
+                      className={`text-xs font-extrabold px-2.5 py-1 rounded tracking-wide ${
+                        item.isProxima
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                          : 'bg-slate-800 text-slate-300 border border-slate-700 font-bold'
+                      }`}
+                    >
+                      {item.numero}ª Troca
+                    </span>
+                    {item.isProxima && (
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 animate-pulse">
+                        Próxima
                       </span>
-                      {item.isProxima && (
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider animate-pulse">
-                          Próxima
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-medium text-slate-400">
-                      +{item.diasAcumulados}d
+                    )}
+                  </div>
+
+                  {/* Centro: Data em destaque e Dia da semana */}
+                  <div className="flex items-baseline sm:items-center gap-3 flex-1 sm:justify-center">
+                    <span className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-mono">
+                      {item.dataFormatada}
+                    </span>
+                    <span className="text-xs sm:text-sm font-medium text-slate-400 capitalize">
+                      {item.diaSemana}
                     </span>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="text-xl font-extrabold text-white tracking-tight">
-                      {item.dataFormatada}
-                    </div>
-                    <div className="text-xs text-slate-400 capitalize flex items-center justify-between">
-                      <span>{item.diaSemana}</span>
-                      <span className="text-[10px] text-slate-400 uppercase">
-                        Usar #{item.numero + 1}
-                      </span>
-                    </div>
+                  {/* Lado direito: Delta de dias e Alinhador a usar */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 min-w-[180px] pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                      +{item.diasAcumulados}d
+                    </span>
+                    <span className="text-xs font-bold text-amber-400/90 tracking-wide uppercase px-2 py-0.5 rounded bg-amber-500/5 border border-amber-500/20">
+                      Usar #{item.numero + 1}
+                    </span>
                   </div>
                 </div>
               ))}
