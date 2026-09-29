@@ -261,6 +261,34 @@ export interface FinanciamentoResultado {
   diferencaReal: number
 }
 
+export interface FinanciamentoReversoInput {
+  valorTotal: number
+  valorEntrada?: number
+  numParcelas: number
+  valorParcela: number
+  descontoAVistaPercent?: number
+}
+
+export interface FinanciamentoReversoResultado {
+  valorTotal: number
+  valorEntrada: number
+  valorFinanciado: number
+  numParcelas: number
+  valorParcela: number
+  totalParcelado: number
+  totalJuros: number
+  jurosPercentual: number
+  taxaMensalPercent: number
+  cetMensalPercent: number
+  cetAnualPercent: number
+  descontoAVistaPercent: number
+  valorAVistaComDesconto: number
+  economiaAVista: number
+  recomendacao: string
+  melhorOpcao: 'avista' | 'parcelado' | 'equivalente'
+  diferencaReal: number
+}
+
 /**
  * Cálculo da parcela pela tabela Price:
  * PMT = PV * (i / (1 - (1 + i)^(-n)))
@@ -285,53 +313,138 @@ export const calcularTIRMensal = (valorPresente: number, parcela: number, n: num
   if (valorPresente <= 0 || parcela <= 0 || n <= 0) return 0
   if (Math.abs(parcela * n - valorPresente) < 0.001) return 0
 
-  // Se o total das parcelas for menor que o PV, a taxa é negativa ou zero
+  // Se o total das parcelas for menor que o PV, a taxa é zero/negativa
   if (parcela * n < valorPresente) return 0
 
-  // Newton-Raphson para f(i) = PV - sum_{t=1}^n PMT / (1+i)^t = 0
-  // Para parcelas constantes: f(i) = PV - PMT * (1 - (1+i)^(-n)) / i = 0
-  let i = 0.015 // chute inicial de 1.5% ao mês
+  // Chute inicial baseado em aproximação financeira: (Total - PV) / (PV * (n+1)/2)
+  let i = ((parcela * n - valorPresente) / (valorPresente * (n + 1))) * 2
+  if (!Number.isFinite(i) || i <= 0 || i > 2) {
+    i = 0.015
+  }
 
-  for (let iter = 0; iter < 50; iter++) {
-    if (i <= -0.99) i = 0.001
+  // Newton-Raphson para f(i) = PV - PMT * (1 - (1+i)^(-n)) / i = 0
+  let converged = false
+  for (let iter = 0; iter < 60; iter++) {
+    if (i <= 0) i = 0.0001
     const pot = Math.pow(1 + i, -n)
     const f = valorPresente - (parcela * (1 - pot)) / i
 
-    // Derivada f'(i):
-    // d/di [ (1 - (1+i)^(-n)) / i ] = [ -i * (-n)(1+i)^(-n-1) - (1 - (1+i)^(-n)) ] / i^2
+    // Derivada f'(i)
     const dPot = -n * Math.pow(1 + i, -n - 1)
     const dAn = (i * -dPot - (1 - pot)) / (i * i)
     const df = -parcela * dAn
 
-    if (Math.abs(df) < 1e-12) break
+    if (!Number.isFinite(df) || Math.abs(df) < 1e-12) break
 
     const nextI = i - f / df
-    if (Math.abs(nextI - i) < 1e-7) {
+    if (!Number.isFinite(nextI)) break
+
+    if (Math.abs(nextI - i) < 1e-8) {
       i = nextI
+      converged = true
       break
     }
     i = nextI
   }
 
-  // Se convergiu para algo razoável
-  if (Number.isFinite(i) && i >= 0 && i < 10) {
+  if (converged && Number.isFinite(i) && i >= 0 && i < 10) {
     return i * 100
   }
 
-  // Fallback: Método da bisseção em [0, 500%]
+  // Fallback: Método da bisseção em [0, 20.0] (até 2000% a.m.)
   let low = 0.0
-  let high = 5.0 // 500%
-  for (let step = 0; step < 60; step++) {
+  let high = 20.0
+  for (let step = 0; step < 70; step++) {
     const mid = (low + high) / 2
     const midPv = (parcela * (1 - Math.pow(1 + mid, -n))) / mid
     if (midPv > valorPresente) {
-      low = mid // precisa de taxa maior para diminuir o PV
+      low = mid
     } else {
       high = mid
     }
   }
 
   return ((low + high) / 2) * 100
+}
+
+/**
+ * Modo Reverso: dado o valor financiado (ou total e entrada),
+ * número de parcelas e valor de cada parcela, calcula:
+ * - Taxa de juros real embutida (% a.m.)
+ * - Total pago e juros embutidos (R$ e %)
+ * - CET mensal e anualizado
+ * - Comparação à vista vs. parcelado
+ */
+export const calcularFinanciamentoReverso = (
+  input: FinanciamentoReversoInput,
+): FinanciamentoReversoResultado => {
+  const valorTotal = Math.max(0, input.valorTotal || 0)
+  const valorEntrada = Math.min(valorTotal, Math.max(0, input.valorEntrada || 0))
+  const numParcelas = Math.max(1, Math.round(input.numParcelas || 1))
+  const valorParcela = Math.max(0, input.valorParcela || 0)
+  const descontoAVistaPercent = Math.max(0, input.descontoAVistaPercent || 0)
+
+  const valorFinanciado = Math.max(0, valorTotal - valorEntrada)
+  const totalParcelasPagas = valorParcela * numParcelas
+  const totalParcelado = valorEntrada + totalParcelasPagas
+
+  // Juros sobre a operação financiada
+  const totalJuros = Math.max(0, totalParcelado - valorTotal)
+  const jurosPercentual = valorFinanciado > 0 ? (totalJuros / valorFinanciado) * 100 : 0
+
+  // Taxa de juros nominal embutida (TIR da operação financiada)
+  const taxaMensalPercent =
+    valorFinanciado > 0 && valorParcela > 0
+      ? calcularTIRMensal(valorFinanciado, valorParcela, numParcelas)
+      : 0
+
+  // Comparador À Vista
+  const descontoReal = (valorTotal * descontoAVistaPercent) / 100
+  const valorAVistaComDesconto = Math.max(0, valorTotal - descontoReal)
+  const diferencaReal = Math.abs(totalParcelado - valorAVistaComDesconto)
+
+  // CET real considerando oportunidade do desconto à vista
+  const baseLiquidaFinanciada =
+    descontoAVistaPercent > 0 ? Math.max(1, valorAVistaComDesconto - valorEntrada) : valorFinanciado
+
+  let cetMensal = taxaMensalPercent
+  if (descontoAVistaPercent > 0 && valorParcela > 0) {
+    cetMensal = calcularTIRMensal(baseLiquidaFinanciada, valorParcela, numParcelas)
+  }
+
+  // CET Anualizado: (1 + i_m)^12 - 1
+  const cetAnual = (Math.pow(1 + cetMensal / 100, 12) - 1) * 100
+
+  let melhorOpcao: 'avista' | 'parcelado' | 'equivalente' = 'equivalente'
+  let recomendacao = 'Os valores são equivalentes.'
+
+  if (valorAVistaComDesconto < totalParcelado - 0.01) {
+    melhorOpcao = 'avista'
+    recomendacao = `À vista compensa em ${formatCurrency(diferencaReal)} de economia frente ao parcelamento total.`
+  } else if (totalParcelado < valorAVistaComDesconto - 0.01) {
+    melhorOpcao = 'parcelado'
+    recomendacao = `Parcelado compensa em ${formatCurrency(diferencaReal)}.`
+  }
+
+  return {
+    valorTotal,
+    valorEntrada,
+    valorFinanciado,
+    numParcelas,
+    valorParcela,
+    totalParcelado,
+    totalJuros,
+    jurosPercentual,
+    taxaMensalPercent,
+    cetMensalPercent: cetMensal,
+    cetAnualPercent: cetAnual,
+    descontoAVistaPercent,
+    valorAVistaComDesconto,
+    economiaAVista: diferencaReal,
+    recomendacao,
+    melhorOpcao,
+    diferencaReal,
+  }
 }
 
 /**
