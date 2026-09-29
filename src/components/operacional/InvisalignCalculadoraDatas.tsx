@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Calendar,
   CalendarDays,
+  CalendarCheck2,
   Sparkles,
   RotateCcw,
   Clock,
@@ -14,6 +15,7 @@ import {
   Info,
   Copy,
   Check,
+  Stethoscope,
 } from 'lucide-react'
 import { format, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -81,6 +83,34 @@ export function InvisalignCalculadoraDatas() {
     return itens
   }, [dataBase, qtdAlinhadores, diasUso, isValid])
 
+  // Cálculo da PRÓXIMA CONSULTA:
+  // Regra de negócio: data da última troca calculada + dias de uso por alinhador
+  // (o paciente coloca o último alinhador e ainda precisa usá-lo pelo período completo estipulado)
+  const proximaConsulta = useMemo(() => {
+    if (!isValid || cronograma.length === 0) return null
+
+    const ultimaTroca = cronograma[cronograma.length - 1]
+    const dataConsulta = addDays(ultimaTroca.dataTroca, diasUso)
+    const dataFormatada = format(dataConsulta, 'dd/MM/yyyy')
+    const rawDiaSemana = format(dataConsulta, 'EEEE', { locale: ptBR })
+    const diaSemana = rawDiaSemana.charAt(0).toUpperCase() + rawDiaSemana.slice(1)
+    const ultimoAlinhadorNumero = qtdAlinhadores
+    const dataUltimaTrocaCurta = format(ultimaTroca.dataTroca, 'dd/MM')
+    const diasTotaisAcumulados = (qtdAlinhadores + 1) * diasUso
+
+    return {
+      data: dataConsulta,
+      dataFormatada,
+      diaSemana,
+      ultimoAlinhadorNumero,
+      dataUltimaTrocaCurta,
+      dataUltimaTrocaCompleta: ultimaTroca.dataFormatada,
+      diasUso,
+      diasTotaisAcumulados,
+      composicaoTexto: `${dataUltimaTrocaCurta} (último alinhador #${ultimoAlinhadorNumero}) + ${diasUso} dias`,
+    }
+  }, [cronograma, isValid, diasUso, qtdAlinhadores])
+
   const handleReset = () => {
     setQtdAlinhadoresInput('6')
     setDiasUsoInput('10')
@@ -103,6 +133,13 @@ export function InvisalignCalculadoraDatas() {
         (item) =>
           `• ${item.numero}ª Troca (Alinhador #${item.numero + 1}): ${item.dataFormatada} (${item.diaSemana})`,
       ),
+      ...(proximaConsulta
+        ? [
+            '',
+            `★ PRÓXIMA CONSULTA: ${proximaConsulta.dataFormatada} (${proximaConsulta.diaSemana})`,
+            `  Composição: ${proximaConsulta.composicaoTexto}`,
+          ]
+        : []),
     ]
 
     try {
@@ -286,6 +323,64 @@ export function InvisalignCalculadoraDatas() {
                   </span>
                 </div>
               )}
+
+              {/* Ponto 2a: Bloco de Destaque Premium PRÓXIMA CONSULTA na coluna esquerda */}
+              {proximaConsulta && (
+                <div className="relative overflow-hidden rounded-xl border border-amber-500/50 bg-gradient-to-br from-amber-500/15 via-slate-950 to-amber-950/30 p-4 shadow-xl ring-1 ring-amber-500/30">
+                  <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#d4af37]/15 rounded-full blur-xl pointer-events-none" />
+
+                  <div className="relative z-10 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37]">
+                          <CalendarCheck2 className="w-4 h-4 text-[#d4af37]" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-[#d4af37]">
+                          Próxima Consulta
+                        </span>
+                      </div>
+                      <Badge className="bg-[#d4af37] text-slate-950 hover:bg-[#d4af37] text-[10px] font-black uppercase tracking-wider shadow-sm">
+                        Retorno Clínico
+                      </Badge>
+                    </div>
+
+                    <div className="pt-1">
+                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight font-mono">
+                        {proximaConsulta.dataFormatada}
+                      </div>
+                      <div className="text-xs font-semibold text-amber-300 capitalize flex items-center gap-1.5 mt-0.5">
+                        <span>{proximaConsulta.diaSemana}</span>
+                        <span className="text-slate-500">•</span>
+                        <span className="text-[11px] text-slate-400 font-normal">
+                          +{proximaConsulta.diasTotaisAcumulados}d do início
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Composição transparente da conta */}
+                    <div className="pt-2 border-t border-amber-500/20 text-[11px] text-slate-300 space-y-1">
+                      <div className="flex items-center justify-between text-slate-400">
+                        <span>Composição do retorno:</span>
+                        <span className="text-amber-400 font-mono font-bold">
+                          +{proximaConsulta.diasUso} dias após troca final
+                        </span>
+                      </div>
+                      <div className="bg-slate-950/70 rounded-md px-2.5 py-1.5 border border-amber-500/20 font-mono text-[11px] text-amber-200/90 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>
+                          {proximaConsulta.dataUltimaTrocaCurta} (último alinhador) +{' '}
+                          {proximaConsulta.diasUso} dias
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-relaxed pt-0.5">
+                        O paciente inicia o último alinhador em{' '}
+                        {proximaConsulta.dataUltimaTrocaCompleta} e completa os{' '}
+                        {proximaConsulta.diasUso} dias de uso antes da consulta.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -394,6 +489,39 @@ export function InvisalignCalculadoraDatas() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Ponto 2b: Linha destacada no FINAL do cronograma vertical da coluna direita */}
+                  {proximaConsulta && (
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-amber-500/60 bg-gradient-to-r from-amber-500/20 via-slate-950 to-amber-950/20 shadow-lg ring-1 ring-amber-500/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all mt-3">
+                      {/* Lado esquerdo: Badge de Destaque Próxima Consulta */}
+                      <div className="flex items-center gap-2.5 min-w-[160px]">
+                        <span className="text-xs font-black px-2.5 py-1 rounded tracking-wide bg-[#d4af37] text-slate-950 shadow-sm flex items-center gap-1.5 uppercase">
+                          <Stethoscope className="w-3.5 h-3.5 text-slate-950" />
+                          Próxima Consulta
+                        </span>
+                      </div>
+
+                      {/* Centro: Data e Dia da Semana com destaque amplo */}
+                      <div className="flex items-baseline sm:items-center gap-3 flex-1 sm:justify-center">
+                        <span className="text-xl sm:text-2xl font-black text-amber-300 tracking-tight font-mono">
+                          {proximaConsulta.dataFormatada}
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-amber-200/90 capitalize">
+                          {proximaConsulta.diaSemana}
+                        </span>
+                      </div>
+
+                      {/* Lado direito: Delta acumulado e indicação de retorno */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 min-w-[170px] pt-1 sm:pt-0 border-t sm:border-t-0 border-amber-500/30">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-900/90 border border-amber-500/40 text-amber-300 font-mono">
+                          +{proximaConsulta.diasTotaisAcumulados}d
+                        </span>
+                        <span className="text-xs font-black text-[#d4af37] tracking-wider uppercase px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 shadow-sm">
+                          Retorno / Avaliação
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
