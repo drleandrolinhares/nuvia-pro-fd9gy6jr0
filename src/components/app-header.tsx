@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Clock, Search, TerminalSquare } from 'lucide-react'
+import { Calculator, Clock, Search, TerminalSquare } from 'lucide-react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useClock } from '@/hooks/use-clock'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { CalculadoraSheet } from '@/components/calculadora'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,6 +19,7 @@ import {
 export function AppHeader() {
   const timeString = useClock()
   const location = useLocation()
+  const [calculadoraOpen, setCalculadoraOpen] = useState(false)
 
   // Simple breadcrumb generator based on path
   const generateBreadcrumbs = () => {
@@ -87,6 +92,28 @@ export function AppHeader() {
             </kbd>
           </div>
         </div>
+
+        {/* Botão Calculadora NUVIA */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setCalculadoraOpen(true)}
+              aria-label="Abrir Calculadora NUVIA"
+              className="size-9 rounded-lg border-sidebar-border bg-sidebar-accent/50 text-secondary hover:bg-secondary hover:text-primary transition-colors shrink-0"
+            >
+              <Calculator className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs font-semibold">
+            Calculadora NUVIA
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Painel lateral da Calculadora */}
+        <CalculadoraSheet open={calculadoraOpen} onOpenChange={setCalculadoraOpen} />
       </div>
     </header>
   )
