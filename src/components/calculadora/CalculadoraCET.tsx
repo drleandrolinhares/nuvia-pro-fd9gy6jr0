@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   formatCurrency,
   formatPercent,
@@ -69,24 +69,123 @@ const parsePtBrNumber = (raw: string): number => {
   return isNaN(v) ? 0 : v
 }
 
+const STORAGE_KEY_CET = 'nuvia_calc_cet_state'
+
+interface CETSavedState {
+  modo: ModoCET
+  valorTotalInput: string
+  entradaInput: string
+  parcelasInput: string
+  taxaMensalInput: string
+  descontoAVistaInput: string
+  revValorTotalInput: string
+  revEntradaInput: string
+  revParcelasInput: string
+  revValorParcelaInput: string
+  revDescontoAVistaInput: string
+}
+
+const getInitialCETState = (): CETSavedState => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CET)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return {
+        modo: parsed.modo === 'reverso' ? 'reverso' : 'direto',
+        valorTotalInput: typeof parsed.valorTotalInput === 'string' ? parsed.valorTotalInput : '',
+        entradaInput: typeof parsed.entradaInput === 'string' ? parsed.entradaInput : '',
+        parcelasInput: typeof parsed.parcelasInput === 'string' ? parsed.parcelasInput : '',
+        taxaMensalInput: typeof parsed.taxaMensalInput === 'string' ? parsed.taxaMensalInput : '',
+        descontoAVistaInput:
+          typeof parsed.descontoAVistaInput === 'string' ? parsed.descontoAVistaInput : '',
+        revValorTotalInput:
+          typeof parsed.revValorTotalInput === 'string' ? parsed.revValorTotalInput : '',
+        revEntradaInput: typeof parsed.revEntradaInput === 'string' ? parsed.revEntradaInput : '',
+        revParcelasInput:
+          typeof parsed.revParcelasInput === 'string' ? parsed.revParcelasInput : '',
+        revValorParcelaInput:
+          typeof parsed.revValorParcelaInput === 'string' ? parsed.revValorParcelaInput : '',
+        revDescontoAVistaInput:
+          typeof parsed.revDescontoAVistaInput === 'string' ? parsed.revDescontoAVistaInput : '',
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return {
+    modo: 'direto',
+    valorTotalInput: '',
+    entradaInput: '',
+    parcelasInput: '',
+    taxaMensalInput: '',
+    descontoAVistaInput: '',
+    revValorTotalInput: '',
+    revEntradaInput: '',
+    revParcelasInput: '',
+    revValorParcelaInput: '',
+    revDescontoAVistaInput: '',
+  }
+}
+
 export function CalculadoraCET() {
-  const [modo, setModo] = useState<ModoCET>('direto')
+  const [initial] = useState<CETSavedState>(getInitialCETState)
+  const [modo, setModo] = useState<ModoCET>(initial.modo)
 
   // Inputs - Modo Direto (SABE A TAXA?)
-  const [valorTotalInput, setValorTotalInput] = useState<string>('12000')
-  const [entradaInput, setEntradaInput] = useState<string>('2000')
-  const [parcelasInput, setParcelasInput] = useState<string>('12')
-  const [taxaMensalInput, setTaxaMensalInput] = useState<string>('1.99')
-  const [descontoAVistaInput, setDescontoAVistaInput] = useState<string>('10')
+  const [valorTotalInput, setValorTotalInput] = useState<string>(initial.valorTotalInput)
+  const [entradaInput, setEntradaInput] = useState<string>(initial.entradaInput)
+  const [parcelasInput, setParcelasInput] = useState<string>(initial.parcelasInput)
+  const [taxaMensalInput, setTaxaMensalInput] = useState<string>(initial.taxaMensalInput)
+  const [descontoAVistaInput, setDescontoAVistaInput] = useState<string>(
+    initial.descontoAVistaInput,
+  )
 
   // Inputs - Modo Reverso (SABE A PARCELA?)
-  const [revValorTotalInput, setRevValorTotalInput] = useState<string>('12000')
-  const [revEntradaInput, setRevEntradaInput] = useState<string>('')
-  const [revParcelasInput, setRevParcelasInput] = useState<string>('12')
-  const [revValorParcelaInput, setRevValorParcelaInput] = useState<string>('1100')
-  const [revDescontoAVistaInput, setRevDescontoAVistaInput] = useState<string>('10')
+  const [revValorTotalInput, setRevValorTotalInput] = useState<string>(initial.revValorTotalInput)
+  const [revEntradaInput, setRevEntradaInput] = useState<string>(initial.revEntradaInput)
+  const [revParcelasInput, setRevParcelasInput] = useState<string>(initial.revParcelasInput)
+  const [revValorParcelaInput, setRevValorParcelaInput] = useState<string>(
+    initial.revValorParcelaInput,
+  )
+  const [revDescontoAVistaInput, setRevDescontoAVistaInput] = useState<string>(
+    initial.revDescontoAVistaInput,
+  )
 
   const [copied, setCopied] = useState(false)
+
+  // Salvar estado no localStorage a cada alteração
+  useEffect(() => {
+    try {
+      const stateToSave: CETSavedState = {
+        modo,
+        valorTotalInput,
+        entradaInput,
+        parcelasInput,
+        taxaMensalInput,
+        descontoAVistaInput,
+        revValorTotalInput,
+        revEntradaInput,
+        revParcelasInput,
+        revValorParcelaInput,
+        revDescontoAVistaInput,
+      }
+      localStorage.setItem(STORAGE_KEY_CET, JSON.stringify(stateToSave))
+    } catch {
+      // ignore
+    }
+  }, [
+    modo,
+    valorTotalInput,
+    entradaInput,
+    parcelasInput,
+    taxaMensalInput,
+    descontoAVistaInput,
+    revValorTotalInput,
+    revEntradaInput,
+    revParcelasInput,
+    revValorParcelaInput,
+    revDescontoAVistaInput,
+  ])
 
   // Conversões numéricas - Modo Direto
   const valorTotal = useMemo(() => Math.max(0, parsePtBrNumber(valorTotalInput)), [valorTotalInput])
@@ -146,8 +245,12 @@ export function CalculadoraCET() {
   }, [revValorTotal, revValorEntrada, revNumParcelas, revValorParcela, revDescontoAVista])
 
   // Validação de estado válido para exibição de resultados
-  const isDiretoValido = valorTotal > 0 && numParcelas >= 1
+  const hasDiretoInput = Boolean(valorTotalInput.trim() || entradaInput.trim())
+  const isDiretoValido = hasDiretoInput && valorTotal > 0 && numParcelas >= 1
+
+  const hasReversoInput = Boolean(revValorTotalInput.trim() || revValorParcelaInput.trim())
   const isReversoValido =
+    hasReversoInput &&
     revValorTotal > 0 &&
     revValorTotal > revValorEntrada &&
     revNumParcelas >= 1 &&
@@ -528,7 +631,7 @@ export function CalculadoraCET() {
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
                     {resultadoDireto.descontoAVistaPercent > 0
-                      ? `Mesmo em parcelamento sem juros, o desconto à vista representa um ganho real de ${formatPercent(resultadoDireto.cetMensalPercent)} a.m.`
+                      ? `Considerando o desconto à vista, o custo de oportunidade ao parcelar equivale a ${formatPercent(resultadoDireto.custoOportunidadeMensalPercent)} a.m.`
                       : 'Informe uma taxa de desconto à vista acima para calcular o custo de oportunidade exato.'}
                   </p>
                 </div>

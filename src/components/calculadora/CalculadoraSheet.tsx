@@ -17,8 +17,29 @@ interface CalculadoraSheetProps {
   onOpenChange: (open: boolean) => void
 }
 
+const STORAGE_KEY_ACTIVE_TAB = 'nuvia_calc_active_tab'
+
 export function CalculadoraSheet({ open, onOpenChange }: CalculadoraSheetProps) {
-  const [activeTab, setActiveTab] = useState<'basica' | 'juros' | 'cet'>('basica')
+  const [activeTab, setActiveTab] = useState<'basica' | 'juros' | 'cet'>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_TAB)
+      if (saved === 'basica' || saved === 'juros' || saved === 'cet') {
+        return saved
+      }
+    } catch {
+      // ignore
+    }
+    return 'basica'
+  })
+
+  const handleTabChange = (val: 'basica' | 'juros' | 'cet') => {
+    setActiveTab(val)
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_TAB, val)
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -49,7 +70,7 @@ export function CalculadoraSheet({ open, onOpenChange }: CalculadoraSheetProps) 
         {/* Abas da Calculadora */}
         <Tabs
           value={activeTab}
-          onValueChange={(val) => setActiveTab(val as 'basica' | 'juros' | 'cet')}
+          onValueChange={(val) => handleTabChange(val as 'basica' | 'juros' | 'cet')}
           className="flex-1 flex flex-col overflow-hidden"
         >
           <div className="px-5 pt-3 pb-2 shrink-0">

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   formatCurrency,
   formatPercent,
@@ -13,17 +13,69 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'sonner'
 import { Copy, Check, TrendingUp, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 
-export function CalculadoraJuros() {
-  const [tipoJuros, setTipoJuros] = useState<'compostos' | 'simples'>('compostos')
-  const [unidadeTempo, setUnidadeTempo] = useState<'meses' | 'anos'>('meses')
+const STORAGE_KEY_JUROS = 'nuvia_calc_juros_state'
 
-  // Inputs
-  const [capitalInput, setCapitalInput] = useState<string>('10000')
-  const [taxaInput, setTaxaInput] = useState<string>('1.5')
-  const [tempoInput, setTempoInput] = useState<string>('12')
+interface JurosSavedState {
+  tipoJuros: 'compostos' | 'simples'
+  unidadeTempo: 'meses' | 'anos'
+  capitalInput: string
+  taxaInput: string
+  tempoInput: string
+}
+
+const getInitialJurosState = (): JurosSavedState => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_JUROS)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return {
+        tipoJuros: parsed.tipoJuros === 'simples' ? 'simples' : 'compostos',
+        unidadeTempo: parsed.unidadeTempo === 'anos' ? 'anos' : 'meses',
+        capitalInput: typeof parsed.capitalInput === 'string' ? parsed.capitalInput : '',
+        taxaInput: typeof parsed.taxaInput === 'string' ? parsed.taxaInput : '',
+        tempoInput: typeof parsed.tempoInput === 'string' ? parsed.tempoInput : '',
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return {
+    tipoJuros: 'compostos',
+    unidadeTempo: 'meses',
+    capitalInput: '',
+    taxaInput: '',
+    tempoInput: '',
+  }
+}
+
+export function CalculadoraJuros() {
+  const [initial] = useState<JurosSavedState>(getInitialJurosState)
+  const [tipoJuros, setTipoJuros] = useState<'compostos' | 'simples'>(initial.tipoJuros)
+  const [unidadeTempo, setUnidadeTempo] = useState<'meses' | 'anos'>(initial.unidadeTempo)
+
+  // Inputs - começam vazios se não houver cálculo salvo
+  const [capitalInput, setCapitalInput] = useState<string>(initial.capitalInput)
+  const [taxaInput, setTaxaInput] = useState<string>(initial.taxaInput)
+  const [tempoInput, setTempoInput] = useState<string>(initial.tempoInput)
 
   const [copied, setCopied] = useState(false)
   const [showTable, setShowTable] = useState(false)
+
+  // Salvar alterações no localStorage
+  useEffect(() => {
+    try {
+      const stateToSave: JurosSavedState = {
+        tipoJuros,
+        unidadeTempo,
+        capitalInput,
+        taxaInput,
+        tempoInput,
+      }
+      localStorage.setItem(STORAGE_KEY_JUROS, JSON.stringify(stateToSave))
+    } catch {
+      // ignore
+    }
+  }, [tipoJuros, unidadeTempo, capitalInput, taxaInput, tempoInput])
 
   // Parsing seguro dos inputs
   const capital = useMemo(() => {
@@ -188,54 +240,60 @@ export function CalculadoraJuros() {
       </div>
 
       {/* Cartão de Resultados */}
-      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-secondary/30 rounded-2xl p-4 shadow-lg space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-secondary font-bold">
-            RESULTADO • {tipoJuros === 'compostos' ? 'COMPOSTO' : 'SIMPLES'}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleCopyResumo}
-            className="h-6 px-2 text-[11px] border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white flex items-center gap-1"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3 h-3 text-emerald-400" />
-                <span className="text-emerald-400">Copiado</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3 text-secondary" />
-                <span>Copiar</span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div>
-          <div className="text-xs text-slate-400">Montante Final Acumulado</div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-secondary font-mono tracking-tight drop-shadow-sm">
-            {formatCurrency(resultado.montante)}
+      {capital > 0 ? (
+        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-secondary/30 rounded-2xl p-4 shadow-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-widest text-secondary font-bold">
+              RESULTADO • {tipoJuros === 'compostos' ? 'COMPOSTO' : 'SIMPLES'}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopyResumo}
+              className="h-6 px-2 text-[11px] border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white flex items-center gap-1"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-400" />
+                  <span className="text-emerald-400">Copiado</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 text-secondary" />
+                  <span>Copiar</span>
+                </>
+              )}
+            </Button>
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
           <div>
-            <div className="text-[11px] text-slate-400">Total em Juros</div>
-            <div className="text-sm font-bold text-emerald-400 font-mono">
-              + {formatCurrency(resultado.totalJuros)}
+            <div className="text-xs text-slate-400">Montante Final Acumulado</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-secondary font-mono tracking-tight drop-shadow-sm">
+              {formatCurrency(resultado.montante)}
             </div>
           </div>
-          <div>
-            <div className="text-[11px] text-slate-400">Rentabilidade Total</div>
-            <div className="text-sm font-bold text-slate-200 font-mono">
-              {capital > 0 ? formatPercent((resultado.totalJuros / capital) * 100) : '0,00%'}
+
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+            <div>
+              <div className="text-[11px] text-slate-400">Total em Juros</div>
+              <div className="text-sm font-bold text-emerald-400 font-mono">
+                + {formatCurrency(resultado.totalJuros)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-400">Rentabilidade Total</div>
+              <div className="text-sm font-bold text-slate-200 font-mono">
+                {capital > 0 ? formatPercent((resultado.totalJuros / capital) * 100) : '0,00%'}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-6 text-center text-xs text-slate-500 bg-slate-900/40 border border-dashed border-slate-800 rounded-xl">
+          Informe o capital inicial para ver o cálculo de juros.
+        </div>
+      )}
 
       {/* Mini-tabela de Evolução (para juros compostos) */}
       {tipoJuros === 'compostos' &&

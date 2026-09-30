@@ -14,14 +14,58 @@ interface CalculadoraBasicaProps {
   isActive?: boolean
 }
 
+const STORAGE_KEY_BASICA = 'nuvia_calc_basica_state'
+
+interface BasicaSavedState {
+  display: string
+  expression: string
+  historico: HistoricoItem[]
+}
+
+const getInitialBasicaState = (): BasicaSavedState => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_BASICA)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return {
+        display: typeof parsed.display === 'string' && parsed.display ? parsed.display : '0',
+        expression: typeof parsed.expression === 'string' ? parsed.expression : '',
+        historico: Array.isArray(parsed.historico) ? parsed.historico : [],
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return {
+    display: '0',
+    expression: '',
+    historico: [],
+  }
+}
+
 export function CalculadoraBasica({ onCopyResult, isActive = true }: CalculadoraBasicaProps) {
-  const [display, setDisplay] = useState('0')
-  const [expression, setExpression] = useState('')
+  const [initial] = useState<BasicaSavedState>(getInitialBasicaState)
+  const [display, setDisplay] = useState<string>(initial.display)
+  const [expression, setExpression] = useState<string>(initial.expression)
   const [hasEvaluated, setHasEvaluated] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [historico, setHistorico] = useState<HistoricoItem[]>([])
+  const [historico, setHistorico] = useState<HistoricoItem[]>(initial.historico)
   const [showHistory, setShowHistory] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Salvar estado no localStorage sempre que display, expression ou historico mudar
+  useEffect(() => {
+    try {
+      const stateToSave: BasicaSavedState = {
+        display,
+        expression,
+        historico,
+      }
+      localStorage.setItem(STORAGE_KEY_BASICA, JSON.stringify(stateToSave))
+    } catch {
+      // ignore
+    }
+  }, [display, expression, historico])
 
   // Manipular clique de dígitos e vírgula
   const handleDigit = (digit: string) => {

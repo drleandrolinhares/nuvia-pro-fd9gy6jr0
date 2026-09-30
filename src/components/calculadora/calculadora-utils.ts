@@ -256,6 +256,7 @@ export interface FinanciamentoResultado {
   economiaAVista: number
   cetMensalPercent: number
   cetAnualPercent: number
+  custoOportunidadeMensalPercent: number
   recomendacao: string
   melhorOpcao: 'avista' | 'parcelado' | 'equivalente'
   diferencaReal: number
@@ -473,16 +474,17 @@ export const calcularFinanciamento = (input: FinanciamentoInput): FinanciamentoR
   // Diferença entre pagar à vista vs total financiado
   const diferencaReal = Math.abs(totalParcelado - valorAVistaComDesconto)
 
-  // CET real:
-  // Se houver desconto à vista, o custo de oportunidade é o valor que o cliente pagaria à vista menos a entrada.
-  // Ex: Produto R$ 1.000 em 10x sem juros de R$ 100. À vista tem 10% desc = R$ 900.
-  // Na prática o cliente está financiando R$ 900 para pagar 10x de R$ 100! CET > 0!
+  // No modo direto com taxa informada, o CET nominal da operação de financiamento
+  // corresponde à própria taxa acordada (sem taxas ou tarifas contratuais extras).
+  // A comparação com o desconto à vista é um comparador comercial de custo de oportunidade.
+  const cetMensal = taxaMensalPercent
+
+  // Custo de oportunidade com desconto à vista (taxa implícita caso deixe de pagar à vista):
   const baseLiquidaFinanciada =
     descontoAVistaPercent > 0 ? Math.max(1, valorAVistaComDesconto - valorEntrada) : valorFinanciado
-
-  let cetMensal = taxaMensalPercent
+  let custoOportunidadeMensal = taxaMensalPercent
   if (descontoAVistaPercent > 0 && valorParcela > 0) {
-    cetMensal = calcularTIRMensal(baseLiquidaFinanciada, valorParcela, numParcelas)
+    custoOportunidadeMensal = calcularTIRMensal(baseLiquidaFinanciada, valorParcela, numParcelas)
   }
 
   // CET Anualizado: (1 + i_m)^12 - 1
@@ -513,6 +515,7 @@ export const calcularFinanciamento = (input: FinanciamentoInput): FinanciamentoR
     economiaAVista: diferencaReal,
     cetMensalPercent: cetMensal,
     cetAnualPercent: cetAnual,
+    custoOportunidadeMensalPercent: custoOportunidadeMensal,
     recomendacao,
     melhorOpcao,
     diferencaReal,
