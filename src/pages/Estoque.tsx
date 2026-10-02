@@ -72,6 +72,7 @@ export default function Estoque() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [canManage, setCanManage] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
+  const [canLaunch, setCanLaunch] = useState(false)
   const [activeTab, setActiveTab] = useState('produtos')
   const [camposDinamicos, setCamposDinamicos] = useState<
     Record<string, { tamanho: string; diametro: string }>
@@ -87,8 +88,13 @@ export default function Estoque() {
       const { data: editar } = await supabase.rpc('has_permission', {
         permission_name: 'Editar Estoque',
       })
-      setCanManage(!!gerenciar)
-      setCanEdit(!!editar)
+      const { data: lancar } = await supabase.rpc('has_permission', {
+        permission_name: 'Lançar Estoque',
+      })
+      const isGerenciar = !!gerenciar
+      setCanManage(isGerenciar)
+      setCanEdit(isGerenciar || !!editar)
+      setCanLaunch(isGerenciar || !!lancar)
     }
     checkPermission()
   }, [])
@@ -359,7 +365,7 @@ export default function Estoque() {
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          {canManage && activeTab === 'produtos' && (
+          {canLaunch && activeTab === 'produtos' && (
             <div className="flex gap-2 w-full md:w-auto animate-in fade-in zoom-in duration-200">
               <Button
                 onClick={() => setModalEntradaOpen(true)}
