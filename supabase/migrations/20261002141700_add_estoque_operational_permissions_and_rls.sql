@@ -1,4 +1,4 @@
--- Migration: 20260910150000_add_estoque_operational_permissions_and_rls.sql
+-- Migration: 20261002141700_add_estoque_operational_permissions_and_rls.sql
 -- Adiciona 'Editar Estoque' e 'Lançar Estoque' ao catálogo public.permissoes
 -- Concede as novas permissões retroativamente a quem já possui 'Gerenciar Estoque'
 -- Atualiza as políticas de RLS para produtos, entrada_produtos e saida_produtos
@@ -75,8 +75,8 @@ BEGIN
       WHERE cp.permissao_id = v_id_gerenciar
       ON CONFLICT DO NOTHING;
 
-      INSERT INTO public.usuario_permissoes (usuario_id, permissao_id, tenant_id)
-      SELECT up.usuario_id, v_id_lancar, up.tenant_id
+      INSERT INTO public.usuario_permissoes (usuario_id, permissao_id)
+      SELECT up.usuario_id, v_id_lancar
       FROM public.usuario_permissoes up
       WHERE up.permissao_id = v_id_gerenciar
       ON CONFLICT DO NOTHING;
@@ -89,8 +89,8 @@ BEGIN
       WHERE cp.permissao_id = v_id_gerenciar
       ON CONFLICT DO NOTHING;
 
-      INSERT INTO public.usuario_permissoes (usuario_id, permissao_id, tenant_id)
-      SELECT up.usuario_id, v_id_editar, up.tenant_id
+      INSERT INTO public.usuario_permissoes (usuario_id, permissao_id)
+      SELECT up.usuario_id, v_id_editar
       FROM public.usuario_permissoes up
       WHERE up.permissao_id = v_id_gerenciar
       ON CONFLICT DO NOTHING;
