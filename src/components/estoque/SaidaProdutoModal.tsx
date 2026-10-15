@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
+import { parsePtBrNumber } from '@/lib/utils'
 import { Produto, formatProdutoVariacoes } from '@/services/produtos'
 import { Loader2, Search, Check, PackageMinus } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -40,9 +41,15 @@ import { cn } from '@/lib/utils'
 const formSchema = z
   .object({
     produto_id: z.string().min(1, 'Selecione um produto'),
-    quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que 0'),
+    quantidade: z.preprocess(
+      (v) => parsePtBrNumber(v),
+      z.number().min(1, 'A quantidade deve ser maior que 0'),
+    ),
     tipo_saida: z.enum(['definitiva', 'parcial']),
-    quantidade_devolver: z.coerce.number().optional(),
+    quantidade_devolver: z.preprocess(
+      (v) => (v === '' || v === undefined || v === null ? undefined : parsePtBrNumber(v)),
+      z.number().optional(),
+    ),
     descricao: z.string().optional(),
     observacoes: z.string().optional(),
   })
@@ -279,7 +286,13 @@ export function SaidaProdutoModal({
                       *
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" min="1" className="border-slate-300" {...field} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        className="border-slate-300"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -339,10 +352,11 @@ export function SaidaProdutoModal({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
                         className="bg-white border-amber-200 focus-visible:ring-amber-500"
                         {...field}
+                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormMessage />

@@ -34,6 +34,7 @@ import { format, parseISO } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
+import { parsePtBrNumber } from '@/lib/utils'
 
 interface CompraData {
   fornecedor_id?: string
@@ -202,9 +203,9 @@ export function CompraItemFormModal({
   }
 
   const vu = useMemo(() => {
-    const vt = parseFloat(valorTotal) || 0
-    const qc = parseInt(qtdComprada) || 1
-    const ie = parseInt(itensEmbalagem) || 1
+    const vt = parsePtBrNumber(valorTotal) || 0
+    const qc = parsePtBrNumber(qtdComprada) || 1
+    const ie = parsePtBrNumber(itensEmbalagem) || 1
     if (referenciaConsumo === 'itens_embalagem') return vt / (qc * ie)
     return vt / qc
   }, [valorTotal, qtdComprada, itensEmbalagem, referenciaConsumo])
@@ -234,6 +235,10 @@ export function CompraItemFormModal({
       custo_unitario: vu,
     }
 
+    const valorTotalNum = parsePtBrNumber(valorTotal) || 0
+    const qtdCompradaNum = parsePtBrNumber(qtdComprada) || 0
+    const itensEmbalagemNum = parsePtBrNumber(itensEmbalagem) || 1
+
     if (produtoId === 'new') {
       const { data, error } = await createProduto({ ...payloadProduto, quantidade_estoque: 0 })
       if (error || !data) {
@@ -261,16 +266,15 @@ export function CompraItemFormModal({
       produto_nome: nome,
       produto_marca: marca,
       produto_sala: salas.find((s) => s.id === salaId)?.nome,
-      valor_total: parseFloat(valorTotal) || 0,
-      qtd_comprada: parseInt(qtdComprada) || 0,
-      itens_embalagem:
-        referenciaConsumo === 'itens_embalagem' ? parseInt(itensEmbalagem) || null : null,
+      valor_total: valorTotalNum,
+      qtd_comprada: qtdCompradaNum,
+      itens_embalagem: referenciaConsumo === 'itens_embalagem' ? itensEmbalagemNum || null : null,
       referencia_consumo: referenciaConsumo,
       valor_unitario: vu,
       estoque_adicionado:
         referenciaConsumo === 'itens_embalagem'
-          ? (parseInt(qtdComprada) || 0) * (parseInt(itensEmbalagem) || 1)
-          : parseInt(qtdComprada) || 0,
+          ? qtdCompradaNum * itensEmbalagemNum
+          : qtdCompradaNum,
       data_validade: dbValidade,
       numero_armario: numeroArmario || null,
       observacoes: observacoes || null,
@@ -389,9 +393,9 @@ export function CompraItemFormModal({
             <div className="space-y-2">
               <Label>Valor Total (R$) *</Label>
               <Input
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
                 required
                 value={valorTotal}
                 onChange={(e) => setValorTotal(e.target.value)}
@@ -402,8 +406,8 @@ export function CompraItemFormModal({
             <div className="space-y-2">
               <Label>Qtd Comprada *</Label>
               <Input
-                type="number"
-                min="1"
+                type="text"
+                inputMode="numeric"
                 required
                 value={qtdComprada}
                 onChange={(e) => setQtdComprada(e.target.value)}
@@ -414,8 +418,8 @@ export function CompraItemFormModal({
             <div className="space-y-2">
               <Label>Itens na Embalagem</Label>
               <Input
-                type="number"
-                min="1"
+                type="text"
+                inputMode="numeric"
                 value={itensEmbalagem}
                 onChange={(e) => setItensEmbalagem(e.target.value)}
                 className="border-slate-300"
@@ -482,8 +486,8 @@ export function CompraItemFormModal({
             <div className="space-y-2">
               <Label>Estoque Mínimo</Label>
               <Input
-                type="number"
-                min="0"
+                type="text"
+                inputMode="numeric"
                 value={estoqueMinimo}
                 onChange={(e) => setEstoqueMinimo(e.target.value)}
                 className="border-slate-300"

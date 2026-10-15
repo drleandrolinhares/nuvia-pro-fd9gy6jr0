@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { parsePtBrNumber } from '@/lib/utils'
 
 import {
   createProduto,
@@ -43,8 +44,14 @@ const formSchema = z.object({
   marca: z.string().optional(),
   especialidade_id: z.string().optional(),
   embalagem: z.string().optional(),
-  quantidade_minima: z.number().min(0, 'Valor inválido').optional(),
-  custo_unitario: z.number().min(0, 'Valor inválido').optional(),
+  quantidade_minima: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? 0 : parsePtBrNumber(v)),
+    z.number().min(0, 'Valor inválido').optional(),
+  ),
+  custo_unitario: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? 0 : parsePtBrNumber(v)),
+    z.number().min(0, 'Valor inválido').optional(),
+  ),
   sala_id: z.string().optional(),
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
   controle_prazo: z.boolean().default(false),
@@ -324,7 +331,13 @@ export function CriarProdutoModal({
                     <FormItem>
                       <FormLabel>Estq. Mínimo</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" placeholder="0" {...field} />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="0"
+                          {...field}
+                          value={field.value ?? ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -339,7 +352,13 @@ export function CriarProdutoModal({
                   <FormItem>
                     <FormLabel>Custo Unitário</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

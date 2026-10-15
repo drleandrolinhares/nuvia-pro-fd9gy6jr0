@@ -31,6 +31,7 @@ import {
   upsertProdutoCamposValores,
 } from '@/services/produtos'
 import * as cadastrosService from '@/services/cadastros'
+import { parsePtBrNumber } from '@/lib/utils'
 
 interface EditarProdutoModalProps {
   produto: Produto | null
@@ -181,11 +182,11 @@ export function EditarProdutoModal({
       marca: marca.trim().toUpperCase() || null,
       especialidade_id: especialidadeId === 'none' ? null : especialidadeId,
       codigo_barras: codigoBarras.trim() || null,
-      quantidade_minima: controlePorPrazo ? 0 : parseInt(quantidadeMinima) || 0,
+      quantidade_minima: controlePorPrazo ? 0 : parsePtBrNumber(quantidadeMinima) || 0,
       sala_id: salaId === 'none' ? null : salaId,
       sala: salaNome,
       numero_armario: numeroArmario.trim() || null,
-      custo_unitario: parseFloat(custoUnitario) || 0,
+      custo_unitario: parsePtBrNumber(custoUnitario) || 0,
       referencia_consumo: referenciaConsumo,
       alerta_prazo_dias: controlePorPrazo ? parseInt(alertaPrazoDias) || null : null,
       consumo_estimado_valor: consumoEstimadoValor ? parseFloat(consumoEstimadoValor) : null,
@@ -290,10 +291,11 @@ export function EditarProdutoModal({
                 <Label htmlFor="qtd_min">Estq. Mínimo</Label>
                 <Input
                   id="qtd_min"
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   value={quantidadeMinima}
                   onChange={(e) => setQuantidadeMinima(e.target.value)}
+                  placeholder="0"
                 />
               </div>
             )}
@@ -326,12 +328,11 @@ export function EditarProdutoModal({
               <Label htmlFor="custo_unitario">Custo Aprox.</Label>
               <Input
                 id="custo_unitario"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 value={custoUnitario}
                 onChange={(e) => setCustoUnitario(e.target.value)}
-                placeholder="0.00"
+                placeholder="0,00"
               />
             </div>
           </div>

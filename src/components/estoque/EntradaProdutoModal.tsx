@@ -45,7 +45,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { cn } from '@/lib/utils'
+import { cn, parsePtBrNumber } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
 import {
@@ -71,9 +71,15 @@ const formSchema = z.object({
   embalagem_id: z.string().optional(),
   fornecedor_id: z.string().optional(),
 
-  quantidade_comprada: z.number().min(1, 'Deve ser maior que zero'),
-  itens_embalagem: z.number().min(1, 'Deve ser maior que zero'),
-  valor_total: z.number().min(0, 'Obrigatório'),
+  quantidade_comprada: z.preprocess(
+    (v) => parsePtBrNumber(v),
+    z.number().min(1, 'Deve ser maior que zero'),
+  ),
+  itens_embalagem: z.preprocess(
+    (v) => parsePtBrNumber(v),
+    z.number().min(1, 'Deve ser maior que zero'),
+  ),
+  valor_total: z.preprocess((v) => parsePtBrNumber(v), z.number().min(0, 'Obrigatório')),
 
   referencia_consumo: z.enum(['qtd_comprada', 'itens_embalagem']),
 
@@ -83,7 +89,10 @@ const formSchema = z.object({
 
   sala_id: z.string().optional(),
   numero_armario: z.string().optional(),
-  estoque_minimo: z.number().min(0).optional(),
+  estoque_minimo: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? 0 : parsePtBrNumber(v)),
+    z.number().min(0).optional(),
+  ),
 
   controle_prazo: z.boolean().default(false),
   alerta_prazo_dias: z.union([z.string(), z.number()]).optional(),
@@ -366,10 +375,10 @@ export function EntradaProdutoModal({
       setHistorico([])
     }
   }
-  const qtyComprada = Number(form.watch('quantidade_comprada')) || 1
-  const itensEmb = Number(form.watch('itens_embalagem')) || 1
+  const qtyComprada = parsePtBrNumber(form.watch('quantidade_comprada')) || 1
+  const itensEmb = parsePtBrNumber(form.watch('itens_embalagem')) || 1
   const refConsumo = form.watch('referencia_consumo')
-  const valorTotal = Number(form.watch('valor_total')) || 0
+  const valorTotal = parsePtBrNumber(form.watch('valor_total')) || 0
 
   const totalAdicionado = refConsumo === 'itens_embalagem' ? qtyComprada * itensEmb : qtyComprada
   const valorAtribuido = totalAdicionado > 0 ? valorTotal / totalAdicionado : 0
@@ -845,10 +854,12 @@ export function EntradaProdutoModal({
                         <div className="relative">
                           <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            type="number"
-                            step="0.01"
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="0,00"
                             className={cn(inputClass, 'pl-9')}
                             {...field}
+                            value={field.value ?? ''}
                           />
                         </div>
                       </FormControl>
@@ -863,7 +874,13 @@ export function EntradaProdutoModal({
                     <FormItem>
                       <FormLabel className={labelClass}>Qtd Comprada</FormLabel>
                       <FormControl>
-                        <Input type="number" className={inputClass} {...field} />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          className={inputClass}
+                          {...field}
+                          value={field.value ?? ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -876,7 +893,13 @@ export function EntradaProdutoModal({
                     <FormItem>
                       <FormLabel className={labelClass}>Itens na Embalagem</FormLabel>
                       <FormControl>
-                        <Input type="number" className={inputClass} {...field} />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          className={inputClass}
+                          {...field}
+                          value={field.value ?? ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1104,7 +1127,13 @@ export function EntradaProdutoModal({
                   <FormItem>
                     <FormLabel className={labelClass}>Estoque Mínimo</FormLabel>
                     <FormControl>
-                      <Input type="number" className={inputClass} {...field} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        className={inputClass}
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
