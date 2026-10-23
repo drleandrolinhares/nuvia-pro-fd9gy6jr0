@@ -86,17 +86,52 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
 
   useEffect(() => {
     async function loadUsers() {
-      const { data } = await supabase
-        .from('crc_comercial')
-        .select('usuario_id, nome')
-        .not('usuario_id', 'is', null)
-      if (data) {
-        setCrcUsers(data)
-        if (!evento && data.find((u) => u.usuario_id === user?.id)) {
-          setColaboradorId(user!.id)
-        } else if (data.length > 0 && !evento) {
-          setColaboradorId(data[0].usuario_id)
+      // 1. Buscar apenas colaboradores com status 'ativo' em crc_comercial
+      // e checar se seus usuários correspondentes também estão ativos em 'usuarios'.
+      const [{ data: crcList }, { data: usuariosAtivos }] = await Promise.all([
+        supabase
+          .from('crc_comercial')
+          .select('usuario_id, nome, status')
+          .not('usuario_id', 'is', null),
+        supabase.from('usuarios').select('id, nome, status').eq('status', 'ativo'),
+      ])
+
+      const idsUsuariosAtivos = new Set((usuariosAtivos || []).map((u) => u.id))
+
+      // Filtrar apenas quem está ativo tanto em crc_comercial (status = 'ativo') quanto em usuarios
+      let ativos = (crcList || []).filter((u) => {
+        const isCrcAtivo = !u.status || u.status === 'ativo'
+        const isUserAtivo = u.usuario_id && idsUsuariosAtivos.has(u.usuario_id)
+        return isCrcAtivo && isUserAtivo
+      })
+
+      // Preservação: Se estamos editando um compromisso antigo (`evento`) cujo responsável
+      // está atualmente inativo, ele deve continuar aparecendo na lista deste compromisso.
+      if (evento?.usuario_id) {
+        const jaEstaNaLista = ativos.some((u) => u.usuario_id === evento.usuario_id)
+        if (!jaEstaNaLista) {
+          const responsavelExistente = crcList?.find((u) => u.usuario_id === evento.usuario_id)
+          if (responsavelExistente) {
+            ativos = [
+              { ...responsavelExistente, nome: `${responsavelExistente.nome} (Inativo)` },
+              ...ativos,
+            ]
+          } else {
+            // Caso não esteja em crc_comercial, busca o nome do usuario no próprio evento ou tabela usuarios
+            const nomeInativo = evento.usuario?.nome || 'Responsável anterior (Inativo)'
+            ativos = [
+              { usuario_id: evento.usuario_id, nome: nomeInativo, status: 'inativo' },
+              ...ativos,
+            ]
+          }
         }
+      }
+
+      setCrcUsers(ativos)
+      if (!evento && ativos.find((u) => u.usuario_id === user?.id)) {
+        setColaboradorId(user!.id)
+      } else if (ativos.length > 0 && !evento) {
+        setColaboradorId(ativos[0].usuario_id)
       }
     }
     loadUsers()

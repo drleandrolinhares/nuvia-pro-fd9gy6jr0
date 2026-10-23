@@ -18,6 +18,20 @@ export async function getUsuarios() {
   return data as UsuarioWithCargo[]
 }
 
+export async function getUsuariosAtivos() {
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select(`
+      *,
+      cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
+    `)
+    .eq('status', 'ativo')
+    .order('nome')
+
+  if (error) throw error
+  return data as UsuarioWithCargo[]
+}
+
 export async function getCargos() {
   const { data, error } = await supabase.from('cargos').select('*').order('nome')
   if (error) throw error

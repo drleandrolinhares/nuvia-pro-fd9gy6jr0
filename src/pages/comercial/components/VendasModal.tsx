@@ -147,11 +147,7 @@ export function VendasModal({
         })
 
       Promise.resolve(
-        supabase
-          .from('crc_comercial')
-          .select('id, nome')
-          .or('status.eq.ativo,status.eq.Ativo,status.is.null')
-          .order('nome'),
+        supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo').order('nome'),
       )
         .then(({ data, error }: any) => {
           if (error) {
