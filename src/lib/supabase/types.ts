@@ -926,18 +926,23 @@ export type Database = {
         Row: {
           arquivado: boolean
           atualizado_em: string
+          cancelado_em: string | null
+          cancelado_por: string | null
           concluido_em: string | null
           concluido_por: string | null
           criado_em: string
           data_fim: string
           data_inicio: string
+          data_original: string | null
           descricao: string | null
           eh_dia_inteiro: boolean
           hora_fim: string | null
           hora_inicio: string | null
           id: string
           lead_id: string | null
+          motivo_cancelamento: string | null
           paciente_id: string | null
+          reagendado: boolean | null
           resultado_acao: string | null
           setor: string | null
           status_acao: string | null
@@ -948,18 +953,23 @@ export type Database = {
         Insert: {
           arquivado?: boolean
           atualizado_em?: string
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           concluido_em?: string | null
           concluido_por?: string | null
           criado_em?: string
           data_fim: string
           data_inicio: string
+          data_original?: string | null
           descricao?: string | null
           eh_dia_inteiro?: boolean
           hora_fim?: string | null
           hora_inicio?: string | null
           id?: string
           lead_id?: string | null
+          motivo_cancelamento?: string | null
           paciente_id?: string | null
+          reagendado?: boolean | null
           resultado_acao?: string | null
           setor?: string | null
           status_acao?: string | null
@@ -970,18 +980,23 @@ export type Database = {
         Update: {
           arquivado?: boolean
           atualizado_em?: string
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           concluido_em?: string | null
           concluido_por?: string | null
           criado_em?: string
           data_fim?: string
           data_inicio?: string
+          data_original?: string | null
           descricao?: string | null
           eh_dia_inteiro?: boolean
           hora_fim?: string | null
           hora_inicio?: string | null
           id?: string
           lead_id?: string | null
+          motivo_cancelamento?: string | null
           paciente_id?: string | null
+          reagendado?: boolean | null
           resultado_acao?: string | null
           setor?: string | null
           status_acao?: string | null
@@ -990,6 +1005,13 @@ export type Database = {
           usuario_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'compromissos_cancelado_por_fkey'
+            columns: ['cancelado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'compromissos_concluido_por_fkey'
             columns: ['concluido_por']
@@ -2454,6 +2476,96 @@ export type Database = {
             columns: ['tenant_id']
             isOneToOne: false
             referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funil_agenda_logs: {
+        Row: {
+          acao: string
+          compromisso_id: string | null
+          criado_em: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          data_anterior: string | null
+          data_nova: string | null
+          detalhes: string | null
+          id: string
+          lead_id: string | null
+          paciente_id: string | null
+          tenant_id: string | null
+          tipo: string
+          usuario_id: string | null
+          usuario_nome: string
+        }
+        Insert: {
+          acao: string
+          compromisso_id?: string | null
+          criado_em?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          data_anterior?: string | null
+          data_nova?: string | null
+          detalhes?: string | null
+          id?: string
+          lead_id?: string | null
+          paciente_id?: string | null
+          tenant_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+          usuario_nome: string
+        }
+        Update: {
+          acao?: string
+          compromisso_id?: string | null
+          criado_em?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          data_anterior?: string | null
+          data_nova?: string | null
+          detalhes?: string | null
+          id?: string
+          lead_id?: string | null
+          paciente_id?: string | null
+          tenant_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+          usuario_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funil_agenda_logs_compromisso_id_fkey'
+            columns: ['compromisso_id']
+            isOneToOne: false
+            referencedRelation: 'compromissos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funil_agenda_logs_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'funil_leads'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funil_agenda_logs_paciente_id_fkey'
+            columns: ['paciente_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funil_agenda_logs_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funil_agenda_logs_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
             referencedColumns: ['id']
           },
         ]

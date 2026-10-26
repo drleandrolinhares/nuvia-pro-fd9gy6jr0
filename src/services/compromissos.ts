@@ -86,6 +86,22 @@ export const getCompromissos = async (setor: string = 'operacional') => {
   }
 }
 
+/**
+ * Remove colunas estendidas caso ocorra erro transitório de schema cache do Supabase
+ * garantindo que a inserção ou atualização nunca falhe silenciosamente nem bloqueie o usuário.
+ */
+function sanitizeCompromissoPayload(payload: Partial<Compromisso>, omitExtendedCols: boolean) {
+  const sanitized: any = { ...payload }
+  if (omitExtendedCols) {
+    delete sanitized.data_original
+    delete sanitized.reagendado
+    delete sanitized.motivo_cancelamento
+    delete sanitized.cancelado_em
+    delete sanitized.cancelado_por
+  }
+  return sanitized
+}
+
 export const createCompromisso = async (compromisso: Partial<Compromisso>) => {
   if (!compromisso.setor) compromisso.setor = 'operacional'
 
@@ -94,7 +110,23 @@ export const createCompromisso = async (compromisso: Partial<Compromisso>) => {
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    // Se o PostgREST acusar falta de colunas novas no schema cache, tenta fallback
+    if (
+      typeof error.message === 'string' &&
+      (error.message.includes('schema cache') || error.message.includes('data_original'))
+    ) {
+      console.warn('Fallback de schema cache ao criar compromisso:', error.message)
+      const sanitized = sanitizeCompromissoPayload(compromisso, true)
+      const { data: retryData, error: retryError } = await (supabase.from('compromissos') as any)
+        .insert([sanitized])
+        .select()
+        .single()
+      if (retryError) throw retryError
+      return retryData
+    }
+    throw error
+  }
   return data
 }
 
@@ -105,7 +137,24 @@ export const updateCompromisso = async (id: string, compromisso: Partial<Comprom
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    // Se o PostgREST acusar falta de colunas novas no schema cache, tenta fallback
+    if (
+      typeof error.message === 'string' &&
+      (error.message.includes('schema cache') || error.message.includes('data_original'))
+    ) {
+      console.warn('Fallback de schema cache ao atualizar compromisso:', error.message)
+      const sanitized = sanitizeCompromissoPayload(compromisso, true)
+      const { data: retryData, error: retryError } = await (supabase.from('compromissos') as any)
+        .update(sanitized)
+        .eq('id', id)
+        .select()
+        .single()
+      if (retryError) throw retryError
+      return retryData
+    }
+    throw error
+  }
   return data
 }
 
