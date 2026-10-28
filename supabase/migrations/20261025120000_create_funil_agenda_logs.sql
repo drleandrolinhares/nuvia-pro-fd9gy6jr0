@@ -82,3 +82,6 @@ CREATE TRIGGER trg_lock_compromissos_criado_em
   BEFORE UPDATE ON public.compromissos
   FOR EACH ROW
   EXECUTE FUNCTION public.trg_preserve_compromissos_criado_em();
+
+-- Recarregar cache de esquema do PostgREST para refletir colunas e tabela imediatamente
+NOTIFY pgrst, 'reload schema';
