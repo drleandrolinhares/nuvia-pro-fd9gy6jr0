@@ -1,5 +1,5 @@
 -- Migration: 20261030140000_create_comissao_ajustes.sql
--- Controle de remoção/agendamento de comissões e auditoria imutável (NUVIA PRO)
+-- Controle de remocao/agendamento de comissoes e auditoria imutavel (NUVIA PRO)
 -- Idempotente: seguro para execução no SQL Editor do Supabase
 
 -- 1. Tabela comissao_ajustes

@@ -1,5 +1,5 @@
 -- Migration: 20261025120000_create_funil_agenda_logs.sql
--- Auditoria e carimbo imutável de agendamentos do funil comercial
+-- Auditoria e carimbo imutavel de agendamentos do funil comercial
 
 -- 1. Colunas adicionais em compromissos para controle de cancelamento e reagendamento
 ALTER TABLE public.compromissos 
