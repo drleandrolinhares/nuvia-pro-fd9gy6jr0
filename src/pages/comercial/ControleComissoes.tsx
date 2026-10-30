@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -7,8 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DollarSign, Users, TrendingUp, BarChart3, Filter } from 'lucide-react'
+import {
+  DollarSign,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Filter,
+  CalendarClock,
+  Settings,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -16,15 +25,21 @@ import { ConfiguracaoFaixas } from '@/components/comissoes/configuracao-faixas'
 import { ComissoesDashboardCards } from '@/components/comissoes/comissoes-dashboard-cards'
 import { ComissoesTabela } from '@/components/comissoes/comissoes-tabela'
 import { ProfessionalCards } from '@/components/comissoes/professional-cards'
+import { BarraAcaoComissoes } from '@/components/comissoes/barra-acao-comissoes'
+import { ModalRemoverComissao } from '@/components/comissoes/modal-remover-comissao'
+import { PagamentosProgramadosTab } from '@/components/comissoes/pagamentos-programados-tab'
 import {
   fetchComissoesPeriodo,
   type ComissaoVenda,
   type DashboardTotals,
   type ProfessionalSummary,
 } from '@/services/comissoes-dashboard'
+import { removerComissoesDoFechamento } from '@/services/comissao-ajustes'
 
 export default function ControleComissoes() {
   const { toast } = useToast()
+  const { profile } = useAuth()
+  const [activeTab, setActiveTab] = useState('dash')
   const [mesAno, setMesAno] = useState(format(new Date(), 'yyyy-MM'))
   const [loading, setLoading] = useState(true)
   const [vendas, setVendas] = useState<ComissaoVenda[]>([])
@@ -37,6 +52,11 @@ export default function ControleComissoes() {
   const [profissionais, setProfissionais] = useState<ProfessionalSummary[]>([])
   const [filtroDentista, setFiltroDentista] = useState<string>('todos')
   const [filtroCRC, setFiltroCRC] = useState<string>('todos')
+
+  // Seleção de linhas para remoção
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [modalRemoverAberto, setModalRemoverAberto] = useState(false)
+  const [salvandoRemocao, setSalvandoRemocao] = useState(false)
 
   const mesesOptions = useMemo(
     () =>
@@ -76,25 +96,34 @@ export default function ControleComissoes() {
       .sort((a, b) => a.nome.localeCompare(b.nome))
   }, [vendas])
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        const { vendas: v, totals: t, profissionais: p } = await fetchComissoesPeriodo(mesAno)
-        setVendas(v)
-        setTotals(t)
-        setProfissionais(p)
-      } catch (error: any) {
-        toast({
-          title: 'Erro ao carregar dados',
-          description: error.message,
-          variant: 'destructive',
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const { vendas: v, totals: t, profissionais: p } = await fetchComissoesPeriodo(mesAno)
+      setVendas(v)
+      setTotals(t)
+      setProfissionais(p)
+      // Limpa IDs que já não existem no período
+      setSelectedIds((prev) => {
+        const next = new Set<string>()
+        const validIds = new Set(v.map((item) => item.id))
+        prev.forEach((id) => {
+          if (validIds.has(id)) next.add(id)
         })
-      } finally {
-        setLoading(false)
-      }
+        return next
+      })
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao carregar dados',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
+  }, [mesAno, toast])
 
+  useEffect(() => {
     loadData()
 
     const channel = supabase
@@ -112,12 +141,100 @@ export default function ControleComissoes() {
         { event: '*', schema: 'public', table: 'referencias_comissao_crc' },
         () => loadData(),
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comissao_ajustes' }, () =>
+        loadData(),
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [mesAno])
+  }, [loadData])
+
+  // Gerenciamento de seleção
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const handleToggleSelectAll = (items: ComissaoVenda[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = items.every((i) => prev.has(i.id))
+      const next = new Set(prev)
+      if (allSelected) {
+        items.forEach((i) => next.delete(i.id))
+      } else {
+        items.forEach((i) => next.add(i.id))
+      }
+      return next
+    })
+  }
+
+  const comissoesSelecionadas = useMemo(() => {
+    return vendas.filter((v) => selectedIds.has(v.id))
+  }, [vendas, selectedIds])
+
+  const tipoAbaAtiva: 'dentista' | 'crc' = activeTab === 'crc' ? 'crc' : 'dentista'
+
+  const totalComissoesSelecionadas = useMemo(() => {
+    return comissoesSelecionadas.reduce((acc, v) => {
+      return acc + (tipoAbaAtiva === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc)
+    }, 0)
+  }, [comissoesSelecionadas, tipoAbaAtiva])
+
+  const totalTratamentoSelecionado = useMemo(() => {
+    return comissoesSelecionadas.reduce((acc, v) => acc + v.valor_tratamento, 0)
+  }, [comissoesSelecionadas])
+
+  const handleConfirmarRemocao = async (dados: {
+    tipo: 'cancelada' | 'programada'
+    justificativa: string
+    dataProgramada?: string
+  }) => {
+    if (comissoesSelecionadas.length === 0) return
+
+    setSalvandoRemocao(true)
+    try {
+      const inputs = comissoesSelecionadas.map((v) => ({
+        comissao_id: v.id,
+        tipo: dados.tipo,
+        justificativa: dados.justificativa,
+        data_programada: dados.dataProgramada,
+        usuario_id: profile?.id || null,
+        usuario_nome: profile?.nome || 'Usuário do Sistema',
+        dados_venda: v,
+      }))
+
+      await removerComissoesDoFechamento(inputs)
+
+      toast({
+        title:
+          dados.tipo === 'programada'
+            ? 'Comissões agendadas com sucesso!'
+            : 'Comissões canceladas com sucesso!',
+        description: `${comissoesSelecionadas.length} comissão(ões) removida(s) deste fechamento com recálculo automático e auditoria registrada.`,
+      })
+
+      setSelectedIds(new Set())
+      await loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao remover comissões',
+        description: err.message,
+        variant: 'destructive',
+      })
+      throw err
+    } finally {
+      setSalvandoRemocao(false)
+    }
+  }
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
@@ -158,13 +275,13 @@ export default function ControleComissoes() {
       </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
-      <Tabs defaultValue="dash" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-2xl bg-slate-900 border border-slate-800 h-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5 max-w-4xl bg-slate-900 border border-slate-800 h-auto p-1">
           <TabsTrigger
             value="dash"
             className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
           >
-            <BarChart3 className="w-4 h-4 mr-1 md:mr-2" />
+            <BarChart3 className="w-4 h-4 mr-1 md:mr-1.5" />
             <span className="hidden sm:inline">DASH POR VENDEDOR</span>
             <span className="sm:hidden">DASH</span>
           </TabsTrigger>
@@ -181,9 +298,18 @@ export default function ControleComissoes() {
             CRC
           </TabsTrigger>
           <TabsTrigger
+            value="programados"
+            className="data-[state=active]:bg-slate-800 data-[state=active]:text-amber-400 text-slate-400 text-xs md:text-sm py-2 font-medium"
+          >
+            <CalendarClock className="w-4 h-4 mr-1 md:mr-1.5 text-amber-500" />
+            <span className="hidden sm:inline">PAGAMENTOS PROGRAMADOS</span>
+            <span className="sm:hidden">PROGRAMADOS</span>
+          </TabsTrigger>
+          <TabsTrigger
             value="configuracoes"
             className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs md:text-sm py-2"
           >
+            <Settings className="w-4 h-4 mr-1 md:mr-1.5" />
             CONFIG.
           </TabsTrigger>
         </TabsList>
@@ -236,6 +362,9 @@ export default function ControleComissoes() {
             tipo="dentista"
             loading={loading}
             profissionalFilter={filtroDentista}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
           />
         </TabsContent>
 
@@ -268,6 +397,21 @@ export default function ControleComissoes() {
             tipo="crc"
             loading={loading}
             profissionalFilter={filtroCRC}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
+          />
+        </TabsContent>
+
+        <TabsContent value="programados" className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarClock className="w-5 h-5 text-amber-500" />
+            <h2 className="text-lg font-bold text-slate-900">Controle de Pagamentos Programados</h2>
+            <span className="text-sm text-slate-500">({competenciaLabel})</span>
+          </div>
+          <PagamentosProgramadosTab
+            competencia={competenciaLabel}
+            onAtualizarDashboard={loadData}
           />
         </TabsContent>
 
@@ -275,6 +419,27 @@ export default function ControleComissoes() {
           <ConfiguracaoFaixas />
         </TabsContent>
       </Tabs>
+
+      {/* Barra de Ação Flutuante ao Selecionar Linhas (Dentistas ou CRC) */}
+      {(activeTab === 'dentistas' || activeTab === 'crc') && (
+        <BarraAcaoComissoes
+          quantidade={selectedIds.size}
+          totalComissao={totalComissoesSelecionadas}
+          totalVendas={totalTratamentoSelecionado}
+          onRemover={() => setModalRemoverAberto(true)}
+          onLimparSelecao={() => setSelectedIds(new Set())}
+        />
+      )}
+
+      {/* Modal de Remoção com Justificativa Obrigatória */}
+      <ModalRemoverComissao
+        open={modalRemoverAberto}
+        onOpenChange={setModalRemoverAberto}
+        comissoes={comissoesSelecionadas}
+        tipoAbaAtiva={tipoAbaAtiva}
+        onConfirmar={handleConfirmarRemocao}
+        loading={salvandoRemocao}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2 } from 'lucide-react'
 import type { ComissaoVenda } from '@/services/comissoes-dashboard'
 
@@ -24,11 +25,17 @@ export function ComissoesTabela({
   tipo,
   loading,
   profissionalFilter = 'todos',
+  selectedIds = new Set(),
+  onToggleSelect,
+  onToggleSelectAll,
 }: {
   vendas: ComissaoVenda[]
   tipo: 'dentista' | 'crc'
   loading: boolean
   profissionalFilter?: string
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string, venda: ComissaoVenda) => void
+  onToggleSelectAll?: (items: ComissaoVenda[]) => void
 }) {
   const filtered = vendas.filter((v) => {
     const matchesTipo = tipo === 'dentista' ? v.dentista_avaliador : v.crc
@@ -48,11 +55,24 @@ export function ComissoesTabela({
 
   const totalVendas = filtered.reduce((acc, v) => acc + v.valor_tratamento, 0)
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((v) => selectedIds.has(v.id))
+  const someFilteredSelected = filtered.some((v) => selectedIds.has(v.id)) && !allFilteredSelected
+
   return (
-    <div className="rounded-lg border border-slate-800 overflow-hidden bg-slate-900">
+    <div className="rounded-lg border border-slate-800 overflow-hidden bg-slate-900 shadow-md">
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-800/80 border-slate-800 hover:bg-slate-800/80">
+            <TableHead className="w-12 text-center">
+              <Checkbox
+                checked={
+                  allFilteredSelected ? true : someFilteredSelected ? 'indeterminate' : false
+                }
+                onCheckedChange={() => onToggleSelectAll?.(filtered)}
+                aria-label="Marcar todas as comissões"
+                className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+              />
+            </TableHead>
             <TableHead className="text-slate-300 font-semibold">Data</TableHead>
             <TableHead className="text-slate-300 font-semibold">Paciente</TableHead>
             <TableHead className="text-slate-300 font-semibold">
@@ -69,65 +89,82 @@ export function ComissoesTabela({
         <TableBody>
           {loading ? (
             <TableRow className="border-slate-800">
-              <TableCell colSpan={9} className="text-center py-8 bg-slate-900">
+              <TableCell colSpan={10} className="text-center py-8 bg-slate-900">
                 <Loader2 className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
               </TableCell>
             </TableRow>
           ) : filtered.length === 0 ? (
             <TableRow className="border-slate-800">
-              <TableCell colSpan={9} className="text-center text-slate-400 py-8 bg-slate-900">
+              <TableCell colSpan={10} className="text-center text-slate-400 py-8 bg-slate-900">
                 Nenhuma comissão encontrada para este período.
               </TableCell>
             </TableRow>
           ) : (
             <>
-              {filtered.map((v) => (
-                <TableRow
-                  key={v.id}
-                  className="border-slate-800 hover:bg-slate-800/50 bg-slate-900"
-                >
-                  <TableCell className="text-slate-300">{formatDate(v.data_fechamento)}</TableCell>
-                  <TableCell className="font-medium text-white">{v.paciente_nome}</TableCell>
-                  <TableCell className="text-slate-300">
-                    {tipo === 'dentista' ? v.dentista_nome || '-' : v.crc_nome || '-'}
-                  </TableCell>
-                  <TableCell className="text-right text-slate-300">
-                    {formatCurrency(v.valor_tratamento)}
-                  </TableCell>
-                  <TableCell className="text-right text-slate-300">
-                    {formatCurrency(v.valor_entrada)}
-                  </TableCell>
-                  <TableCell className="text-center text-slate-300">
-                    {v.percentual_entrada.toFixed(1)}%
-                  </TableCell>
-                  <TableCell className="text-center font-medium text-amber-400">
-                    {(tipo === 'dentista'
-                      ? v.percentual_comissao_dentista
-                      : v.percentual_comissao_crc
-                    ).toFixed(1)}
-                    %
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-emerald-400">
-                    {formatCurrency(
-                      tipo === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc,
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        v.status_comissao === 'pago'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                      }
-                    >
-                      {v.status_comissao === 'pago' ? 'Pago' : 'Em Aberto'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map((v) => {
+                const isSelected = selectedIds.has(v.id)
+                return (
+                  <TableRow
+                    key={v.id}
+                    className={`border-slate-800 transition-colors ${
+                      isSelected
+                        ? 'bg-amber-500/10 hover:bg-amber-500/15'
+                        : 'bg-slate-900 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <TableCell className="w-12 text-center">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => onToggleSelect?.(v.id, v)}
+                        aria-label={`Selecionar comissão de ${v.paciente_nome}`}
+                        className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                      />
+                    </TableCell>
+                    <TableCell className="text-slate-300">
+                      {formatDate(v.data_fechamento)}
+                    </TableCell>
+                    <TableCell className="font-medium text-white">{v.paciente_nome}</TableCell>
+                    <TableCell className="text-slate-300">
+                      {tipo === 'dentista' ? v.dentista_nome || '-' : v.crc_nome || '-'}
+                    </TableCell>
+                    <TableCell className="text-right text-slate-300">
+                      {formatCurrency(v.valor_tratamento)}
+                    </TableCell>
+                    <TableCell className="text-right text-slate-300">
+                      {formatCurrency(v.valor_entrada)}
+                    </TableCell>
+                    <TableCell className="text-center text-slate-300">
+                      {v.percentual_entrada.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="text-center font-medium text-amber-400">
+                      {(tipo === 'dentista'
+                        ? v.percentual_comissao_dentista
+                        : v.percentual_comissao_crc
+                      ).toFixed(1)}
+                      %
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-emerald-400">
+                      {formatCurrency(
+                        tipo === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc,
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          v.status_comissao === 'pago'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        }
+                      >
+                        {v.status_comissao === 'pago' ? 'Pago' : 'Em Aberto'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               <TableRow className="bg-slate-800/80 border-slate-800 font-bold">
-                <TableCell colSpan={3} className="text-right text-white">
+                <TableCell colSpan={4} className="text-right text-white">
                   Total ({filtered.length} vendas):
                 </TableCell>
                 <TableCell className="text-right text-white">

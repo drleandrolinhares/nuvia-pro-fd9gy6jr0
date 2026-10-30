@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 import type { FaixaBase } from '@/services/comissoes'
+import { fetchAjustesAtivosMap, type ComissaoAjuste } from '@/services/comissao-ajustes'
 
 export interface ComissaoVenda {
   id: string
@@ -18,6 +19,7 @@ export interface ComissaoVenda {
   percentual_comissao_crc: number
   valor_comissao_crc: number
   status_comissao: string | null
+  ajuste?: ComissaoAjuste | null
 }
 
 export interface DashboardTotals {
@@ -208,37 +210,52 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
   vendas: ComissaoVenda[]
   totals: DashboardTotals
   profissionais: ProfessionalSummary[]
+  ajustesAtivosMap: Map<string, ComissaoAjuste>
 }> {
   const dataInicio = parseISO(`${mesAno}-01`)
   const inicioStr = format(startOfMonth(dataInicio), 'yyyy-MM-dd')
   const fimStr = format(endOfMonth(dataInicio), 'yyyy-MM-dd')
+
+  // Carrega mapa de ajustes ativos (cancelados ou programados) de forma resiliente
+  const ajustesAtivosMap = await fetchAjustesAtivosMap()
 
   const { data: rpcData, error: rpcError } = await supabase.rpc('calcular_comissao_periodo', {
     p_data_inicio: inicioStr,
     p_data_fim: fimStr,
   })
 
+  let todasVendas: ComissaoVenda[] = []
+
   if (!rpcError && rpcData && rpcData.length >= 0) {
-    const vendas = mapRpcData(rpcData as any[])
-    const totals = computeTotals(vendas)
-    return { vendas, totals, profissionais: buildProfessionalSummaries(vendas) }
+    todasVendas = mapRpcData(rpcData as any[])
+  } else {
+    const [vendasRes, faixasDRes, faixasCRes] = await Promise.all([
+      supabase
+        .from('vendas_confirmadas')
+        .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
+        .gte('data_fechamento', inicioStr)
+        .lte('data_fechamento', fimStr)
+        .order('data_fechamento', { ascending: false }),
+      supabase.from('referencias_comissao_dentista').select('*').eq('status', 'ativo'),
+      supabase.from('referencias_comissao_crc').select('*').eq('status', 'ativo'),
+    ])
+
+    const faixasD = (faixasDRes.data || []) as FaixaBase[]
+    const faixasC = (faixasCRes.data || []) as FaixaBase[]
+    todasVendas = buildVendasFromFallback(vendasRes.data || [], faixasD, faixasC)
   }
 
-  const [vendasRes, faixasDRes, faixasCRes] = await Promise.all([
-    supabase
-      .from('vendas_confirmadas')
-      .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
-      .gte('data_fechamento', inicioStr)
-      .lte('data_fechamento', fimStr)
-      .order('data_fechamento', { ascending: false }),
-    supabase.from('referencias_comissao_dentista').select('*').eq('status', 'ativo'),
-    supabase.from('referencias_comissao_crc').select('*').eq('status', 'ativo'),
-  ])
+  // Filtrar comissões que NÃO têm ajuste ativo (cancelada ou programada)
+  // Comissões com ajuste ativo saem dos cards de Visão Geral, das tabelas DENTISTAS/CRC e do dash por vendedor
+  const vendasAtivas = todasVendas.filter((v) => !ajustesAtivosMap.has(v.id))
 
-  const faixasD = (faixasDRes.data || []) as FaixaBase[]
-  const faixasC = (faixasCRes.data || []) as FaixaBase[]
-  const vendas = buildVendasFromFallback(vendasRes.data || [], faixasD, faixasC)
-  const totals = computeTotals(vendas)
+  const totals = computeTotals(vendasAtivas)
+  const profissionais = buildProfessionalSummaries(vendasAtivas)
 
-  return { vendas, totals, profissionais: buildProfessionalSummaries(vendas) }
+  return {
+    vendas: vendasAtivas,
+    totals,
+    profissionais,
+    ajustesAtivosMap,
+  }
 }
