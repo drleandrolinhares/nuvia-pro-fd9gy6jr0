@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -22,11 +23,14 @@ import {
   FileText,
   Stethoscope,
   Contact,
+  HelpCircle,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 
 type FormaPagamento = 'dinheiro' | 'pix' | 'cartao'
+type RespostaMudanca = 'sim' | 'nao' | ''
 
 interface ProfissionalOpcao {
   id: string
@@ -41,6 +45,8 @@ interface DetalhesVendaState {
   parcelas: string
   dentistaAvaliador: string
   crcComercial: string
+  mudancaFormaPagamento: RespostaMudanca
+  observacaoMudanca: string
 }
 
 const STORAGE_KEY = 'nuvia-detalhes-venda'
@@ -53,6 +59,8 @@ const initialState: DetalhesVendaState = {
   parcelas: '',
   dentistaAvaliador: '',
   crcComercial: '',
+  mudancaFormaPagamento: '',
+  observacaoMudanca: '',
 }
 
 const FORMA_LABEL: Record<FormaPagamento, string> = {
@@ -228,8 +236,20 @@ export function DetalhesVendaTab() {
       parcelas === null &&
       !dentistaNome &&
       !crcNome &&
+      !state.mudancaFormaPagamento &&
+      !state.observacaoMudanca.trim() &&
       state.formaPagamento === initialState.formaPagamento,
-    [state.paciente, total, entrada, parcelas, dentistaNome, crcNome, state.formaPagamento],
+    [
+      state.paciente,
+      total,
+      entrada,
+      parcelas,
+      dentistaNome,
+      crcNome,
+      state.mudancaFormaPagamento,
+      state.observacaoMudanca,
+      state.formaPagamento,
+    ],
   )
 
   return (
@@ -383,6 +403,66 @@ export function DetalhesVendaTab() {
               </Select>
             </div>
 
+            {/* Pergunta sobre mudança da forma de pagamento proposta */}
+            <div className="space-y-2 pt-1 border-t border-slate-800/80">
+              <Label className="text-slate-300 text-xs uppercase tracking-wider font-semibold flex items-center gap-2 leading-relaxed">
+                <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                HOUVE MUDANÇA DA FORMA DE PAGAMENTO PROPOSTA PELO AVALIADOR:
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    update(
+                      'mudancaFormaPagamento',
+                      state.mudancaFormaPagamento === 'sim' ? '' : 'sim',
+                    )
+                  }
+                  className={cn(
+                    'h-9 px-3 rounded-md text-xs font-bold uppercase tracking-wider transition-all border flex items-center justify-center gap-1.5',
+                    state.mudancaFormaPagamento === 'sim'
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm shadow-amber-500/20'
+                      : 'bg-slate-900/50 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white hover:bg-slate-850',
+                  )}
+                >
+                  SIM
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    update(
+                      'mudancaFormaPagamento',
+                      state.mudancaFormaPagamento === 'nao' ? '' : 'nao',
+                    )
+                  }
+                  className={cn(
+                    'h-9 px-3 rounded-md text-xs font-bold uppercase tracking-wider transition-all border flex items-center justify-center gap-1.5',
+                    state.mudancaFormaPagamento === 'nao'
+                      ? 'bg-slate-800 text-slate-100 border-slate-600 shadow-sm'
+                      : 'bg-slate-900/50 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white hover:bg-slate-850',
+                  )}
+                >
+                  NÃO
+                </button>
+              </div>
+
+              {state.mudancaFormaPagamento === 'sim' && (
+                <div className="space-y-2 pt-2 animate-in fade-in-50 duration-200">
+                  <Label className="text-amber-400 text-xs uppercase tracking-wider font-semibold flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                    OBSERVAÇÃO DA CRC (O QUE HOUVE):
+                  </Label>
+                  <Textarea
+                    value={state.observacaoMudanca}
+                    onChange={(e) => update('observacaoMudanca', e.target.value)}
+                    placeholder="Descreva a mudança proposta pelo avaliador vs realizada (ex.: avaliador propôs entrada de 30% em dinheiro, mas o paciente solicitou parcelar a entrada no cartão)..."
+                    rows={3}
+                    className="bg-slate-900/50 border-slate-800 text-slate-200 text-xs focus:text-white hover:border-slate-600 focus:bg-slate-800 focus:border-amber-500/50 placeholder:text-slate-600 resize-none"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label className="text-slate-300 text-xs uppercase tracking-wider font-semibold flex items-center gap-2">
                 <Repeat className="w-3.5 h-3.5 text-amber-500" />
@@ -512,6 +592,38 @@ export function DetalhesVendaTab() {
                 >
                   {crcNome ? <span className="uppercase tracking-wide">{crcNome}</span> : emDash}
                 </LinhaResumo>
+                <div className="py-2.5 border-b border-slate-800">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2.5 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                      <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+                      Mudança de Pagamento
+                    </div>
+                    <div className="text-right font-bold">
+                      {state.mudancaFormaPagamento === 'sim' ? (
+                        <span className="text-amber-400 font-bold uppercase tracking-wider text-xs px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
+                          SIM
+                        </span>
+                      ) : state.mudancaFormaPagamento === 'nao' ? (
+                        <span className="text-slate-300 font-bold uppercase tracking-wider text-xs px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                          NÃO
+                        </span>
+                      ) : (
+                        emDash
+                      )}
+                    </div>
+                  </div>
+                  {state.mudancaFormaPagamento === 'sim' && state.observacaoMudanca.trim() && (
+                    <div className="mt-2.5 bg-slate-950/60 border border-slate-800 rounded p-2.5 text-left">
+                      <div className="text-[10px] text-amber-400 uppercase tracking-wider font-bold mb-1 flex items-center gap-1.5">
+                        <MessageSquare className="w-3 h-3 text-amber-500" />
+                        Observação da CRC
+                      </div>
+                      <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed break-words font-normal">
+                        {state.observacaoMudanca.trim()}
+                      </p>
+                    </div>
+                  )}
+                </div>
                 <LinhaResumo
                   icon={<Percent className="w-3.5 h-3.5 text-amber-500" />}
                   label="% de Entrada"
