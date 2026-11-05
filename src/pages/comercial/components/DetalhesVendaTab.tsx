@@ -20,10 +20,18 @@ import {
   Receipt,
   AlertTriangle,
   FileText,
+  Stethoscope,
+  Contact,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 type FormaPagamento = 'dinheiro' | 'pix' | 'cartao'
+
+interface ProfissionalOpcao {
+  id: string
+  nome: string
+}
 
 interface DetalhesVendaState {
   paciente: string
@@ -31,6 +39,8 @@ interface DetalhesVendaState {
   valorEntrada: string
   formaPagamento: FormaPagamento
   parcelas: string
+  dentistaAvaliador: string
+  crcComercial: string
 }
 
 const STORAGE_KEY = 'nuvia-detalhes-venda'
@@ -41,6 +51,8 @@ const initialState: DetalhesVendaState = {
   valorEntrada: '',
   formaPagamento: 'dinheiro',
   parcelas: '',
+  dentistaAvaliador: '',
+  crcComercial: '',
 }
 
 const FORMA_LABEL: Record<FormaPagamento, string> = {
@@ -146,6 +158,39 @@ export function DetalhesVendaTab() {
   const update = <K extends keyof DetalhesVendaState>(key: K, value: DetalhesVendaState[K]) =>
     setState((prev) => ({ ...prev, [key]: value }))
 
+  const [dentistas, setDentistas] = useState<ProfissionalOpcao[]>([])
+  const [crcs, setCrcs] = useState<ProfissionalOpcao[]>([])
+
+  useEffect(() => {
+    let cancelado = false
+    const carregar = async () => {
+      try {
+        const [dRes, cRes] = await Promise.all([
+          supabase
+            .from('dentistas_avaliadores')
+            .select('id, nome')
+            .eq('status', 'ativo')
+            .order('nome'),
+          supabase.from('crc_comercial').select('id, nome').eq('status', 'ativo').order('nome'),
+        ])
+        if (!cancelado) {
+          setDentistas((dRes.data as ProfissionalOpcao[]) || [])
+          setCrcs((cRes.data as ProfissionalOpcao[]) || [])
+        }
+      } catch {
+        // degradação graciosa: listas permanecem vazias
+        if (!cancelado) {
+          setDentistas([])
+          setCrcs([])
+        }
+      }
+    }
+    carregar()
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
   const total = parseCurrency(state.valorTotal)
   const entrada = parseCurrency(state.valorEntrada)
   const parcelas = parseParcelas(state.parcelas)
@@ -166,14 +211,25 @@ export function DetalhesVendaTab() {
       ? saldoAParcelar / parcelas
       : null
 
+  const dentistaNome = useMemo(
+    () => dentistas.find((d) => d.id === state.dentistaAvaliador)?.nome || null,
+    [dentistas, state.dentistaAvaliador],
+  )
+  const crcNome = useMemo(
+    () => crcs.find((c) => c.id === state.crcComercial)?.nome || null,
+    [crcs, state.crcComercial],
+  )
+
   const resumoVazio = useMemo(
     () =>
       !state.paciente.trim() &&
       total === null &&
       entrada === null &&
       parcelas === null &&
+      !dentistaNome &&
+      !crcNome &&
       state.formaPagamento === initialState.formaPagamento,
-    [state.paciente, total, entrada, parcelas, state.formaPagamento],
+    [state.paciente, total, entrada, parcelas, dentistaNome, crcNome, state.formaPagamento],
   )
 
   return (
@@ -240,13 +296,89 @@ export function DetalhesVendaTab() {
                 value={state.formaPagamento}
                 onValueChange={(v) => update('formaPagamento', v as FormaPagamento)}
               >
-                <SelectTrigger className="bg-slate-900/50 border-slate-800 h-9 text-slate-200 hover:border-slate-600 focus:border-amber-500/50">
+                <SelectTrigger className="bg-slate-900/50 border-slate-800 h-9 text-slate-100 hover:border-slate-600 focus:border-amber-500/50 [&>span]:text-slate-100">
                   <SelectValue placeholder="Forma de pagamento" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">Pix</SelectItem>
-                  <SelectItem value="cartao">Cartão</SelectItem>
+                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 [&_[role=option]]:text-slate-100 [&_[role=option]]:focus:bg-slate-800 [&_[role=option]]:focus:text-white [&_[role=option]]:data-[highlighted]:bg-slate-800 [&_[role=option]]:data-[highlighted]:text-white [&_[role=option]]:data-[state=checked]:text-amber-400">
+                  <SelectItem
+                    className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white data-[state=checked]:text-amber-400"
+                    value="dinheiro"
+                  >
+                    Dinheiro
+                  </SelectItem>
+                  <SelectItem
+                    className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white data-[state=checked]:text-amber-400"
+                    value="pix"
+                  >
+                    Pix
+                  </SelectItem>
+                  <SelectItem
+                    className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white data-[state=checked]:text-amber-400"
+                    value="cartao"
+                  >
+                    Cartão
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-xs uppercase tracking-wider font-semibold flex items-center gap-2">
+                <Stethoscope className="w-3.5 h-3.5 text-amber-500" />
+                Dentista Avaliador
+              </Label>
+              <Select
+                value={state.dentistaAvaliador}
+                onValueChange={(v) => update('dentistaAvaliador', v)}
+              >
+                <SelectTrigger className="bg-slate-900/50 border-slate-800 h-9 text-slate-100 hover:border-slate-600 focus:border-amber-500/50 [&>span]:text-slate-100">
+                  <SelectValue placeholder="Selecione o dentista..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 [&_[role=option]]:text-slate-100 [&_[role=option]]:focus:bg-slate-800 [&_[role=option]]:focus:text-white [&_[role=option]]:data-[highlighted]:bg-slate-800 [&_[role=option]]:data-[highlighted]:text-white [&_[role=option]]:data-[state=checked]:text-amber-400">
+                  {dentistas.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-slate-500">
+                      Nenhum profissional cadastrado
+                    </div>
+                  ) : (
+                    dentistas.map((d) => (
+                      <SelectItem
+                        key={d.id}
+                        value={d.id}
+                        className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white data-[state=checked]:text-amber-400"
+                      >
+                        {d.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-xs uppercase tracking-wider font-semibold flex items-center gap-2">
+                <Contact className="w-3.5 h-3.5 text-amber-500" />
+                CRC Comercial
+              </Label>
+              <Select value={state.crcComercial} onValueChange={(v) => update('crcComercial', v)}>
+                <SelectTrigger className="bg-slate-900/50 border-slate-800 h-9 text-slate-100 hover:border-slate-600 focus:border-amber-500/50 [&>span]:text-slate-100">
+                  <SelectValue placeholder="Selecione o CRC..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 [&_[role=option]]:text-slate-100 [&_[role=option]]:focus:bg-slate-800 [&_[role=option]]:focus:text-white [&_[role=option]]:data-[highlighted]:bg-slate-800 [&_[role=option]]:data-[highlighted]:text-white [&_[role=option]]:data-[state=checked]:text-amber-400">
+                  {crcs.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-slate-500">
+                      Nenhum profissional cadastrado
+                    </div>
+                  ) : (
+                    crcs.map((c) => (
+                      <SelectItem
+                        key={c.id}
+                        value={c.id}
+                        className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white data-[state=checked]:text-amber-400"
+                      >
+                        {c.nome}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -363,6 +495,22 @@ export function DetalhesVendaTab() {
                   ) : (
                     emDash
                   )}
+                </LinhaResumo>
+                <LinhaResumo
+                  icon={<Stethoscope className="w-3.5 h-3.5 text-amber-500" />}
+                  label="Dentista Avaliador"
+                >
+                  {dentistaNome ? (
+                    <span className="uppercase tracking-wide">{dentistaNome}</span>
+                  ) : (
+                    emDash
+                  )}
+                </LinhaResumo>
+                <LinhaResumo
+                  icon={<Contact className="w-3.5 h-3.5 text-amber-500" />}
+                  label="CRC Comercial"
+                >
+                  {crcNome ? <span className="uppercase tracking-wide">{crcNome}</span> : emDash}
                 </LinhaResumo>
                 <LinhaResumo
                   icon={<Percent className="w-3.5 h-3.5 text-amber-500" />}
