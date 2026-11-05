@@ -25,6 +25,7 @@ import { VendasTabela } from './components/VendasTabela'
 import { VendasModal } from './components/VendasModal'
 import { VendasRankingDentistas } from './components/VendasRankingDentistas'
 import { VendasConcretizadasLista } from './components/VendasConcretizadasLista'
+import { DetalhesVendaTab } from './components/DetalhesVendaTab'
 import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
 import { VendasAtuaisWidget } from '@/components/financeiro/vendas-atuais-widget'
@@ -341,7 +342,7 @@ export default function Vendas() {
       </div>
 
       <Tabs defaultValue="oportunidades" className="space-y-4" onValueChange={() => setPage(1)}>
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto gap-2 bg-slate-200/50 p-1 rounded-lg max-w-[800px]">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 h-auto gap-2 bg-slate-200/50 p-1 rounded-lg max-w-[1000px]">
           <TabsTrigger
             value="oportunidades"
             className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all py-2"
@@ -359,6 +360,12 @@ export default function Vendas() {
             className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all py-2"
           >
             Ranking de Avaliadores
+          </TabsTrigger>
+          <TabsTrigger
+            value="detalhes"
+            className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all py-2"
+          >
+            Detalhes da Venda
           </TabsTrigger>
         </TabsList>
 
@@ -413,6 +420,10 @@ export default function Vendas() {
             dataInicio={filters.dataInicio}
             dataFim={filters.dataFim}
           />
+        </TabsContent>
+
+        <TabsContent value="detalhes" className="space-y-4 outline-none">
+          <DetalhesVendaTab />
         </TabsContent>
       </Tabs>
     </div>
