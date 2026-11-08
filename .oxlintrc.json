@@ -120,6 +120,7 @@
       "rules": {
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "warn",
+        "react/jsx-no-undef": "error",
         "@typescript-eslint/no-empty-object-type": "warn",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": "warn",
