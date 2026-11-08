@@ -49,6 +49,7 @@ import {
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import { resetUserPassword } from '@/services/permissoes'
 import { PermissoesEditorDialog } from './configuracoes/PermissoesEditorDialog'
+import { Can } from '@/components/permissions/can'
 import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 import {
   DropdownMenu,
@@ -356,13 +357,15 @@ export default function Usuarios() {
                 </Button>
               </>
             )}
-            <Button
-              onClick={handleNew}
-              className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
-            >
-              <Plus className="size-4" />
-              Novo usuário
-            </Button>
+            <Can acao="Criar Usuario" pagina="Acessar Usuários">
+              <Button
+                onClick={handleNew}
+                className="bg-slate-200 text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm"
+              >
+                <Plus className="size-4" />
+                Novo usuário
+              </Button>
+            </Can>
           </div>
         }
       />
@@ -641,22 +644,26 @@ export default function Usuarios() {
                             >
                               <Edit className="w-4 h-4 mr-2 text-slate-500" /> Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setUsuarioPermissoes(usuario)
-                                setPermissoesOpen(true)
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <ShieldAlert className="w-4 h-4 mr-2 text-slate-500" /> Permissões de
-                              acesso
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleResetPassword(usuario)}
-                              className="cursor-pointer"
-                            >
-                              <KeyRound className="w-4 h-4 mr-2 text-slate-500" /> Resetar Senha
-                            </DropdownMenuItem>
+                            <Can acao="Gerenciar Permissoes" pagina="Acessar Usuários">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setUsuarioPermissoes(usuario)
+                                  setPermissoesOpen(true)
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <ShieldAlert className="w-4 h-4 mr-2 text-slate-500" /> Permissões
+                                de acesso
+                              </DropdownMenuItem>
+                            </Can>
+                            <Can acao="Resetar Senha" pagina="Acessar Usuários">
+                              <DropdownMenuItem
+                                onClick={() => handleResetPassword(usuario)}
+                                className="cursor-pointer"
+                              >
+                                <KeyRound className="w-4 h-4 mr-2 text-slate-500" /> Resetar Senha
+                              </DropdownMenuItem>
+                            </Can>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleToggleStatus(usuario.id, status)}
