@@ -123,7 +123,7 @@ export function GestaoRH() {
     setLoading(true)
     try {
       const { data: usersBase, error: usersError } = await supabase
-        .from('usuarios_publico')
+        .from('usuarios')
         .select('id, nome, data_admissao, avatar_url')
         .eq('status', 'ativo')
         .eq('elegivel_ferias', true)

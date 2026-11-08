@@ -13,7 +13,7 @@ export type UsuarioWithCargo = Tables<'usuarios'> & {
  */
 export async function getUsuarios() {
   const { data, error } = await supabase
-    .from('usuarios_publico')
+    .from('usuarios')
     .select(`
       *,
       cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
@@ -26,7 +26,7 @@ export async function getUsuarios() {
 
 export async function getUsuariosAtivos() {
   const { data, error } = await supabase
-    .from('usuarios_publico')
+    .from('usuarios')
     .select(`
       *,
       cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
@@ -106,7 +106,6 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
         cargo_id: data.cargo_id,
         cargo_secundario_id: data.cargo_secundario_id || null,
         data_admissao: data.data_admissao || null,
-        salario: data.salario || null,
         status: data.status || 'ativo',
         horario_entrada: data.horario_entrada || null,
         horario_saida: data.horario_saida || null,
@@ -150,6 +149,15 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
       throw new Error('Resposta inválida do servidor: ID do usuário não retornado')
 
     userId = edgeData.user.id
+
+    // Salário vive em tabela própria (usuarios_salarios), com RLS própria.
+    if (data.salario !== undefined && data.salario !== null && data.salario !== '') {
+      const { error: salarioError } = await supabase
+        .from('usuarios_salarios' as any)
+        .upsert({ usuario_id: userId, salario: Number(data.salario) }, { onConflict: 'usuario_id' })
+      if (salarioError) throw salarioError
+    }
+
     return userId
   }
 
@@ -178,7 +186,6 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     cargo_id: data.cargo_id,
     cargo_secundario_id: data.cargo_secundario_id || null,
     data_admissao: data.data_admissao || null,
-    salario: data.salario || null,
     status: data.status || 'ativo',
     possui_carteira: data.possui_carteira !== undefined ? data.possui_carteira : true,
     exigir_rotina: data.exigir_rotina !== undefined ? data.exigir_rotina : true,
@@ -196,6 +203,15 @@ export async function saveColaborador(data: any, isEdit: boolean, oldEmail?: str
     ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
   })
   if (userError) throw userError
+
+  // Salário vive em tabela própria (usuarios_salarios), restrita por RLS.
+  // Só grava quando o valor foi informado — preserva o que já existe.
+  if (data.salario !== undefined && data.salario !== null && data.salario !== '') {
+    const { error: salarioError } = await supabase
+      .from('usuarios_salarios' as any)
+      .upsert({ usuario_id: userId, salario: Number(data.salario) }, { onConflict: 'usuario_id' })
+    if (salarioError) throw salarioError
+  }
 
   const { error: detalhesError } = await supabase.from('colaboradores_detalhes').upsert({
     usuario_id: userId,

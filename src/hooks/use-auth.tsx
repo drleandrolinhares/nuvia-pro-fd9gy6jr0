@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const { data, error } = await supabase
-        .from('usuarios_publico')
+        .from('usuarios')
         .select(
           `*, cargo_principal:cargos!usuarios_cargo_id_fkey(nome), cargo_secundario:cargos!usuarios_cargo_secundario_id_fkey(nome)`,
         )
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!userProfile) {
       try {
         const { data, error } = await supabase
-          .from('usuarios_publico')
+          .from('usuarios')
           .select('*')
           .eq('id', userId)
           .single()

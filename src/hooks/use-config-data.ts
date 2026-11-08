@@ -14,13 +14,15 @@ export function useConfigData() {
     setLoading(true)
     setError(false)
     try {
-      const [uRes, cRes, pRes] = await Promise.all([
+      const [uRes, cRes, pRes, sRes] = await Promise.all([
         supabase
           .from('usuarios')
           .select('*, cargos!usuarios_cargo_id_fkey(nome), colaboradores_detalhes(*)')
           .order('nome'),
         supabase.from('cargos').select('*, cargo_permissoes(permissao_id)'),
         supabase.from('permissoes').select('*'),
+        // salário não está na view (dado sensível); a RPC só devolve para admin/RH
+        supabase.rpc('get_salarios_equipe'),
       ])
 
       let hasError = false
@@ -37,7 +39,19 @@ export function useConfigData() {
         console.error('[useConfigData] Error fetching permissoes:', pRes.error)
       }
 
-      setUsuarios(uRes.data || [])
+      // Salário vem da RPC (a view não expõe o dado). Para quem não é
+      // admin/RH a RPC devolve vazio e o campo fica nulo na tela.
+      const salariosPorUsuario: Record<string, number> = {}
+      ;((sRes as any)?.data || []).forEach((s: any) => {
+        salariosPorUsuario[s.id] = Number(s.salario) || 0
+      })
+
+      setUsuarios(
+        (uRes.data || []).map((u: any) => ({
+          ...u,
+          salario: u.id in salariosPorUsuario ? salariosPorUsuario[u.id] : null,
+        })),
+      )
       setCargos(cRes.data || [])
       setPermissoes(pRes.data || [])
 

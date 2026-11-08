@@ -75,8 +75,15 @@ export default function ColaboradorFormSheet({
     setActiveTab('pessoal')
     if (isEdit) {
       setLoading(true)
-      getColaboradorDetalhes(usuario.id)
-        .then((det) => {
+      Promise.all([
+        getColaboradorDetalhes(usuario.id),
+        // salário não está mais em `usuarios`; vem da RPC restrita
+        supabase
+          .rpc('get_salarios_equipe')
+          .then(({ data }) => (data || []).find((s: any) => s.id === usuario.id)?.salario ?? null)
+          .catch(() => null),
+      ])
+        .then(([det, salarioAtual]) => {
           let em = { nome: '', telefone: '', parentesco: '' }
           try {
             if (det?.beneficiario_emergencia) em = JSON.parse(det.beneficiario_emergencia)
@@ -87,6 +94,7 @@ export default function ColaboradorFormSheet({
             ...usuario,
             password: '',
             ...det,
+            salario: salarioAtual ?? undefined,
             pode_realizar_lancamento: (usuario as any).pode_realizar_lancamento ?? false,
             possui_carteira: usuario.possui_carteira ?? true,
             exigir_rotina: usuario.exigir_rotina ?? true,
