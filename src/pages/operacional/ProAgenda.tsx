@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Loader2, BookOpen, Clock, Search, Plus, Edit, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ManageProcedureDialog } from '@/components/operacional/manage-procedure-dialog'
+import { PageHeader } from '@/components/page-header'
 
 export default function ProAgenda() {
   const [dentistas, setDentistas] = useState<any[]>([])
@@ -92,61 +93,53 @@ export default function ProAgenda() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
-            <BookOpen className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">PRO AGENDA</h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Glossário e tempos de procedimentos para a recepção
-            </p>
-          </div>
-        </div>
+      <PageHeader
+        title="Pro Agenda"
+        description="Glossário e tempos de procedimentos para a recepção."
+        icon={BookOpen}
+        actions={
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Input
+                placeholder="Buscar procedimento..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-slate-950 border-slate-800 text-white focus-visible:ring-amber-500"
+              />
+            </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <Input
-              placeholder="Buscar procedimento..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-slate-950 border-slate-800 text-white focus-visible:ring-amber-500"
-            />
-          </div>
-
-          <Select value={selectedDentista} onValueChange={setSelectedDentista}>
-            <SelectTrigger className="w-full sm:w-[220px] bg-slate-950 border-slate-800 text-white font-medium focus:ring-amber-500">
-              <SelectValue placeholder="Selecione um dentista" />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800 text-white">
-              <SelectItem value="all" className="focus:bg-slate-800">
-                Visão Geral
-              </SelectItem>
-              {dentistas.map((d) => (
-                <SelectItem key={d.id} value={d.id} className="focus:bg-slate-800">
-                  {d.nome}
+            <Select value={selectedDentista} onValueChange={setSelectedDentista}>
+              <SelectTrigger className="w-full sm:w-[220px] bg-slate-950 border-slate-800 text-white font-medium focus:ring-amber-500">
+                <SelectValue placeholder="Selecione um dentista" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                <SelectItem value="all" className="focus:bg-slate-800">
+                  Visão Geral
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {dentistas.map((d) => (
+                  <SelectItem key={d.id} value={d.id} className="focus:bg-slate-800">
+                    {d.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {isAdmin && (
-            <Button
-              onClick={() => {
-                setEditingProc(null)
-                setManageDialogOpen(true)
-              }}
-              className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold whitespace-nowrap shadow-md"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Procedimento
-            </Button>
-          )}
-        </div>
-      </div>
+            {isAdmin && (
+              <Button
+                onClick={() => {
+                  setEditingProc(null)
+                  setManageDialogOpen(true)
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold whitespace-nowrap shadow-md"
+              >
+                <Plus className="size-4" />
+                Novo procedimento
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center h-64 bg-slate-900/50 rounded-lg border border-slate-800">

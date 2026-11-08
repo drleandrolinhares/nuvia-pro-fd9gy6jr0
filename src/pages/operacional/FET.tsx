@@ -3,6 +3,7 @@ import { FETPatientList } from '@/components/fet/fet-patient-list'
 import { FETPatientDetail } from '@/components/fet/fet-patient-detail'
 import { FETLogs } from '@/components/fet/fet-logs'
 import { Activity } from 'lucide-react'
+import { PageHeader } from '@/components/page-header'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function FET() {
@@ -10,50 +11,35 @@ export default function FET() {
   const [activeTab, setActiveTab] = useState('ativos')
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-full bg-slate-950 overflow-hidden rounded-xl border border-slate-800 shadow-2xl -mx-2 sm:-mx-4 md:-mx-8 lg:-mx-16 w-[calc(100%+1rem)] sm:w-[calc(100%+2rem)] md:w-[calc(100%+4rem)] lg:w-[calc(100%+8rem)] max-w-none">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-500/10 rounded-lg shrink-0">
-            <Activity className="w-5 h-5 text-amber-500" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight leading-tight">
-              Ficha de Evolução (FET)
-            </h1>
-            <p className="text-xs text-slate-400 mt-0.5">Controle de execução e evolução</p>
-          </div>
-        </div>
-
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => {
-            setActiveTab(v)
-            setSelectedPatientId(null)
-          }}
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="bg-slate-900/50 border border-slate-800 h-9">
-            <TabsTrigger
-              value="ativos"
-              className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 text-xs font-bold"
-            >
-              Tratamentos Ativos
-            </TabsTrigger>
-            <TabsTrigger
-              value="finalizados"
-              className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 text-xs font-bold"
-            >
-              Finalizados
-            </TabsTrigger>
-            <TabsTrigger
-              value="logs"
-              className="data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 text-xs font-bold"
-            >
-              LOG (Auditoria)
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-full overflow-hidden">
+      <PageHeader
+        title="Ficha de evolução (FET)"
+        description="Controle de execução e evolução dos tratamentos."
+        icon={Activity}
+        className="shrink-0 pb-3"
+        actions={
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => {
+              setActiveTab(v)
+              setSelectedPatientId(null)
+            }}
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="h-9">
+              <TabsTrigger value="ativos" className="text-xs font-semibold">
+                Ativos
+              </TabsTrigger>
+              <TabsTrigger value="finalizados" className="text-xs font-semibold">
+                Finalizados
+              </TabsTrigger>
+              <TabsTrigger value="logs" className="text-xs font-semibold">
+                Auditoria
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        }
+      />
 
       <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full max-w-full">
         {activeTab !== 'logs' ? (
@@ -72,14 +58,14 @@ export default function FET() {
                   onStatusChange={() => setSelectedPatientId(null)}
                 />
               ) : (
-                <div className="flex flex-col flex-1 items-center justify-center border border-slate-800 border-dashed rounded-lg bg-slate-900/30 text-center p-8">
-                  <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4 border border-slate-800">
-                    <Activity className="w-8 h-8 text-slate-600" />
+                <div className="flex flex-col flex-1 items-center justify-center border border-dashed border-border-strong/70 rounded-lg bg-muted/25 text-center p-8">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                    <Activity className="w-8 h-8 text-muted-foreground/60" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-300 mb-2">
-                    Nenhum Paciente Selecionado
+                  <h3 className="text-lg font-bold text-foreground mb-2">
+                    Nenhum paciente selecionado
                   </h3>
-                  <p className="text-slate-500 max-w-sm">
+                  <p className="text-muted-foreground max-w-sm">
                     Selecione um paciente na lista ao lado ou crie um novo para visualizar e
                     gerenciar sua Ficha de Evolução de Tratamento.
                   </p>
