@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { supabase } from '@/lib/supabase/client'
+import { PageHeader } from '@/components/page-header'
 
 export default function Negociacao() {
   const [valor, setValor] = useState('')
