@@ -63,15 +63,15 @@
 
     --radius: 0.75rem;
 
-    /* ---- Sidebar (navy profundo) ---- */
-    --sidebar-background: 218 60% 10%;
-    --sidebar-foreground: 213 35% 96%;
-    --sidebar-primary: 38 46% 55%;
-    --sidebar-primary-foreground: 218 60% 10%;
-    --sidebar-accent: 218 42% 17%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 218 38% 19%;
-    --sidebar-ring: 38 46% 55%;
+    /* ---- Sidebar (clara, alto contraste) ---- */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 30% 24%;
+    --sidebar-primary: 217 58% 15%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 30% 96.5%;
+    --sidebar-accent-foreground: 217 58% 15%;
+    --sidebar-border: 216 22% 91%;
+    --sidebar-ring: 217 58% 30%;
 
     /* ---- Data viz ---- */
     --chart-1: 38 46% 55%;
@@ -121,10 +121,10 @@
     --input: 218 30% 23%;
     --ring: 38 46% 55%;
 
-    --sidebar-background: 219 55% 8%;
+    --sidebar-background: 219 45% 10%;
     --sidebar-foreground: 213 35% 96%;
-    --sidebar-accent: 218 40% 15%;
-    --sidebar-border: 218 34% 16%;
+    --sidebar-accent: 218 38% 16%;
+    --sidebar-border: 218 34% 17%;
 
     --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
     --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.4);

@@ -59,7 +59,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
@@ -283,15 +282,10 @@ import { supabase } from '@/lib/supabase/client'
 
 const OPEN_GROUPS_KEY = 'nuvia_sidebar_open_groups'
 
-/** Pill de contagem — discreto, dourado, sem "gritar" na navegação */
-function NavBadge({ value, className }: { value: number; className?: string }) {
+/** Contador discreto — não compete com o rótulo do menu */
+function NavBadge({ value }: { value: number }) {
   return (
-    <span
-      className={cn(
-        'ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-secondary/95 px-1.5 text-[10px] font-extrabold leading-none text-secondary-foreground shadow-sm',
-        className,
-      )}
-    >
+    <span className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
       {value > 99 ? '99+' : value}
     </span>
   )
@@ -301,7 +295,7 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, profile, signOut, isAdmin, hasPermission } = useAuth()
-  const { state, isMobile, setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   const [badges, setBadges] = useState({
     pedidos: 0,
@@ -316,7 +310,7 @@ export function AppSidebar() {
       const raw = localStorage.getItem(OPEN_GROUPS_KEY)
       if (raw) return JSON.parse(raw)
     } catch (e) {
-      /* estado inicial padrão */
+      /* preferência não persistida — não interrompe a navegação */
     }
     return {}
   })
@@ -494,13 +488,6 @@ export function AppSidebar() {
     items.forEach((item) => {
       const b = getBadge(item.title)
       if (b && typeof b === 'number') total += b
-
-      if (item.subItems) {
-        item.subItems.forEach((subItem: any) => {
-          const subB = getBadge(subItem.title)
-          if (subB && typeof subB === 'number') total += subB
-        })
-      }
     })
     return total > 0 ? total : null
   }
@@ -516,6 +503,7 @@ export function AppSidebar() {
 
   const displayName =
     profile?.nome || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário'
+
   const initials =
     displayName
       .split(' ')
@@ -524,44 +512,41 @@ export function AppSidebar() {
       .slice(0, 2)
       .join('')
       .toUpperCase() || 'US'
+
   const roleLabel =
     profile?.cargo_principal_nome ||
     profile?.cargo_principal?.nome ||
     (isAdmin ? 'Administrador' : 'Colaborador')
 
   return (
-    <Sidebar className="border-r border-sidebar-border/80" data-state={state}>
-      <SidebarHeader className="border-b border-white/[0.06] px-3 py-3.5">
+    <Sidebar className="border-r border-sidebar-border">
+      <SidebarHeader className="px-3 py-3">
         <Link
           to="/"
           onClick={closeMobile}
-          className="group flex items-center gap-3 rounded-lg px-2 py-1 outline-none transition-colors hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-sidebar-ring/60"
+          className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none transition-colors hover:bg-sidebar-accent/70 focus-visible:ring-2 focus-visible:ring-sidebar-ring/40"
         >
-          <div className="relative grid size-9 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-[hsl(var(--gold))] to-[hsl(var(--gold-strong))] shadow-[0_2px_10px_-2px_hsl(var(--gold)/0.55)]">
-            <span className="text-[15px] font-extrabold leading-none tracking-tighter text-[hsl(var(--navy-deep))]">
+          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
+            <span className="text-[13px] font-extrabold leading-none tracking-tighter text-primary-foreground">
               N
             </span>
           </div>
           <div className="flex min-w-0 flex-col leading-none">
-            <span className="text-[15px] font-extrabold tracking-[0.14em] text-white">
-              NUVIA
-              <span className="ml-1 font-semibold tracking-[0.10em] text-[hsl(var(--gold))]">
-                PRO
-              </span>
+            <span className="text-[14px] font-bold tracking-[0.06em] text-foreground">
+              NUVIA<span className="ml-1 font-semibold text-secondary">PRO</span>
             </span>
-            <span className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.16em] text-sidebar-foreground/45">
+            <span className="mt-1 truncate text-[9.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Odontologia
             </span>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3">
+      <SidebarContent className="px-2 pb-2">
         {navData.map((group: any) => {
           if (group.isDirectLink) {
-            if (group.permission) {
-              if (!hasPermission(group.permission)) return null
-            }
+            if (group.permission && !hasPermission(group.permission)) return null
+
             const active = location.pathname === group.url
             const Icon = group.icon
             const badge = getBadge(group.title)
@@ -575,10 +560,9 @@ export function AppSidebar() {
                       isActive={active}
                       tooltip={group.title}
                       className={cn(
-                        'relative h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-semibold text-sidebar-foreground/72',
-                        'hover:bg-white/[0.06] hover:text-white',
-                        'data-[active=true]:bg-white/[0.09] data-[active=true]:text-white',
-                        'data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-[hsl(var(--gold))]',
+                        'h-9 rounded-lg px-2.5 text-[13px] font-semibold',
+                        'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                        'data-[active=true]:bg-secondary/15 data-[active=true]:font-semibold data-[active=true]:text-foreground',
                       )}
                     >
                       <Link to={group.url} onClick={closeMobile}>
@@ -586,7 +570,9 @@ export function AppSidebar() {
                           <Icon
                             className={cn(
                               'size-[17px] shrink-0',
-                              active ? 'text-[hsl(var(--gold))]' : 'text-sidebar-foreground/55',
+                              active
+                                ? 'text-secondary-foreground dark:text-secondary'
+                                : 'text-muted-foreground',
                             )}
                           />
                         )}
@@ -605,11 +591,9 @@ export function AppSidebar() {
               if (item.title === 'ROTINA DIÁRIA' && profile?.exigir_rotina === false) {
                 return false
               }
-
               if (item.permission) {
                 return hasPermission(item.permission)
               }
-
               return false // Zero Trust: must have explicit permission mapping
             }) || []
 
@@ -619,7 +603,7 @@ export function AppSidebar() {
             (item: any) =>
               location.pathname === item.url || location.pathname.startsWith(`${item.url}/`),
           )
-          const isOpen = openGroups[group.title] ?? false
+          const isOpen = openGroups[group.title] ?? groupActive
           const GroupIcon = group.icon
           const groupBadge = getGroupBadge(filteredItems)
 
@@ -628,27 +612,25 @@ export function AppSidebar() {
               key={group.title}
               open={isOpen}
               onOpenChange={(open) => toggleGroup(group.title, open)}
-              className="group/collapsible py-0.5"
+              className="group/collapsible"
             >
               <SidebarGroup className="p-0">
                 <SidebarGroupLabel asChild>
                   <CollapsibleTrigger
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[10.5px] font-bold uppercase tracking-[0.14em]',
-                      'text-sidebar-foreground/42 transition-colors hover:bg-white/[0.04] hover:text-sidebar-foreground/75',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/50',
-                      groupActive && 'text-sidebar-foreground/70',
+                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em]',
+                      'text-muted-foreground/85 transition-colors hover:bg-sidebar-accent/70 hover:text-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/40',
+                      groupActive && 'text-foreground',
                     )}
                   >
-                    {GroupIcon && <GroupIcon className="size-[13px] shrink-0 opacity-70" />}
+                    {GroupIcon && <GroupIcon className="size-3.5 shrink-0 opacity-60" />}
                     <span className="truncate">{group.title}</span>
                     <span className="ml-auto flex items-center gap-1.5">
-                      {groupBadge && (
-                        <NavBadge value={groupBadge} className="h-[18px] text-[10px]" />
-                      )}
+                      {groupBadge && <NavBadge value={groupBadge} />}
                       <ChevronRight
                         className={cn(
-                          'size-3.5 shrink-0 opacity-50 transition-transform duration-200',
+                          'size-3.5 shrink-0 opacity-40 transition-transform duration-200',
                           isOpen && 'rotate-90',
                         )}
                       />
@@ -657,7 +639,7 @@ export function AppSidebar() {
                 </SidebarGroupLabel>
 
                 <CollapsibleContent>
-                  <SidebarGroupContent className="pt-0.5">
+                  <SidebarGroupContent>
                     <SidebarMenu>
                       {filteredItems.map((item: any) => {
                         const ItemIcon = item.icon
@@ -670,20 +652,22 @@ export function AppSidebar() {
                             <Collapsible key={item.title} className="group/sub">
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton className="h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/72 hover:bg-white/[0.06] hover:text-white">
-                                    {ItemIcon && <ItemIcon className="size-[17px] opacity-60" />}
+                                  <SidebarMenuButton className="h-9 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground">
+                                    {ItemIcon && (
+                                      <ItemIcon className="size-[17px] text-muted-foreground" />
+                                    )}
                                     <span className="truncate">{item.title}</span>
                                     <ChevronRight className="ml-auto size-3.5 opacity-40 transition-transform group-data-[state=open]/sub:rotate-90" />
                                   </SidebarMenuButton>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
-                                  <SidebarMenuSub className="ml-4 border-l border-white/[0.08] py-1 pl-2">
+                                  <SidebarMenuSub className="ml-4 border-l border-sidebar-border py-1 pl-2">
                                     {item.subItems.map((sub: any) => (
                                       <SidebarMenuSubItem key={sub.title}>
                                         <SidebarMenuSubButton
                                           asChild
                                           isActive={location.pathname === sub.url}
-                                          className="h-8 rounded-md text-[12.5px] text-sidebar-foreground/65 hover:bg-white/[0.06] hover:text-white data-[active=true]:bg-white/[0.09] data-[active=true]:font-semibold data-[active=true]:text-white"
+                                          className="h-8 rounded-md text-[12.5px] text-sidebar-foreground hover:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-foreground"
                                         >
                                           <Link to={sub.url} onClick={closeMobile}>
                                             <span className="truncate">{sub.title}</span>
@@ -705,10 +689,9 @@ export function AppSidebar() {
                               isActive={active}
                               tooltip={item.title}
                               className={cn(
-                                'relative h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/72',
-                                'hover:bg-white/[0.06] hover:text-white',
-                                'data-[active=true]:bg-white/[0.09] data-[active=true]:font-semibold data-[active=true]:text-white',
-                                'data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-[hsl(var(--gold))]',
+                                'h-9 rounded-lg px-2.5 text-[13px] font-medium',
+                                'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                                'data-[active=true]:bg-secondary/15 data-[active=true]:font-semibold data-[active=true]:text-foreground',
                               )}
                             >
                               <Link to={item.url} onClick={closeMobile}>
@@ -717,8 +700,8 @@ export function AppSidebar() {
                                     className={cn(
                                       'size-[17px] shrink-0',
                                       active
-                                        ? 'text-[hsl(var(--gold))]'
-                                        : 'text-sidebar-foreground/55',
+                                        ? 'text-secondary-foreground dark:text-secondary'
+                                        : 'text-muted-foreground',
                                     )}
                                   />
                                 )}
@@ -740,7 +723,7 @@ export function AppSidebar() {
         })}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/[0.06] p-2.5">
+      <SidebarFooter className="border-t border-sidebar-border p-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -749,11 +732,11 @@ export function AppSidebar() {
                   type="button"
                   className={cn(
                     'flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none',
-                    'transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-sidebar-ring/50',
-                    'data-[state=open]:bg-white/[0.07]',
+                    'transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring/40',
+                    'data-[state=open]:bg-sidebar-accent',
                   )}
                 >
-                  <Avatar className="size-8 shrink-0 ring-1 ring-white/10">
+                  <Avatar className="size-8 shrink-0 ring-1 ring-border">
                     <AvatarImage
                       src={
                         (profile as any)?.avatar_url ||
@@ -761,19 +744,17 @@ export function AppSidebar() {
                         `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`
                       }
                     />
-                    <AvatarFallback className="bg-[hsl(var(--gold))] text-[11px] font-extrabold text-[hsl(var(--navy-deep))]">
+                    <AvatarFallback className="bg-muted text-[11px] font-bold text-foreground">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex min-w-0 flex-1 flex-col leading-tight">
-                    <span className="truncate text-[12.5px] font-semibold text-white">
+                    <span className="truncate text-[12.5px] font-semibold text-foreground">
                       {displayName}
                     </span>
-                    <span className="truncate text-[11px] text-sidebar-foreground/45">
-                      {roleLabel}
-                    </span>
+                    <span className="truncate text-[11px] text-muted-foreground">{roleLabel}</span>
                   </div>
-                  <Settings className="size-4 shrink-0 text-sidebar-foreground/35" />
+                  <Settings className="size-4 shrink-0 text-muted-foreground/70" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="right" align="end" className="mb-1 w-60">

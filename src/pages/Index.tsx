@@ -14,6 +14,9 @@ import {
   LayoutDashboard,
   Boxes,
   RefreshCw,
+  Clock,
+  Users,
+  ShieldCheck,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,7 +59,7 @@ const MESES = [
 const brl = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
 
-/** Bloco de KPI com hierarquia clara: rótulo, valor, contexto e tendência */
+/** Bloco de KPI com hierarquia clara: rótulo, valor, contexto */
 function KpiTile({
   label,
   value,
@@ -80,16 +83,16 @@ function KpiTile({
   } as const
 
   return (
-    <div className="group relative flex min-w-0 flex-col gap-2 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-shadow hover:shadow-card">
+    <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border/70 bg-card p-3.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="truncate text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
           {label}
         </span>
-        {Icon && <Icon className="size-4 shrink-0 text-muted-foreground/50" />}
+        {Icon && <Icon className="size-3.5 shrink-0 text-muted-foreground/45" />}
       </div>
       <span
         className={cn(
-          'tabular truncate text-[1.35rem] font-bold leading-none tracking-tight',
+          'tabular truncate text-[1.25rem] font-bold leading-none tracking-tight',
           toneStyles[tone],
           loading && 'text-muted-foreground/40',
         )}
@@ -101,59 +104,56 @@ function KpiTile({
   )
 }
 
-/** Cartão de painel com cabeçalho padronizado (ícone, título, ação) */
+/** Painel com cabeçalho padronizado */
 function PanelCard({
   title,
   icon: Icon,
   action,
   children,
-  className,
   count,
+  className,
 }: {
   title: string
   icon: ElementType
   action?: ReactNode
   children: ReactNode
-  className?: string
   count?: number
+  className?: string
 }) {
   return (
-    <Card className={cn('flex h-[380px] flex-col overflow-hidden', className)}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 py-4">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
-            <Icon className="size-4" />
-          </span>
-          <CardTitle className="truncate text-sm font-semibold uppercase tracking-[0.06em]">
+    <Card className={cn('flex h-[360px] flex-col overflow-hidden', className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Icon className="size-4 shrink-0 text-muted-foreground" />
+          <CardTitle className="truncate text-[12.5px] font-bold uppercase tracking-[0.06em] text-foreground">
             {title}
           </CardTitle>
           {typeof count === 'number' && count > 0 && (
-            <Badge variant="secondary" className="tabular shrink-0 px-2 py-0 font-bold">
+            <Badge variant="soft" className="tabular shrink-0 px-1.5 py-0 text-[10px] font-bold">
               {count}
             </Badge>
           )}
         </div>
         {action}
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">{children}</CardContent>
+      <CardContent className="flex-1 overflow-y-auto p-3 custom-scrollbar">{children}</CardContent>
     </Card>
   )
 }
 
-/** Estado vazio consistente entre os painéis */
 function EmptyState({ icon: Icon, label }: { icon: ElementType; label: string }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong/70 bg-muted/25 p-6 text-center">
-      <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground/60">
-        <Icon className="size-5" />
+    <div className="flex h-full flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border-strong/60 bg-muted/20 p-6 text-center">
+      <span className="grid size-9 place-items-center rounded-full bg-muted text-muted-foreground/55">
+        <Icon className="size-4" />
       </span>
-      <p className="max-w-[220px] text-[12.5px] leading-relaxed text-muted-foreground">{label}</p>
+      <p className="max-w-[210px] text-[12px] leading-relaxed text-muted-foreground">{label}</p>
     </div>
   )
 }
 
 const Index = () => {
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const { toast } = useToast()
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
@@ -228,18 +228,14 @@ const Index = () => {
       })
 
       setLoadingSAC(true)
-      const isAdmin =
-        profile?.role === 'admin' ||
-        user.email === 'drleandro@nuvia.com' ||
-        user.email === 'drleandrolinhares@gmail.com'
-
+      // Privilégio vem exclusivamente do perfil/RBAC — nunca de e-mail fixo no cliente.
       let query = supabase
         .from('sac_demandas')
         .select('id, paciente_nome, tipo, limite_primeiro_contato, status')
         .neq('status', 'resolvido')
         .order('limite_primeiro_contato', { ascending: true })
 
-      if (!isAdmin) {
+      if (!(isAdmin || profile?.role === 'admin' || profile?.role === 'super_admin')) {
         query = query.eq('quem_resolve_id', user.id)
       }
 
@@ -373,8 +369,18 @@ const Index = () => {
   const hora = new Date().getHours()
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
 
+  const kpiResumo = [
+    { label: 'SAC pendente', value: String(minhasDemandas.length), icon: MessageSquare },
+    { label: 'Alertas de estoque', value: String(itemsAvisos.length), icon: Package },
+    {
+      label: 'Aniversariantes',
+      value: String(aniversariantes.length),
+      icon: Cake,
+    },
+  ]
+
   return (
-    <div className="relative space-y-5 animate-fade-in-up">
+    <div className="relative space-y-5">
       <div className="absolute -top-1 right-0 z-10">
         <SyncIndicator isSyncing={loading} />
       </div>
@@ -386,7 +392,7 @@ const Index = () => {
             <LayoutDashboard className="size-3.5" />
             Painel executivo
           </div>
-          <h1 className="truncate text-[1.55rem] font-bold leading-tight tracking-tight text-foreground sm:text-[1.75rem]">
+          <h1 className="truncate text-2xl font-bold leading-tight tracking-tight text-foreground">
             {saudacao}
             {primeiroNome ? `, ${primeiroNome}` : ''}
           </h1>
@@ -401,17 +407,15 @@ const Index = () => {
       </div>
 
       {/* Meta de faturamento */}
-      <Card className="overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 py-4">
-          <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-accent text-accent-foreground">
-              <Target className="size-4" />
-            </span>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Target className="size-4 text-muted-foreground" />
             <div>
-              <CardTitle className="text-sm font-semibold uppercase tracking-[0.06em]">
+              <CardTitle className="text-[12.5px] font-bold uppercase tracking-[0.06em]">
                 Meta de faturamento
               </CardTitle>
-              <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 Vendas confirmadas no mês corrente
               </p>
             </div>
@@ -432,8 +436,8 @@ const Index = () => {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-5">
-          <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <CardContent className="p-4">
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className={cn(
                 'h-full rounded-full transition-all duration-700',
@@ -442,26 +446,19 @@ const Index = () => {
               style={{ width: `${Math.min(100, Math.max(0, percentualAlcancado))}%` }}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <KpiTile
-              label="Meta do mês"
-              value={brl(metaFaturamento)}
-              loading={loadingMeta}
-              icon={Target}
-            />
+          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-5">
+            <KpiTile label="Meta do mês" value={brl(metaFaturamento)} loading={loadingMeta} />
             <KpiTile
               label="Vendas atuais"
               value={brl(totalVendasMes)}
               tone="positive"
               loading={loadingMeta}
-              icon={ArrowUpRight}
             />
             <KpiTile
               label="Falta para a meta"
               value={brl(valorRestante)}
               tone="warning"
               loading={loadingMeta}
-              icon={TrendingDown}
             />
             <KpiTile
               label="Meta alcançada"
@@ -479,55 +476,82 @@ const Index = () => {
         </CardContent>
       </Card>
 
+      {/* Atalhos de contexto */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        {kpiResumo.map((k) => (
+          <button
+            key={k.label}
+            type="button"
+            onClick={() => {
+              if (k.label === 'SAC pendente') window.location.assign('/operacional/sac')
+              if (k.label === 'Alertas de estoque') window.location.assign('/estoque')
+              if (k.label === 'Aniversariantes') window.location.assign('/intranet/performance')
+            }}
+            className="flex items-center gap-3 rounded-lg border border-border/70 bg-card px-4 py-3 text-left transition-colors hover:border-border-strong hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+              <k.icon className="size-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                {k.label}
+              </span>
+              <span className="tabular block text-lg font-bold leading-tight text-foreground">
+                {k.value}
+              </span>
+            </span>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground/40" />
+          </button>
+        ))}
+      </div>
+
       {/* Carteira (quando habilitada) */}
       {possuiCarteira && (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <Card className="flex items-center justify-between gap-4 p-4">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                 <Wallet className="size-3.5" /> Saldo acumulado
               </div>
               <div
                 className={cn(
-                  'tabular mt-1.5 truncate text-2xl font-bold tracking-tight',
+                  'tabular mt-1.5 truncate text-xl font-bold tracking-tight',
                   saldoCritico ? 'text-destructive' : 'text-success',
                 )}
               >
                 {loadingUsuarios ? '—' : brl(saldoAtual)}
               </div>
-              <p className="mt-1 text-[11.5px] text-muted-foreground">
-                Disponível para saque na carteira
-              </p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Disponível para saque</p>
             </div>
             <span
               className={cn(
-                'grid size-11 shrink-0 place-items-center rounded-xl',
+                'grid size-10 shrink-0 place-items-center rounded-lg',
                 saldoCritico ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success',
               )}
             >
-              <Wallet className="size-5" />
+              <Wallet className="size-4.5" />
             </span>
           </Card>
 
           <Card className="flex items-center justify-between gap-4 p-4">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                 <TrendingDown className="size-3.5" /> Descontos aplicados
               </div>
-              <div className="tabular mt-1.5 truncate text-2xl font-bold tracking-tight text-destructive">
+              <div className="tabular mt-1.5 truncate text-xl font-bold tracking-tight text-destructive">
                 {loadingUsuarios ? '—' : brl(saldoPerdido)}
               </div>
-              <p className="mt-1 text-[11.5px] text-muted-foreground">Penalidades e descontos</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Penalidades e descontos</p>
             </div>
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-destructive/10 text-destructive">
-              <TrendingDown className="size-5" />
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive">
+              <TrendingDown className="size-4.5" />
             </span>
           </Card>
         </div>
       )}
 
       {/* Painéis operacionais */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-2.5 lg:grid-cols-2">
         <PanelCard
           title="SAC"
           icon={MessageSquare}
@@ -541,21 +565,21 @@ const Index = () => {
           }
         >
           {minhasDemandas.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {minhasDemandas.map((d) => (
                 <Link
                   key={d.id}
                   to={`/operacional/sac?demanda=${d.id}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5 transition-colors hover:border-border-strong hover:bg-muted/50"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-card px-3 py-2 transition-colors hover:border-border-strong hover:bg-muted/40"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-semibold text-foreground">
+                    <p className="truncate text-[12.5px] font-semibold text-foreground">
                       {d.paciente_nome}
                     </p>
-                    <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <div className="mt-0.5 flex items-center gap-2 text-[10.5px] text-muted-foreground">
                       <span
                         className={cn(
-                          'rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                          'rounded px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide',
                           d.tipo === 'reclamacao'
                             ? 'bg-destructive/10 text-destructive'
                             : 'bg-warning/10 text-warning',
@@ -573,7 +597,7 @@ const Index = () => {
                   <Badge
                     variant="outline"
                     className={cn(
-                      'shrink-0 text-[10px] uppercase tracking-wide',
+                      'shrink-0 text-[9.5px] uppercase',
                       d.status === 'recebido' && 'border-destructive/30 text-destructive',
                       d.status === 'sendo_tratado' && 'border-warning/30 text-warning',
                     )}
@@ -601,7 +625,7 @@ const Index = () => {
           }
         >
           {itemsAvisos.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {itemsAvisos.map((item) => {
                 const prazoAtingido =
                   item.data_proxima_revisao &&
@@ -615,25 +639,25 @@ const Index = () => {
                   <Link
                     key={item.id}
                     to={`/estoque?q=${encodeURIComponent(item.nome)}`}
-                    className="group flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5 transition-colors hover:border-border-strong hover:bg-muted/50"
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-card px-3 py-2 transition-colors hover:border-border-strong hover:bg-muted/40"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-semibold text-foreground group-hover:text-primary">
+                      <p className="truncate text-[12.5px] font-semibold text-foreground group-hover:text-primary">
                         {item.nome}
                       </p>
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 truncate text-[10.5px] text-muted-foreground">
                         {item.marca || 'Sem marca'} · {item.variacao || 'S/V'} · mín.{' '}
                         {item.quantidade_minima}
                       </p>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
+                    <div className="flex shrink-0 flex-col items-end gap-0.5">
                       {abaixoMinimo && (
-                        <span className="tabular rounded bg-destructive/10 px-1.5 py-0.5 text-[11px] font-bold text-destructive">
+                        <span className="tabular rounded bg-destructive/10 px-1.5 py-0.5 text-[10.5px] font-bold text-destructive">
                           {item.quantidade_estoque} un.
                         </span>
                       )}
                       {prazoAtingido && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-warning">
+                        <span className="flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-warning">
                           <AlertTriangle className="size-3" /> comprar
                         </span>
                       )}
@@ -655,7 +679,7 @@ const Index = () => {
               value={selectedMonth.toString()}
               onValueChange={(v) => setSelectedMonth(parseInt(v))}
             >
-              <SelectTrigger className="h-8 w-[118px] shrink-0 text-xs">
+              <SelectTrigger className="h-7 w-[110px] shrink-0 text-[11.5px]">
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
@@ -669,13 +693,13 @@ const Index = () => {
           }
         >
           {loadingUsuarios ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="skeleton-shimmer h-11 rounded-lg" />
+                <div key={i} className="skeleton-shimmer h-10 rounded-lg" />
               ))}
             </div>
           ) : aniversariantes.length > 0 ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col">
               {aniversariantes.map((a) => {
                 const isToday =
                   selectedMonth === new Date().getMonth() && a.day === new Date().getDate()
@@ -687,26 +711,26 @@ const Index = () => {
                       a.isPast && 'opacity-45',
                     )}
                   >
-                    <Avatar className="size-8 shrink-0 ring-1 ring-border">
+                    <Avatar className="size-7 shrink-0 ring-1 ring-border">
                       <AvatarImage
                         src={
                           a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
                         }
                       />
-                      <AvatarFallback className="bg-muted text-[10px] font-bold text-muted-foreground">
+                      <AvatarFallback className="bg-muted text-[9.5px] font-bold text-muted-foreground">
                         {a.nome.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-foreground">{a.nome}</p>
-                      <p className="tabular text-[11px] text-muted-foreground">
+                      <p className="truncate text-[12.5px] font-medium text-foreground">{a.nome}</p>
+                      <p className="tabular text-[10.5px] text-muted-foreground">
                         Dia {String(a.day).padStart(2, '0')}
                       </p>
                     </div>
                     {isToday && (
                       <Badge
                         variant="secondary"
-                        className="shrink-0 text-[10px] font-bold uppercase"
+                        className="shrink-0 text-[9.5px] font-bold uppercase"
                       >
                         Hoje
                       </Badge>
@@ -721,7 +745,7 @@ const Index = () => {
         </PanelCard>
 
         <PanelCard title="A única coisa" icon={RefreshCw}>
-          <EmptyState icon={Calendar} label="Nenhum lembrete ou agendamento pendente no momento." />
+          <EmptyState icon={Clock} label="Nenhum lembrete ou agendamento pendente no momento." />
         </PanelCard>
       </div>
 

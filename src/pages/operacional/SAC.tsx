@@ -179,12 +179,15 @@ export default function SACPage() {
       }
 
       if (user) {
+        // Privilégio vem exclusivamente do RBAC (role do cadastro).
+        // Nunca de e-mail fixo no cliente: e-mail é alterável e não é credencial.
         const loggedUser = usersRes.data?.find((u) => u.id === user.id)
-        setIsAdmin(
-          loggedUser?.role === 'admin' ||
-            user.email === 'drleandro@nuvia.com' ||
-            user.email === 'drleandrolinhares@gmail.com',
-        )
+        const role = String(loggedUser?.role || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim()
+        setIsAdmin(role === 'admin' || role === 'administrador' || role === 'super_admin')
       }
     } catch (error: any) {
       toast({ title: 'Erro ao carregar', description: error.message, variant: 'destructive' })
