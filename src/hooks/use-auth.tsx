@@ -259,11 +259,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setPermissionsLoaded(false)
         setLoading(false)
         if (userChannel) supabase.removeChannel(userChannel)
-      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         // Silently update session/user/profile without flipping `loading = true`.
         // Toggling `loading = true` causes ProtectedRoute / AppRoutes to show "Carregando sistema..."
         // and unmount/remount page components whenever the tab regains focus or token refreshes.
         loadData(currentSession)
+      } else if (event === 'TOKEN_REFRESHED') {
+        // TOKEN_REFRESHED acontece a cada ~1h e também ao voltar o foco na aba.
+        // Recarregar perfil + 4 consultas + permissões a cada refresh multiplicava
+        // requisições durante a navegação (medido: 40 consultas de permissões em 50 min
+        // numa única sessão). O token novo basta; o perfil não muda.
+        setSession(currentSession)
+        setUser(currentSession?.user ?? null)
       }
     })
 

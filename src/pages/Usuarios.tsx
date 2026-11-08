@@ -125,8 +125,30 @@ export default function Usuarios() {
   const [showAusencia, setShowAusencia] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<ExtendedUsuario | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  // Se as permissões não chegarem (sessão expirada, rede, refresh), a tela não pode
+  // ficar girando para sempre: após 6s ela libera com o que tiver.
+  const [permissionsTimedOut, setPermissionsTimedOut] = useState(false)
 
   const { profile, isAdmin, hasPermission: checkPermission, permissionsLoaded } = useAuth()
+
+  useEffect(() => {
+    if (permissionsLoaded) return
+    const timer = setTimeout(() => {
+      console.warn('[Usuarios] permissionsLoaded timeout — liberando a tela')
+      setPermissionsTimedOut(true)
+    }, 6000)
+    return () => clearTimeout(timer)
+  }, [permissionsLoaded])
+
+  // O `load()` também tem de soltar a tela mesmo se uma das consultas nunca responder.
+  useEffect(() => {
+    if (!loading) return
+    const timer = setTimeout(() => {
+      console.warn('[Usuarios] load timeout — liberando a tela')
+      setLoading(false)
+    }, 15000)
+    return () => clearTimeout(timer)
+  }, [loading])
 
   const load = async () => {
     try {
@@ -265,7 +287,7 @@ export default function Usuarios() {
     }
   }
 
-  if (loading || !permissionsLoaded) {
+  if ((loading && !permissionsTimedOut) || (!permissionsLoaded && !permissionsTimedOut)) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />

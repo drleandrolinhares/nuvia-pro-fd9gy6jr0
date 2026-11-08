@@ -169,6 +169,9 @@ function toast({ ...props }: Toast) {
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
+  // A lista de dependências era `[state]`: cada atualização de estado re-registrava
+  // o listener, então toda página que usava `toast` acumulava inscrições a cada
+  // render. Navegar rápido multiplicava isso e travava a interface.
   React.useEffect(() => {
     listeners.push(setState)
     return () => {
@@ -177,7 +180,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,

@@ -127,8 +127,10 @@ export default function ControleComissoes() {
   useEffect(() => {
     loadData()
 
+    // Nome único por montagem: nome fixo faria `supabase.channel()` reutilizar um
+    // canal que ainda está sendo removido e estourar "tried to subscribe multiple times".
     const channel = supabase
-      .channel(`comissoes-page-${Math.random()}`)
+      .channel(`comissoes-page-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () =>
         loadData(),
       )

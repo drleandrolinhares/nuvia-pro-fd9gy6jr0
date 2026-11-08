@@ -442,6 +442,11 @@ export function AppSidebar() {
     }
   }, [user?.id])
 
+  // A contagem do chat NÃO é refeita a cada navegação: antes, cada clique no menu
+  // disparava uma RPC (232 chamadas em 50 min numa única sessão, medido nos logs)
+  // e, navegando rápido, elas se acumulavam e travavam a interface.
+  // Agora: uma leitura ao entrar, um intervalo curto só enquanto a aba está visível,
+  // e os eventos (chat_read/chat_updated) apenas quando realmente houver mudança.
   useEffect(() => {
     const handleChatRead = () => {
       fetchChatCountStandalone()
@@ -449,28 +454,61 @@ export function AppSidebar() {
     window.addEventListener('chat_read', handleChatRead)
     window.addEventListener('chat_updated', handleChatRead)
 
-    if (location.pathname === '/operacional/pedidos') {
-      localStorage.setItem('last_visit_pedidos', new Date().toISOString())
-      setBadges((prev) => ({ ...prev, pedidos: 0 }))
-    }
-    if (location.pathname === '/operacional/comunicados') {
-      localStorage.setItem('last_visit_comunicados', new Date().toISOString())
-      setBadges((prev) => ({ ...prev, comunicados: 0 }))
-    }
-
-    fetchChatCountStandalone()
-
     return () => {
       window.removeEventListener('chat_read', handleChatRead)
       window.removeEventListener('chat_updated', handleChatRead)
     }
-  }, [location.pathname, user?.id])
+  }, [user?.id])
+
+  // Marcação de "visto" ao abrir Pedidos/Comunicados (não refaz a contagem do chat).
+  useEffect(() => {
+    if (location.pathname === '/operacional/pedidos') {
+      localStorage.setItem('last_visit_pedidos', new Date().toISOString())
+      setBadges((prev) => (prev.pedidos === 0 ? prev : { ...prev, pedidos: 0 }))
+    }
+    if (location.pathname === '/operacional/comunicados') {
+      localStorage.setItem('last_visit_comunicados', new Date().toISOString())
+      setBadges((prev) => (prev.comunicados === 0 ? prev : { ...prev, comunicados: 0 }))
+    }
+  }, [location.pathname])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchChatCountStandalone()
-    }, 30000) // Ajustado para não sobrecarregar
-    return () => clearInterval(interval)
+    let interval: ReturnType<typeof setInterval> | null = null
+
+    const start = () => {
+      if (interval) return
+      interval = setInterval(() => {
+        // Não consulta com a aba em segundo plano: era o que multiplicava chamadas
+        // quando o usuário alternava entre janelas ou navegava rápido.
+        if (document.visibilityState === 'visible') fetchChatCountStandalone()
+      }, 120000)
+    }
+    const stop = () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchChatCountStandalone()
+        start()
+      } else {
+        stop()
+      }
+    }
+
+    const onFocus = () => fetchChatCountStandalone()
+
+    start()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [user?.id])
 
   const getBadge = (title: string) => {
