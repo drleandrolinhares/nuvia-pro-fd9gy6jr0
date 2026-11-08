@@ -1,7 +1,16 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useState, useEffect, useMemo } from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Shield, UserCog, ShieldAlert, Loader2, AlertCircle } from 'lucide-react'
+import {
+  Plus,
+  Shield,
+  UserCog,
+  ShieldAlert,
+  Loader2,
+  AlertCircle,
+  Users,
+  Search,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   getCargos,
@@ -13,18 +22,22 @@ import {
 } from '@/services/permissoes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { CargoDialog } from './CargoDialog'
-import { UsuarioPermissoesDialog } from './UsuarioPermissoesDialog'
+import { PermissoesEditorDialog } from './PermissoesEditorDialog'
 import { getUsuarios } from '@/services/usuarios'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 
 export function PermissoesTab() {
   const { isAdmin } = useAuth()
   const [cargos, setCargos] = useState<Cargo[]>([])
   const [permissoes, setPermissoes] = useState<Permissao[]>([])
   const [usuarios, setUsuarios] = useState<UsuarioComPermissoes[]>([])
+  const [excecoesPorUsuario, setExcecoesPorUsuario] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [partialError, setPartialError] = useState(false)
+  const [busca, setBusca] = useState('')
   const { toast } = useToast()
 
   const [cargoDialogOpen, setCargoDialogOpen] = useState(false)
@@ -42,12 +55,14 @@ export function PermissoesTab() {
         getPermissoes(),
         getUsuariosComPermissoes(),
         getUsuarios(),
+        supabase.from('usuario_permissoes_negadas').select('usuario_id'),
       ])
 
       const c = results[0].status === 'fulfilled' ? results[0].value : []
       const p = results[1].status === 'fulfilled' ? results[1].value : []
       const u = results[2].status === 'fulfilled' ? results[2].value : []
       const allUsers = results[3].status === 'fulfilled' ? results[3].value : []
+      const negadasRes = results[4].status === 'fulfilled' ? (results[4].value as any) : null
 
       setCargos(c)
       setPermissoes(p)
@@ -57,15 +72,16 @@ export function PermissoesTab() {
       )
       setUsuarios(u.filter((user) => activeUserIds.has(user.id)))
 
-      const hasRejection = results.some((r) => r.status === 'rejected')
-      if (hasRejection) {
-        setPartialError(true)
-        toast({
-          title: 'Aviso',
-          description: 'Alguns dados não puderam ser carregados. Tente recarregar.',
-          variant: 'destructive',
-        })
-      }
+      // Conta exceções: concessões individuais + negações
+      const contagem: Record<string, number> = {}
+      u.forEach((user) => {
+        const qtd = (user.usuario_permissoes?.length || 0) > 0 ? 1 : 0
+        if (qtd) contagem[user.id] = user.usuario_permissoes.length
+      })
+      ;(negadasRes?.data || []).forEach((r: any) => {
+        contagem[r.usuario_id] = (contagem[r.usuario_id] || 0) + 1
+      })
+      setExcecoesPorUsuario(contagem)
     } catch (error: any) {
       setPartialError(true)
       toast({ title: 'Erro ao carregar dados', description: error.message, variant: 'destructive' })
@@ -82,6 +98,33 @@ export function PermissoesTab() {
     }
   }, [isAdmin])
 
+  const paginas = useMemo(() => permissoes.filter((p) => p.tipo === 'pagina'), [permissoes])
+  const acoes = useMemo(() => permissoes.filter((p) => p.tipo === 'acao'), [permissoes])
+
+  const resumoCargo = (cargo: Cargo) => {
+    const ids = new Set(cargo.cargo_permissoes?.map((cp) => cp.permissao_id) || [])
+    const qtdPaginas = paginas.filter((p) => ids.has(p.id)).length
+    const qtdAcoes = acoes.filter((p) => ids.has(p.id)).length
+    return { qtdPaginas, qtdAcoes }
+  }
+
+  const termo = busca.trim().toLowerCase()
+  const usuariosFiltrados = termo
+    ? usuarios.filter(
+        (u) =>
+          u.nome.toLowerCase().includes(termo) ||
+          u.email.toLowerCase().includes(termo) ||
+          (u.cargo?.nome || '').toLowerCase().includes(termo),
+      )
+    : usuarios
+
+  const cargosFiltrados = termo
+    ? cargos.filter(
+        (c) =>
+          c.nome.toLowerCase().includes(termo) || (c.setor || '').toLowerCase().includes(termo),
+      )
+    : cargos
+
   if (!isAdmin) {
     return (
       <Card className="border-border/50 shadow-sm">
@@ -90,21 +133,24 @@ export function PermissoesTab() {
           <h3 className="text-lg font-bold uppercase tracking-wider mb-2 text-foreground">
             Acesso Restrito
           </h3>
-          <p className="text-sm">
-            Apenas usuários com privilégios de CEO (Administrador) podem configurar cargos e
-            permissões.
-          </p>
+          <p className="text-sm">Apenas administradores podem configurar cargos e permissões.</p>
         </CardContent>
       </Card>
     )
   }
 
+  const comExcecao = usuarios.filter((u) => (excecoesPorUsuario[u.id] || 0) > 0).length
+
   return (
     <Card className="border-border/50 shadow-sm">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
-        <div>
-          <CardTitle className="uppercase tracking-wider text-lg">Cargos e Permissões</CardTitle>
-          <CardDescription>Gerencie o controle de acesso (RBAC) da clínica.</CardDescription>
+      <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold tracking-tight text-foreground">Controle de acesso</h3>
+          <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-muted-foreground">
+            O <strong className="font-semibold text-foreground">cargo</strong> define o padrão de
+            acesso. A <strong className="font-semibold text-foreground">pessoa</strong> recebe
+            apenas exceções — liberar algo a mais ou bloquear algo do cargo.
+          </p>
         </div>
         <Button
           size="sm"
@@ -112,34 +158,52 @@ export function PermissoesTab() {
             setSelectedCargo(null)
             setCargoDialogOpen(true)
           }}
-          className="uppercase tracking-wider text-xs font-bold"
+          className="shrink-0 uppercase tracking-wider text-xs font-bold"
         >
-          <Plus className="size-4 mr-2" /> Novo Cargo
+          <Plus className="size-4 mr-2" /> Novo cargo
         </Button>
       </CardHeader>
+
       <CardContent>
         <Tabs defaultValue="cargos" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="mb-4 grid w-full grid-cols-2">
             <TabsTrigger value="cargos" className="uppercase tracking-wider text-xs font-bold">
-              <Shield className="size-4 mr-2" /> Cargos
+              <Shield className="size-4 mr-2" /> Padrão por cargo
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px]">
+                {cargos.length}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="usuarios" className="uppercase tracking-wider text-xs font-bold">
-              <UserCog className="size-4 mr-2" /> Exceções por Colaborador
+              <UserCog className="size-4 mr-2" /> Exceções por pessoa
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px]">
+                {comExcecao}
+              </Badge>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="cargos" className="space-y-4">
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar cargo, pessoa ou e-mail..."
+              className="h-9 pl-9 text-[13px]"
+            />
+          </div>
+
+          {/* ---------- PADRÃO POR CARGO ---------- */}
+          <TabsContent value="cargos" className="space-y-3">
             {loading ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+              <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
                 <Loader2 className="size-5 animate-spin" />
                 <span className="text-sm">Carregando cargos...</span>
               </div>
-            ) : cargos.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+            ) : cargosFiltrados.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground">
                 {partialError ? (
                   <div className="flex flex-col items-center gap-2">
                     <AlertCircle className="size-8 text-amber-500" />
-                    <p>Erro ao carregar cargos. Tente recarregar a página.</p>
+                    <p>Erro ao carregar cargos.</p>
                     <Button variant="outline" size="sm" onClick={loadData} className="mt-2">
                       Recarregar
                     </Button>
@@ -149,22 +213,54 @@ export function PermissoesTab() {
                 )}
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 items-start">
-                {cargos.map((cargo) => (
-                  <div
-                    key={cargo.id}
-                    className="rounded-lg border bg-card text-card-foreground p-4 flex flex-col gap-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <h4 className="font-bold text-sm uppercase tracking-wider leading-none">
-                          {cargo.nome}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {cargo.descricao || 'Sem descrição'} • Setor:{' '}
-                          {cargo.setor || 'Não definido'}
+              <div className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+                {cargosFiltrados.map((cargo) => {
+                  const { qtdPaginas, qtdAcoes } = resumoCargo(cargo)
+                  const pessoas = usuarios.filter(
+                    (u) => (u.cargo?.nome || '') === cargo.nome,
+                  ).length
+                  return (
+                    <div
+                      key={cargo.id}
+                      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[13.5px] font-semibold text-foreground">
+                            {cargo.nome}
+                          </span>
+                          {cargo.setor && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {cargo.setor}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                          {qtdPaginas === 0 && qtdAcoes === 0 ? (
+                            <span className="text-amber-600 dark:text-amber-400">
+                              Sem acesso liberado — quem tiver este cargo não vê nada
+                            </span>
+                          ) : (
+                            <>
+                              {qtdPaginas} de {paginas.length} páginas
+                              {qtdAcoes > 0 && ` · ${qtdAcoes} ações`}
+                              {pessoas > 0 && ` · ${pessoas} pessoa(s)`}
+                            </>
+                          )}
                         </p>
                       </div>
+
+                      <div className="hidden w-40 shrink-0 sm:block">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary/70 transition-all"
+                            style={{
+                              width: `${paginas.length ? (qtdPaginas / paginas.length) * 100 : 0}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -172,98 +268,95 @@ export function PermissoesTab() {
                           setSelectedCargo(cargo)
                           setCargoDialogOpen(true)
                         }}
-                        className="h-8 text-xs uppercase tracking-wider shrink-0"
+                        className="h-8 shrink-0 text-xs uppercase tracking-wider"
                       >
                         Editar
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {cargo.cargo_permissoes?.map((cp) => {
-                        const perm = permissoes.find((p) => p.id === cp.permissao_id)
-                        return perm ? (
-                          <Badge
-                            key={perm.id}
-                            variant="secondary"
-                            className="text-[10px] uppercase px-2 py-0.5 font-medium"
-                          >
-                            {perm.nome}
-                          </Badge>
-                        ) : null
-                      })}
-                      {(!cargo.cargo_permissoes || cargo.cargo_permissoes.length === 0) && (
-                        <span className="text-xs text-muted-foreground italic">
-                          Sem permissões atribuídas
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="usuarios" className="space-y-4">
+          {/* ---------- EXCEÇÕES POR PESSOA ---------- */}
+          <TabsContent value="usuarios" className="space-y-3">
+            <p className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-[11.5px] leading-relaxed text-muted-foreground">
+              Quem não aparece aqui com exceções{' '}
+              <strong className="font-semibold text-foreground">
+                acessa exatamente o que o cargo permite
+              </strong>
+              . Abra uma pessoa para liberar ou bloquear itens específicos.
+            </p>
+
             {loading ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+              <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
                 <Loader2 className="size-5 animate-spin" />
                 <span className="text-sm">Carregando colaboradores...</span>
               </div>
-            ) : usuarios.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+            ) : usuariosFiltrados.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground">
                 {partialError
-                  ? 'Erro ao carregar colaboradores. Tente recarregar.'
+                  ? 'Erro ao carregar colaboradores.'
                   : 'Nenhum colaborador encontrado.'}
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 items-start">
-                {usuarios.map((user) => (
-                  <div
-                    key={user.id}
-                    className="rounded-lg border bg-card text-card-foreground p-4 flex flex-col gap-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <h4 className="font-bold text-sm uppercase tracking-wider leading-none">
-                          {user.nome}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {user.email} • Cargo: {user.cargo?.nome || 'Nenhum'}
+              <div className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+                {usuariosFiltrados.map((user) => {
+                  const excecoes = excecoesPorUsuario[user.id] || 0
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30"
+                    >
+                      <div className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold uppercase text-muted-foreground">
+                        {user.nome
+                          .split(' ')
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join('')}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="truncate text-[13.5px] font-semibold text-foreground">
+                            {user.nome}
+                          </span>
+                          {excecoes > 0 ? (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-600 dark:text-amber-400"
+                            >
+                              {excecoes} exceção(ões)
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-border text-[10px] text-muted-foreground"
+                            >
+                              segue o cargo
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                          {user.cargo?.nome || 'Sem cargo'} · {user.email}
                         </p>
                       </div>
+
                       <Button
-                        variant="outline"
+                        variant={excecoes > 0 ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => {
                           setSelectedUser(user)
                           setUserDialogOpen(true)
                         }}
-                        className="h-8 text-xs uppercase tracking-wider shrink-0"
+                        className="h-8 shrink-0 text-xs uppercase tracking-wider"
                       >
-                        Permissões
+                        Ajustar
                       </Button>
                     </div>
-                    {user.usuario_permissoes?.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {user.usuario_permissoes.map((up) => {
-                          const p = permissoes.find((p) => p.id === up.permissao_id)
-                          return p ? (
-                            <Badge
-                              key={p.id}
-                              variant="outline"
-                              className="text-[10px] uppercase px-2 py-0.5 font-medium bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400"
-                            >
-                              {p.nome}
-                            </Badge>
-                          ) : null
-                        })}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">
-                        Sem permissões adicionais
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </TabsContent>
@@ -279,11 +372,10 @@ export function PermissoesTab() {
           />
         )}
         {userDialogOpen && selectedUser && (
-          <UsuarioPermissoesDialog
+          <PermissoesEditorDialog
             open={userDialogOpen}
             onOpenChange={setUserDialogOpen}
             usuario={selectedUser}
-            permissoes={permissoes}
             onSave={loadData}
           />
         )}

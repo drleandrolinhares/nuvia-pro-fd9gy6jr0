@@ -48,6 +48,7 @@ import {
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import { resetUserPassword } from '@/services/permissoes'
+import { PermissoesEditorDialog } from './configuracoes/PermissoesEditorDialog'
 import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 import {
   DropdownMenu,
@@ -129,6 +130,8 @@ export default function Usuarios() {
   // Se as permissões não chegarem (sessão expirada, rede, refresh), a tela não pode
   // ficar girando para sempre: após 6s ela libera com o que tiver.
   const [permissionsTimedOut, setPermissionsTimedOut] = useState(false)
+  const [permissoesOpen, setPermissoesOpen] = useState(false)
+  const [usuarioPermissoes, setUsuarioPermissoes] = useState<ExtendedUsuario | null>(null)
 
   const { profile, isAdmin, hasPermission: checkPermission, permissionsLoaded } = useAuth()
 
@@ -639,6 +642,16 @@ export default function Usuarios() {
                               <Edit className="w-4 h-4 mr-2 text-slate-500" /> Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              onClick={() => {
+                                setUsuarioPermissoes(usuario)
+                                setPermissoesOpen(true)
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <ShieldAlert className="w-4 h-4 mr-2 text-slate-500" /> Permissões de
+                              acesso
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() => handleResetPassword(usuario)}
                               className="cursor-pointer"
                             >
@@ -680,6 +693,18 @@ export default function Usuarios() {
         isAdmin={isAdmin}
       />
       <AusenciaTemporariaDialog open={showAusencia} onOpenChange={setShowAusencia} />
+
+      {usuarioPermissoes && (
+        <PermissoesEditorDialog
+          open={permissoesOpen}
+          onOpenChange={(v) => {
+            setPermissoesOpen(v)
+            if (!v) setUsuarioPermissoes(null)
+          }}
+          usuario={usuarioPermissoes}
+          onSave={load}
+        />
+      )}
     </div>
   )
 }

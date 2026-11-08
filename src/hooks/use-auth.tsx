@@ -44,6 +44,8 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   permissions: string[]
+  /** Slugs negados explicitamente para este usuário (bloqueio de ação/botão). */
+  deniedPermissions: string[]
   isAdmin: boolean
   isGerenteAdministrativo: boolean
   acessoConfig: any | null
@@ -70,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [permissions, setPermissions] = useState<string[]>([])
+  const [deniedPermissions, setDeniedPermissions] = useState<string[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [isGerenteAdministrativo, setIsGerenteAdministrativo] = useState(false)
   const [acessoConfig, setAcessoConfig] = useState<any | null>(null)
@@ -135,6 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let userIsAdmin = false
     let acessoConfig: any = null
     let userPermissions: string[] = []
+    let userDenied: string[] = []
 
     try {
       const { data, error } = await supabase.rpc('is_admin')
@@ -161,9 +165,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('[auth] Error fetching access config:', e)
     }
 
+    // Permissões efetivas: cargo ∪ concedidas − negadas (resolvido no banco).
+    // Antes vinha só a união, então uma negação explícita era ignorada na tela
+    // e o usuário via o menu que o banco recusava.
     try {
-      const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: userId })
-      if (!error) userPermissions = (data as string[]) || []
+      const { data: efetivas, error: effErr } = await supabase.rpc('get_effective_permissions', {
+        p_user_id: userId,
+      })
+
+      if (!effErr && Array.isArray(efetivas)) {
+        userPermissions = (efetivas as any[])
+          .filter((p) => p.concedida === true)
+          .map((p) => p.slug as string)
+        // Negadas explicitamente: usadas para bloquear AÇÕES (botões) na ponta.
+        userDenied = (efetivas as any[])
+          .filter((p) => p.origem === 'negada')
+          .map((p) => p.slug as string)
+      } else {
+        const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: userId })
+        if (!error) userPermissions = (data as string[]) || []
+      }
     } catch (e) {
       console.error('[auth] Error fetching permissions:', e)
     }
@@ -179,6 +200,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isGerenteAdministrativo: userIsGerenteAdm,
       acessoConfig,
       permissions: userPermissions,
+      denied: userDenied,
     }
   }
 
@@ -194,6 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsGerenteAdministrativo(data.isGerenteAdministrativo)
         setAcessoConfig(data.acessoConfig)
         setPermissions(data.permissions || [])
+        setDeniedPermissions(data.denied || [])
         setPermissionsLoaded(true)
       }
     }
@@ -226,6 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsGerenteAdministrativo(data.isGerenteAdministrativo)
           setAcessoConfig(data.acessoConfig)
           setPermissions(data.permissions || [])
+          setDeniedPermissions(data.denied || [])
           setPermissionsLoaded(true)
         }
         setupRealtime(currentSession.user.id)
@@ -339,6 +363,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         profile,
         permissions,
+        deniedPermissions,
         isAdmin,
         isGerenteAdministrativo,
         acessoConfig,

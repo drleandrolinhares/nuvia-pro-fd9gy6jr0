@@ -34,6 +34,8 @@ export function CargoDialog({
   const [descricao, setDescricao] = useState('')
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [mostrarAcoes, setMostrarAcoes] = useState(false)
+  const [busca, setBusca] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -83,7 +85,18 @@ export function CargoDialog({
     }
   }
 
-  const groupedPermissoes = permissoes.reduce(
+  const termo = busca.trim().toLowerCase()
+  const visiveis = permissoes.filter((p) => {
+    if (!mostrarAcoes && p.tipo === 'acao') return false
+    if (!termo) return true
+    return (
+      p.nome.toLowerCase().includes(termo) ||
+      (p.modulo || '').toLowerCase().includes(termo) ||
+      (p.descricao || '').toLowerCase().includes(termo)
+    )
+  })
+
+  const groupedPermissoes = visiveis.reduce(
     (acc, p) => {
       const mod = p.modulo || 'Geral'
       if (!acc[mod]) acc[mod] = []
@@ -141,9 +154,30 @@ export function CargoDialog({
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
-                Permissões de Acesso
-              </h4>
+              <div className="flex flex-col gap-2 border-b pb-2 sm:flex-row sm:items-center sm:justify-between">
+                <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Permissões de Acesso
+                </h4>
+                <div className="flex items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                    <Checkbox
+                      checked={mostrarAcoes}
+                      onCheckedChange={(v) => setMostrarAcoes(!!v)}
+                      className="size-3.5"
+                    />
+                    mostrar ações
+                  </label>
+                </div>
+              </div>
+
+              <div className="relative">
+                <input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar permissão..."
+                  className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                />
+              </div>
               <div className="space-y-6">
                 {Object.entries(groupedPermissoes).map(([modulo, perms]) => (
                   <div key={modulo} className="space-y-3">
@@ -165,6 +199,11 @@ export function CargoDialog({
                               className="text-sm font-medium cursor-pointer"
                             >
                               {p.nome}
+                              {p.tipo === 'acao' && (
+                                <span className="ml-1.5 rounded border border-border px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                  ação
+                                </span>
+                              )}
                             </Label>
                             {p.descricao && (
                               <p className="text-[10px] text-muted-foreground">{p.descricao}</p>

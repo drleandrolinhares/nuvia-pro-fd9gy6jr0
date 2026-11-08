@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 
+export type PermissaoTipo = 'pagina' | 'acao'
+
 export type Permissao = {
   id: string
   nome: string
@@ -8,6 +10,9 @@ export type Permissao = {
   descricao: string | null
   ordem: number
   ativo: boolean
+  tipo: PermissaoTipo
+  parent_slug: string | null
+  critica: boolean
 }
 
 export type Cargo = {
@@ -24,6 +29,17 @@ export type UsuarioComPermissoes = {
   email: string
   cargo: { nome: string } | null
   usuario_permissoes: { permissao_id: string }[]
+}
+
+/** Estado efetivo de uma permissão para um usuário. */
+export type EstadoPermissao = 'herdada' | 'concedida' | 'negada'
+
+export type PermissaoEfetiva = {
+  permissao_id: string
+  slug: string
+  tipo: PermissaoTipo
+  origem: 'cargo' | 'usuario' | 'negada' | 'nenhuma'
+  concedida: boolean
 }
 
 export async function checkIsAdmin() {
@@ -83,7 +99,13 @@ export async function getPermissoes(): Promise<Permissao[]> {
     console.error('[permissoes] Error fetching permissoes:', error)
     return []
   }
-  return (data || []) as Permissao[]
+  // Garante os defaults caso a migração ainda não tenha rodado em algum ambiente
+  return ((data || []) as any[]).map((p) => ({
+    ...p,
+    tipo: (p.tipo || (String(p.nome).startsWith('Acessar ') ? 'pagina' : 'acao')) as PermissaoTipo,
+    parent_slug: p.parent_slug ?? null,
+    critica: !!p.critica,
+  }))
 }
 
 export async function getUsuarioPermissoes(usuarioId: string): Promise<string[]> {
@@ -95,10 +117,64 @@ export async function getUsuarioPermissoes(usuarioId: string): Promise<string[]>
   return (data || []) as string[]
 }
 
+/**
+ * Permissões concedidas e negadas de um usuário, já resolvidas pelo banco
+ * (cargo ∪ concedidas − negadas). Usado pela tela de edição.
+ */
+export async function getPermissoesEfetivas(usuarioId: string): Promise<{
+  efetivas: PermissaoEfetiva[]
+  concedidas: Set<string>
+  negadas: Set<string>
+}> {
+  const concedidas = new Set<string>()
+  const negadas = new Set<string>()
+  let efetivas: PermissaoEfetiva[] = []
+
+  const { data, error } = await supabase.rpc('get_effective_permissions', {
+    p_user_id: usuarioId,
+  })
+
+  if (!error && data) {
+    efetivas = (data as any[]).map((r) => ({
+      permissao_id: r.permissao_id,
+      slug: r.slug,
+      tipo: r.tipo,
+      origem: r.origem,
+      concedida: r.concedida,
+    }))
+    efetivas.forEach((e) => {
+      if (e.origem === 'usuario') concedidas.add(e.permissao_id)
+      if (e.origem === 'negada') negadas.add(e.permissao_id)
+    })
+    return { efetivas, concedidas, negadas }
+  }
+
+  // Fallback se a função ainda não existir no ambiente
+  if (error) console.warn('[permissoes] get_effective_permissions indisponível:', error.message)
+
+  const { data: up } = await supabase
+    .from('usuario_permissoes')
+    .select('permissao_id')
+    .eq('usuario_id', usuarioId)
+  ;(up || []).forEach((r: any) => concedidas.add(r.permissao_id))
+
+  try {
+    const { data: neg } = await supabase
+      .from('usuario_permissoes_negadas')
+      .select('permissao_id')
+      .eq('usuario_id', usuarioId)
+    ;(neg || []).forEach((r: any) => negadas.add(r.permissao_id))
+  } catch {
+    /* tabela pode não existir em ambiente antigo */
+  }
+
+  return { efetivas, concedidas, negadas }
+}
+
 export async function getUsuariosComPermissoes() {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nome, email, cargo:cargos!usuarios_cargo_id_fkey(nome)')
+    .select('id, nome, email, status, cargo:cargos!usuarios_cargo_id_fkey(nome)')
     .order('nome')
   if (error) {
     console.error('[permissoes] Error fetching usuarios:', error)
@@ -136,22 +212,55 @@ export async function getUsuariosComPermissoes() {
   )
 }
 
+/**
+ * Grava a configuração de um usuário em um único passo.
+ * `concedidas` entram como exceção positiva; `negadas` como exceção negativa.
+ * Tudo o que não estiver em nenhuma das listas volta a herdar do cargo.
+ */
+export async function saveUsuarioPermissoesConfig(
+  usuarioId: string,
+  concedidas: string[],
+  negadas: string[],
+) {
+  const { error: delConc } = await supabase
+    .from('usuario_permissoes')
+    .delete()
+    .eq('usuario_id', usuarioId)
+  if (delConc) throw delConc
+
+  if (concedidas.length > 0) {
+    const { error } = await supabase
+      .from('usuario_permissoes')
+      .insert(concedidas.map((pid) => ({ usuario_id: usuarioId, permissao_id: pid })))
+    if (error) throw error
+  }
+
+  const { error: delNeg } = await supabase
+    .from('usuario_permissoes_negadas')
+    .delete()
+    .eq('usuario_id', usuarioId)
+  if (delNeg) throw delNeg
+
+  if (negadas.length > 0) {
+    const { error } = await supabase
+      .from('usuario_permissoes_negadas')
+      .insert(negadas.map((pid) => ({ usuario_id: usuarioId, permissao_id: pid })))
+    if (error) throw error
+  }
+}
+
+/** Compatibilidade: grava apenas concessões. */
 export async function saveUsuarioPermissoes(usuarioId: string, permissaoIds: string[]) {
   const { error: deleteError } = await supabase
     .from('usuario_permissoes')
     .delete()
     .eq('usuario_id', usuarioId)
-
   if (deleteError) throw deleteError
 
   if (permissaoIds.length > 0) {
-    const inserts = permissaoIds.map((pid) => ({
-      usuario_id: usuarioId,
-      permissao_id: pid,
-    }))
-
-    const { error: insertError } = await supabase.from('usuario_permissoes').insert(inserts)
-
+    const { error: insertError } = await supabase
+      .from('usuario_permissoes')
+      .insert(permissaoIds.map((pid) => ({ usuario_id: usuarioId, permissao_id: pid })))
     if (insertError) throw insertError
   }
 }
@@ -202,4 +311,33 @@ export async function saveCargo(
   }
 
   return id
+}
+
+/**
+ * Resolve o estado de exibição de uma permissão na tela de edição:
+ *   herdada  → vem do cargo (ou não vem, e aparece desmarcada)
+ *   concedida→ exceção positiva do usuário
+ *   negada   → exceção negativa do usuário
+ */
+export function estadoPermissao(
+  permissaoId: string,
+  herdadasDoCargo: Set<string>,
+  concedidas: Set<string>,
+  negadas: Set<string>,
+): EstadoPermissao {
+  if (negadas.has(permissaoId)) return 'negada'
+  if (concedidas.has(permissaoId)) return 'concedida'
+  return 'herdada'
+}
+
+/** A permissão está efetivamente liberada? */
+export function permissaoLiberada(
+  permissaoId: string,
+  herdadasDoCargo: Set<string>,
+  concedidas: Set<string>,
+  negadas: Set<string>,
+): boolean {
+  if (negadas.has(permissaoId)) return false
+  if (concedidas.has(permissaoId)) return true
+  return herdadasDoCargo.has(permissaoId)
 }
