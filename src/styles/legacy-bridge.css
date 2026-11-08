@@ -229,6 +229,65 @@
   box-shadow: var(--shadow-card);
 }
 
+/* ------------------------------------------------------------------
+   Normaliza a FAIXA ESCURA de cabeçalho das telas legadas.
+
+   Cada tela antiga desenha seu próprio cabeçalho como uma barra escura
+   com borda dourada à esquerda. Isso destoa do padrão claro do sistema
+   e, sobre papel branco, vira um bloco pesado. Aqui o cabeçalho passa a
+   ter o mesmo desenho do componente PageHeader — sem tocar no JSX de
+   18 telas, sem risco de quebrar seus diálogos internos.
+
+   O seletor usa id + atributos para vencer as classes utilitárias do
+   Tailwind naquele elemento (diferente do resto da ponte, que usa
+   :where e especificidade zero).
+------------------------------------------------------------------- */
+:is(#conteudo > div > div > div, #conteudo > div > div):is(
+  [class*='border-l-4'][class*='bg-slate-900']
+) {
+  background-color: transparent;
+  border-width: 0;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+:is(#conteudo > div > div > div, #conteudo > div > div):is(
+    [class*='border-l-4'][class*='bg-slate-900']
+  )
+  h1 {
+  font-size: 1.4rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  color: hsl(var(--foreground));
+}
+
+:is(#conteudo > div > div > div, #conteudo > div > div):is(
+    [class*='border-l-4'][class*='bg-slate-900']
+  )
+  p {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: hsl(var(--muted-foreground));
+}
+
+/* O quadrado do ícone vira um selo discreto. */
+:is(#conteudo > div > div > div, #conteudo > div > div):is(
+    [class*='border-l-4'][class*='bg-slate-900']
+  )
+  > div
+  > div:first-child {
+  background-color: hsl(var(--muted));
+  border: 0;
+  box-shadow: none;
+  color: hsl(var(--muted-foreground));
+}
+
 /* exceção: tinta branca sobre ouro/fundo colorido continua branca */
 :where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
   :is(
