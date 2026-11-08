@@ -16,6 +16,7 @@ import {
   TerceiroCategoria,
 } from '@/services/terceiros'
 import { useToast } from '@/hooks/use-toast'
+import { PageHeader } from '@/components/page-header'
 
 const INVISALIGN_INITIAL_COLUMNS = [
   'PENDENTE / NÃO ESCANEADOS',
@@ -208,90 +209,66 @@ export default function Invisalign() {
   }
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 h-[calc(100vh-4rem)] flex flex-col space-y-4 bg-slate-950 text-slate-100">
-      {/* Header com identidade Nuvia PRO: visual escuro com acento âmbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-xl shadow-lg border-l-4 border-l-[#d4af37] shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[#d4af37] shadow-inner">
-            <Sparkles className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white uppercase">
-                INVISALIGN
-              </h1>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[#d4af37] uppercase tracking-wider">
-                Operacional
-              </span>
+    <div className="p-4 lg:p-6 h-[calc(100vh-4rem)] flex flex-col space-y-4">
+      <PageHeader
+        title="Invisalign"
+        description={
+          activeTab === 'cards'
+            ? 'Quadro kanban de acompanhamento dos tratamentos com alinhadores transparentes.'
+            : 'Calculadora de datas para troca programada de alinhadores.'
+        }
+        icon={Sparkles}
+        actions={
+          activeTab === 'cards' ? (
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              <div className="relative min-w-[220px]">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquisar paciente ou plano..."
+                  className="h-9 pl-9"
+                />
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="size-4" />
+                Atualizar
+              </Button>
+              <Button size="sm" onClick={() => setIsModalOpen(true)}>
+                <Plus className="size-4" />
+                Novo registro
+              </Button>
             </div>
-            <p className="text-slate-400 text-xs sm:text-sm mt-1">
-              {activeTab === 'cards'
-                ? 'Quadro kanban de acompanhamento de tratamentos com alinhadores transparentes Invisalign.'
-                : 'Calculadora de simulação de datas para troca programada de alinhadores.'}
-            </p>
-          </div>
-        </div>
+          ) : undefined
+        }
+      />
 
-        {/* Controles do header: busca e ações de cards só se aplicam à aba CARDS */}
-        {activeTab === 'cards' && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-            <div className="relative min-w-[240px] sm:min-w-[280px]">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Pesquisar paciente ou plano..."
-                className="pl-9 bg-slate-950 border-slate-800 text-slate-100 placeholder:text-slate-500 h-10 text-xs sm:text-sm w-full"
-              />
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white h-10 px-3 text-xs uppercase font-bold tracking-wider"
-            >
-              <RefreshCw className="w-4 h-4 mr-1.5" />
-              Atualizar
-            </Button>
-
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-wider text-xs shadow-md transition-all h-10 px-4"
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Novo Registro
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Barra de Subabas da Página INVISALIGN */}
-      <div className="flex items-center gap-2 border-b border-slate-800/90 pb-2 shrink-0">
+      {/* Subabas da página */}
+      <div className="flex items-center gap-1 border-b border-border pb-2 shrink-0">
         <button
           type="button"
           onClick={() => setActiveTab('cards')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all ${
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
             activeTab === 'cards'
-              ? 'bg-[#d4af37] text-slate-950 shadow-md font-extrabold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800'
+              ? 'bg-secondary/15 text-foreground'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
         >
-          <LayoutGrid className="w-4 h-4" />
-          CARDS (Kanban)
+          <LayoutGrid className="size-4" />
+          Cards (Kanban)
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('datas')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-all ${
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
             activeTab === 'datas'
-              ? 'bg-[#d4af37] text-slate-950 shadow-md font-extrabold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800'
+              ? 'bg-secondary/15 text-foreground'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
         >
-          <CalendarClock className="w-4 h-4" />
-          DATAS (Calculadora de Troca)
+          <CalendarClock className="size-4" />
+          Datas (calculadora)
         </button>
       </div>
 
@@ -299,8 +276,8 @@ export default function Invisalign() {
       {activeTab === 'cards' && (
         <>
           {loadingCategory || !categoria ? (
-            <div className="flex-1 flex items-center justify-center text-slate-400 gap-2">
-              <RefreshCw className="w-5 h-5 animate-spin text-amber-500" />
+            <div className="flex-1 flex items-center justify-center text-muted-foreground gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-primary" />
               <span>Carregando módulo Invisalign...</span>
             </div>
           ) : (

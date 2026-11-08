@@ -126,21 +126,12 @@ export default function Negociacao() {
 
   return (
     <div className="flex-1 p-4 md:p-8 space-y-8 bg-slate-50 min-h-full overscroll-none">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <Handshake className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Simulador de Negociação
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Simule parcelamentos e aplique descontos baseados na política da clínica.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Simulador de negociação"
+        description="Simule parcelamentos e aplique descontos conforme a política da clínica."
+        icon={Handshake}
+        className="mb-6"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* PAINEL ESQUERDO */}

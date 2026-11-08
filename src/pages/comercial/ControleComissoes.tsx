@@ -238,35 +238,27 @@ export default function ControleComissoes() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-white min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <DollarSign className="w-6 h-6 text-amber-500" />
+      <PageHeader
+        title="Controle de comissões"
+        description="Cálculo agregado por profissional — dentistas e CRC comercial."
+        icon={DollarSign}
+        actions={
+          <div className="w-full sm:w-56">
+            <Select value={mesAno} onValueChange={setMesAno}>
+              <SelectTrigger>
+                <SelectValue placeholder="Mês/Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {mesesOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Controle de Comissões
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Cálculo agregado por profissional — Comissões de Dentistas e CRC Comercial
-            </p>
-          </div>
-        </div>
-        <div className="w-full md:w-56">
-          <Select value={mesAno} onValueChange={setMesAno}>
-            <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-              <SelectValue placeholder="Mês/Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {mesesOptions.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-amber-500" />
