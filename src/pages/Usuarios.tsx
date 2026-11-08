@@ -44,6 +44,7 @@ import {
   Settings,
   CalendarClock,
   KeyRound,
+  Users,
 } from 'lucide-react'
 import ColaboradorFormSheet from '@/components/colaboradores/ColaboradorFormSheet'
 import { resetUserPassword } from '@/services/permissoes'
