@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Package } from 'lucide-react'
+import { PageHeader } from '@/components/page-header'
 import { useAuth } from '@/hooks/use-auth'
 import NovosPedidos from './NovosPedidos'
 import PedidosRecebidos from './PedidosRecebidos'
@@ -15,21 +16,16 @@ export default function Pedidos() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 h-[calc(100vh-4rem)] flex flex-col">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm shrink-0">
-        <div className="p-3 bg-slate-800 rounded-lg">
-          <Package className="w-6 h-6 text-amber-500" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white uppercase tracking-tight">Pedidos</h1>
-          <p className="text-slate-400 text-sm font-medium uppercase tracking-wider mt-1">
-            Requisição semanal de insumos para o almoxarifado
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Pedidos"
+        description="Requisição semanal de insumos para o almoxarifado."
+        icon={Package}
+        className="shrink-0"
+      />
 
-      <div className="bg-white py-4 px-5 text-base text-slate-700 shrink-0 border border-slate-200 rounded-lg my-2">
-        <strong className="text-slate-900 block mb-2 text-sm uppercase tracking-wider flex items-center gap-2 font-bold">
-          <Package className="w-4 h-4 text-slate-500" /> Regras Importantes:
+      <div className="shrink-0 rounded-lg border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
+        <strong className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-foreground">
+          <Package className="size-4 text-muted-foreground" /> Regras importantes
         </strong>
         <ul className="list-disc pl-6 space-y-1 font-medium text-sm">
           <li>

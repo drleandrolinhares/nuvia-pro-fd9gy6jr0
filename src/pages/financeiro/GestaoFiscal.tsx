@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CurrencyInput } from '@/components/precificacao/CurrencyInput'
+import { PageHeader } from '@/components/page-header'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Table,
@@ -244,34 +245,26 @@ export default function GestaoFiscal() {
 
   return (
     <div className="p-6 max-w-full mx-auto w-full animate-fade-in-up">
-      <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 rounded-xl p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 rounded-lg">
-            <Landmark className="w-6 h-6 text-amber-500" />
+      <PageHeader
+        title="Gestão fiscal"
+        description="Receitas, despesas e estimativas de tributação."
+        icon={Landmark}
+        className="mb-6"
+        actions={
+          <div className="flex flex-col items-stretch gap-1 sm:items-end">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              Faturamento previsto total
+            </span>
+            <div className="w-full sm:w-64">
+              <CurrencyInput
+                value={c.faturamento_previsto}
+                onChange={(v: number) => setC({ ...c, faturamento_previsto: v })}
+                className="h-11 text-lg"
+              />
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight uppercase">
-              Gestão Fiscal
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Controle inteligente de receitas, despesas e estimativas de tributação
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col md:items-end w-full md:w-auto">
-          <span className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-2">
-            Faturamento Previsto Total
-          </span>
-          <div className="w-full md:w-64">
-            <CurrencyInput
-              value={c.faturamento_previsto}
-              onChange={(v: number) => setC({ ...c, faturamento_previsto: v })}
-              className="h-12 text-xl border-amber-500/50 bg-amber-500/5 text-amber-500 focus:border-amber-400 focus:text-amber-400"
-              iconClassName="text-amber-500/70"
-            />
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-blue-500 rounded-xl p-5 shadow-sm flex flex-col justify-center">
