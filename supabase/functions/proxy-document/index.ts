@@ -20,7 +20,33 @@ Deno.serve(async (req: Request) => {
       throw new Error('URL parameter is missing')
     }
 
-    const response = await fetch(targetUrl)
+    // Proteção contra SSRF: apenas http(s) e nunca destinos internos/privados
+    const target = new URL(targetUrl)
+
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+      throw new Error('Unsupported URL protocol')
+    }
+
+    const host = target.hostname.toLowerCase()
+    const isBlockedHost =
+      host === 'localhost' ||
+      host === '0.0.0.0' ||
+      host === '[::1]' ||
+      host === '::1' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.internal') ||
+      host.endsWith('.local') ||
+      /^127\./.test(host) ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^169\.254\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+
+    if (isBlockedHost) {
+      throw new Error('URL not allowed')
+    }
+
+    const response = await fetch(target.toString(), { redirect: 'follow' })
 
     if (!response.ok) {
       throw new Error(`Failed to fetch document: ${response.statusText}`)

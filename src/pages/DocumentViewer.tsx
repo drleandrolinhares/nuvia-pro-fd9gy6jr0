@@ -15,6 +15,23 @@ export default function DocumentViewer() {
       return
     }
 
+    // Só documentos via HTTP(S). Bloqueia javascript:, data:, file: e afins —
+    // a URL vem da query string e é repassada ao proxy.
+    let safeUrl = ''
+    try {
+      const parsed = new URL(url, window.location.origin)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        setError(true)
+        setLoading(false)
+        return
+      }
+      safeUrl = parsed.toString()
+    } catch {
+      setError(true)
+      setLoading(false)
+      return
+    }
+
     const scriptId = 'pdfjs-script'
     let script = document.getElementById(scriptId) as HTMLScriptElement
 
@@ -26,7 +43,7 @@ export default function DocumentViewer() {
 
         const supabaseUrl =
           import.meta.env.VITE_SUPABASE_URL || 'https://jblynykmltyvseugkvkk.supabase.co'
-        const proxyUrl = `${supabaseUrl}/functions/v1/proxy-document?url=${encodeURIComponent(url)}`
+        const proxyUrl = `${supabaseUrl}/functions/v1/proxy-document?url=${encodeURIComponent(safeUrl)}`
 
         const loadingTask = pdfjsLib.getDocument(proxyUrl)
         const pdf = await loadingTask.promise

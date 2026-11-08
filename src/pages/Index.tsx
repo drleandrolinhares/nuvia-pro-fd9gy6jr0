@@ -1,38 +1,25 @@
 import {
-  ArrowDownRight,
-  CircleDollarSign,
   Calendar,
-  RefreshCcw,
-  Package,
-  Wallet,
-  TrendingDown,
   Cake,
-  LayoutDashboard,
-  MessageSquare,
-  ArrowRight,
-  Target,
-  Plus,
-  Trash,
-  Edit2,
-  Loader2,
-  Search,
-  Lock,
   CheckCircle2,
+  MessageSquare,
+  Package,
+  Target,
+  TrendingDown,
+  Wallet,
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
+  LayoutDashboard,
+  Boxes,
+  RefreshCw,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, type ElementType, type ReactNode } from 'react'
 import { GestaoRH } from '@/components/rh/GestaoRH'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase/client'
 import { fetchProdutos, Produto } from '@/services/produtos'
 import { SyncIndicator } from '@/components/ui/sync-indicator'
@@ -41,7 +28,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { parseISO, format, subDays, startOfMonth, endOfMonth } from 'date-fns'
+import { parseISO, format, startOfMonth, endOfMonth } from 'date-fns'
 import {
   Select,
   SelectContent,
@@ -49,13 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 
 const MESES = [
@@ -72,6 +52,105 @@ const MESES = [
   'Novembro',
   'Dezembro',
 ]
+
+const brl = (value: number) =>
+  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+
+/** Bloco de KPI com hierarquia clara: rótulo, valor, contexto e tendência */
+function KpiTile({
+  label,
+  value,
+  hint,
+  tone = 'neutral',
+  icon: Icon,
+  loading,
+}: {
+  label: string
+  value: string
+  hint?: string
+  tone?: 'neutral' | 'positive' | 'warning' | 'negative'
+  icon?: ElementType
+  loading?: boolean
+}) {
+  const toneStyles = {
+    neutral: 'text-foreground',
+    positive: 'text-success',
+    warning: 'text-warning',
+    negative: 'text-destructive',
+  } as const
+
+  return (
+    <div className="group relative flex min-w-0 flex-col gap-2 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-shadow hover:shadow-card">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          {label}
+        </span>
+        {Icon && <Icon className="size-4 shrink-0 text-muted-foreground/50" />}
+      </div>
+      <span
+        className={cn(
+          'tabular truncate text-[1.35rem] font-bold leading-none tracking-tight',
+          toneStyles[tone],
+          loading && 'text-muted-foreground/40',
+        )}
+      >
+        {loading ? '—' : value}
+      </span>
+      {hint && <span className="truncate text-[11px] text-muted-foreground">{hint}</span>}
+    </div>
+  )
+}
+
+/** Cartão de painel com cabeçalho padronizado (ícone, título, ação) */
+function PanelCard({
+  title,
+  icon: Icon,
+  action,
+  children,
+  className,
+  count,
+}: {
+  title: string
+  icon: ElementType
+  action?: ReactNode
+  children: ReactNode
+  className?: string
+  count?: number
+}) {
+  return (
+    <Card className={cn('flex h-[380px] flex-col overflow-hidden', className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 py-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
+            <Icon className="size-4" />
+          </span>
+          <CardTitle className="truncate text-sm font-semibold uppercase tracking-[0.06em]">
+            {title}
+          </CardTitle>
+          {typeof count === 'number' && count > 0 && (
+            <Badge variant="secondary" className="tabular shrink-0 px-2 py-0 font-bold">
+              {count}
+            </Badge>
+          )}
+        </div>
+        {action}
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">{children}</CardContent>
+    </Card>
+  )
+}
+
+/** Estado vazio consistente entre os painéis */
+function EmptyState({ icon: Icon, label }: { icon: ElementType; label: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong/70 bg-muted/25 p-6 text-center">
+      <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground/60">
+        <Icon className="size-5" />
+      </span>
+      <p className="max-w-[220px] text-[12.5px] leading-relaxed text-muted-foreground">{label}</p>
+    </div>
+  )
+}
 
 const Index = () => {
   const { user, profile } = useAuth()
@@ -287,376 +366,363 @@ const Index = () => {
     }
   }, [produtosDashboard])
 
+  const saldoCritico = saldoAtual < 0
+  const primeiroNome = (profile?.nome || user?.user_metadata?.name || '')
+    .split(' ')
+    .filter(Boolean)[0]
+  const hora = new Date().getHours()
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
+
   return (
-    <div className="space-y-6 animate-fade-in-up relative pb-8">
-      <div className="absolute top-6 right-6 z-10">
+    <div className="relative space-y-5 animate-fade-in-up">
+      <div className="absolute -top-1 right-0 z-10">
         <SyncIndicator isSyncing={loading} />
       </div>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <LayoutDashboard className="w-6 h-6 text-amber-500" />
+
+      {/* Cabeçalho da página */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <div className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            <LayoutDashboard className="size-3.5" />
+            Painel executivo
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase pr-24 sm:pr-0">
-              Dashboard Nuvia
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Visão Geral da Gestão de Estoque e Rotinas.
-            </p>
-          </div>
+          <h1 className="truncate text-[1.55rem] font-bold leading-tight tracking-tight text-foreground sm:text-[1.75rem]">
+            {saudacao}
+            {primeiroNome ? `, ${primeiroNome}` : ''}
+          </h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Visão consolidada de meta, operação, pessoas e estoque.
+          </p>
         </div>
+        <Badge variant="outline" className="w-fit gap-1.5 py-1 text-[11px] capitalize">
+          <Calendar className="size-3.5" />
+          {format(new Date(), "EEEE, dd 'de' MMMM")}
+        </Badge>
       </div>
 
-      <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm mb-6 animate-fade-in-down">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/10 rounded-md">
-              <Target className="w-5 h-5 text-emerald-500" />
-            </div>
-            <h2 className="text-lg font-bold uppercase tracking-wider text-slate-100">
-              Gestão de Meta
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-              Meta
+      {/* Meta de faturamento */}
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/70 py-4">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-8 place-items-center rounded-lg bg-accent text-accent-foreground">
+              <Target className="size-4" />
             </span>
-            <span className="text-xl font-bold text-slate-200">
-              {loadingMeta
-                ? '...'
-                : `R$ ${metaFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </span>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center relative group">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-              Vendas Atuais
-            </span>
-            <span className="text-xl font-bold text-emerald-400">
-              {loadingMeta
-                ? '...'
-                : `R$ ${totalVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </span>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-              Falta para Meta (R$)
-            </span>
-            <span className="text-xl font-bold text-amber-400">
-              {loadingMeta
-                ? '...'
-                : `R$ ${valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </span>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-              Meta Alcançada
-            </span>
-            <span className="text-xl font-bold text-emerald-400">
-              {loadingMeta ? '...' : `${percentualAlcancado.toFixed(1)}%`}
-            </span>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex flex-col justify-center">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-              Falta para Meta (%)
-            </span>
-            <span className="text-xl font-bold text-amber-400">
-              {loadingMeta ? '...' : `${percentualFaltante.toFixed(1)}%`}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 mb-6">
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-md">
-                <Cake className="size-5 text-amber-500" />
-              </div>
-              <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                Aniversariantes
+            <div>
+              <CardTitle className="text-sm font-semibold uppercase tracking-[0.06em]">
+                Meta de faturamento
               </CardTitle>
+              <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                Vendas confirmadas no mês corrente
+              </p>
             </div>
+          </div>
+          <div className="hidden items-center gap-1.5 sm:flex">
+            <span
+              className={cn(
+                'tabular text-[13px] font-bold',
+                percentualAlcancado >= 100 ? 'text-success' : 'text-foreground',
+              )}
+            >
+              {loadingMeta ? '—' : `${percentualAlcancado.toFixed(1)}%`}
+            </span>
+            {percentualAlcancado >= 100 ? (
+              <ArrowUpRight className="size-4 text-success" />
+            ) : (
+              <ArrowDownRight className="size-4 text-warning" />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5">
+          <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-700',
+                percentualAlcancado >= 100 ? 'bg-success' : 'bg-primary',
+              )}
+              style={{ width: `${Math.min(100, Math.max(0, percentualAlcancado))}%` }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <KpiTile
+              label="Meta do mês"
+              value={brl(metaFaturamento)}
+              loading={loadingMeta}
+              icon={Target}
+            />
+            <KpiTile
+              label="Vendas atuais"
+              value={brl(totalVendasMes)}
+              tone="positive"
+              loading={loadingMeta}
+              icon={ArrowUpRight}
+            />
+            <KpiTile
+              label="Falta para a meta"
+              value={brl(valorRestante)}
+              tone="warning"
+              loading={loadingMeta}
+              icon={TrendingDown}
+            />
+            <KpiTile
+              label="Meta alcançada"
+              value={`${percentualAlcancado.toFixed(1)}%`}
+              tone={percentualAlcancado >= 100 ? 'positive' : 'neutral'}
+              loading={loadingMeta}
+            />
+            <KpiTile
+              label="Falta (%)"
+              value={`${percentualFaltante.toFixed(1)}%`}
+              tone="warning"
+              loading={loadingMeta}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Carteira (quando habilitada) */}
+      {possuiCarteira && (
+        <div className="grid gap-3 md:grid-cols-2">
+          <Card className="flex items-center justify-between gap-4 p-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                <Wallet className="size-3.5" /> Saldo acumulado
+              </div>
+              <div
+                className={cn(
+                  'tabular mt-1.5 truncate text-2xl font-bold tracking-tight',
+                  saldoCritico ? 'text-destructive' : 'text-success',
+                )}
+              >
+                {loadingUsuarios ? '—' : brl(saldoAtual)}
+              </div>
+              <p className="mt-1 text-[11.5px] text-muted-foreground">
+                Disponível para saque na carteira
+              </p>
+            </div>
+            <span
+              className={cn(
+                'grid size-11 shrink-0 place-items-center rounded-xl',
+                saldoCritico ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success',
+              )}
+            >
+              <Wallet className="size-5" />
+            </span>
+          </Card>
+
+          <Card className="flex items-center justify-between gap-4 p-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                <TrendingDown className="size-3.5" /> Descontos aplicados
+              </div>
+              <div className="tabular mt-1.5 truncate text-2xl font-bold tracking-tight text-destructive">
+                {loadingUsuarios ? '—' : brl(saldoPerdido)}
+              </div>
+              <p className="mt-1 text-[11.5px] text-muted-foreground">Penalidades e descontos</p>
+            </div>
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-destructive/10 text-destructive">
+              <TrendingDown className="size-5" />
+            </span>
+          </Card>
+        </div>
+      )}
+
+      {/* Painéis operacionais */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <PanelCard
+          title="SAC"
+          icon={MessageSquare}
+          count={minhasDemandas.length}
+          action={
+            <Button variant="ghost" size="xs" asChild className="shrink-0 text-primary">
+              <Link to="/operacional/sac">
+                Ver tudo <ArrowRight className="ml-1 size-3" />
+              </Link>
+            </Button>
+          }
+        >
+          {minhasDemandas.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {minhasDemandas.map((d) => (
+                <Link
+                  key={d.id}
+                  to={`/operacional/sac?demanda=${d.id}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5 transition-colors hover:border-border-strong hover:bg-muted/50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-semibold text-foreground">
+                      {d.paciente_nome}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span
+                        className={cn(
+                          'rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                          d.tipo === 'reclamacao'
+                            ? 'bg-destructive/10 text-destructive'
+                            : 'bg-warning/10 text-warning',
+                        )}
+                      >
+                        {d.tipo}
+                      </span>
+                      <span className="tabular">
+                        {d.limite_primeiro_contato
+                          ? format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'shrink-0 text-[10px] uppercase tracking-wide',
+                      d.status === 'recebido' && 'border-destructive/30 text-destructive',
+                      d.status === 'sendo_tratado' && 'border-warning/30 text-warning',
+                    )}
+                  >
+                    {String(d.status).replace('_', ' ')}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState icon={CheckCircle2} label="Nenhuma demanda pendente. Tudo em dia." />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title="Alertas de estoque"
+          icon={Package}
+          count={itemsAvisos.length}
+          action={
+            <Button variant="ghost" size="xs" asChild className="shrink-0 text-primary">
+              <Link to="/estoque">
+                Estoque <ArrowRight className="ml-1 size-3" />
+              </Link>
+            </Button>
+          }
+        >
+          {itemsAvisos.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {itemsAvisos.map((item) => {
+                const prazoAtingido =
+                  item.data_proxima_revisao &&
+                  new Date(
+                    new Date(item.data_proxima_revisao).getTime() +
+                      new Date(item.data_proxima_revisao).getTimezoneOffset() * 60000,
+                  ) <= new Date(new Date().setHours(0, 0, 0, 0))
+                const abaixoMinimo = (item.quantidade_estoque || 0) <= (item.quantidade_minima || 0)
+
+                return (
+                  <Link
+                    key={item.id}
+                    to={`/estoque?q=${encodeURIComponent(item.nome)}`}
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5 transition-colors hover:border-border-strong hover:bg-muted/50"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-semibold text-foreground group-hover:text-primary">
+                        {item.nome}
+                      </p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        {item.marca || 'Sem marca'} · {item.variacao || 'S/V'} · mín.{' '}
+                        {item.quantidade_minima}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {abaixoMinimo && (
+                        <span className="tabular rounded bg-destructive/10 px-1.5 py-0.5 text-[11px] font-bold text-destructive">
+                          {item.quantidade_estoque} un.
+                        </span>
+                      )}
+                      {prazoAtingido && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-warning">
+                          <AlertTriangle className="size-3" /> comprar
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <EmptyState icon={Boxes} label="Nenhum alerta de estoque no momento." />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title="Aniversariantes"
+          icon={Cake}
+          action={
             <Select
               value={selectedMonth.toString()}
               onValueChange={(v) => setSelectedMonth(parseInt(v))}
             >
-              <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-300">
+              <SelectTrigger className="h-8 w-[118px] shrink-0 text-xs">
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-300">
+              <SelectContent>
                 {MESES.map((mes, idx) => (
-                  <SelectItem
-                    key={idx}
-                    value={idx.toString()}
-                    className="text-xs focus:bg-slate-800 focus:text-slate-100"
-                  >
+                  <SelectItem key={idx} value={idx.toString()} className="text-xs">
                     {mes}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-            {loadingUsuarios ? (
-              <div className="text-sm text-slate-500">Carregando...</div>
-            ) : aniversariantes.length > 0 ? (
-              <div className="space-y-3 pr-2">
-                {aniversariantes.map((a) => (
+          }
+        >
+          {loadingUsuarios ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="skeleton-shimmer h-11 rounded-lg" />
+              ))}
+            </div>
+          ) : aniversariantes.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              {aniversariantes.map((a) => {
+                const isToday =
+                  selectedMonth === new Date().getMonth() && a.day === new Date().getDate()
+                return (
                   <div
                     key={a.id}
                     className={cn(
-                      'flex items-center gap-3',
-                      a.isPast ? 'opacity-50 grayscale' : '',
+                      'flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-muted/50',
+                      a.isPast && 'opacity-45',
                     )}
                   >
-                    <Avatar className="size-8 border border-slate-700">
+                    <Avatar className="size-8 shrink-0 ring-1 ring-border">
                       <AvatarImage
                         src={
                           a.avatar_url || `https://img.usecurling.com/ppl/thumbnail?seed=${a.id}`
                         }
                       />
-                      <AvatarFallback className="bg-slate-800 text-slate-300">
+                      <AvatarFallback className="bg-muted text-[10px] font-bold text-muted-foreground">
                         {a.nome.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-medium truncate text-slate-200">{a.nome}</p>
-                      <p className="text-xs text-slate-500">
-                        Dia {a.day.toString().padStart(2, '0')}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-foreground">{a.nome}</p>
+                      <p className="tabular text-[11px] text-muted-foreground">
+                        Dia {String(a.day).padStart(2, '0')}
                       </p>
                     </div>
-                    {!a.isPast &&
-                      selectedMonth === new Date().getMonth() &&
-                      a.day === new Date().getDate() && (
-                        <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-0 uppercase shrink-0 font-bold border-0">
-                          Hoje!
-                        </Badge>
-                      )}
+                    {isToday && (
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 text-[10px] font-bold uppercase"
+                      >
+                        Hoje
+                      </Badge>
+                    )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                  Nenhum aniversariante neste mês
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
-            <div className="p-2 bg-amber-500/10 rounded-md">
-              <CheckCircle2 className="size-5 text-amber-500" />
+                )
+              })}
             </div>
-            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-              A Única Coisa
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 pt-4 flex flex-col justify-center items-center h-full">
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50 w-full h-full p-6 text-center">
-              <Calendar className="w-8 h-8 text-slate-600 mb-3" />
-              <p className="text-sm text-slate-400 font-medium max-w-[250px]">
-                Nenhum lembrete ou agendamento pendente no momento.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <EmptyState icon={Cake} label="Nenhum aniversariante neste mês." />
+          )}
+        </PanelCard>
 
-      {possuiCarteira && (
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
-          <Card className="border-slate-800 bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[140px]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                Saldo Total Acumulado
-              </CardTitle>
-              <Wallet className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center">
-              <div className="text-4xl font-bold text-slate-100">
-                {loadingUsuarios
-                  ? '...'
-                  : `R$ ${saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-              </div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide mt-1">
-                Saldo global disponível na carteira
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-800 bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col h-[140px]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                Saldo Perdido
-              </CardTitle>
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center">
-              <div className="text-4xl font-bold text-destructive">
-                {loadingUsuarios
-                  ? '...'
-                  : `R$ ${saldoPerdido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-              </div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide mt-1">
-                Penalidades e descontos
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <div className="grid gap-6 md:grid-cols-2 mb-6">
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-md">
-                <MessageSquare className="size-5 text-amber-500" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-                  SAC
-                </CardTitle>
-                <Badge className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2 py-0.5 rounded-full">
-                  {minhasDemandas.length}
-                </Badge>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="h-8 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2"
-            >
-              <Link to="/operacional/sac">
-                Ver Tudo <ArrowRight className="ml-1 size-3" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-            {minhasDemandas.length > 0 ? (
-              <div className="flex flex-col gap-3 pr-2">
-                {minhasDemandas.map((d) => (
-                  <div
-                    key={d.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-semibold text-sm text-slate-200">
-                        <Link
-                          to={`/operacional/sac?demanda=${d.id}`}
-                          className="hover:text-amber-400 hover:underline"
-                        >
-                          {d.paciente_nome}
-                        </Link>
-                      </p>
-                      <p className="text-xs text-slate-500 flex items-center gap-2 mt-1.5">
-                        <span
-                          className={cn(
-                            'px-1.5 py-0.5 rounded text-[10px] uppercase font-bold shadow-sm',
-                            d.tipo === 'reclamacao'
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/20'
-                              : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20',
-                          )}
-                        >
-                          {d.tipo}
-                        </span>
-                        <span className="font-medium">
-                          Prazo:{' '}
-                          {d.limite_primeiro_contato
-                            ? format(parseISO(d.limite_primeiro_contato), 'dd/MM/yyyy')
-                            : '-'}
-                        </span>
-                      </p>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'uppercase text-[10px] tracking-wider font-bold shadow-sm border-0',
-                        d.status === 'recebido' && 'text-red-400 bg-red-400/10',
-                        d.status === 'sendo_tratado' && 'text-yellow-400 bg-yellow-400/10',
-                      )}
-                    >
-                      {d.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                  Nenhuma demanda pendente
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800 bg-slate-900 shadow-sm flex flex-col h-[400px]">
-          <CardHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-800">
-            <div className="p-2 bg-amber-500/10 rounded-md">
-              <Package className="size-5 text-amber-500" />
-            </div>
-            <CardTitle className="text-lg font-bold uppercase tracking-wider text-slate-100">
-              Gestão de Estoque
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
-            {itemsAvisos.length > 0 ? (
-              <div className="flex flex-col gap-3 pr-2">
-                {itemsAvisos.map((item) => (
-                  <Link
-                    key={item.id}
-                    to={`/estoque?q=${encodeURIComponent(item.nome)}`}
-                    className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-800 transition-colors cursor-pointer group"
-                  >
-                    <div>
-                      <p className="font-semibold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">
-                        {item.nome}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {item.marca || 'Sem marca'} - {item.variacao || 'S/V'}
-                      </p>
-                    </div>
-                    <div className="text-right flex flex-col items-end gap-1">
-                      {item.data_proxima_revisao &&
-                      new Date(
-                        new Date(item.data_proxima_revisao).getTime() +
-                          new Date(item.data_proxima_revisao).getTimezoneOffset() * 60000,
-                      ) <= new Date(new Date().setHours(0, 0, 0, 0)) ? (
-                        <p className="font-bold text-amber-600 text-[11px] uppercase bg-amber-50 px-2 py-1 rounded inline-block border border-amber-200 shadow-sm">
-                          Prazo de Compra Atingido
-                        </p>
-                      ) : null}
-                      {(item.quantidade_estoque || 0) <= (item.quantidade_minima || 0) && (
-                        <p className="font-bold text-destructive text-sm bg-red-500/10 px-2 py-1 rounded inline-block">
-                          {item.quantidade_estoque} em estoque
-                        </p>
-                      )}
-                      <p className="text-xs text-slate-500">Mínimo: {item.quantidade_minima}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-slate-800 bg-slate-900/50">
-                <p className="text-sm text-slate-500 uppercase tracking-widest font-medium text-center px-4">
-                  Nenhum alerta no momento. Tudo em ordem.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <PanelCard title="A única coisa" icon={RefreshCw}>
+          <EmptyState icon={Calendar} label="Nenhum lembrete ou agendamento pendente no momento." />
+        </PanelCard>
       </div>
 
       <div className="mb-0">

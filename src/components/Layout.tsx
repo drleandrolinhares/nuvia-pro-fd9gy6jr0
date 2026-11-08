@@ -6,6 +6,7 @@ import { AppHeader } from './app-header'
 import { cn } from '@/lib/utils'
 import { AlertCircle, Home, RefreshCcw, ShieldAlert } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { Button } from '@/components/ui/button'
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -27,32 +28,31 @@ class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 w-full h-full">
-          <div className="bg-white dark:bg-slate-900 border border-red-500/20 rounded-lg p-6 max-w-md w-full text-center space-y-4 shadow-xl">
-            <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-6 h-6" />
+        <div className="flex min-h-[60vh] w-full flex-col items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-7 text-center shadow-card">
+            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-destructive/10 text-destructive">
+              <AlertCircle className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Erro de Visualização
+            <h2 className="text-lg font-bold tracking-tight text-foreground">
+              Não foi possível exibir esta página
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Encontramos um problema ao tentar exibir esta página. Isso pode ter sido causado pelo
-              tradutor do navegador ou uma instabilidade momentânea.
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Ocorreu uma instabilidade ao renderizar o conteúdo. Recarregue para tentar novamente —
+              seus dados não foram alterados.
             </p>
-            <div className="flex gap-3 justify-center mt-6">
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 font-medium"
-              >
-                <RefreshCcw className="w-4 h-4" /> Recarregar
-              </button>
-              <button
-                onClick={() => (window.location.href = '/')}
-                className="px-4 py-2 bg-amber-500 text-slate-900 font-bold rounded hover:bg-amber-600 transition-colors flex items-center gap-2"
-              >
-                <Home className="w-4 h-4" /> Ir para Início
-              </button>
+            <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                <RefreshCcw className="size-4" /> Recarregar
+              </Button>
+              <Button onClick={() => (window.location.href = '/')}>
+                <Home className="size-4" /> Ir para Início
+              </Button>
             </div>
+            {this.state.error?.message && (
+              <p className="mt-5 break-words rounded-lg bg-muted/60 p-2.5 text-left font-mono text-[11px] leading-relaxed text-muted-foreground">
+                {this.state.error.message}
+              </p>
+            )}
           </div>
         </div>
       )
@@ -78,32 +78,34 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="bg-background flex flex-col h-dvh w-full overflow-hidden">
+      <SidebarInset className="flex h-dvh w-full flex-col overflow-hidden bg-background">
         <AppHeader />
         {user && !loading && !hasTenant && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-4 py-2 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 border-b border-warning/25 bg-warning/[0.09] px-4 py-2 text-xs text-warning">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>
-                <strong>Atenção:</strong> Sua conta ainda não está formalmente vinculada ao tenant
-                da clínica. Alguns dados podem não carregar. Contate o administrador do sistema.
+              <ShieldAlert className="h-4 w-4 shrink-0" />
+              <span className="leading-relaxed">
+                <strong className="font-semibold">Atenção:</strong> sua conta ainda não está
+                vinculada ao tenant da clínica. Alguns dados podem não carregar — contate o
+                administrador do sistema.
               </span>
             </div>
           </div>
         )}
         <main
+          id="conteudo"
           className={cn(
-            'flex-1 overflow-x-hidden',
-            isChat ? 'overflow-hidden' : 'overflow-y-auto',
-            isLaboratorios ? 'p-2 sm:p-3' : !isChat && !isViewer && 'p-4 md:p-8',
+            'app-canvas flex-1 overflow-x-hidden',
+            isChat ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar',
+            isLaboratorios ? 'p-0' : !isChat && !isViewer && 'px-4 py-5 md:px-7 md:py-7',
             isViewer && 'p-0',
           )}
         >
           <div
             className={cn(
-              'mx-auto w-full h-full',
-              !isChat && !isViewer && (isLaboratorios ? 'pb-6' : 'pb-16'),
-              !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1600px]'),
+              'mx-auto h-full w-full',
+              !isChat && !isViewer && 'pb-10',
+              !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1560px]'),
             )}
           >
             <ErrorBoundary>

@@ -1,87 +1,185 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  NUVIA PRO — Design System
+  ---------------------------------------------------------------
+  Base clara e executiva (canvas grafite suave / superfícies brancas),
+  marca navy + ouro e foco em legibilidade de tabelas densas.
+  Somente tokens semânticos: nenhuma tela deve depender de cor fixa.
+*/
 @layer base {
   :root {
-    /* Nuvia Brand Colors */
-    --navy: 216 100% 8%; /* #001529 */
-    --navy-light: 216 50% 15%;
-    --gold: 42 48% 56%; /* #C5A059 */
+    /* ---- Marca ---- */
+    --navy: 217 58% 13%;
+    --navy-deep: 219 63% 9%;
+    --navy-soft: 217 36% 21%;
+    --gold: 38 46% 55%;
+    --gold-strong: 36 52% 43%;
 
-    --background: 210 20% 98%; /* Off-white workspace */
-    --foreground: 222.2 84% 4.9%;
+    /* ---- Superfícies ---- */
+    --background: 216 26% 97%;
+    --foreground: 218 45% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 218 45% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 218 45% 11%;
 
-    --primary: var(--navy);
+    /* ---- Semânticos ---- */
+    --primary: 217 58% 15%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--gold);
-    --secondary-foreground: var(--navy);
+    --secondary: 38 46% 55%;
+    --secondary-foreground: 218 45% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 216 24% 95.5%;
+    --muted-foreground: 217 13% 42%;
 
-    --accent: var(--gold);
-    --accent-foreground: var(--navy);
+    --accent: 38 48% 94%;
+    --accent-foreground: 217 58% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 66% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: var(--gold);
+    --success: 158 64% 27%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --warning: 28 88% 38%;
+    --warning-foreground: 0 0% 100%;
 
-    /* Sidebar specific - Navy Theme */
-    --sidebar-background: var(--navy);
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: var(--gold);
-    --sidebar-primary-foreground: var(--navy);
-    --sidebar-accent: var(--navy-light);
-    --sidebar-accent-foreground: var(--gold);
-    --sidebar-border: var(--navy-light);
-    --sidebar-ring: var(--gold);
+    --info: 214 84% 44%;
+    --info-foreground: 0 0% 100%;
 
-    --chart-1: var(--gold);
-    --chart-2: 216 100% 20%;
-    --chart-3: 150 60% 40%;
-    --chart-4: 0 70% 50%;
-    --chart-5: 33 100% 50%;
+    /* ---- Traços ---- */
+    --border: 216 21% 90%;
+    --border-strong: 216 18% 81%;
+    --input: 216 21% 86%;
+    --ring: 217 58% 24%;
+
+    --radius: 0.75rem;
+
+    /* ---- Sidebar (navy profundo) ---- */
+    --sidebar-background: 218 60% 10%;
+    --sidebar-foreground: 213 35% 96%;
+    --sidebar-primary: 38 46% 55%;
+    --sidebar-primary-foreground: 218 60% 10%;
+    --sidebar-accent: 218 42% 17%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 218 38% 19%;
+    --sidebar-ring: 38 46% 55%;
+
+    /* ---- Data viz ---- */
+    --chart-1: 38 46% 55%;
+    --chart-2: 217 58% 30%;
+    --chart-3: 158 60% 32%;
+    --chart-4: 0 66% 50%;
+    --chart-5: 28 88% 44%;
+
+    /* ---- Elevação ---- */
+    --shadow-xs: 0 1px 2px 0 hsl(218 45% 11% / 0.05);
+    --shadow-card: 0 1px 2px 0 hsl(218 45% 11% / 0.04), 0 10px 26px -18px hsl(218 45% 11% / 0.35);
+    --shadow-card-hover:
+      0 1px 2px 0 hsl(218 45% 11% / 0.05), 0 16px 34px -20px hsl(218 45% 11% / 0.45);
+    --shadow-pop: 0 18px 45px -20px hsl(218 45% 11% / 0.35), 0 2px 8px hsl(218 45% 11% / 0.06);
   }
 
   .dark {
-    --background: var(--navy);
-    --foreground: 210 40% 98%;
-    --card: var(--navy-light);
-    --card-foreground: 210 40% 98%;
-    --popover: var(--navy-light);
-    --popover-foreground: 210 40% 98%;
-    --primary: var(--gold);
-    --primary-foreground: var(--navy);
-    --secondary: var(--navy-light);
-    --secondary-foreground: 210 40% 98%;
-    --muted: var(--navy-light);
-    --muted-foreground: 215.4 16.3% 70%;
-    --accent: var(--gold);
-    --accent-foreground: var(--navy);
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: var(--navy-light);
-    --input: var(--navy-light);
-    --ring: var(--gold);
+    --background: 219 45% 8%;
+    --foreground: 213 35% 96%;
+
+    --card: 218 40% 12%;
+    --card-foreground: 213 35% 96%;
+
+    --popover: 218 40% 12%;
+    --popover-foreground: 213 35% 96%;
+
+    --primary: 38 46% 55%;
+    --primary-foreground: 218 60% 10%;
+    --secondary: 218 40% 17%;
+    --secondary-foreground: 213 35% 96%;
+
+    --muted: 218 34% 17%;
+    --muted-foreground: 214 18% 68%;
+
+    --accent: 218 34% 20%;
+    --accent-foreground: 213 35% 96%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 158 48% 42%;
+    --warning: 28 82% 48%;
+    --info: 214 78% 56%;
+
+    --border: 218 30% 21%;
+    --border-strong: 218 26% 28%;
+    --input: 218 30% 23%;
+    --ring: 38 46% 55%;
+
+    --sidebar-background: 219 55% 8%;
+    --sidebar-foreground: 213 35% 96%;
+    --sidebar-accent: 218 40% 15%;
+    --sidebar-border: 218 34% 16%;
+
+    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-card-hover: 0 14px 30px -18px hsl(0 0% 0% / 0.6);
+    --shadow-pop: 0 18px 45px -20px hsl(0 0% 0% / 0.7);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family:
+      'Inter',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      sans-serif;
+    font-feature-settings:
+      'cv02' 1,
+      'cv03' 1,
+      'cv04' 1,
+      'cv11' 1;
+    letter-spacing: -0.006em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Foco visível e consistente (acessibilidade por teclado) */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-ring/45 ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    background: hsl(var(--secondary) / 0.28);
+    color: hsl(var(--foreground));
+  }
+
+  /* Números alinhados em colunas — tabelas e KPIs */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   section[aria-label='Notifications alt+T'] {
@@ -117,12 +215,30 @@
   }
   @keyframes fade-in-up {
     from {
-      transform: translateY(10px);
+      transform: translateY(8px);
       opacity: 0;
     }
     to {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+  @keyframes fade-in-down {
+    from {
+      transform: translateY(-6px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -400px 0;
+    }
+    100% {
+      background-position: 400px 0;
     }
   }
 
@@ -133,10 +249,13 @@
     animation: accordion-up 0.2s ease-out;
   }
   .animate-fade-in {
-    animation: fade-in 0.3s ease-out;
+    animation: fade-in 0.25s ease-out both;
   }
   .animate-fade-in-up {
-    animation: fade-in-up 0.4s ease-out forwards;
+    animation: fade-in-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-fade-in-down {
+    animation: fade-in-down 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   /* Animação de tarja piscando para aviso de prazo de laboratório */
@@ -174,19 +293,100 @@
     animation: pulse-badge 1.4s ease-in-out infinite;
   }
 
-  /* Custom scrollbar for webkit */
+  /* Scrollbar discreta (classe usada por várias telas) */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border-strong)) transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border-strong));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.55);
+  }
+
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 3px;
+    background-color: hsl(var(--border-strong));
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Fundo do app: profundidade sutil, sem competir com o conteúdo */
+  .app-canvas {
+    background-image:
+      radial-gradient(1200px 600px at 12% -10%, hsl(var(--secondary) / 0.06), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, hsl(var(--primary) / 0.045), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  .surface-hero {
+    background-image:
+      radial-gradient(900px 380px at 12% -30%, hsl(var(--secondary) / 0.22), transparent 62%),
+      linear-gradient(
+        135deg,
+        hsl(var(--navy-deep)) 0%,
+        hsl(var(--navy)) 55%,
+        hsl(var(--navy-soft)) 100%
+      );
+  }
+
+  .skeleton-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.55) 40%,
+      hsl(var(--muted)) 80%
+    );
+    background-size: 400px 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+  .print\:hidden {
+    display: none !important;
   }
 }

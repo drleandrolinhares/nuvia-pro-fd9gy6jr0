@@ -6,27 +6,35 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  [
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold',
+    'transition-[background-color,color,box-shadow,border-color,transform] duration-150',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    'active:translate-y-px disabled:pointer-events-none disabled:opacity-55',
+    '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  ].join(' '),
   {
     variants: {
       variant: {
-        default:
-          'bg-slate-200 text-slate-700 font-bold hover:bg-amber-500 hover:text-slate-950 shadow-sm transition-all duration-200',
-        destructive:
-          'bg-red-500 text-white font-bold hover:bg-red-600 transition-all duration-200 shadow-sm',
-        outline:
-          'border-2 border-slate-200 bg-transparent text-slate-700 font-bold hover:border-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-all duration-200',
+        default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/92 hover:shadow-md',
         secondary:
-          'bg-slate-800 text-white font-bold hover:bg-amber-500 hover:text-slate-950 shadow-sm transition-all duration-200',
-        ghost:
-          'text-slate-600 font-bold hover:bg-amber-100 hover:text-amber-700 transition-all duration-200',
-        link: 'text-amber-600 underline-offset-4 hover:underline font-bold',
+          'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/90 hover:shadow-md',
+        destructive:
+          'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md',
+        success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90 hover:shadow-md',
+        outline:
+          'border border-border-strong bg-card text-foreground shadow-xs hover:border-primary/35 hover:bg-muted/70',
+        ghost: 'text-foreground/75 hover:bg-muted hover:text-foreground',
+        soft: 'bg-accent text-accent-foreground hover:bg-accent/70',
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
+        sm: 'h-9 rounded-md px-3 text-[13px]',
+        xs: 'h-8 rounded-md px-2.5 text-xs [&_svg]:size-3.5',
+        lg: 'h-11 rounded-lg px-7 text-[15px]',
         icon: 'h-10 w-10',
+        'icon-sm': 'h-8 w-8 rounded-md [&_svg]:size-4',
       },
     },
     defaultVariants: {

@@ -7,8 +7,6 @@ import {
   Briefcase,
   ChevronRight,
   Clock,
-  CloudCog,
-  Database,
   Filter,
   FileBarChart,
   FileText,
@@ -49,6 +47,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -60,7 +59,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth, normalizeString, isAdminRole } from '@/hooks/use-auth'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useAuth } from '@/hooks/use-auth'
+import { cn } from '@/lib/utils'
 
 export const navData = [
   {
@@ -280,10 +281,27 @@ export const navData = [
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
+const OPEN_GROUPS_KEY = 'nuvia_sidebar_open_groups'
+
+/** Pill de contagem — discreto, dourado, sem "gritar" na navegação */
+function NavBadge({ value, className }: { value: number; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-secondary/95 px-1.5 text-[10px] font-extrabold leading-none text-secondary-foreground shadow-sm',
+        className,
+      )}
+    >
+      {value > 99 ? '99+' : value}
+    </span>
+  )
+}
+
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, profile, permissions, signOut, isAdmin, hasPermission } = useAuth()
+  const { user, profile, signOut, isAdmin, hasPermission } = useAuth()
+  const { state, isMobile, setOpenMobile } = useSidebar()
 
   const [badges, setBadges] = useState({
     pedidos: 0,
@@ -292,6 +310,28 @@ export function AppSidebar() {
     chat: 0,
     laboratorios: 0,
   })
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(OPEN_GROUPS_KEY)
+      if (raw) return JSON.parse(raw)
+    } catch (e) {
+      /* estado inicial padrão */
+    }
+    return {}
+  })
+
+  const toggleGroup = (title: string, open: boolean) => {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [title]: open }
+      try {
+        localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(next))
+      } catch (e) {
+        /* preferência não persistida — não interrompe a navegação */
+      }
+      return next
+    })
+  }
 
   const fetchChatCountStandalone = async () => {
     if (!user?.id) return
@@ -470,47 +510,92 @@ export function AppSidebar() {
     navigate('/')
   }
 
+  const closeMobile = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
+  const displayName =
+    profile?.nome || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário'
+  const initials =
+    displayName
+      .split(' ')
+      .filter(Boolean)
+      .map((n: string) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'US'
+  const roleLabel =
+    profile?.cargo_principal_nome ||
+    profile?.cargo_principal?.nome ||
+    (isAdmin ? 'Administrador' : 'Colaborador')
+
   return (
-    <Sidebar className="border-r-sidebar-border">
-      <SidebarHeader className="p-4 mb-8">
-        <Link to="/" className="flex items-center gap-3 px-2 py-2">
-          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-            <CloudCog className="size-6" />
+    <Sidebar className="border-r border-sidebar-border/80" data-state={state}>
+      <SidebarHeader className="border-b border-white/[0.06] px-3 py-3.5">
+        <Link
+          to="/"
+          onClick={closeMobile}
+          className="group flex items-center gap-3 rounded-lg px-2 py-1 outline-none transition-colors hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-sidebar-ring/60"
+        >
+          <div className="relative grid size-9 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-[hsl(var(--gold))] to-[hsl(var(--gold-strong))] shadow-[0_2px_10px_-2px_hsl(var(--gold)/0.55)]">
+            <span className="text-[15px] font-extrabold leading-none tracking-tighter text-[hsl(var(--navy-deep))]">
+              N
+            </span>
           </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="text-xl font-bold text-secondary tracking-widest">NUVIA</span>
-            <span className="text-[10px] text-sidebar-foreground/70 tracking-[0.2em] uppercase">
+          <div className="flex min-w-0 flex-col leading-none">
+            <span className="text-[15px] font-extrabold tracking-[0.14em] text-white">
+              NUVIA
+              <span className="ml-1 font-semibold tracking-[0.10em] text-[hsl(var(--gold))]">
+                PRO
+              </span>
+            </span>
+            <span className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.16em] text-sidebar-foreground/45">
               Odontologia
             </span>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 pt-2">
+      <SidebarContent className="px-2 py-3">
         {navData.map((group: any) => {
           if (group.isDirectLink) {
             if (group.permission) {
               if (!hasPermission(group.permission)) return null
             }
+            const active = location.pathname === group.url
+            const Icon = group.icon
+            const badge = getBadge(group.title)
 
             return (
-              <SidebarGroup key={group.title} className="py-1 mb-2">
-                <SidebarGroupLabel
-                  asChild
-                  className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
-                >
-                  <Link to={group.url} className="flex w-full items-center justify-between py-2">
-                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase">
-                      {group.icon && <group.icon className="size-4 text-amber-500" />}
-                      {group.title}
-                    </div>
-                    {getBadge(group.title) && (
-                      <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
-                        {getBadge(group.title)}
-                      </span>
-                    )}
-                  </Link>
-                </SidebarGroupLabel>
+              <SidebarGroup key={group.title} className="p-0">
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={group.title}
+                      className={cn(
+                        'relative h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-semibold text-sidebar-foreground/72',
+                        'hover:bg-white/[0.06] hover:text-white',
+                        'data-[active=true]:bg-white/[0.09] data-[active=true]:text-white',
+                        'data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-[hsl(var(--gold))]',
+                      )}
+                    >
+                      <Link to={group.url} onClick={closeMobile}>
+                        {Icon && (
+                          <Icon
+                            className={cn(
+                              'size-[17px] shrink-0',
+                              active ? 'text-[hsl(var(--gold))]' : 'text-sidebar-foreground/55',
+                            )}
+                          />
+                        )}
+                        <span className="truncate">{group.title}</span>
+                        {badge && <NavBadge value={badge} />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
               </SidebarGroup>
             )
           }
@@ -530,62 +615,78 @@ export function AppSidebar() {
 
           if (filteredItems.length === 0) return null
 
+          const groupActive = filteredItems.some(
+            (item: any) =>
+              location.pathname === item.url || location.pathname.startsWith(`${item.url}/`),
+          )
+          const isOpen = openGroups[group.title] ?? false
+          const GroupIcon = group.icon
+          const groupBadge = getGroupBadge(filteredItems)
+
           return (
             <Collapsible
               key={group.title}
-              defaultOpen={group.defaultOpen}
-              className="group/collapsible py-1"
+              open={isOpen}
+              onOpenChange={(open) => toggleGroup(group.title, open)}
+              className="group/collapsible py-0.5"
             >
-              <SidebarGroup>
-                <SidebarGroupLabel
-                  asChild
-                  className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 cursor-pointer rounded-md"
-                >
-                  <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
-                    <div className="flex items-center gap-2 font-bold tracking-wider text-xs text-amber-500 uppercase">
-                      {group.icon && <group.icon className="size-4 text-amber-500" />}
-                      {group.title}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getGroupBadge(filteredItems) && (
-                        <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
-                          {getGroupBadge(filteredItems)}
-                        </span>
+              <SidebarGroup className="p-0">
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[10.5px] font-bold uppercase tracking-[0.14em]',
+                      'text-sidebar-foreground/42 transition-colors hover:bg-white/[0.04] hover:text-sidebar-foreground/75',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/50',
+                      groupActive && 'text-sidebar-foreground/70',
+                    )}
+                  >
+                    {GroupIcon && <GroupIcon className="size-[13px] shrink-0 opacity-70" />}
+                    <span className="truncate">{group.title}</span>
+                    <span className="ml-auto flex items-center gap-1.5">
+                      {groupBadge && (
+                        <NavBadge value={groupBadge} className="h-[18px] text-[10px]" />
                       )}
-                      <ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-amber-500/50" />
-                    </div>
+                      <ChevronRight
+                        className={cn(
+                          'size-3.5 shrink-0 opacity-50 transition-transform duration-200',
+                          isOpen && 'rotate-90',
+                        )}
+                      />
+                    </span>
                   </CollapsibleTrigger>
                 </SidebarGroupLabel>
+
                 <CollapsibleContent>
-                  <SidebarGroupContent className="pt-1">
+                  <SidebarGroupContent className="pt-0.5">
                     <SidebarMenu>
                       {filteredItems.map((item: any) => {
                         const ItemIcon = item.icon
+                        const active =
+                          location.pathname === item.url ||
+                          location.pathname.startsWith(`${item.url}/`)
 
                         if (item.subItems) {
                           return (
                             <Collapsible key={item.title} className="group/sub">
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton className="pl-8 justify-between hover:bg-sidebar-accent text-white hover:text-white w-full font-medium">
-                                    <div className="flex items-center gap-2">
-                                      {ItemIcon && <ItemIcon />}
-                                      <span>{item.title}</span>
-                                    </div>
-                                    <ChevronRight className="size-4 transition-transform group-data-[state=open]/sub:rotate-90 text-white/50" />
+                                  <SidebarMenuButton className="h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/72 hover:bg-white/[0.06] hover:text-white">
+                                    {ItemIcon && <ItemIcon className="size-[17px] opacity-60" />}
+                                    <span className="truncate">{item.title}</span>
+                                    <ChevronRight className="ml-auto size-3.5 opacity-40 transition-transform group-data-[state=open]/sub:rotate-90" />
                                   </SidebarMenuButton>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
-                                  <SidebarMenuSub className="ml-10 border-l border-sidebar-border pr-0 mr-0 mt-1">
+                                  <SidebarMenuSub className="ml-4 border-l border-white/[0.08] py-1 pl-2">
                                     {item.subItems.map((sub: any) => (
                                       <SidebarMenuSubItem key={sub.title}>
                                         <SidebarMenuSubButton
                                           asChild
                                           isActive={location.pathname === sub.url}
-                                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white hover:text-white data-[active=true]:font-bold py-1.5 h-auto font-medium"
+                                          className="h-8 rounded-md text-[12.5px] text-sidebar-foreground/65 hover:bg-white/[0.06] hover:text-white data-[active=true]:bg-white/[0.09] data-[active=true]:font-semibold data-[active=true]:text-white"
                                         >
-                                          <Link to={sub.url}>
-                                            <span>{sub.title}</span>
+                                          <Link to={sub.url} onClick={closeMobile}>
+                                            <span className="truncate">{sub.title}</span>
                                           </Link>
                                         </SidebarMenuSubButton>
                                       </SidebarMenuSubItem>
@@ -601,21 +702,29 @@ export function AppSidebar() {
                           <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                               asChild
-                              isActive={location.pathname === item.url}
-                              className="pl-8 data-[active=true]:bg-sidebar-accent data-[active=true]:text-white text-white hover:text-white data-[active=true]:font-bold font-medium"
+                              isActive={active}
+                              tooltip={item.title}
+                              className={cn(
+                                'relative h-9 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/72',
+                                'hover:bg-white/[0.06] hover:text-white',
+                                'data-[active=true]:bg-white/[0.09] data-[active=true]:font-semibold data-[active=true]:text-white',
+                                'data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-[hsl(var(--gold))]',
+                              )}
                             >
-                              <Link
-                                to={item.url}
-                                className="flex items-center justify-between w-full"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {ItemIcon && <ItemIcon />}
-                                  <span>{item.title}</span>
-                                </div>
+                              <Link to={item.url} onClick={closeMobile}>
+                                {ItemIcon && (
+                                  <ItemIcon
+                                    className={cn(
+                                      'size-[17px] shrink-0',
+                                      active
+                                        ? 'text-[hsl(var(--gold))]'
+                                        : 'text-sidebar-foreground/55',
+                                    )}
+                                  />
+                                )}
+                                <span className="truncate">{item.title}</span>
                                 {getBadge(item.title) && (
-                                  <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
-                                    {getBadge(item.title)}
-                                  </span>
+                                  <NavBadge value={getBadge(item.title) as number} />
                                 )}
                               </Link>
                             </SidebarMenuButton>
@@ -631,13 +740,20 @@ export function AppSidebar() {
         })}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
+      <SidebarFooter className="border-t border-white/[0.06] p-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-3 px-2 py-2 mb-2 cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors w-full outline-none">
-                  <Avatar className="size-9 border border-sidebar-border">
+                <button
+                  type="button"
+                  className={cn(
+                    'flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none',
+                    'transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-sidebar-ring/50',
+                    'data-[state=open]:bg-white/[0.07]',
+                  )}
+                >
+                  <Avatar className="size-8 shrink-0 ring-1 ring-white/10">
                     <AvatarImage
                       src={
                         (profile as any)?.avatar_url ||
@@ -645,35 +761,42 @@ export function AppSidebar() {
                         `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user?.id || '1'}`
                       }
                     />
-                    <AvatarFallback className="bg-secondary text-secondary-foreground">
-                      {user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() ||
-                        user?.email?.substring(0, 2)?.toUpperCase() ||
-                        'US'}
+                    <AvatarFallback className="bg-[hsl(var(--gold))] text-[11px] font-extrabold text-[hsl(var(--navy-deep))]">
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col overflow-hidden flex-1 text-left">
-                    <span className="text-sm font-medium truncate text-sidebar-foreground">
-                      {user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário'}
+                  <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="truncate text-[12.5px] font-semibold text-white">
+                      {displayName}
                     </span>
-                    <span className="text-xs text-sidebar-foreground/60 truncate">
-                      {user?.email || ''}
+                    <span className="truncate text-[11px] text-sidebar-foreground/45">
+                      {roleLabel}
                     </span>
                   </div>
-                </div>
+                  <Settings className="size-4 shrink-0 text-sidebar-foreground/35" />
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="end" className="w-56 mb-2">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuContent side="right" align="end" className="mb-1 w-60">
+                <DropdownMenuLabel className="flex flex-col gap-0.5">
+                  <span className="text-[13px] font-semibold">{displayName}</span>
+                  <span className="text-[11px] font-normal text-muted-foreground">
+                    {user?.email || 'sem e-mail'}
+                  </span>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/perfil')} className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => navigate('/perfil')}
+                  className="cursor-pointer gap-2.5"
+                >
+                  <User className="h-4 w-4 text-muted-foreground" />
                   <span>Meu Perfil</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  className="cursor-pointer gap-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                   <span>Sair do Sistema</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

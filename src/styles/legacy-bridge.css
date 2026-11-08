@@ -1,0 +1,248 @@
+/*
+  ==================================================================
+  Ponte visual — telas legadas passam a respeitar o design system
+  ==================================================================
+  O sistema foi escrito sobre a paleta escura `slate`. Reescrever dezenas
+  de telas seria risco alto e ganho zero de funcionalidade. Aqui a
+  tradução é só de COR, com escopo restrito à área de conteúdo, diálogos
+  e popovers (sidebar/header têm tokens próprios e ficam de fora).
+
+  `:where(#conteudo)` vale ZERO de especificidade, então cada seletor
+  empata com um utilitário do Tailwind: estados (`hover:`, `focus:`,
+  `data-[state=active]:`) continuam funcionando, e nada estrutural, de
+  dados, permissões ou comportamento é alterado.
+*/
+
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-slate-900, .bg-slate-950) {
+  background-color: hsl(var(--card));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .bg-slate-900\/95,
+    .bg-slate-900\/90,
+    .bg-slate-900\/85,
+    .bg-slate-900\/80,
+    .bg-slate-950\/95,
+    .bg-slate-950\/90
+  ) {
+  background-color: hsl(var(--card) / 0.95);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .bg-slate-900\/70,
+    .bg-slate-900\/60,
+    .bg-slate-900\/50,
+    .bg-slate-950\/80,
+    .bg-slate-950\/70,
+    .bg-slate-950\/60,
+    .bg-slate-950\/50,
+    .bg-slate-900\/40
+  ) {
+  background-color: hsl(var(--muted) / 0.55);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-slate-800, .bg-slate-700) {
+  background-color: hsl(var(--muted));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .bg-slate-800\/80,
+    .bg-slate-800\/70,
+    .bg-slate-800\/60,
+    .bg-slate-800\/50,
+    .bg-slate-800\/40,
+    .bg-slate-700\/70,
+    .bg-slate-700\/60,
+    .bg-slate-700\/50,
+    .bg-slate-600\/50
+  ) {
+  background-color: hsl(var(--muted) / 0.75);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-slate-600, .bg-slate-500) {
+  background-color: hsl(var(--border-strong));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-slate-50, .bg-slate-100) {
+  background-color: hsl(var(--background));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-slate-200, .bg-slate-300) {
+  background-color: hsl(var(--muted));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .bg-slate-200\/80,
+    .bg-slate-200\/70,
+    .bg-slate-100\/80,
+    .bg-slate-100\/70,
+    .bg-slate-50\/80,
+    .bg-slate-50\/60,
+    .bg-slate-50\/50
+  ) {
+  background-color: hsl(var(--muted) / 0.6);
+}
+
+/* hover herdado: continua reagindo, sem escurecer a tela */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .hover\:bg-slate-800:hover,
+    .hover\:bg-slate-700:hover,
+    .hover\:bg-slate-600:hover,
+    .hover\:bg-slate-800\/60:hover,
+    .hover\:bg-slate-800\/50:hover,
+    .hover\:bg-slate-700\/50:hover
+  ) {
+  background-color: hsl(var(--muted));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .hover\:bg-slate-900:hover,
+    .hover\:bg-slate-950:hover,
+    .hover\:bg-slate-900\/80:hover,
+    .hover\:bg-slate-900\/60:hover,
+    .hover\:bg-slate-900\/50:hover
+  ) {
+  background-color: hsl(var(--muted) / 0.7);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.hover\:bg-slate-100:hover, .hover\:bg-slate-200:hover) {
+  background-color: hsl(var(--muted));
+}
+
+/* tinta clara -> tinta do tema */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-slate-50, .text-slate-100, .text-slate-200, .text-white) {
+  color: hsl(var(--foreground));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper]) .text-slate-300 {
+  color: hsl(var(--foreground) / 0.88);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-slate-400, .text-slate-500) {
+  color: hsl(var(--muted-foreground));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .text-slate-700,
+    .text-slate-800,
+    .text-slate-900,
+    .text-slate-950,
+    .text-gray-900,
+    .text-zinc-900,
+    .text-black
+  ) {
+  color: hsl(var(--foreground));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .hover\:text-white:hover,
+    .hover\:text-slate-50:hover,
+    .hover\:text-slate-100:hover,
+    .hover\:text-slate-200:hover
+  ) {
+  color: hsl(var(--foreground));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.hover\:text-slate-300:hover, .hover\:text-slate-400:hover) {
+  color: hsl(var(--foreground) / 0.85);
+}
+
+/* traços */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .border-slate-800,
+    .border-slate-700,
+    .border-slate-600,
+    .border-slate-500,
+    .border-slate-300,
+    .border-slate-200
+  ) {
+  border-color: hsl(var(--border));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .border-slate-800\/80,
+    .border-slate-800\/70,
+    .border-slate-800\/60,
+    .border-slate-800\/50,
+    .border-slate-700\/60,
+    .border-slate-700\/50,
+    .border-slate-200\/60
+  ) {
+  border-color: hsl(var(--border) / 0.75);
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.divide-slate-800, .divide-slate-700, .divide-slate-200)
+  > :not([hidden])
+  ~ :not([hidden]) {
+  border-color: hsl(var(--border));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.ring-slate-700, .ring-slate-800, .ring-slate-200) {
+  --tw-ring-color: hsl(var(--border-strong));
+}
+
+/* status legíveis em papel branco */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-emerald-300, .text-emerald-400, .text-green-400, .text-green-500) {
+  color: hsl(var(--success));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-red-300, .text-red-400, .text-red-500, .text-rose-300, .text-rose-400, .text-rose-500) {
+  color: hsl(var(--destructive));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-yellow-300, .text-yellow-400, .text-yellow-500) {
+  color: hsl(var(--warning));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.text-blue-300, .text-blue-400, .text-blue-500, .text-sky-400, .text-sky-500) {
+  color: hsl(var(--info));
+}
+
+/* cartões escuros viram cartões do tema */
+:where(#conteudo) > div > :is(.bg-slate-900, .bg-slate-950),
+:where(#conteudo) .rounded-xl:is(.bg-slate-900, .bg-slate-950),
+:where(#conteudo) .rounded-lg:is(.bg-slate-900, .bg-slate-950) {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: var(--shadow-card);
+}
+
+/* exceção: tinta branca sobre ouro/fundo colorido continua branca */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .bg-amber-400,
+    .bg-amber-500,
+    .bg-amber-600,
+    .bg-amber-700,
+    .bg-emerald-500,
+    .bg-emerald-600,
+    .bg-red-500,
+    .bg-red-600,
+    .bg-blue-500,
+    .bg-blue-600,
+    .bg-primary,
+    .bg-destructive,
+    .bg-success
+  )
+  :is(.text-white, .text-slate-50, .text-slate-100, .text-slate-900, .text-slate-950) {
+  color: #fff;
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-amber-400, .bg-amber-500, .bg-amber-600, .bg-amber-700):is(
+    .text-white,
+    .text-slate-50,
+    .text-slate-100
+  ) {
+  color: #fff;
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(.bg-amber-400, .bg-amber-500, .bg-amber-600, .bg-amber-700):is(
+    .text-slate-900,
+    .text-slate-950
+  ) {
+  color: hsl(var(--navy-deep));
+}
