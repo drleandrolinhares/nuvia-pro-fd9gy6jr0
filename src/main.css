@@ -59,8 +59,8 @@
 
     /* ---- Traços ----
        Borda é o que desenha o card: 90% de luminosidade sumia no branco. */
-    --border: 216 19% 85%;
-    --border-strong: 216 16% 74%;
+    --border: 216 18% 80%;
+    --border-strong: 216 15% 68%;
     --input: 216 21% 86%;
     --ring: 217 58% 24%;
 
