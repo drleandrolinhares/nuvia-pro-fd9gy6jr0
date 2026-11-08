@@ -16,6 +16,7 @@ import {
 import { TreinamentosQuiz } from './treinamentos/TreinamentosQuiz'
 import { TreinamentosRanking } from './treinamentos/TreinamentosRanking'
 import { TreinamentosAdmin } from './treinamentos/TreinamentosAdmin'
+import { PageHeader } from '@/components/page-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -119,42 +120,36 @@ export default function Treinamentos() {
 
   return (
     <div className="flex flex-col gap-6 p-6 w-full mx-auto animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
-        <div className="flex items-start gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3 uppercase">
-              <GraduationCap className="h-8 w-8 text-amber-500" />
-              Treinamentos
-            </h1>
-            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
-              Acesse os cursos e capacitações disponíveis para o seu setor.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-6 bg-slate-950 p-4 rounded-lg border border-slate-800 shadow-inner">
-          <div className="text-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-              Módulos
+      <PageHeader
+        title="Treinamentos"
+        description="Cursos e capacitações disponíveis para o seu setor."
+        icon={GraduationCap}
+        actions={
+          <div className="flex items-center gap-5 rounded-lg border border-border bg-card px-4 py-2">
+            <div className="text-center">
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                Módulos
+              </div>
+              <div className="tabular text-lg font-bold leading-tight text-foreground">
+                {progresso.filter((p) => p.aprovado).length}
+              </div>
             </div>
-            <div className="text-2xl font-bold text-white">
-              {progresso.filter((p) => p.aprovado).length}
-            </div>
-          </div>
-          <div className="w-px h-10 bg-slate-800"></div>
-          <div className="text-center flex flex-col items-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-              Meus Pontos
-            </div>
-            <div className="text-2xl font-bold text-amber-500 flex items-center gap-1">
-              {totalPontos} <Star className="w-5 h-5 fill-amber-500" />
+            <div className="h-8 w-px bg-border" />
+            <div className="flex flex-col items-center">
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                Meus pontos
+              </div>
+              <div className="tabular flex items-center gap-1 text-lg font-bold leading-tight text-foreground">
+                {totalPontos} <Star className="size-4 fill-secondary text-secondary" />
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <Tabs defaultValue="cursos" className="w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <TabsList className="bg-slate-900 border-slate-800 h-auto p-1 flex-wrap justify-start">
+          <TabsList className="h-auto flex-wrap justify-start p-1">
             <TabsTrigger value="cursos" className="py-2">
               Cursos Disponíveis
             </TabsTrigger>
@@ -198,7 +193,7 @@ export default function Treinamentos() {
               .map((curso) => {
                 const modulosCurso = modulos.filter((m) => m.curso_id === curso.id)
                 return (
-                  <Card key={curso.id} className="bg-slate-900 border-slate-800 shadow-sm">
+                  <Card key={curso.id}>
                     <CardHeader>
                       <CardTitle className="text-xl text-slate-100">{curso.titulo}</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -216,10 +211,10 @@ export default function Treinamentos() {
                         return (
                           <div
                             key={modulo.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
+                            className="flex flex-col justify-between gap-4 rounded-lg border border-border/70 p-4 transition-colors hover:border-border-strong sm:flex-row sm:items-center"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
+                              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
                                 {modulo.arquivo_url ? (
                                   <FileText className="w-5 h-5" />
                                 ) : (
@@ -227,10 +222,10 @@ export default function Treinamentos() {
                                 )}
                               </div>
                               <div>
-                                <h4 className="font-semibold text-slate-200">{modulo.titulo}</h4>
+                                <h4 className="font-semibold text-foreground">{modulo.titulo}</h4>
                                 {p && (
                                   <p
-                                    className={`text-xs mt-1 font-medium ${p.aprovado ? 'text-emerald-500' : 'text-rose-500'}`}
+                                    className={`mt-1 text-xs font-medium ${p.aprovado ? 'text-success' : 'text-destructive'}`}
                                   >
                                     Última nota: {p.nota_quiz}{' '}
                                     {p.aprovado
@@ -242,9 +237,9 @@ export default function Treinamentos() {
                             </div>
                             <div className="flex items-center gap-4">
                               {p?.aprovado ? (
-                                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                                <CheckCircle2 className="size-6 text-success" />
                               ) : p ? (
-                                <XCircle className="w-6 h-6 text-rose-500" />
+                                <XCircle className="size-6 text-destructive" />
                               ) : null}
                               <Button
                                 variant={p?.aprovado ? 'outline' : 'default'}

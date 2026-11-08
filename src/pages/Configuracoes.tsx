@@ -8,6 +8,7 @@ import DescontosPorPrazo from './configuracoes/DescontosPorPrazo'
 import EntradaEFaixas from './configuracoes/EntradaEFaixas'
 import DentistasProTab from './configuracoes/DentistasProTab'
 import { useAuth } from '@/hooks/use-auth'
+import { PageHeader } from '@/components/page-header'
 
 export default function Configuracoes() {
   const { isAdmin, loading, hasPermission, permissionsLoaded } = useAuth()
@@ -54,21 +55,12 @@ export default function Configuracoes() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <Shield className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Configurações do Sistema
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Parâmetros Globais Nuvia Odontologia
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Configurações do sistema"
+        description="Parâmetros globais da Nuvia Odontologia."
+        icon={Shield}
+        className="mb-6"
+      />
 
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="bg-muted/50 p-1 mb-6 flex-wrap h-auto rounded-lg gap-2 border">
