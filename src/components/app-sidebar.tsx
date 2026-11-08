@@ -285,7 +285,7 @@ const OPEN_GROUPS_KEY = 'nuvia_sidebar_open_groups'
 /** Contador discreto — não compete com o rótulo do menu */
 function NavBadge({ value }: { value: number }) {
   return (
-    <span className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+    <span className="ml-auto inline-flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-destructive px-1 text-[9.5px] font-bold leading-none text-destructive-foreground">
       {value > 99 ? '99+' : value}
     </span>
   )
@@ -618,13 +618,13 @@ export function AppSidebar() {
                 <SidebarGroupLabel asChild>
                   <CollapsibleTrigger
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em]',
-                      'text-muted-foreground/85 transition-colors hover:bg-sidebar-accent/70 hover:text-foreground',
+                      'flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-[0.09em]',
+                      'text-muted-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/40',
-                      groupActive && 'text-foreground',
+                      groupActive && 'text-muted-foreground',
                     )}
                   >
-                    {GroupIcon && <GroupIcon className="size-3.5 shrink-0 opacity-60" />}
+                    {GroupIcon && <GroupIcon className="size-3 shrink-0 opacity-45" />}
                     <span className="truncate">{group.title}</span>
                     <span className="ml-auto flex items-center gap-1.5">
                       {groupBadge && <NavBadge value={groupBadge} />}
@@ -640,81 +640,86 @@ export function AppSidebar() {
 
                 <CollapsibleContent>
                   <SidebarGroupContent>
-                    <SidebarMenu>
-                      {filteredItems.map((item: any) => {
-                        const ItemIcon = item.icon
-                        const active =
-                          location.pathname === item.url ||
-                          location.pathname.startsWith(`${item.url}/`)
+                    {/* Trilho vertical: marca onde começa a hierarquia filha.
+                        Sem ele, item-filho e rótulo do grupo parecem irmãos. */}
+                    <div className="relative ml-4 border-l border-sidebar-border/90 py-0.5 pl-2.5">
+                      <SidebarMenu className="gap-0.5">
+                        {filteredItems.map((item: any) => {
+                          const ItemIcon = item.icon
+                          const active =
+                            location.pathname === item.url ||
+                            location.pathname.startsWith(`${item.url}/`)
 
-                        if (item.subItems) {
+                          if (item.subItems) {
+                            return (
+                              <Collapsible key={item.title} className="group/sub">
+                                <SidebarMenuItem>
+                                  <CollapsibleTrigger asChild>
+                                    <SidebarMenuButton className="h-8 rounded-md px-2 text-[12.5px] font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground">
+                                      {ItemIcon && (
+                                        <ItemIcon className="size-[15px] shrink-0 text-muted-foreground/80" />
+                                      )}
+                                      <span className="truncate">{item.title}</span>
+                                      <ChevronRight className="ml-auto size-3 opacity-40 transition-transform group-data-[state=open]/sub:rotate-90" />
+                                    </SidebarMenuButton>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent>
+                                    <SidebarMenuSub className="ml-1.5 border-l border-sidebar-border/70 py-0.5 pl-2">
+                                      {item.subItems.map((sub: any) => (
+                                        <SidebarMenuSubItem key={sub.title}>
+                                          <SidebarMenuSubButton
+                                            asChild
+                                            isActive={location.pathname === sub.url}
+                                            className="h-7 rounded-md text-[12px] text-muted-foreground hover:bg-sidebar-accent hover:text-foreground data-[active=true]:bg-secondary/15 data-[active=true]:font-semibold data-[active=true]:text-foreground"
+                                          >
+                                            <Link to={sub.url} onClick={closeMobile}>
+                                              <span className="truncate">{sub.title}</span>
+                                            </Link>
+                                          </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                      ))}
+                                    </SidebarMenuSub>
+                                  </CollapsibleContent>
+                                </SidebarMenuItem>
+                              </Collapsible>
+                            )
+                          }
+
                           return (
-                            <Collapsible key={item.title} className="group/sub">
-                              <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton className="h-9 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground">
-                                    {ItemIcon && (
-                                      <ItemIcon className="size-[17px] text-muted-foreground" />
-                                    )}
-                                    <span className="truncate">{item.title}</span>
-                                    <ChevronRight className="ml-auto size-3.5 opacity-40 transition-transform group-data-[state=open]/sub:rotate-90" />
-                                  </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                  <SidebarMenuSub className="ml-4 border-l border-sidebar-border py-1 pl-2">
-                                    {item.subItems.map((sub: any) => (
-                                      <SidebarMenuSubItem key={sub.title}>
-                                        <SidebarMenuSubButton
-                                          asChild
-                                          isActive={location.pathname === sub.url}
-                                          className="h-8 rounded-md text-[12.5px] text-sidebar-foreground hover:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-foreground"
-                                        >
-                                          <Link to={sub.url} onClick={closeMobile}>
-                                            <span className="truncate">{sub.title}</span>
-                                          </Link>
-                                        </SidebarMenuSubButton>
-                                      </SidebarMenuSubItem>
-                                    ))}
-                                  </SidebarMenuSub>
-                                </CollapsibleContent>
-                              </SidebarMenuItem>
-                            </Collapsible>
+                            <SidebarMenuItem key={item.title}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={active}
+                                tooltip={item.title}
+                                className={cn(
+                                  'h-8 rounded-md px-2 text-[12.5px] font-medium',
+                                  'text-sidebar-foreground transition-colors',
+                                  'hover:bg-sidebar-accent hover:text-foreground',
+                                  'data-[active=true]:bg-secondary/15 data-[active=true]:font-semibold data-[active=true]:text-foreground',
+                                )}
+                              >
+                                <Link to={item.url} onClick={closeMobile}>
+                                  {ItemIcon && (
+                                    <ItemIcon
+                                      className={cn(
+                                        'size-[15px] shrink-0',
+                                        active
+                                          ? 'text-secondary-foreground dark:text-secondary'
+                                          : 'text-muted-foreground/80',
+                                      )}
+                                    />
+                                  )}
+                                  <span className="truncate">{item.title}</span>
+                                  {getBadge(item.title) && (
+                                    <NavBadge value={getBadge(item.title) as number} />
+                                  )}
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
                           )
-                        }
-
-                        return (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={active}
-                              tooltip={item.title}
-                              className={cn(
-                                'h-9 rounded-lg px-2.5 text-[13px] font-medium',
-                                'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
-                                'data-[active=true]:bg-secondary/15 data-[active=true]:font-semibold data-[active=true]:text-foreground',
-                              )}
-                            >
-                              <Link to={item.url} onClick={closeMobile}>
-                                {ItemIcon && (
-                                  <ItemIcon
-                                    className={cn(
-                                      'size-[17px] shrink-0',
-                                      active
-                                        ? 'text-secondary-foreground dark:text-secondary'
-                                        : 'text-muted-foreground',
-                                    )}
-                                  />
-                                )}
-                                <span className="truncate">{item.title}</span>
-                                {getBadge(item.title) && (
-                                  <NavBadge value={getBadge(item.title) as number} />
-                                )}
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        )
-                      })}
-                    </SidebarMenu>
+                        })}
+                      </SidebarMenu>
+                    </div>
                   </SidebarGroupContent>
                 </CollapsibleContent>
               </SidebarGroup>

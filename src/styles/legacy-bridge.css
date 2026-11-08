@@ -13,8 +13,22 @@
   dados, permissões ou comportamento é alterado.
 */
 
-:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
-  :is(.bg-slate-900, .bg-slate-950) {
+/* ---------------------------------------------------------------
+   Papel de cada tom. Isto é o que dá relevo à tela:
+   slate-950 é o FUNDO da página (canvas recuado) e slate-900 é a
+   SUPERFÍCIE do card (branca, elevada). Mapear os dois para branco
+   apagava a separação card/página — o cartão sumia no fundo.
+   `:where()` mantém especificidade zero, então a borda/realce que a
+   própria tela aplica continua vencendo onde existir.
+----------------------------------------------------------------- */
+:where(#conteudo) :is(.bg-slate-950) {
+  background-color: hsl(var(--background));
+}
+:where(#conteudo) :is(.bg-slate-900) {
+  background-color: hsl(var(--card));
+}
+/* Diálogos flutuam sobre o conteúdo: sempre brancos. */
+:where([role='dialog'], [data-radix-popper-content-wrapper]) :is(.bg-slate-900, .bg-slate-950) {
   background-color: hsl(var(--card));
 }
 :where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
@@ -202,12 +216,16 @@
   color: hsl(var(--info));
 }
 
-/* cartões escuros viram cartões do tema */
-:where(#conteudo) > div > :is(.bg-slate-900, .bg-slate-950),
-:where(#conteudo) .rounded-xl:is(.bg-slate-900, .bg-slate-950),
-:where(#conteudo) .rounded-lg:is(.bg-slate-900, .bg-slate-950) {
+/* Cartões escuros viram cartões do tema, com contorno de verdade.
+   O box-shadow vem PRIMEIRO para que uma borda declarada pela própria
+   tela (ex.: border-l-4 de destaque) continue valendo. */
+:where(#conteudo)
+  :is(.rounded-xl, .rounded-lg, .rounded-md, .rounded-2xl):is(.bg-slate-900, .bg-slate-950) {
   background-color: hsl(var(--card));
-  border-color: hsl(var(--border));
+  box-shadow: var(--shadow-card);
+}
+:where(#conteudo) > div > :is(.bg-slate-900, .bg-slate-950) {
+  background-color: hsl(var(--card));
   box-shadow: var(--shadow-card);
 }
 
