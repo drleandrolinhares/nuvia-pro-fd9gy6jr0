@@ -22,6 +22,7 @@ import {
   registrarLaboratorioLog,
 } from '@/services/laboratorios'
 import { LaboratoriosLogsModal } from '@/components/operacional/LaboratoriosLogsModal'
+import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -735,81 +736,65 @@ export default function Laboratorios() {
   }
 
   return (
-    <div className="p-2 sm:p-3 lg:p-4 space-y-4 w-full bg-slate-950 text-slate-100 min-h-[calc(100vh-4rem)]">
-      {/* Header com identidade Nuvia */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-5 sm:p-6 rounded-xl shadow-lg border-l-4 border-l-amber-500">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-500 shadow-inner">
-            <FlaskConical className="w-7 h-7" />
+    <div className="space-y-4 w-full min-h-[calc(100vh-4rem)]">
+      <PageHeader
+        title="Laboratórios"
+        description="Controle de próteses, coroas, barras e prazos, com cálculo de dias úteis e alertas."
+        icon={FlaskConical}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLogTrabalhoFiltro(null)
+                setLogPacienteFiltro(null)
+                setLogsModalOpen(true)
+              }}
+              title="Visualizar histórico completo de auditoria e ações realizadas neste setor"
+              className="border-slate-700 bg-slate-800/90 text-amber-400 hover:bg-slate-700 hover:text-amber-300 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
+            >
+              <History className="w-4 h-4 mr-1.5 text-amber-400" />
+              Histórico / Logs
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportarPdf}
+              disabled={carregando || trabalhosFiltrados.length === 0}
+              title={
+                trabalhosFiltrados.length === 0
+                  ? 'Nenhum trabalho na visualização atual para exportar'
+                  : 'Exportar lista atual para PDF de acordo com o laboratório e ordenação selecionados'
+              }
+              className="border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
+            >
+              <FileDown className="w-4 h-4 mr-1.5" />
+              Exportar PDF
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={carregarDados}
+              disabled={carregando}
+              className="border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white"
+            >
+              <RefreshCw className={cn('w-4 h-4 mr-2', carregando && 'animate-spin')} />
+              Atualizar
+            </Button>
+
+            <Button
+              onClick={() => abrirCriacao()}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-wider text-xs shadow-md transition-all"
+            >
+              <Plus className="size-4" />
+              Adicionar trabalho
+            </Button>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white uppercase">
-                LABORATÓRIOS
-              </h1>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-400 uppercase tracking-wider">
-                Operacional
-              </span>
-            </div>
-            <p className="text-slate-400 text-xs sm:text-sm mt-1">
-              Grade estilo planilha para controle de próteses, coroas, barras e prazos com cálculo
-              automático de dias úteis e alertas.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setLogTrabalhoFiltro(null)
-              setLogPacienteFiltro(null)
-              setLogsModalOpen(true)
-            }}
-            title="Visualizar histórico completo de auditoria e ações realizadas neste setor"
-            className="border-slate-700 bg-slate-800/90 text-amber-400 hover:bg-slate-700 hover:text-amber-300 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
-          >
-            <History className="w-4 h-4 mr-1.5 text-amber-400" />
-            Histórico / Logs
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportarPdf}
-            disabled={carregando || trabalhosFiltrados.length === 0}
-            title={
-              trabalhosFiltrados.length === 0
-                ? 'Nenhum trabalho na visualização atual para exportar'
-                : 'Exportar lista atual para PDF de acordo com o laboratório e ordenação selecionados'
-            }
-            className="border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 font-bold uppercase tracking-wider text-xs shadow-sm transition-all"
-          >
-            <FileDown className="w-4 h-4 mr-1.5" />
-            Exportar PDF
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={carregarDados}
-            disabled={carregando}
-            className="border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white"
-          >
-            <RefreshCw className={cn('w-4 h-4 mr-2', carregando && 'animate-spin')} />
-            Atualizar
-          </Button>
-
-          <Button
-            onClick={() => abrirCriacao()}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold uppercase tracking-wider text-xs shadow-md transition-all"
-          >
-            <Plus className="w-4 h-4 mr-1.5" />
-            Adicionar Trabalho
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Cards de Métricas Rápidas */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
