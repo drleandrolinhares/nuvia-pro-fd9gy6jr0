@@ -49,6 +49,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useToast } from '@/hooks/use-toast'
+import { PageHeader } from '@/components/page-header'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
@@ -528,18 +529,11 @@ export default function SACPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 p-6 rounded-lg shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-500/10 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-amber-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-100">SAC</h1>
-              <p className="text-slate-400 mt-1">Gestão de Sugestões e Reclamações</p>
-            </div>
-          </div>
-
+      <PageHeader
+        title="SAC"
+        description="Gestão de sugestões e reclamações."
+        icon={MessageSquare}
+        actions={
           <div className="flex flex-wrap gap-2">
             <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
               <DialogTrigger asChild>
@@ -1265,8 +1259,8 @@ export default function SACPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
