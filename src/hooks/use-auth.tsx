@@ -347,6 +347,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (isAdmin || isGerenteAdministrativo) return true
     if (profile?.status?.toLowerCase() === 'inativo') return false
     const permArray = Array.isArray(perms) ? perms : [perms]
+    // Uma negação explícita vence o cargo: se qualquer uma das permissões
+    // pedidas estiver negada para esta pessoa, o acesso não é liberado.
+    if (permArray.some((p) => deniedPermissions.includes(p))) return false
     return permArray.some((p) => permissions.includes(p))
   }
 

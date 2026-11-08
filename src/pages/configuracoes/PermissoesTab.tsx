@@ -45,6 +45,7 @@ export function PermissoesTab() {
 
   const [userDialogOpen, setUserDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UsuarioComPermissoes | null>(null)
+  const [somenteExcecoes, setSomenteExcecoes] = useState(false)
 
   const loadData = async () => {
     setLoading(true)
@@ -56,6 +57,7 @@ export function PermissoesTab() {
         getUsuariosComPermissoes(),
         getUsuarios(),
         supabase.from('usuario_permissoes_negadas').select('usuario_id'),
+        supabase.from('usuario_permissoes').select('usuario_id'),
       ])
 
       const c = results[0].status === 'fulfilled' ? results[0].value : []
@@ -63,6 +65,7 @@ export function PermissoesTab() {
       const u = results[2].status === 'fulfilled' ? results[2].value : []
       const allUsers = results[3].status === 'fulfilled' ? results[3].value : []
       const negadasRes = results[4].status === 'fulfilled' ? (results[4].value as any) : null
+      const concedidasRes = results[5].status === 'fulfilled' ? (results[5].value as any) : null
 
       setCargos(c)
       setPermissoes(p)
@@ -72,11 +75,28 @@ export function PermissoesTab() {
       )
       setUsuarios(u.filter((user) => activeUserIds.has(user.id)))
 
-      // Conta exceções: concessões individuais + negações
+      // Conta exceções REAIS: o que a pessoa tem fora do cargo (concedidas)
+      // + o que ela tem bloqueado (negadas). O que é igual ao cargo não é
+      // exceção e por isso não aparece no badge.
+      const cargoPorUsuario = new Map<string, Set<string>>()
+      c.forEach((cargo) => {
+        cargoPorUsuario.set(
+          cargo.id,
+          new Set((cargo.cargo_permissoes || []).map((cp) => cp.permissao_id)),
+        )
+      })
+
       const contagem: Record<string, number> = {}
+      const concedidasPorUsuario = new Map<string, string[]>()
+      ;(concedidasRes?.data || []).forEach((r: any) => {
+        if (!concedidasPorUsuario.has(r.usuario_id)) concedidasPorUsuario.set(r.usuario_id, [])
+        concedidasPorUsuario.get(r.usuario_id)!.push(r.permissao_id)
+      })
+
       u.forEach((user) => {
-        const qtd = (user.usuario_permissoes?.length || 0) > 0 ? 1 : 0
-        if (qtd) contagem[user.id] = user.usuario_permissoes.length
+        const doCargo = cargoPorUsuario.get((user as any).cargo_id || '') || new Set<string>()
+        const extras = (concedidasPorUsuario.get(user.id) || []).filter((pid) => !doCargo.has(pid))
+        if (extras.length) contagem[user.id] = extras.length
       })
       ;(negadasRes?.data || []).forEach((r: any) => {
         contagem[r.usuario_id] = (contagem[r.usuario_id] || 0) + 1
@@ -140,6 +160,9 @@ export function PermissoesTab() {
   }
 
   const comExcecao = usuarios.filter((u) => (excecoesPorUsuario[u.id] || 0) > 0).length
+  const usuariosListados = somenteExcecoes
+    ? usuariosFiltrados.filter((u) => (excecoesPorUsuario[u.id] || 0) > 0)
+    : usuariosFiltrados
 
   return (
     <Card className="border-border/50 shadow-sm">
@@ -281,28 +304,40 @@ export function PermissoesTab() {
 
           {/* ---------- EXCEÇÕES POR PESSOA ---------- */}
           <TabsContent value="usuarios" className="space-y-3">
-            <p className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-[11.5px] leading-relaxed text-muted-foreground">
-              Quem não aparece aqui com exceções{' '}
-              <strong className="font-semibold text-foreground">
-                acessa exatamente o que o cargo permite
-              </strong>
-              . Abra uma pessoa para liberar ou bloquear itens específicos.
-            </p>
+            <div className="flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+                Quem está com{' '}
+                <strong className="font-semibold text-foreground">segue o cargo</strong> acessa
+                exatamente o que o cargo permite. Abra uma pessoa para liberar ou bloquear itens
+                específicos.
+              </p>
+              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-[11.5px] font-medium text-foreground">
+                <input
+                  type="checkbox"
+                  checked={somenteExcecoes}
+                  onChange={(e) => setSomenteExcecoes(e.target.checked)}
+                  className="size-3.5 accent-primary"
+                />
+                Só com exceções
+              </label>
+            </div>
 
             {loading ? (
               <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
                 <Loader2 className="size-5 animate-spin" />
                 <span className="text-sm">Carregando colaboradores...</span>
               </div>
-            ) : usuariosFiltrados.length === 0 ? (
+            ) : usuariosListados.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
                 {partialError
                   ? 'Erro ao carregar colaboradores.'
-                  : 'Nenhum colaborador encontrado.'}
+                  : somenteExcecoes
+                    ? 'Ninguém tem exceção — todo mundo segue o cargo.'
+                    : 'Nenhum colaborador encontrado.'}
               </div>
             ) : (
               <div className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
-                {usuariosFiltrados.map((user) => {
+                {usuariosListados.map((user) => {
                   const excecoes = excecoesPorUsuario[user.id] || 0
                   return (
                     <div
