@@ -4,8 +4,6 @@ import { useLocation } from 'react-router-dom'
 
 export default function Placeholder() {
   const location = useLocation()
-  // TESTE TEMPORARIO DE GUARDA — sera removido
-  const _probe = <ComponenteInexistenteParaTeste />
   const pathName = location.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Módulo'
 
   return (
