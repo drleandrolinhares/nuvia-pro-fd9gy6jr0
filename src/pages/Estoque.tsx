@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { PageHeader } from '@/components/page-header'
 import {
   Search,
   ScanLine,
@@ -347,53 +348,33 @@ export default function Estoque() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
-        <div className="absolute top-4 right-4 z-10 md:static md:top-auto md:right-auto md:hidden">
-          <SyncIndicator isSyncing={loading} className="bg-slate-800 border-slate-700" />
-        </div>
-        <div className="flex items-start gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white pr-24 sm:pr-0">
-              Gestão de Estoque
-            </h1>
-            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
-              Controle de Materiais e Insumos Financeiros
-            </p>
-          </div>
-          <div className="hidden md:block">
-            <SyncIndicator isSyncing={loading} className="bg-slate-800 border-slate-700" />
-          </div>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          {canLaunch && activeTab === 'produtos' && (
-            <div className="flex gap-2 w-full md:w-auto animate-in fade-in zoom-in duration-200">
-              <Button
-                onClick={() => setModalEntradaOpen(true)}
-                className="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
-              >
-                <PackagePlus className="w-4 h-4 mr-2" />
-                Entrada
-              </Button>
-              <Button
-                onClick={() => setModalSaidaOpen(true)}
-                variant="outline"
-                className="flex-1 md:flex-none border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-950 font-bold bg-slate-900/50"
-              >
-                <PackageMinus className="w-4 h-4 mr-2" />
-                Saída
-              </Button>
+      <PageHeader
+        title="Gestão de estoque"
+        description="Materiais, insumos e movimentações da clínica."
+        icon={Package}
+        actions={
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-muted-foreground lg:flex">
+              <span className="tabular text-[11.5px] font-semibold">
+                {format(currentTime, 'HH:mm:ss')}
+              </span>
             </div>
-          )}
-          <div className="flex flex-col items-end text-amber-500 bg-slate-950/50 px-4 py-2 rounded-lg border border-slate-800 w-full md:w-auto hidden lg:flex">
-            <span className="text-sm font-medium capitalize">
-              {format(currentTime, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <span className="text-2xl font-bold font-mono tracking-wider">
-              {format(currentTime, 'HH:mm:ss')}
-            </span>
+            <SyncIndicator isSyncing={loading} />
+            {canLaunch && activeTab === 'produtos' && (
+              <>
+                <Button onClick={() => setModalEntradaOpen(true)}>
+                  <PackagePlus className="size-4" />
+                  Entrada
+                </Button>
+                <Button variant="outline" onClick={() => setModalSaidaOpen(true)}>
+                  <PackageMinus className="size-4" />
+                  Saída
+                </Button>
+              </>
+            )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="flex flex-wrap max-w-fit justify-start">
