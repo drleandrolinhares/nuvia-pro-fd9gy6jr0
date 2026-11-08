@@ -13,6 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { PageHeader } from '@/components/page-header'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
@@ -181,25 +182,17 @@ export default function SmartLock() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <Lock className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white uppercase">SMART LOCK</h1>
-            <p className="text-slate-300 mt-1 text-sm uppercase tracking-wider font-medium">
-              Painel de Monitoramento de Acessos
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => setIsAddOpen(true)}
-          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold whitespace-nowrap w-full md:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Nova Ausência / Exceção
-        </Button>
-      </div>
+      <PageHeader
+        title="Smart Lock"
+        description="Painel de monitoramento de acessos."
+        icon={Lock}
+        className="mb-6"
+        actions={
+          <Button onClick={() => setIsAddOpen(true)}>
+            <Plus className="size-4" /> Nova ausência / exceção
+          </Button>
+        }
+      />
 
       <AusenciaTemporariaDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
       <EditarAusenciaDialog

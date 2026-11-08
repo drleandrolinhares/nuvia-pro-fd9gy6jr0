@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { PageHeader } from '@/components/page-header'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -509,41 +510,33 @@ export default function Onboarding() {
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 md:p-8 rounded-xl shadow-lg border-l-4 border-amber-500">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 uppercase">
-            <CheckSquare className="text-amber-500" /> Onboarding
-          </h1>
-          <p className="text-slate-300 mt-1">
-            Acompanhe as fases de integração de acordo com a sua função.
-          </p>
-        </div>
-        {isAdmin && (
-          <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => setCargosModal(true)}
-              className="border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
-            >
-              <Users className="w-4 h-4 mr-2" /> Gerenciar Funções
-            </Button>
-            <Button
-              onClick={() => {
-                setFaseForm({
-                  ordem: fases.length > 0 ? Math.max(...fases.map((f) => f.ordem)) + 1 : 0,
-                  direcionamento: 'todos',
-                  cargos_alvo: [],
-                  usuarios_alvo: [],
-                })
-                setFaseModal(true)
-              }}
-              className="bg-amber-500 text-slate-900 hover:bg-amber-600 font-bold"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Nova Fase
-            </Button>
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="Onboarding"
+        description="Acompanhe as fases de integração de acordo com a sua função."
+        icon={CheckSquare}
+        actions={
+          isAdmin ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => setCargosModal(true)}>
+                <Users className="size-4" /> Gerenciar funções
+              </Button>
+              <Button
+                onClick={() => {
+                  setFaseForm({
+                    ordem: fases.length > 0 ? Math.max(...fases.map((f) => f.ordem)) + 1 : 0,
+                    direcionamento: 'todos',
+                    cargos_alvo: [],
+                    usuarios_alvo: [],
+                  })
+                  setFaseModal(true)
+                }}
+              >
+                <Plus className="size-4" /> Nova fase
+              </Button>
+            </div>
+          ) : undefined
+        }
+      />
 
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-none">
         <div className="flex items-center gap-3 w-full md:w-auto">
