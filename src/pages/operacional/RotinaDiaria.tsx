@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 import {
+  ListChecks,
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -328,21 +330,19 @@ function ResumoFechamento({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-      <div className="bg-slate-900 border-l-4 border-amber-500 p-4 sm:p-6 rounded-lg shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
           onClick={onCancel}
           disabled={isSaving}
-          className="shrink-0 text-slate-400 hover:text-white hover:bg-slate-800"
+          className="shrink-0"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-            Fechamento de Rotina
-          </h1>
-          <p className="text-slate-400 mt-1 text-sm sm:text-base font-medium tracking-wider uppercase">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Fechamento de rotina</h1>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             Resumo consolidado das atividades do dia.
           </p>
         </div>
@@ -1294,24 +1294,22 @@ export default function RotinaDiaria() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-6xl space-y-6 animate-fade-in-up">
-      <div className="bg-slate-900 border-l-4 border-amber-500 p-4 sm:p-6 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-            Rotina Diária
-          </h1>
-          <p className="text-slate-400 mt-1 text-sm sm:text-base font-medium tracking-wider uppercase">
-            Gerencie e acompanhe as tarefas operacionais do dia.
-          </p>
-        </div>
-        <div className="text-left sm:text-right bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-          <div className="text-2xl font-bold text-amber-500 tracking-wider">
-            {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
+      <PageHeader
+        title="Rotina diária"
+        description="Tarefas operacionais do dia."
+        icon={ListChecks}
+        className="mb-6"
+        actions={
+          <div className="rounded-lg border border-border bg-card px-3 py-1.5 text-right">
+            <div className="tabular text-lg font-bold leading-none tracking-tight text-foreground">
+              {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
+            </div>
+            <div className="mt-0.5 text-[11px] capitalize text-muted-foreground">
+              {now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </div>
           </div>
-          <div className="text-sm text-slate-400 capitalize">
-            {now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {isTimeLocked && (
         <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-900/50 dark:text-amber-300 flex items-start gap-3 shadow-sm mb-4">

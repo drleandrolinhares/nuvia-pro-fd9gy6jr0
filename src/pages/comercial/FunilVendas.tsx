@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { FunilDashboard } from '@/components/comercial/funil/funil-dashboard'
 import { FunilConfiguracoes } from '@/components/comercial/funil/funil-configuracoes'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 import {
   Select,
   SelectContent,
@@ -287,37 +288,27 @@ export default function FunilVendas() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
-            <BarChart3 className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Funil de Vendas</h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Análise e controle de captação de leads e conversão
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 flex-1 sm:flex-none">
-            <Filter className="w-4 h-4 text-slate-400 hidden lg:block" />
+      <PageHeader
+        title="Funil de vendas"
+        description="Captação de leads e conversão por período."
+        icon={BarChart3}
+        actions={
+          <div className="w-full sm:w-[200px]">
             <Select value={mesReferencia} onValueChange={setMesReferencia}>
-              <SelectTrigger className="w-full sm:w-[200px] bg-slate-950 border-slate-800 text-white font-medium focus:ring-amber-500">
+              <SelectTrigger>
                 <SelectValue placeholder="Selecione o mês" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-white">
+              <SelectContent>
                 {mesesOptions.map((m) => (
-                  <SelectItem key={m.value} value={m.value} className="focus:bg-slate-800">
+                  <SelectItem key={m.value} value={m.value}>
                     {m.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="inline-flex flex-wrap items-center gap-2 bg-slate-900/80 p-2 rounded-xl shadow-sm border border-slate-800">
         <button
