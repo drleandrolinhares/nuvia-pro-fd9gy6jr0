@@ -26,7 +26,9 @@ import {
   TerceiroEtiquetaGlobal,
 } from '@/services/terceiros'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 import {
+  Users,
   Plus,
   GripVertical,
   Calendar,
@@ -433,36 +435,28 @@ export default function Parceiros() {
 
   return (
     <div className="p-6 h-[calc(100vh-4rem)] flex flex-col space-y-6 bg-slate-50/50">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm mb-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <User className="w-6 h-6 text-amber-500" />
+      <PageHeader
+        title="Parceiros"
+        description="Trabalhos e serviços externos (laboratórios, clínicas)."
+        icon={Users}
+        className="mb-6 shrink-0"
+        actions={
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Pesquisar paciente ou serviço..."
+                className="h-9 pl-9 text-sm sm:min-w-[250px]"
+              />
+            </div>
+            <Button onClick={() => openModal()}>
+              <Plus className="size-4" /> Novo registro
+            </Button>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">PARCEIROS</h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Gerencie trabalhos e serviços externos (laboratórios, clínicas).
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar paciente ou serviço..."
-              className="pl-9 bg-slate-800 border-slate-700 text-slate-200 h-10 text-sm min-w-[250px]"
-            />
-          </div>
-          <Button
-            onClick={() => openModal()}
-            className="bg-slate-200 w-full sm:w-auto text-slate-700 hover:bg-amber-500 hover:text-white font-bold uppercase tracking-wider text-xs transition-all shadow-sm h-10"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Registro
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <Tabs
         value={categoriaSlug}
