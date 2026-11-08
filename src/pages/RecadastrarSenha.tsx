@@ -3,18 +3,11 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Lock, Loader2, Eye, EyeOff } from 'lucide-react'
+import { AuthShell } from '@/components/auth/auth-shell'
+import { Lock, Loader2, Eye, EyeOff, ShieldAlert } from 'lucide-react'
 
 export default function RecadastrarSenha() {
   const [newPassword, setNewPassword] = useState('')
@@ -65,74 +58,68 @@ export default function RecadastrarSenha() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-      <Card className="w-full max-w-md relative z-10 border-amber-500/50 bg-slate-900 shadow-2xl shadow-amber-900/20">
-        <CardHeader className="space-y-3 pb-6 text-center">
-          <div className="mx-auto bg-amber-500/10 w-16 h-16 rounded-full flex items-center justify-center border border-amber-500/30 mb-2">
-            <Lock className="w-8 h-8 text-amber-500" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-white">
-            Recadastrar Senha
-          </CardTitle>
-          <CardDescription className="text-slate-400">
-            Por segurança, você deve definir uma nova senha antes de continuar.
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-password" className="text-slate-300">
-                Nova Senha
-              </Label>
-              <div className="relative">
-                <Input
-                  id="new-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-slate-100 focus-visible:ring-amber-500 pr-10"
-                  required
-                  minLength={6}
-                  placeholder="Mínimo 6 caracteres"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password" className="text-slate-300">
-                Confirmar Senha
-              </Label>
-              <Input
-                id="confirm-password"
-                type={showPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="bg-slate-950 border-slate-800 text-slate-100 focus-visible:ring-amber-500"
-                required
-                minLength={6}
-                placeholder="Repita a nova senha"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="pt-2">
-            <Button
-              type="submit"
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold tracking-wide transition-all"
-              disabled={loading}
+    <AuthShell
+      icon={Lock}
+      title="Defina uma nova senha"
+      subtitle="Por segurança, você precisa substituir a senha temporária antes de continuar."
+    >
+      <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/25 bg-warning/[0.07] p-2.5 text-[11.5px] leading-relaxed text-warning">
+        <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
+        <span>Use no mínimo 6 caracteres e não reutilize a senha temporária.</span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="new-password">Nova senha</Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="h-11 pr-11"
+              required
+              minLength={6}
+              placeholder="Mínimo 6 caracteres"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              tabIndex={-1}
             >
-              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              {loading ? 'Atualizando...' : 'Atualizar Senha'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="confirm-password">Confirmar senha</Label>
+          <Input
+            id="confirm-password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="h-11"
+            required
+            minLength={6}
+            placeholder="Repita a nova senha"
+          />
+        </div>
+
+        <Button type="submit" size="lg" className="mt-1 w-full" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" /> Atualizando…
+            </>
+          ) : (
+            'Atualizar senha'
+          )}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

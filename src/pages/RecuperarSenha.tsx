@@ -3,16 +3,9 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { AuthShell } from '@/components/auth/auth-shell'
 import { KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function RecuperarSenha() {
@@ -55,63 +48,46 @@ export default function RecuperarSenha() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-      <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/1080?q=dentist%20clinic&color=blue&dpr=1')] opacity-10 bg-cover bg-center" />
+    <AuthShell
+      icon={KeyRound}
+      title="Recuperar senha"
+      subtitle="Informe seu e-mail cadastrado para receber o link de redefinição."
+      footer={
+        <Link
+          to="/"
+          className="mt-4 inline-flex w-full items-center justify-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Voltar para o login
+        </Link>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="email">E-mail corporativo</Label>
+          <Input
+            id="email"
+            type="email"
+            inputMode="email"
+            autoComplete="username"
+            placeholder="nome@nuvia.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-11"
+            required
+          />
+        </div>
 
-      <Card className="w-full max-w-md relative z-10 border-amber-500/50 bg-slate-900 shadow-2xl shadow-amber-900/20">
-        <CardHeader className="space-y-3 pb-6 text-center">
-          <div className="mx-auto bg-amber-500/10 w-16 h-16 rounded-full flex items-center justify-center border border-amber-500/30 mb-2">
-            <KeyRound className="w-8 h-8 text-amber-500" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-white">
-            Recuperar Senha
-          </CardTitle>
-          <CardDescription className="text-slate-400 font-medium tracking-wide">
-            Informe seu e-mail cadastrado para receber as instruções de recuperação.
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-950 border-slate-800 text-slate-100 focus-visible:ring-amber-500 placeholder:text-slate-700"
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="pt-2 flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold tracking-wide transition-all"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando link...
-                </>
-              ) : (
-                'Enviar link de recuperação'
-              )}
-            </Button>
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center text-sm text-slate-400 hover:text-amber-500 transition-colors font-medium"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1.5" />
-              Voltar para o login
-            </Link>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
+        <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" /> Enviando…
+            </>
+          ) : (
+            'Enviar link de recuperação'
+          )}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

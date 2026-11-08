@@ -74,21 +74,21 @@ const getFirstAvailableRoute = (hasPermission: (p: string | string[]) => boolean
 const AccessDeniedMessage = ({ message }: { message: string }) => {
   const { signOut } = useAuth()
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 max-w-md w-full text-center space-y-4 shadow-xl">
-        <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-6 h-6" />
+    <div className="app-canvas flex min-h-dvh flex-col items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-6 text-center shadow-card">
+        <div className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-destructive/10 text-destructive">
+          <Lock className="size-6" />
         </div>
-        <h2 className="text-xl font-semibold text-white">Acesso Bloqueado</h2>
-        <p className="text-slate-400">{message}</p>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-xl font-bold tracking-tight text-foreground">Acesso bloqueado</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{message}</p>
+        <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground/80">
           Caso precise acessar o sistema fora do seu horário, entre em contato com um administrador.
         </p>
         <button
           onClick={() => signOut()}
-          className="mt-4 px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors"
+          className="mt-5 h-10 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2"
         >
-          Sair do Sistema
+          Sair do sistema
         </button>
       </div>
     </div>
@@ -182,8 +182,8 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
 
   if (loading || checking) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary/70" />
       </div>
     )
   }
@@ -256,14 +256,16 @@ const AccessGuard = ({ children }: { children: React.ReactNode }) => {
 
 const PermissionDeniedMessage = () => {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4 h-full min-h-[70vh]">
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-8 max-w-md w-full text-center space-y-4 shadow-xl">
-        <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-8 h-8" />
+    <div className="flex h-full min-h-[70vh] flex-1 flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-card">
+        <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-destructive/10 text-destructive">
+          <Shield className="size-7" />
         </div>
-        <h2 className="text-xl font-semibold text-white">Acesso Restrito</h2>
-        <p className="text-slate-400">Você não tem permissão para acessar este módulo.</p>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-xl font-bold tracking-tight text-foreground">Acesso restrito</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Sua conta não possui permissão para acessar este módulo.
+        </p>
+        <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground/80">
           Esta é uma área protegida. Solicite acesso a um administrador caso precise utilizar esta
           funcionalidade.
         </p>
@@ -299,8 +301,8 @@ const ProtectedRoute = ({
 
   if ((loading || (!permissionsLoaded && !isAdmin)) && !loadingTimeout) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary/70" />
       </div>
     )
   }
@@ -338,9 +340,9 @@ const AppRoutes = () => {
 
   if (loading && !loadingTimeout) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center flex-col gap-4">
-        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-        <p className="text-slate-400 font-medium">Carregando sistema...</p>
+      <div className="app-canvas flex min-h-dvh flex-col items-center justify-center gap-4 bg-background">
+        <Loader2 className="size-9 animate-spin text-primary" />
+        <p className="text-sm font-medium text-muted-foreground">Carregando sistema…</p>
       </div>
     )
   }

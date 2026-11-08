@@ -3,16 +3,9 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { AuthShell } from '@/components/auth/auth-shell'
 import { Lock, Eye, EyeOff, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react'
 
 export default function RedefinirSenha() {
@@ -97,122 +90,95 @@ export default function RedefinirSenha() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-      <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/1080?q=dentist%20clinic&color=blue&dpr=1')] opacity-10 bg-cover bg-center" />
-
-      <Card className="w-full max-w-md relative z-10 border-amber-500/50 bg-slate-900 shadow-2xl shadow-amber-900/20">
-        <CardHeader className="space-y-3 pb-6 text-center">
-          <div className="mx-auto bg-amber-500/10 w-16 h-16 rounded-full flex items-center justify-center border border-amber-500/30 mb-2">
-            {success ? (
-              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-            ) : (
-              <Lock className="w-8 h-8 text-amber-500" />
-            )}
+    <AuthShell
+      icon={success ? CheckCircle2 : Lock}
+      title={success ? 'Senha atualizada' : 'Definir nova senha'}
+      subtitle={
+        success
+          ? 'Tudo certo. Redirecionando para o sistema…'
+          : 'Escolha uma nova senha de acesso para sua conta.'
+      }
+      footer={
+        !success ? (
+          <Link
+            to="/"
+            className="mt-4 inline-flex w-full items-center justify-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            Voltar para o login
+          </Link>
+        ) : undefined
+      }
+    >
+      {!success ? (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="nova-senha">Nova senha</Label>
+            <div className="relative">
+              <Input
+                id="nova-senha"
+                type={showNovaSenha ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Mínimo de 6 caracteres"
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                className="h-11 pr-11"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNovaSenha(!showNovaSenha)}
+                aria-label={showNovaSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                tabIndex={-1}
+              >
+                {showNovaSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-white">
-            Redefinir Senha
-          </CardTitle>
-          <CardDescription className="text-slate-400 font-medium tracking-wide">
-            {success
-              ? 'Senha alterada com sucesso! Redirecionando...'
-              : 'Defina uma nova senha de acesso para sua conta.'}
-          </CardDescription>
-        </CardHeader>
-        {!success ? (
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nova-senha" className="text-slate-300">
-                  Nova Senha
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="nova-senha"
-                    type={showNovaSenha ? 'text' : 'password'}
-                    placeholder="Mínimo de 6 caracteres"
-                    value={novaSenha}
-                    onChange={(e) => setNovaSenha(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-100 focus-visible:ring-amber-500 placeholder:text-slate-700 pr-10"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNovaSenha(!showNovaSenha)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                    tabIndex={-1}
-                  >
-                    {showNovaSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmar-senha" className="text-slate-300">
-                  Confirmar Nova Senha
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="confirmar-senha"
-                    type={showConfirmarSenha ? 'text' : 'password'}
-                    placeholder="Repita a nova senha"
-                    value={confirmarSenha}
-                    onChange={(e) => setConfirmarSenha(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-100 focus-visible:ring-amber-500 placeholder:text-slate-700 pr-10"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                    tabIndex={-1}
-                  >
-                    {showConfirmarSenha ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="pt-2 flex flex-col space-y-4">
-              <Button
-                type="submit"
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold tracking-wide transition-all"
-                disabled={isLoading}
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmar-senha">Confirmar nova senha</Label>
+            <div className="relative">
+              <Input
+                id="confirmar-senha"
+                type={showConfirmarSenha ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Repita a nova senha"
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                className="h-11 pr-11"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
+                aria-label={showConfirmarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                tabIndex={-1}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Atualizando senha...
-                  </>
-                ) : (
-                  'Salvar nova senha'
-                )}
-              </Button>
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center text-sm text-slate-400 hover:text-amber-500 transition-colors font-medium"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1.5" />
-                Voltar para o login
-              </Link>
-            </CardFooter>
-          </form>
-        ) : (
-          <CardContent className="pt-4 pb-6 text-center">
-            <Button
-              type="button"
-              onClick={() => navigate('/')}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold tracking-wide"
-            >
-              Ir para o Login
-            </Button>
-          </CardContent>
-        )}
-      </Card>
-    </div>
+                {showConfirmarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <Button type="submit" size="lg" className="mt-1 w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Atualizando…
+              </>
+            ) : (
+              'Salvar nova senha'
+            )}
+          </Button>
+        </form>
+      ) : (
+        <Button size="lg" className="w-full" onClick={() => navigate('/')}>
+          Ir para o sistema
+        </Button>
+      )}
+    </AuthShell>
   )
 }
