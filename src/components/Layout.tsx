@@ -53,6 +53,9 @@ class ErrorBoundary extends Component<
                 {this.state.error.message}
               </p>
             )}
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              As outras páginas continuam funcionando — use o menu ou o botão “Ir para Início”.
+            </p>
           </div>
         </div>
       )
@@ -108,7 +111,10 @@ export default function Layout() {
               !isChat && (isFullWidth ? 'max-w-full' : 'max-w-[1560px]'),
             )}
           >
-            <ErrorBoundary>
+            {/* `key` na rota: o ErrorBoundary reinicia a cada navegação.
+                Sem isso, um erro em UMA página deixava o app inteiro preso
+                na tela de erro — as páginas seguintes não abriam mais. */}
+            <ErrorBoundary key={location.pathname}>
               <Outlet />
             </ErrorBoundary>
           </div>
