@@ -11,6 +11,7 @@ import { Target, CalendarOff } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { AusenciaTemporariaDialog } from '@/components/performance/ausencia-temporaria-dialog'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 
 export default function Performance() {
   const { profile } = useAuth()
@@ -19,29 +20,19 @@ export default function Performance() {
 
   return (
     <div className="flex flex-col gap-6 p-6 pb-20 w-full mx-auto animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 text-slate-50 p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
-        <div className="flex items-start gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white pr-24 sm:pr-0 flex items-center gap-3 uppercase">
-              <Target className="h-8 w-8 text-amber-500" />
-              Performance
-            </h1>
-            <p className="text-slate-300 text-sm font-medium tracking-wide mt-1">
-              Acompanhe os indicadores de desempenho, feedbacks, bonificações e rotinas da equipe.
-            </p>
-          </div>
-        </div>
-        {isManager && (
-          <Button
-            variant="outline"
-            className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 whitespace-nowrap w-full md:w-auto"
-            onClick={() => setIsAusenciaOpen(true)}
-          >
-            <CalendarOff className="w-4 h-4 mr-2 text-amber-500" />
-            Ausência Temporária
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Performance"
+        description="Indicadores de desempenho, feedbacks, bonificações e rotinas da equipe."
+        icon={Target}
+        actions={
+          isManager ? (
+            <Button variant="outline" onClick={() => setIsAusenciaOpen(true)}>
+              <CalendarOff className="size-4" />
+              Ausência temporária
+            </Button>
+          ) : undefined
+        }
+      />
 
       <AusenciaTemporariaDialog open={isAusenciaOpen} onOpenChange={setIsAusenciaOpen} />
 

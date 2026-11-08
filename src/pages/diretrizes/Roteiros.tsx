@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { RoteirosContent } from '@/components/roteiros/roteiros-content'
 import { SetoresManager } from '@/components/roteiros/setores-manager'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { PageHeader } from '@/components/page-header'
 
 export default function Roteiros() {
   const { setores, roteiros, loading, refresh } = useRoteiros()
@@ -20,28 +21,17 @@ export default function Roteiros() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-none">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 rounded-lg hidden sm:block">
-            <MapIcon className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Guia de Roteiros</h2>
-            <p className="text-sm text-slate-300 mt-1">
-              Padronize mensagens, áudios e vídeos para a equipe.
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => setSetorDialog(true)}
-          variant="outline"
-          className="border-slate-600 hover:bg-slate-800 text-slate-200 hover:text-white shrink-0"
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          Gerenciar Setores
-        </Button>
-      </div>
+      <PageHeader
+        title="Guia de roteiros"
+        description="Padronize mensagens, áudios e vídeos para a equipe."
+        icon={MapIcon}
+        actions={
+          <Button variant="outline" onClick={() => setSetorDialog(true)}>
+            <Settings className="size-4" />
+            Gerenciar setores
+          </Button>
+        }
+      />
 
       {loading && (
         <div className="flex justify-center p-12">
