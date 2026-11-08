@@ -5,9 +5,15 @@ export type UsuarioWithCargo = Tables<'usuarios'> & {
   cargo: Pick<Tables<'cargos'>, 'nome' | 'setor'> | null
 }
 
+/**
+ * A tabela `usuarios` guarda `salario`, que nenhuma tela do dia a dia precisa.
+ * A leitura passa pela view `usuarios_publico` (sem salário, CPF mascarado
+ * para quem não gerencia colaboradores). Quem precisa do salário usa
+ * `getSalariosEquipe()`, que só devolve dados para admin/RH.
+ */
 export async function getUsuarios() {
   const { data, error } = await supabase
-    .from('usuarios')
+    .from('usuarios_publico')
     .select(`
       *,
       cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
@@ -20,7 +26,7 @@ export async function getUsuarios() {
 
 export async function getUsuariosAtivos() {
   const { data, error } = await supabase
-    .from('usuarios')
+    .from('usuarios_publico')
     .select(`
       *,
       cargo:cargos!usuarios_cargo_id_fkey(nome, setor)
@@ -30,6 +36,19 @@ export async function getUsuariosAtivos() {
 
   if (error) throw error
   return data as UsuarioWithCargo[]
+}
+
+/** Salários da equipe — o banco só devolve para admin/RH. */
+export async function getSalariosEquipe() {
+  const { data, error } = await supabase.rpc('get_salarios_equipe')
+  if (error) throw error
+  return (data || []) as {
+    id: string
+    nome: string
+    data_admissao: string | null
+    avatar_url: string | null
+    salario: number | null
+  }[]
 }
 
 export async function getCargos() {

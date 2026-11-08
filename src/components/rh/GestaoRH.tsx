@@ -122,14 +122,32 @@ export function GestaoRH() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const { data: usersData, error: usersError } = await supabase
-        .from('usuarios')
-        .select('id, nome, data_admissao, avatar_url, salario')
+      const { data: usersBase, error: usersError } = await supabase
+        .from('usuarios_publico')
+        .select('id, nome, data_admissao, avatar_url')
         .eq('status', 'ativo')
         .eq('elegivel_ferias', true)
         .not('data_admissao', 'is', null)
 
       if (usersError) throw usersError
+
+      // O salário não está na view (dado sensível). Vem por RPC, que só
+      // devolve valores para admin/RH — para os demais o cálculo continua,
+      // apenas sem a base salarial.
+      let salariosPorUsuario: Record<string, number> = {}
+      try {
+        const { data: salariosData } = await supabase.rpc('get_salarios_equipe')
+        ;(salariosData || []).forEach((s: any) => {
+          salariosPorUsuario[s.id] = Number(s.salario) || 0
+        })
+      } catch (e) {
+        console.warn('[RH] salarios indisponiveis:', e)
+      }
+
+      const usersData = (usersBase || []).map((u: any) => ({
+        ...u,
+        salario: salariosPorUsuario[u.id] ?? null,
+      }))
 
       const { data: periodosData, error: periodosError } = await supabase
         .from('rh_ferias')
