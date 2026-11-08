@@ -10,6 +10,8 @@ import {
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { PageHeader } from '@/components/page-header'
+import { Landmark } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -241,56 +243,35 @@ export default function Vendas() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-slate-900 p-6 rounded-xl border-l-4 border-amber-500 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6 text-amber-500"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
+    <div className="space-y-4">
+      <PageHeader
+        title="Gestão de vendas"
+        description="Acompanhe negociações, vendas concretizadas e o ranking de avaliadores."
+        icon={Landmark}
+        actions={
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+            <OportunidadesWidget
+              periodo={filters.periodo}
+              dataInicio={filters.dataInicio}
+              dataFim={filters.dataFim}
+              refreshKey={refreshKey}
+            />
+            <QuantidadeVendasWidget
+              periodo={filters.periodo}
+              dataInicio={filters.dataInicio}
+              dataFim={filters.dataFim}
+              refreshKey={refreshKey}
+            />
+            <VendasAtuaisWidget
+              periodo={filters.periodo}
+              dataInicio={filters.dataInicio}
+              dataFim={filters.dataFim}
+              refreshKey={refreshKey}
+            />
+            {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={handleSuccess} />}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-              Gestão de Vendas
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm uppercase tracking-wider font-medium">
-              Acompanhe negociações e ranking de avaliadores
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <OportunidadesWidget
-            periodo={filters.periodo}
-            dataInicio={filters.dataInicio}
-            dataFim={filters.dataFim}
-            refreshKey={refreshKey}
-          />
-          <QuantidadeVendasWidget
-            periodo={filters.periodo}
-            dataInicio={filters.dataInicio}
-            dataFim={filters.dataFim}
-            refreshKey={refreshKey}
-          />
-          <VendasAtuaisWidget
-            periodo={filters.periodo}
-            dataInicio={filters.dataInicio}
-            dataFim={filters.dataFim}
-            refreshKey={refreshKey}
-          />
-          {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={handleSuccess} />}
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-4 mb-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border">
         <div className="flex items-center gap-3">
