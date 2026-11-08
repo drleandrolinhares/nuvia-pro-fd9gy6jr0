@@ -642,7 +642,7 @@ export function AppSidebar() {
                   <SidebarGroupContent>
                     {/* Trilho vertical: marca onde começa a hierarquia filha.
                         Sem ele, item-filho e rótulo do grupo parecem irmãos. */}
-                    <div className="relative ml-4 border-l border-sidebar-border/90 py-0.5 pl-2.5">
+                    <div className="relative ml-4 border-l-2 border-border-strong/70 py-0.5 pl-2.5">
                       <SidebarMenu className="gap-0.5">
                         {filteredItems.map((item: any) => {
                           const ItemIcon = item.icon
@@ -664,7 +664,7 @@ export function AppSidebar() {
                                     </SidebarMenuButton>
                                   </CollapsibleTrigger>
                                   <CollapsibleContent>
-                                    <SidebarMenuSub className="ml-1.5 border-l border-sidebar-border/70 py-0.5 pl-2">
+                                    <SidebarMenuSub className="ml-1.5 border-l border-border-strong/60 py-0.5 pl-2">
                                       {item.subItems.map((sub: any) => (
                                         <SidebarMenuSubItem key={sub.title}>
                                           <SidebarMenuSubButton
