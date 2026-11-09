@@ -55,6 +55,12 @@ export default {
         foreground: 'hsl(var(--foreground))',
         surface: 'hsl(var(--card))',
         amber: goldScale,
+        /* Ouro legível em superfície clara (tinta, não preenchimento). */
+        'gold-ink': 'hsl(var(--gold-ink))',
+        'gold-ink-strong': 'hsl(var(--gold-ink-strong))',
+        /* Tinta para faixas de marca escuras (surface-hero). */
+        'hero-foreground': 'hsl(var(--hero-foreground))',
+        'hero-muted': 'hsl(var(--hero-muted))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',

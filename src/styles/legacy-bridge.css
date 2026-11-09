@@ -211,6 +211,44 @@
   :is(.text-yellow-300, .text-yellow-400, .text-yellow-500) {
   color: hsl(var(--warning));
 }
+
+/* OURO COMO TEXTO.
+   O `amber` do Tailwind foi remapeado para a escala `gold`, desenhada
+   para preenchimento: `text-amber-300` (#DDBA7E) tem 1,84:1 no branco e
+   `text-amber-400` (#D89531) 2,54:1 — ambos invisíveis em papel claro.
+   Aqui o ouro de TEXTO passa a usar --gold-ink (6,14:1 no branco). */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    .text-amber-200,
+    .text-amber-200\/90,
+    .text-amber-300,
+    .text-amber-400,
+    .text-amber-400\/90,
+    .text-amber-500
+  ) {
+  color: hsl(var(--gold-ink));
+}
+
+/* SUPERFÍCIES ESCURAS QUE SOBREVIVEM À PONTE.
+   Gradientes (from-/via-/to-slate-9xx) e `bg-slate-950` não são
+   remapeados abaixo, então continuam escuros. Dentro deles o texto
+   continua CLARO — sem isto, `.text-white` virava tinta escura e o
+   título desaparecia (medido: 2,9:1). */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is([class*='from-slate-9'], [class*='via-slate-9'], [class*='to-slate-9'])
+  :is(.text-white, .text-slate-50, .text-slate-100, .text-slate-200) {
+  color: hsl(var(--hero-foreground));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is([class*='from-slate-9'], [class*='via-slate-9'], [class*='to-slate-9'])
+  :is(.text-slate-300, .text-slate-400, .text-slate-500) {
+  color: hsl(var(--hero-muted));
+}
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is([class*='from-slate-9'], [class*='via-slate-9'], [class*='to-slate-9'])
+  :is(.text-amber-200, .text-amber-300, .text-amber-400) {
+  color: hsl(var(--gold));
+}
 :where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
   :is(.text-blue-300, .text-blue-400, .text-blue-500, .text-sky-400, .text-sky-500) {
   color: hsl(var(--info));
@@ -322,4 +360,28 @@
     .text-slate-950
   ) {
   color: hsl(var(--navy-deep));
+}
+
+/* ------------------------------------------------------------------
+   OURO EM HEXADECIMAL FIXO — telas legadas.
+   Várias telas escrevem a cor direto no JSX: `text-[#d4af37]`. Esse
+   tom foi desenhado para fundo ESCURO e sobre papel branco rende
+   2,08:1 (medido no print da calculadora Invisalign em 09/11/2026).
+   Aqui só a TINTA é corrigida; `bg-[#d4af37]` (preenchimento) fica
+   como está, porque ouro cheio com tinta navy em cima está correto.
+------------------------------------------------------------------- */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper]) [class*='text-[#d4af37]'] {
+  color: hsl(var(--gold-ink));
+}
+/* Dentro das superfícies que continuam escuras, ouro claro é o certo:
+   a especificidade (0,2,0) vence a regra acima (0,1,0). */
+:where(#conteudo, [role='dialog'], [data-radix-popper-content-wrapper])
+  :is(
+    [class*='from-slate-9'],
+    [class*='via-slate-9'],
+    [class*='to-slate-9'],
+    [class*='from-amber-9']
+  )
+  [class*='text-[#d4af37]'] {
+  color: hsl(var(--gold));
 }

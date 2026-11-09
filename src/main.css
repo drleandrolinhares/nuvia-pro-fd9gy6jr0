@@ -20,6 +20,13 @@
     --gold: 38 46% 55%;
     --gold-strong: 36 52% 43%;
 
+    /* Ouro de TINTA: o ouro da marca (#C19A57) tem 2,6:1 sobre branco e
+       some em texto. Este tom é o mesmo matiz levado ao escuro o suficiente
+       para passar AA em qualquer superfície clara do sistema:
+       6,14:1 no branco · 5,33:1 no canvas · 6,23:1 no muted. */
+    --gold-ink: 32 70% 32%;
+    --gold-ink-strong: 30 72% 25%;
+
     /* ---- Superfícies ----
        O canvas precisa ser visivelmente mais escuro que o card, senão
        cartão branco sobre fundo branco desaparece (era 1.07:1). */
@@ -50,6 +57,12 @@
 
     --success: 158 64% 27%;
     --success-foreground: 0 0% 100%;
+
+    /* Texto sobre a faixa de marca (surface-hero): a ponte legacy troca
+       `.text-white` por tinta escura, então superfícies escuras
+       restauradas precisam de tokens próprios. */
+    --hero-foreground: 0 0% 100%;
+    --hero-muted: 215 25% 78%;
 
     --warning: 28 88% 38%;
     --warning-foreground: 0 0% 100%;
@@ -126,6 +139,12 @@
     --border-strong: 218 26% 28%;
     --input: 218 30% 23%;
     --ring: 38 46% 55%;
+
+    /* No tema escuro o ouro claro já rende: volta ao tom de marca. */
+    --gold-ink: 38 55% 62%;
+    --gold-ink-strong: 38 58% 70%;
+    --hero-foreground: 213 35% 96%;
+    --hero-muted: 214 20% 70%;
 
     --sidebar-background: 219 45% 10%;
     --sidebar-foreground: 213 35% 96%;
