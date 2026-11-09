@@ -1,0 +1,37 @@
+/*
+  Superfícies escuras da calculadora Invisalign (aba Datas).
+  Os gradientes usam paradas OPACAS: antes, trechos translúcidos (ex.: amber/20)
+  deixavam o fundo claro da página aparecer e o texto claro sumia.
+  As regras abaixo valem dentro da "ilha" escura e vencem a ponte de cor legada
+  (src/styles/legacy-bridge.css), que converte bg-slate-*/
+text-* para tema claro. */ .invisalign-dark {
+  background-color: #0c1830;
+  background-image: linear-gradient(90deg, #14264a 0%, #0c1830 60%, #0a1427 100%);
+}
+
+.invisalign-dark-gold {
+  background-color: #0c1830;
+  background-image: linear-gradient(90deg, #3a2d10 0%, #14213d 45%, #0a1427 100%);
+}
+
+.invisalign-dark [class*='bg-slate-'],
+.invisalign-dark-gold [class*='bg-slate-'] {
+  background-color: #0d1a33 !important;
+}
+
+.invisalign-dark :is(.text-white, .text-slate-100, .text-slate-200),
+.invisalign-dark-gold :is(.text-white, .text-slate-100, .text-slate-200) {
+  color: #f8fafc !important;
+}
+
+.invisalign-dark :is(.text-slate-300, .text-slate-400, .text-slate-500),
+.invisalign-dark-gold :is(.text-slate-300, .text-slate-400, .text-slate-500) {
+  color: #cbd5e1 !important;
+}
+
+.invisalign-dark [class*='text-amber-'],
+.invisalign-dark [class*='text-[#d4af37]'],
+.invisalign-dark-gold [class*='text-amber-'],
+.invisalign-dark-gold [class*='text-[#d4af37]'] {
+  color: #f3d27a !important;
+}

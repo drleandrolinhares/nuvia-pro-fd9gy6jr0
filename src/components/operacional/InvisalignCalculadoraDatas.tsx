@@ -21,6 +21,7 @@ import {
 import { format, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useToast } from '@/hooks/use-toast'
+import './invisalign-dark-surface.css'
 
 export interface TrocaAlinhadorItem {
   numero: number
@@ -293,7 +294,7 @@ export function InvisalignCalculadoraDatas() {
   return (
     <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar pb-10">
       {/* Banner / Card explicativo com identidade visual escura e dourada */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-amber-950/20 border border-slate-800 rounded-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+      <div className="invisalign-dark border border-slate-800 rounded-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="absolute -right-8 -top-8 w-44 h-44 bg-[#d4af37]/5 rounded-full blur-2xl pointer-events-none" />
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1">
@@ -484,7 +485,7 @@ export function InvisalignCalculadoraDatas() {
 
               {/* Bloco de Destaque Premium PRÓXIMA CONSULTA na coluna esquerda */}
               {proximaConsulta && (
-                <div className="relative overflow-hidden rounded-xl border border-amber-500/50 bg-gradient-to-br from-amber-500/15 via-slate-950 to-amber-950/30 p-4 shadow-xl ring-1 ring-amber-500/30">
+                <div className="invisalign-dark-gold relative overflow-hidden rounded-xl border border-amber-500/50 p-4 shadow-xl ring-1 ring-amber-500/30">
                   <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#d4af37]/15 rounded-full blur-xl pointer-events-none" />
 
                   <div className="relative z-10 space-y-2.5">
@@ -621,7 +622,7 @@ export function InvisalignCalculadoraDatas() {
                           item.isPersonalizado
                             ? 'bg-slate-950/90 border-amber-500/60 shadow-md ring-1 ring-amber-500/30'
                             : item.isProxima
-                              ? 'bg-gradient-to-r from-amber-500/15 via-slate-950 to-slate-950 border-amber-500/60 shadow-lg ring-1 ring-amber-500/30'
+                              ? 'invisalign-dark-gold border-amber-500/60 shadow-lg ring-1 ring-amber-500/30'
                               : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -723,7 +724,7 @@ export function InvisalignCalculadoraDatas() {
 
                   {/* Linha destacada no FINAL do cronograma vertical da coluna direita (PRÓXIMA CONSULTA / RETORNO) */}
                   {proximaConsulta && (
-                    <div className="p-3.5 sm:p-4 rounded-xl border border-amber-500/60 bg-gradient-to-r from-amber-500/20 via-slate-950 to-amber-950/20 shadow-lg ring-1 ring-amber-500/30 flex flex-col md:flex-row md:items-center md:justify-between gap-3 transition-all mt-3">
+                    <div className="invisalign-dark-gold p-3.5 sm:p-4 rounded-xl border border-amber-500/60 shadow-lg ring-1 ring-amber-500/30 flex flex-col md:flex-row md:items-center md:justify-between gap-3 transition-all mt-3">
                       {/* Lado esquerdo: Badge de Destaque Próxima Consulta */}
                       <div className="flex items-center gap-2.5 min-w-[170px] shrink-0">
                         <span className="text-xs font-black px-2.5 py-1 rounded tracking-wide bg-[#d4af37] text-slate-950 shadow-sm flex items-center gap-1.5 uppercase">
