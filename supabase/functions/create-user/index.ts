@@ -149,7 +149,13 @@ Deno.serve(async (req: Request) => {
     const userId = authData.user.id
 
     // 2. Insert into public.usuarios using the same UUID
-    // The trigger may have already inserted a minimal row — use upsert to update it with full data
+    // The trigger may have already inserted a minimal row — use upsert to update it with full data.
+    //
+    // ATENÇÃO: `salario` NÃO entra aqui. A coluna foi movida para
+    // usuarios_salarios (RLS própria) e mandá-la para `usuarios` fazia o
+    // PostgREST recusar o cadastro inteiro com
+    // "Could not find the 'salario' column of 'usuarios' in the schema cache".
+    // É gravada no passo 2b.
     const { error: usuarioError } = await adminClient.from('usuarios').upsert(
       {
         id: userId,
@@ -162,7 +168,6 @@ Deno.serve(async (req: Request) => {
         cargo_id: cargo_id || null,
         cargo_secundario_id: cargo_secundario_id || null,
         data_admissao: data_admissao || null,
-        salario: salario || null,
         status: status || 'ativo',
         role: 'user',
         horario_entrada: horario_entrada || null,
@@ -187,6 +192,28 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Erro ao cadastrar usuário: ${usuarioError.message}`)
     }
 
+    // 2b. Salário vive em tabela própria, com RLS própria.
+    // O tenant_id é obrigatório ali; sem ele o RLS não devolve a linha depois.
+    const salarioNum =
+      salario === undefined || salario === null || salario === ''
+        ? null
+        : Number(String(salario).replace(',', '.'))
+    if (salarioNum !== null && Number.isFinite(salarioNum)) {
+      const { error: salarioError } = await adminClient.from('usuarios_salarios').upsert(
+        {
+          usuario_id: userId,
+          salario: salarioNum,
+          tenant_id: resolvedTenantId,
+        },
+        { onConflict: 'usuario_id' },
+      )
+      if (salarioError) {
+        console.error('[create-user] Error inserting into usuarios_salarios:', salarioError)
+        await adminClient.auth.admin.deleteUser(userId)
+        throw new Error(`Erro ao salvar o salário: ${salarioError.message}`)
+      }
+    }
+
     // 3. Insert into public.colaboradores_detalhes when banking/payment data is provided
     if (banco || agencia || conta || pix || ctps || pis || beneficiario_emergencia) {
       const { error: detalhesError } = await adminClient.from('colaboradores_detalhes').upsert(
@@ -200,6 +227,7 @@ Deno.serve(async (req: Request) => {
           pis: pis || null,
           dependentes: dependentes ?? 0,
           beneficiario_emergencia: beneficiario_emergencia || null,
+          tenant_id: resolvedTenantId,
         },
         { onConflict: 'usuario_id' },
       )
