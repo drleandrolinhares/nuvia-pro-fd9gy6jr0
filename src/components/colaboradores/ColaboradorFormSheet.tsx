@@ -78,10 +78,10 @@ export default function ColaboradorFormSheet({
       Promise.all([
         getColaboradorDetalhes(usuario.id),
         // salário não está mais em `usuarios`; vem da RPC restrita
-        supabase
-          .rpc('get_salarios_equipe')
-          .then(({ data }) => (data || []).find((s: any) => s.id === usuario.id)?.salario ?? null)
-          .catch(() => null),
+        (async () => {
+          const { data } = await supabase.rpc('get_salarios_equipe')
+          return (data || []).find((s: any) => s.id === usuario.id)?.salario ?? null
+        })().catch(() => null),
       ])
         .then(([det, salarioAtual]) => {
           let em = { nome: '', telefone: '', parentesco: '' }
