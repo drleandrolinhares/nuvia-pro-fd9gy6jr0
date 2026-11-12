@@ -2,9 +2,11 @@
   Superfícies escuras da calculadora Invisalign (aba Datas).
   Os gradientes usam paradas OPACAS: antes, trechos translúcidos (ex.: amber/20)
   deixavam o fundo claro da página aparecer e o texto claro sumia.
-  As regras abaixo valem dentro da "ilha" escura e vencem a ponte de cor legada
-  (src/styles/legacy-bridge.css), que converte bg-slate-*/
-text-* para tema claro. */ .invisalign-dark {
+  As regras abaixo valem dentro da "ilha" escura e vencem a ponte de cor
+  legada (src/styles/legacy-bridge.css), que remapeia bg-slate e text-slate
+  para o tema claro.
+*/
+.invisalign-dark {
   background-color: #0c1830;
   background-image: linear-gradient(90deg, #14264a 0%, #0c1830 60%, #0a1427 100%);
 }
