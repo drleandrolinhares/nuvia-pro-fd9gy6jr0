@@ -331,7 +331,8 @@ export function VendasModal({
             crc_comercial_id: formData.crc_comercial_id,
             dentista_avaliador_id: formData.dentista_avaliador_id,
             data_venda: formData.data_fechamento,
-            valor: Number(formData.valor_entrada),
+            // `valor` é o que ENTROU no caixa; o tratamento é o total fechado.
+            valor: Number(formData.valor_entrada) || Number(formData.valor_orcamento),
             valor_tratamento: Number(formData.valor_orcamento),
             destino_fiscal: formData.destino_fiscal,
             forma_pagamento: formData.forma_pagamento,
