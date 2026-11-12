@@ -39,7 +39,16 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                   <Icon className={`w-4 h-4 ${accentText}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-white truncate">{prof.nome}</p>
+                  <p className="text-sm font-bold text-white truncate">
+                    {/^convers[ãa]o\s*direta$/i.test(prof.nome)
+                      ? 'Sem dentista identificado'
+                      : prof.nome}
+                  </p>
+                  {/^convers[ãa]o\s*direta$/i.test(prof.nome) && (
+                    <p className="text-[10px] leading-tight text-muted-foreground">
+                      venda direta no consultório — o cadastro não registra qual dentista atendeu
+                    </p>
+                  )}
                   <Badge
                     variant="outline"
                     className={`mt-0.5 text-[10px] py-0 px-1.5 ${accentBadge}`}
