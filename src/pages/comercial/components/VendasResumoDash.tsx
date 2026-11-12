@@ -68,7 +68,7 @@ export function VendasResumoDash({
   }, [modo, ini, fim, refreshKey])
 
   const venda = modo === 'vendas'
-  const pacientesTitulo = venda ? 'Pacientes que fecharam' : 'Pacientes avaliados'
+  const principalTitulo = venda ? 'Vendas lançadas' : 'Oportunidades'
   const valorTitulo = venda ? 'Total fechado' : 'Oportunidades em aberto'
 
   return (
@@ -76,9 +76,10 @@ export function VendasResumoDash({
       {/* KPIs principais */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Mini
-          titulo={pacientesTitulo}
-          valor={num(d?.pacientes)}
-          sub={`${num(d?.linhas)} registros`}
+          titulo={principalTitulo}
+          valor={num(d?.linhas)}
+          destaque={venda ? 'vendas' : 'oportunidades'}
+          sub={`de ${num(d?.pacientes)} ${d?.pacientes === 1 ? 'paciente' : 'pacientes'}`}
           icon={Users}
           loading={loading}
         />
@@ -250,6 +251,7 @@ function Mini({
   titulo,
   valor,
   sub,
+  destaque,
   icon: Icon,
   tone = 'default',
   loading,
@@ -257,6 +259,8 @@ function Mini({
   titulo: string
   valor: string
   sub?: string
+  /** Rótulo curto ao lado do número principal (ex.: "vendas"). */
+  destaque?: string
   icon: React.ElementType
   tone?: 'default' | 'success' | 'gold' | 'danger'
   loading?: boolean
@@ -277,13 +281,20 @@ function Mini({
           {titulo}
         </div>
         {loading ? (
-          <Skeleton className="mt-2 h-6 w-20" />
+          <Skeleton className="mt-2 h-7 w-20" />
         ) : (
-          <div className={`tabular mt-1 text-[19px] font-extrabold leading-tight ${cor}`}>
-            {valor}
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className={`tabular text-[27px] font-extrabold leading-none ${cor}`}>
+              {valor}
+            </span>
+            {destaque && (
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {destaque}
+              </span>
+            )}
           </div>
         )}
-        {sub && <div className="mt-0.5 text-[10.5px] text-muted-foreground">{sub}</div>}
+        {sub && <div className="mt-1 text-[11px] font-medium text-muted-foreground">{sub}</div>}
       </CardContent>
     </Card>
   )
