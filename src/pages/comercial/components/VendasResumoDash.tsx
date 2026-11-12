@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Banknote, Percent, Stethoscope, Target, TrendingUp, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -70,6 +70,24 @@ export function VendasResumoDash({
   const venda = modo === 'vendas'
   const principalTitulo = venda ? 'Vendas lançadas' : 'Oportunidades'
   const valorTitulo = venda ? 'Total fechado' : 'Oportunidades em aberto'
+
+  // Denominadores dos percentuais: soma das linhas de cada lista
+  const totalQtd = useMemo(
+    () => (d?.dentistas ?? []).reduce((a, x) => a + Number(x.quantidade), 0),
+    [d],
+  )
+  const totalValor = useMemo(
+    () => (d?.dentistas ?? []).reduce((a, x) => a + Number(x.valor), 0),
+    [d],
+  )
+  const totalQtdOrigem = useMemo(
+    () => (d?.por_origem ?? []).reduce((a, x) => a + Number(x.quantidade), 0),
+    [d],
+  )
+  const totalValorOrigem = useMemo(
+    () => (d?.por_origem ?? []).reduce((a, x) => a + Number(x.valor), 0),
+    [d],
+  )
 
   return (
     <div className="space-y-3">
@@ -152,17 +170,37 @@ export function VendasResumoDash({
             )}
             <div className="divide-y divide-border">
               {!loading &&
-                (d?.dentistas ?? []).map((x) => (
-                  <div key={x.nome} className="flex items-center justify-between gap-3 py-1.5">
-                    <span className="truncate text-[12.5px] font-medium text-foreground">
-                      {x.nome}
-                    </span>
-                    <span className="tabular shrink-0 text-[12.5px] text-muted-foreground">
-                      <strong className="text-foreground">{num(x.quantidade)}</strong>
-                      {venda ? ` fech. · ${brl(x.valor)}` : ` aval. · ${brl(x.valor)}`}
-                    </span>
-                  </div>
-                ))}
+                (d?.dentistas ?? []).map((x) => {
+                  const pctQtd = totalQtd > 0 ? (x.quantidade / totalQtd) * 100 : 0
+                  const pctValor = totalValor > 0 ? (x.valor / totalValor) * 100 : 0
+                  return (
+                    <div key={x.nome} className="flex items-center justify-between gap-3 py-1.5">
+                      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-foreground">
+                        {x.nome}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <Badge
+                          variant="outline"
+                          className="tabular border-info/40 bg-info/10 px-1.5 py-0 text-[10.5px] font-bold text-info"
+                          title={`${num(x.quantidade)} de ${num(totalQtd)} ${venda ? 'vendas' : 'avaliações'}`}
+                        >
+                          {num(pctQtd, 0)}%
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="tabular border-gold-ink/40 bg-gold-ink/10 px-1.5 py-0 text-[10.5px] font-bold text-gold-ink"
+                          title={`${brl(x.valor)} de ${brl(totalValor)}`}
+                        >
+                          {num(pctValor, 0)}%
+                        </Badge>
+                        <span className="tabular text-[12.5px] text-muted-foreground">
+                          <strong className="text-foreground">{num(x.quantidade)}</strong>
+                          {venda ? ` fech. · ${brl(x.valor)}` : ` aval. · ${brl(x.valor)}`}
+                        </span>
+                      </span>
+                    </div>
+                  )
+                })}
             </div>
           </CardContent>
         </Card>
@@ -187,25 +225,43 @@ export function VendasResumoDash({
                 (d?.por_origem ?? []).map((o) => {
                   const total = d?.valor_total || 1
                   const pct = Math.round((o.valor / total) * 100)
+                  const pctQtd = totalQtdOrigem > 0 ? (o.quantidade / totalQtdOrigem) * 100 : 0
+                  const pctValor = totalValorOrigem > 0 ? (o.valor / totalValorOrigem) * 100 : 0
                   const direta = /convers/i.test(o.nome)
                   return (
                     <div key={o.nome}>
-                      <div className="mb-0.5 flex items-baseline justify-between text-[12px]">
-                        <span className="flex items-center gap-1.5 font-medium text-foreground">
-                          {o.nome}
+                      <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[12px]">
+                        <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground">
+                          <span className="truncate">{o.nome}</span>
                           {venda && direta && (
                             <Badge
                               variant="outline"
-                              className="border-border bg-muted px-1 py-0 text-[9.5px] font-semibold uppercase text-muted-foreground"
+                              className="shrink-0 border-border bg-muted px-1 py-0 text-[9.5px] font-semibold uppercase text-muted-foreground"
                             >
                               sem CRC
                             </Badge>
                           )}
                         </span>
-                        <span className="tabular text-muted-foreground">
-                          {num(o.quantidade)}
-                          {venda ? ' vendas' : ' oport.'} · {brl(o.valor)}
-                          {venda && o.dias_medio != null ? ` · ${num(o.dias_medio, 1)}d` : ''}
+                        <span className="flex shrink-0 items-center gap-1.5 tabular text-muted-foreground">
+                          <Badge
+                            variant="outline"
+                            className="tabular border-info/40 bg-info/10 px-1.5 py-0 text-[10.5px] font-bold text-info"
+                            title={`${num(o.quantidade)} de ${num(totalQtdOrigem)} ${venda ? 'vendas' : 'oportunidades'}`}
+                          >
+                            {num(pctQtd, 0)}%
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="tabular border-gold-ink/40 bg-gold-ink/10 px-1.5 py-0 text-[10.5px] font-bold text-gold-ink"
+                            title={`${brl(o.valor)} de ${brl(totalValorOrigem)}`}
+                          >
+                            {num(pctValor, 0)}%
+                          </Badge>
+                          <span>
+                            {num(o.quantidade)}
+                            {venda ? ' vendas' : ' oport.'} · {brl(o.valor)}
+                            {venda && o.dias_medio != null ? ` · ${num(o.dias_medio, 1)}d` : ''}
+                          </span>
                         </span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
