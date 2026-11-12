@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -70,6 +70,23 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
   const [reagendar, setReagendar] = useState(false)
   const [novaData, setNovaData] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [novaHora, setNovaHora] = useState('')
+
+  /**
+   * A família do desfecho decide qual botão vale.
+   *  - positivo / negativo  -> ENCERRA a negociação (conclui a ação)
+   *  - continuidade         -> NÃO encerra: salva o relato e exige o próximo
+   *                            contato com data e hora
+   * Antes disso o botão verde concluía qualquer coisa, inclusive continuidade —
+   * o que apagava o caso da fila de trabalho (erro apontado em 12/11/2026).
+   */
+  const desfechoSelecionado = useMemo(
+    () => desfechos.find((d) => d.codigo === desfechoCodigo) || null,
+    [desfechos, desfechoCodigo],
+  )
+  const ehContinuidade = desfechoSelecionado?.familia === 'continuidade'
+  const ehEncerramento =
+    desfechoSelecionado?.familia === 'positivo' || desfechoSelecionado?.familia === 'negativo'
+  const exigeNovoContato = ehContinuidade
 
   const [crcUsers, setCrcUsers] = useState<any[]>([])
   const [history, setHistory] = useState<any[]>([])
@@ -504,6 +521,14 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
       toast({ title: 'Informe a nova data para o reagendamento', variant: 'destructive' })
       return
     }
+    if (!reagendamentoHora) {
+      toast({
+        title: 'Informe também o horário do reagendamento',
+        description: 'Sem hora a ação vira "dia inteiro" e a CRC não sabe a que hora ligar.',
+        variant: 'destructive',
+      })
+      return
+    }
 
     setSaving(true)
     try {
@@ -641,9 +666,122 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
     }
   }
 
+  /**
+   * Salvar mantendo o caso na fila — o caminho da CONTINUIDADE.
+   * Grava o desfecho e o relato, mantém `status_acao = 'pendente'` e cria o
+   * próximo contato. Data E hora são obrigatórias: um follow-up sem horário
+   * vira "dia inteiro" e a CRC não sabe quando ligar (apontado em 12/11/2026).
+   */
+  const handleSalvarContinuidade = async () => {
+    if (!desfechoCodigo) {
+      toast({ title: 'Escolha o desfecho', variant: 'destructive' })
+      return
+    }
+    if (!ehContinuidade) {
+      toast({
+        title: 'Este desfecho encerra a negociação',
+        description: 'Use "Encerrar Negociação" para desfechos positivos ou negativos.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (!resultado) {
+      toast({ title: 'Descreva o que foi conversado', variant: 'destructive' })
+      return
+    }
+    if (!novaData) {
+      toast({ title: 'Informe a data do próximo contato', variant: 'destructive' })
+      return
+    }
+    if (!novaHora) {
+      toast({
+        title: 'Informe o horário do próximo contato',
+        description: 'Reagendamento sem hora vira dia inteiro e não dá para cumprir.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setSaving(true)
+    try {
+      // O caso NÃO é concluído: continua pendente, agora com o relato e o
+      // desfecho registrados e o próximo contato marcado.
+      await updateCompromisso(evento!.id, {
+        resultado_acao: resultado,
+        desfecho_codigo: desfechoCodigo,
+        status_acao: 'pendente',
+      })
+
+      await registrarAgendaLog({
+        compromisso_id: evento!.id,
+        lead_id: selectedPerson.type === 'lead' ? selectedPerson.id : null,
+        paciente_id: selectedPerson.type === 'paciente' ? selectedPerson.id : null,
+        tipo: 'acao_comercial',
+        acao: 'ATUALIZADO',
+        detalhes: `Continuidade (${desfechoSelecionado?.rotulo || desfechoCodigo}): ${resultado}`,
+        usuario_id: user?.id || null,
+        usuario_nome: userName,
+      })
+
+      const novoComp = await createCompromisso({
+        usuario_id: colaboradorId,
+        tipo_compromisso: 'acao_comercial' as const,
+        data_inicio: novaData,
+        data_fim: novaData,
+        hora_inicio: `${novaHora}:00`,
+        hora_fim: `${novaHora}:00`,
+        eh_dia_inteiro: false,
+        descricao: `Follow-up. Desfecho anterior: ${desfechoSelecionado?.rotulo || desfechoCodigo} — ${resultado}`,
+        setor: 'comercial',
+        lead_id: selectedPerson.type === 'lead' ? selectedPerson.id : null,
+        paciente_id: selectedPerson.type === 'paciente' ? selectedPerson.id : null,
+        reagendado: true,
+        data_original: evento?.data_inicio,
+      })
+
+      const dataAnteriorStr = evento?.hora_inicio
+        ? `${format(new Date(evento.data_inicio + 'T12:00:00'), 'dd/MM/yyyy')} às ${evento.hora_inicio.substring(0, 5)}`
+        : format(new Date(evento!.data_inicio + 'T12:00:00'), 'dd/MM/yyyy')
+      const dataNovaStr = `${format(new Date(novaData + 'T12:00:00'), 'dd/MM/yyyy')} às ${novaHora}`
+
+      await registrarAgendaLog({
+        compromisso_id: novoComp?.id || null,
+        lead_id: selectedPerson.type === 'lead' ? selectedPerson.id : null,
+        paciente_id: selectedPerson.type === 'paciente' ? selectedPerson.id : null,
+        tipo: 'acao_comercial',
+        acao: 'REAGENDADO',
+        data_anterior: dataAnteriorStr,
+        data_nova: dataNovaStr,
+        detalhes: `Próximo contato agendado a partir de ação em continuidade: ${desfechoSelecionado?.rotulo || desfechoCodigo}`,
+        usuario_id: user?.id || null,
+        usuario_nome: userName,
+      })
+
+      toast({
+        title: 'Salvo — caso continua em aberto',
+        description: `Próximo contato: ${dataNovaStr}`,
+      })
+      onSave()
+    } catch (err: any) {
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleConcluir = async () => {
     if (!desfechoCodigo) {
-      toast({ title: 'Escolha o desfecho para concluir a ação', variant: 'destructive' })
+      toast({ title: 'Escolha o desfecho para encerrar a negociação', variant: 'destructive' })
+      return
+    }
+    // Só positivo ou negativo encerram. Continuidade não pode cair aqui.
+    if (!ehEncerramento) {
+      toast({
+        title: 'Este desfecho não encerra a negociação',
+        description:
+          'Casos de continuidade usam "Salvar e Agendar Próximo Contato" — o caso precisa continuar na fila.',
+        variant: 'destructive',
+      })
       return
     }
     if (!resultado) {
@@ -651,7 +789,15 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
       return
     }
     if (reagendar && !novaData) {
-      toast({ title: 'Preencha a data do reagendamento', variant: 'destructive' })
+      toast({ title: 'Preencha a data do retorno', variant: 'destructive' })
+      return
+    }
+    if (reagendar && !novaHora) {
+      toast({
+        title: 'Informe também o horário do retorno',
+        description: 'Retorno sem hora vira "dia inteiro" e não dá para cumprir.',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -1121,9 +1267,6 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
                     onChange={(e) => {
                       const c = desfechoCodigo === e.target.value ? '' : e.target.value
                       setDesfechoCodigo(c)
-                      const item = desfechos.find((d) => d.codigo === c)
-                      // desfecho de continuidade exige nova ação: já marca o follow-up
-                      if (item?.exige_retorno) setReagendar(true)
                     }}
                     className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                   >
@@ -1167,53 +1310,122 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
                   />
                 </div>
 
-                <div className="flex items-center gap-2 mt-2 bg-slate-950 p-3 rounded border border-slate-800">
-                  <input
-                    type="checkbox"
-                    id="reagendar"
-                    checked={reagendar}
-                    onChange={(e) => setReagendar(e.target.checked)}
-                    className="rounded border-slate-700 bg-slate-900 text-amber-500 w-4 h-4 cursor-pointer"
-                  />
-                  <Label htmlFor="reagendar" className="font-medium cursor-pointer">
-                    Agendar nova ação (Follow-up)
-                  </Label>
-                </div>
-
-                {reagendar && (
-                  <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-md border border-slate-700 border-dashed animate-fade-in">
-                    <div>
-                      <Label>Nova Data *</Label>
-                      <Input
-                        type="date"
-                        value={novaData}
-                        onChange={(e) => setNovaData(e.target.value)}
-                        className="mt-1 bg-slate-900 border-slate-700"
-                      />
+                {/* Continuidade: o caso NÃO sai da fila, então o próximo contato
+                    é obrigatório e precisa de data E hora. */}
+                {exigeNovoContato && (
+                  <div className="space-y-3 bg-slate-950 p-4 rounded-md border border-amber-600/40 animate-fade-in">
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-500 text-base leading-none mt-0.5">🔄</span>
+                      <p className="text-[12px] leading-snug text-amber-200/90">
+                        <strong className="text-amber-400">Caso continua em aberto.</strong> Informe
+                        quando será o próximo contato — ele volta para a agenda e não sai da fila.
+                      </p>
                     </div>
-                    <div>
-                      <Label>Novo Horário</Label>
-                      <Input
-                        type="time"
-                        value={novaHora}
-                        onChange={(e) => setNovaHora(e.target.value)}
-                        className="mt-1 bg-slate-900 border-slate-700"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Data do próximo contato *</Label>
+                        <Input
+                          type="date"
+                          value={novaData}
+                          onChange={(e) => setNovaData(e.target.value)}
+                          className="mt-1 bg-slate-900 border-slate-700"
+                        />
+                      </div>
+                      <div>
+                        <Label>Horário *</Label>
+                        <Input
+                          type="time"
+                          value={novaHora}
+                          onChange={(e) => setNovaHora(e.target.value)}
+                          className="mt-1 bg-slate-900 border-slate-700"
+                        />
+                      </div>
                     </div>
+                    {!novaHora && (
+                      <p className="text-[11px] text-amber-400/80">
+                        O horário é obrigatório: sem ele a ação vira &quot;dia inteiro&quot; e a CRC
+                        não sabe a que hora ligar.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <Button
-                  onClick={handleConcluir}
-                  disabled={saving}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
-                >
-                  {saving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Salvar Resultado e Concluir Ação'
-                  )}
-                </Button>
+                {/* Encerramento (positivo/negativo): follow-up é opcional. */}
+                {ehEncerramento && (
+                  <>
+                    <div className="flex items-center gap-2 mt-2 bg-slate-950 p-3 rounded border border-slate-800">
+                      <input
+                        type="checkbox"
+                        id="reagendar"
+                        checked={reagendar}
+                        onChange={(e) => setReagendar(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-900 text-amber-500 w-4 h-4 cursor-pointer"
+                      />
+                      <Label htmlFor="reagendar" className="font-medium cursor-pointer">
+                        Agendar retorno opcional (pós-venda)
+                      </Label>
+                    </div>
+
+                    {reagendar && (
+                      <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-md border border-slate-700 border-dashed animate-fade-in">
+                        <div>
+                          <Label>Nova Data *</Label>
+                          <Input
+                            type="date"
+                            value={novaData}
+                            onChange={(e) => setNovaData(e.target.value)}
+                            className="mt-1 bg-slate-900 border-slate-700"
+                          />
+                        </div>
+                        <div>
+                          <Label>Novo Horário *</Label>
+                          <Input
+                            type="time"
+                            value={novaHora}
+                            onChange={(e) => setNovaHora(e.target.value)}
+                            className="mt-1 bg-slate-900 border-slate-700"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Um botão por família: cada desfecho tem um caminho só. */}
+                {ehContinuidade && (
+                  <Button
+                    onClick={handleSalvarContinuidade}
+                    disabled={saving || !novaData || !novaHora}
+                    className="w-full bg-info hover:bg-info/90 text-info-foreground mt-2"
+                  >
+                    {saving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Salvar e Agendar Próximo Contato'
+                    )}
+                  </Button>
+                )}
+
+                {(ehEncerramento || !desfechoCodigo) && (
+                  <Button
+                    onClick={handleConcluir}
+                    disabled={saving || !ehEncerramento}
+                    title={
+                      !desfechoCodigo
+                        ? 'Escolha primeiro a categoria do desfecho'
+                        : ehEncerramento
+                          ? 'Encerra o caso: ele sai da fila'
+                          : 'Casos de continuidade usam o botão acima'
+                    }
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-2 disabled:opacity-40"
+                  >
+                    {saving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Encerrar Negociação (Concluir Ação)'
+                    )}
+                  </Button>
+                )}
               </div>
             )}
 
@@ -1257,7 +1469,10 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
               </div>
             )}
 
-            {evento && evento.status_acao === 'pendente' && (
+            {/* Corrigir data/dono/descrição sem registrar desfecho. Some quando já
+                existe categoria escolhida, para não disputar com os botões de
+                encerrar/salvar continuidade. */}
+            {evento && evento.status_acao === 'pendente' && !desfechoCodigo && (
               <div className="pt-2">
                 <Button
                   onClick={handleApenasAtualizar}
@@ -1265,7 +1480,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
                   disabled={saving}
                   className="w-full border-slate-700 hover:bg-slate-800 text-white text-xs"
                 >
-                  Apenas Atualizar Dados da Ação (Sem Concluir)
+                  Salvar apenas os dados da ação (sem registrar desfecho)
                 </Button>
               </div>
             )}
