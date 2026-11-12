@@ -319,9 +319,9 @@ export function CrcInteracoesTab({
                 aria-pressed={ativo}
                 title={ativo ? 'Clique para limpar o filtro' : `Ver só: ${k.titulo.toLowerCase()}`}
                 className={
-                  'rounded-lg border p-2.5 text-left transition-colors hover:border-brand/50 hover:bg-muted/70 ' +
+                  'rounded-lg border p-2.5 text-left transition-colors hover:border-brand-navy/50 hover:bg-muted/70 ' +
                   (ativo
-                    ? 'border-brand bg-brand/10 ring-2 ring-brand/30'
+                    ? 'border-brand-navy bg-brand-navy/10 ring-2 ring-brand-navy/30'
                     : 'border-border bg-muted/40')
                 }
               >
@@ -329,7 +329,7 @@ export function CrcInteracoesTab({
                   <span className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
                     {k.titulo}
                   </span>
-                  {ativo && <X className="size-3 text-brand" />}
+                  {ativo && <X className="size-3 text-brand-navy" />}
                 </div>
                 <div className={'tabular text-[19px] font-extrabold ' + k.classe}>{k.valor}</div>
               </button>
@@ -356,7 +356,7 @@ export function CrcInteracoesTab({
                       'rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold transition-colors ' +
                       corDe(chave) +
                       (ativo
-                        ? ' ring-2 ring-brand/40 ring-offset-1 ring-offset-background'
+                        ? ' ring-2 ring-brand-navy/40 ring-offset-1 ring-offset-background'
                         : ' opacity-90 hover:opacity-100')
                     }
                   >
@@ -369,7 +369,7 @@ export function CrcInteracoesTab({
         )}
 
         {filtro !== CHAVE_TODOS && (
-          <div className="flex items-center justify-between gap-2 rounded-md border border-brand/30 bg-brand/5 px-2.5 py-1.5">
+          <div className="flex items-center justify-between gap-2 rounded-md border border-brand-navy/30 bg-brand-navy/5 px-2.5 py-1.5">
             <span className="text-[11.5px] font-semibold text-foreground/85">
               Filtrando por{' '}
               <span className="font-extrabold">
@@ -412,7 +412,7 @@ export function CrcInteracoesTab({
             <button
               type="button"
               onClick={() => setFiltro(CHAVE_TODOS)}
-              className="mt-1 text-xs font-semibold text-brand underline"
+              className="mt-1 text-xs font-semibold text-brand-navy underline"
             >
               Ver todas as {linhas.length} ações
             </button>
