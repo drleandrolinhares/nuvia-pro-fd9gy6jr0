@@ -34,6 +34,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { VendasResumoDash } from './components/VendasResumoDash'
 import { VendasCabecalhoDash } from './components/VendasCabecalhoDash'
 import { VendasDuplicidades } from './components/VendasDuplicidades'
+import { AtualizarClinicorp } from './components/AtualizarClinicorp'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -306,6 +307,7 @@ export default function Vendas() {
         icon={Landmark}
         actions={
           <div className="flex items-center gap-2">
+            {canEdit && <AtualizarClinicorp onSuccess={handleSuccess} />}
             {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={handleSuccess} />}
           </div>
         }
