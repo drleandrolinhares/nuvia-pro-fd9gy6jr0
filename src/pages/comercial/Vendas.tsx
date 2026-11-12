@@ -370,13 +370,13 @@ export default function Vendas() {
             value="oportunidades"
             className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all py-2"
           >
-            Oportunidades Comerciais
+            Oportunidades em Aberto
           </TabsTrigger>
           <TabsTrigger
             value="concretizadas"
             className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-slate-600 font-bold uppercase tracking-wider text-xs rounded-md transition-all py-2"
           >
-            Vendas Concretizadas
+            Vendas Aprovadas
           </TabsTrigger>
           <TabsTrigger
             value="ranking"
@@ -401,7 +401,7 @@ export default function Vendas() {
           />
           <Card>
             <CardHeader>
-              <CardTitle>Oportunidades Comerciais</CardTitle>
+              <CardTitle>Oportunidades em Aberto</CardTitle>
               <CardDescription>
                 Acompanhamento de avaliações e negociações em andamento.
               </CardDescription>
