@@ -80,7 +80,10 @@ export function VendasCabecalhoDash({
               </div>
             )}
             <p className="mt-1 text-[11.5px] leading-tight text-muted-foreground">
-              {num(d?.avaliacoes)} avaliações no período
+              {num(d?.avaliacoes)} avaliações lançadas
+              {d
+                ? ` · ${num(d.avaliacoes - d.pacientes_avaliados)} paciente(s) com mais de uma`
+                : ''}
             </p>
           </div>
 
@@ -98,7 +101,7 @@ export function VendasCabecalhoDash({
               </div>
             )}
             <p className="mt-1 text-[11.5px] leading-tight text-muted-foreground">
-              Abertas + vendidas — tudo que foi gerado
+              {brl(d?.op_valor)} em aberto + {brl(d?.vendas_valor)} vendido
             </p>
           </div>
 
@@ -160,6 +163,14 @@ export function VendasCabecalhoDash({
                 </div>
               </div>
             )}
+
+            {/* Régua da conta: tudo pela data da AVALIAÇÃO */}
+            <p className="mt-2 text-[10.5px] leading-relaxed text-muted-foreground">
+              Conta pela <strong className="text-foreground/80">data da avaliação</strong>: a
+              oportunidade nasce na avaliação e entra em um grupo só — {num(d?.op_qtd)} em aberto +{' '}
+              {num(d?.vendas_qtd)} vendidas = {num(d?.avaliacoes)}. A aba Vendas Concretizadas usa
+              outra régua (data de <em>fechamento</em>), por isso os totais das duas abas diferem.
+            </p>
           </div>
         </div>
       </CardContent>
