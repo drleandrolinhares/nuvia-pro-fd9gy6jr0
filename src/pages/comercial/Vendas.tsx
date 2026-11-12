@@ -160,8 +160,15 @@ export default function Vendas() {
           break
       }
 
-      if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
-      if (ed) query = query.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
+      // BUSCA GLOBAL POR PACIENTE: quando há nome digitado, o período deixa de
+      // limitar o resultado. Sem isso, achar "em que mês o Ramon foi avaliado"
+      // exigia trocar o filtro mês a mês. O período continua valendo para tudo
+      // que não é busca por nome.
+      const buscandoNome = filters.search.trim().length >= 2
+      if (!buscandoNome) {
+        if (sd) query = query.gte('data_avaliacao', format(sd, 'yyyy-MM-dd'))
+        if (ed) query = query.lte('data_avaliacao', format(ed, 'yyyy-MM-dd'))
+      }
 
       if (debouncedValorRange[0] > 0 || debouncedValorRange[1] < 100000) {
         query = query
@@ -312,6 +319,14 @@ export default function Vendas() {
           </div>
         }
       />
+
+      {filters.search.trim().length >= 2 && (
+        <div className="rounded-lg border border-info/40 bg-info/8 px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
+          Buscando <strong className="text-foreground">"{filters.search}"</strong> em todo o
+          histórico — o período não está filtrando enquanto há nome na busca. Use
+          <strong className="text-foreground"> Limpar</strong> para voltar ao mês.
+        </div>
+      )}
 
       <VendasCabecalhoDash ini={faixaDash.ini} fim={faixaDash.fim} refreshKey={refreshKey} />
 
