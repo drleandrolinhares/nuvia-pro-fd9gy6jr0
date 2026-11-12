@@ -12,11 +12,9 @@ import { ptBR } from 'date-fns/locale'
 import {
   BarChart3,
   CalendarRange,
-  ChevronLeft,
-  ChevronRight,
+  CheckCircle2,
   Lightbulb,
   RefreshCw,
-  Target,
   TrendingUp,
   Users,
   Zap,
@@ -57,7 +55,6 @@ type Perfil = {
 }
 
 type Serie = {
-  crc_nome: string
   dimensao: string
   rotulo: string
   ordem: number
@@ -74,7 +71,10 @@ const num = (v: number | null | undefined, d = 0) =>
     Number(v ?? 0),
   )
 
-/** Faixa do período selecionado. */
+const DIAS = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
+const FAIXAS = ['Manha (ate 12h)', '12h-15h', '15h-18h', 'Noite (apos 18h)']
+const QUINZENAS = ['1a quinzena', '2a quinzena']
+
 function calcularPeriodo(chave: string, ini: string, fim: string) {
   const hoje = new Date()
   if (chave === 'mes') return { ini: startOfMonth(hoje), fim: endOfMonth(hoje) }
@@ -168,7 +168,7 @@ export default function CrcPerformance() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'avaliacoes' }, () =>
         carregar(),
       )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contatos_follow_up' }, () =>
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas_confirmadas' }, () =>
         carregar(),
       )
       .subscribe()
@@ -207,18 +207,21 @@ export default function CrcPerformance() {
   const conversao = total.avaliacoes ? (100 * total.vendas) / total.avaliacoes : 0
   const ticket = total.vendas ? total.valor_vendido / total.vendas : 0
 
-  /** Série agregada de uma dimensão (todos os CRCs somados). */
-  const seriePor = (dim: string) => {
+  /** Agrega uma dimensão preenchendo os rótulos zerados (semana/faixa completa). */
+  const seriePor = (dim: string, todos?: string[]) => {
     const mapa = new Map<
       string,
       { rotulo: string; ordem: number; avaliacoes: number; vendas: number; valor: number }
     >()
+    todos?.forEach((r, i) =>
+      mapa.set(r, { rotulo: r, ordem: i, avaliacoes: 0, vendas: 0, valor: 0 }),
+    )
     series
       .filter((s) => s.dimensao === dim)
       .forEach((s) => {
         const atual = mapa.get(s.rotulo) ?? {
           rotulo: s.rotulo,
-          ordem: s.ordem,
+          ordem: Number(s.ordem),
           avaliacoes: 0,
           vendas: 0,
           valor: 0,
@@ -231,43 +234,46 @@ export default function CrcPerformance() {
     return [...mapa.values()].sort((a, b) => a.ordem - b.ordem)
   }
 
-  const porDiaSemana = seriePor('dia_semana')
-  const porHora = seriePor('hora')
-  const porQuinzena = seriePor('quinzena')
+  const avalDia = seriePor('avaliacao_dia_semana', DIAS)
+  const vendaDia = seriePor('venda_dia_semana', DIAS)
+  const vendaHora = seriePor('venda_hora', FAIXAS)
+  const avalQuinzena = seriePor('avaliacao_quinzena', QUINZENAS)
+  const vendaQuinzena = seriePor('venda_quinzena', QUINZENAS)
 
-  const melhorDia = [...porDiaSemana].sort((a, b) => b.vendas - a.vendas)[0]
-  const melhorHora = [...porHora].sort((a, b) => b.vendas - a.vendas)[0]
+  const melhorDia = [...vendaDia].sort((a, b) => b.vendas - a.vendas)[0]
+  const piorDia = [...vendaDia]
+    .filter((d) => d.vendas > 0 || true)
+    .sort((a, b) => a.vendas - b.vendas)[0]
+  const melhorHora = [...vendaHora].sort((a, b) => b.vendas - a.vendas)[0]
 
   const dicas = useMemo(() => {
     const out: { titulo: string; texto: string }[] = []
-    const aberto = total.valor_aberto
-    if (aberto > 0)
+    if (total.valor_aberto > 0)
       out.push({
-        titulo: `${brl(aberto)} parados em oportunidade aberta`,
+        titulo: `${brl(total.valor_aberto)} em ${num(total.abertas)} oportunidades abertas`,
         texto:
-          'O valor em aberto é o maior ativo do mês. Cada semana sem contato reduz a chance de fechamento — priorize as mais antigas por valor.',
+          'Este é o valor já produzido e ainda não convertido. Priorize por valor e por tempo sem contato: é a alavanca mais rápida de receita.',
       })
-    if (conversao < 35 && total.avaliacoes > 5)
+    if (total.avaliacoes > 0)
       out.push({
-        titulo: `Conversão em ${num(conversao, 1)}%`,
-        texto:
-          'Abaixo de 35% indica que a avaliação está gerando orçamento, mas o follow-up não sustenta a decisão. Meta saudável para clínica: 40–50%.',
+        titulo: `Conversão de ${num(conversao, 1)}%`,
+        texto: `${num(total.vendas)} vendas sobre ${num(total.avaliacoes)} avaliações no período. Referência saudável em clínica: 40% a 50%.`,
       })
-    if (melhorDia)
+    if (melhorDia && melhorDia.vendas > 0)
       out.push({
         titulo: `${melhorDia.rotulo} é o dia que mais fecha`,
-        texto: `${melhorDia.vendas} vendas no período. Concentre as tentativas de fechamento e as avaliações neste dia.`,
+        texto: `${melhorDia.vendas} vendas (${brl(melhorDia.valor)}). Concentre retorno de orçamento e tentativa de fechamento neste dia.`,
       })
-    if (melhorHora)
+    if (melhorHora && melhorHora.vendas > 0)
       out.push({
-        titulo: `${melhorHora.rotulo} é a faixa que mais converte`,
-        texto: `${melhorHora.vendas} vendas. Bloqueie agenda do CRC nessa janela para retorno de orçamento.`,
+        titulo: `A faixa ${melhorHora.rotulo} concentra os fechamentos`,
+        texto: `${melhorHora.vendas} vendas (${brl(melhorHora.valor)}). Proteja essa janela na agenda do CRC para retorno de orçamento.`,
       })
     if (total.interacoes === 0)
       out.push({
-        titulo: 'Nenhuma interação registrada no período',
+        titulo: 'Interações ainda não registradas por CRC',
         texto:
-          'Sem registro, a performance é só o resultado. Abra a aba Interações e registre cada contato com desfecho: é o que permite medir tempo e número de toques até o fechamento.',
+          'O resultado já é medido; o esforço ainda não. Registre cada contato com desfecho na aba de interações para calcular tempo médio de fechamento e toques por venda.',
       })
     return out
   }, [total, conversao, melhorDia, melhorHora])
@@ -276,7 +282,7 @@ export default function CrcPerformance() {
     <div className="space-y-4">
       <PageHeader
         title="Performance CRC Comercial"
-        description="Oportunidades lançadas na Gestão de Vendas cruzadas com a agenda e as interações do CRC."
+        description="Mesma base da Gestão de Vendas: oportunidades por avaliação, vendas por fechamento, agenda e interações."
         icon={TrendingUp}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -336,17 +342,23 @@ export default function CrcPerformance() {
         </div>
       )}
 
-      <div className="text-[12.5px] text-muted-foreground">
-        Período: <strong className="text-foreground">{format(faixa.ini, 'dd/MM/yyyy')}</strong> a{' '}
-        <strong className="text-foreground">{format(faixa.fim, 'dd/MM/yyyy')}</strong>
-        {periodo === 'mes' && (
-          <span className="ml-1 capitalize">
-            · {format(faixa.ini, 'MMMM/yyyy', { locale: ptBR })}
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-muted-foreground">
+        <span>
+          Período: <strong className="text-foreground">{format(faixa.ini, 'dd/MM/yyyy')}</strong> a{' '}
+          <strong className="text-foreground">{format(faixa.fim, 'dd/MM/yyyy')}</strong>
+          {periodo === 'mes' && (
+            <span className="ml-1 capitalize">
+              · {format(faixa.ini, 'MMMM/yyyy', { locale: ptBR })}
+            </span>
+          )}
+        </span>
+        <span className="hidden sm:inline text-border-strong">|</span>
+        <span className="inline-flex items-center gap-1">
+          <CheckCircle2 className="size-3.5 text-success" />
+          Oportunidades: <em>avaliações em aberto</em> · Vendas: <em>fechamentos</em>
+        </span>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           titulo="Pacientes avaliados"
@@ -357,7 +369,7 @@ export default function CrcPerformance() {
         <KpiCard
           titulo="Orçamentos gerados"
           valor={brl(total.valor_oportunidades)}
-          sub={`${brl(total.valor_aberto)} ainda abertos`}
+          sub={`${brl(total.valor_aberto)} em aberto`}
           loading={loading}
           tone="gold"
         />
@@ -371,13 +383,12 @@ export default function CrcPerformance() {
         <KpiCard
           titulo="Conversão"
           valor={`${num(conversao, 1)}%`}
-          sub={`${num(total.agendamentos)} agendamentos · ${num(total.interacoes)} interações`}
+          sub={`${num(total.agendamentos)} agendamentos na agenda`}
           loading={loading}
           tone={conversao >= 40 ? 'success' : conversao >= 25 ? 'gold' : 'danger'}
         />
       </div>
 
-      {/* Tabela por CRC */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -385,7 +396,7 @@ export default function CrcPerformance() {
             Performance por CRC
           </CardTitle>
           <CardDescription>
-            Funil completo no período: do orçamento gerado ao desfecho de cada interação.
+            Oportunidades e vendas separadas: uma mede o que foi gerado, a outra o que fechou.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
@@ -401,22 +412,21 @@ export default function CrcPerformance() {
                   <th className="px-2 py-2 text-right font-bold">Vendido</th>
                   <th className="px-2 py-2 text-right font-bold">Conv.</th>
                   <th className="px-2 py-2 text-right font-bold">Ticket</th>
-                  <th className="px-2 py-2 text-right font-bold">Agend.</th>
-                  <th className="px-2 py-2 text-right font-bold">Interações</th>
+                  <th className="px-2 py-2 text-right font-bold">Agenda</th>
                   <th className="px-2 py-2 text-right font-bold">Dias p/ fechar</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={11} className="py-6">
+                    <td colSpan={10} className="py-6">
                       <Skeleton className="h-8 w-full" />
                     </td>
                   </tr>
                 )}
                 {!loading && perfis.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="py-8 text-center text-muted-foreground">
                       Nenhuma oportunidade lançada no período.
                     </td>
                   </tr>
@@ -452,48 +462,86 @@ export default function CrcPerformance() {
                       </td>
                       <td className="tabular px-2 py-2.5 text-right">{brl(p.ticket_medio)}</td>
                       <td className="tabular px-2 py-2.5 text-right">{num(p.agendamentos)}</td>
-                      <td className="tabular px-2 py-2.5 text-right">{num(p.interacoes)}</td>
                       <td className="tabular px-2 py-2.5 text-right">
                         {p.dias_ate_fechamento == null ? '—' : num(p.dias_ate_fechamento, 1)}
                       </td>
                     </tr>
                   ))}
               </tbody>
+              {!loading && perfis.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-border bg-muted/40 font-bold">
+                    <td className="py-2.5 pr-3 text-foreground">TOTAL</td>
+                    <td className="tabular px-2 py-2.5 text-right">{num(total.avaliacoes)}</td>
+                    <td className="tabular px-2 py-2.5 text-right">
+                      {brl(total.valor_oportunidades)}
+                    </td>
+                    <td className="tabular px-2 py-2.5 text-right text-gold-ink">
+                      {brl(total.valor_aberto)}
+                    </td>
+                    <td className="tabular px-2 py-2.5 text-right">{num(total.vendas)}</td>
+                    <td className="tabular px-2 py-2.5 text-right text-success">
+                      {brl(total.valor_vendido)}
+                    </td>
+                    <td className="tabular px-2 py-2.5 text-right">{num(conversao, 1)}%</td>
+                    <td className="tabular px-2 py-2.5 text-right">{brl(ticket)}</td>
+                    <td className="tabular px-2 py-2.5 text-right">{num(total.agendamentos)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Comparações de tempo */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <BarrasCard
-          titulo="Por dia da semana"
-          descricao="Onde a venda realmente acontece"
-          dados={porDiaSemana}
+          titulo="Avaliações por dia da semana"
+          descricao="Quando o paciente chega para ser avaliado"
+          dados={avalDia}
+          metrica="avaliacoes"
           loading={loading}
         />
         <BarrasCard
-          titulo="Por faixa do dia"
-          descricao="Melhor janela para fechar"
-          dados={porHora}
+          titulo="Vendas por dia da semana"
+          descricao="Quando o fechamento acontece"
+          dados={vendaDia}
+          metrica="vendas"
           loading={loading}
         />
         <BarrasCard
-          titulo="Por quinzena do mês"
-          descricao="Início x fim de mês"
-          dados={porQuinzena}
+          titulo="Vendas por faixa do dia"
+          descricao="Horário do lançamento do fechamento"
+          dados={vendaHora}
+          metrica="vendas"
           loading={loading}
         />
+        <div className="space-y-3">
+          <BarrasCard
+            titulo="Avaliações por quinzena"
+            descricao="Início x fim de mês"
+            dados={avalQuinzena}
+            metrica="avaliacoes"
+            loading={loading}
+          />
+          <BarrasCard
+            titulo="Vendas por quinzena"
+            descricao="Onde o mês vira resultado"
+            dados={vendaQuinzena}
+            metrica="vendas"
+            loading={loading}
+          />
+        </div>
       </div>
 
-      {/* Dicas */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Lightbulb className="size-4 text-gold-ink" />O que os números pedem
           </CardTitle>
           <CardDescription>
-            Leitura automática do período — o que atacar primeiro para virar máquina de vendas.
+            Leitura automática do período selecionado, sempre sobre os mesmos números da tabela.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2.5 pt-0 sm:grid-cols-2">
@@ -513,7 +561,6 @@ export default function CrcPerformance() {
         </CardContent>
       </Card>
 
-      {/* Interações */}
       <CrcInteracoesTab ini={ini} fim={fim} crcFiltro={crcFiltro} crcs={crcs} onSaved={carregar} />
     </div>
   )
@@ -563,14 +610,18 @@ function BarrasCard({
   titulo,
   descricao,
   dados,
+  metrica,
   loading,
 }: {
   titulo: string
   descricao: string
-  dados: { rotulo: string; vendas: number; valor: number }[]
+  dados: { rotulo: string; avaliacoes: number; vendas: number; valor: number }[]
+  metrica: 'avaliacoes' | 'vendas'
   loading?: boolean
 }) {
-  const max = Math.max(1, ...dados.map((d) => d.vendas))
+  const vals = dados.map((d) => (metrica === 'avaliacoes' ? d.avaliacoes : d.vendas))
+  const max = Math.max(1, ...vals)
+  const totalVals = vals.reduce((a, b) => a + b, 0)
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -583,24 +634,30 @@ function BarrasCard({
       <CardContent className="space-y-2 pt-0">
         {loading && <Skeleton className="h-24 w-full" />}
         {!loading &&
-          dados.map((d) => (
-            <div key={d.rotulo}>
-              <div className="mb-0.5 flex items-baseline justify-between text-[11.5px]">
-                <span className="font-medium text-foreground">{d.rotulo}</span>
-                <span className="tabular text-muted-foreground">
-                  {d.vendas} · {brl(d.valor)}
-                </span>
+          dados.map((d, i) => {
+            const v = vals[i]
+            const pct = totalVals > 0 ? Math.round((v / totalVals) * 100) : 0
+            return (
+              <div key={d.rotulo}>
+                <div className="mb-0.5 flex items-baseline justify-between text-[11.5px]">
+                  <span className="font-medium text-foreground">{d.rotulo}</span>
+                  <span className="tabular text-muted-foreground">
+                    {metrica === 'vendas'
+                      ? `${v} vendas · ${brl(d.valor)}`
+                      : `${v} avaliações${totalVals ? ` · ${pct}%` : ''}`}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-gold-ink"
+                    style={{ width: `${v === 0 ? 0 : Math.max(3, (v / max) * 100)}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-gold-ink"
-                  style={{ width: `${Math.max(3, (d.vendas / max) * 100)}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        {!loading && dados.length === 0 && (
-          <p className="py-4 text-center text-xs text-muted-foreground">Sem dados no período.</p>
+            )
+          })}
+        {!loading && dados.every((d, i) => vals[i] === 0) && (
+          <p className="py-3 text-center text-xs text-muted-foreground">Sem dados no período.</p>
         )}
       </CardContent>
     </Card>
