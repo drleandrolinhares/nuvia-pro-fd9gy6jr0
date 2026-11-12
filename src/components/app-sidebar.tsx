@@ -32,6 +32,7 @@ import {
   GraduationCap,
   FlaskConical,
   Sparkles,
+  TrendingUp,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -169,6 +170,12 @@ export const navData = [
         title: 'GESTÃO DE VENDAS',
         url: '/comercial/vendas',
         icon: FileBarChart,
+        permission: ['Acessar Gestão de Vendas'],
+      },
+      {
+        title: 'PERFORMANCE CRC',
+        url: '/comercial/crc',
+        icon: TrendingUp,
         permission: ['Acessar Gestão de Vendas'],
       },
       {

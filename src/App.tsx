@@ -38,6 +38,7 @@ import Onboarding from './pages/intranet/Onboarding'
 import Treinamentos from './pages/intranet/Treinamentos'
 import Negociacao from './pages/comercial/Negociacao'
 import Vendas from './pages/comercial/Vendas'
+import CrcPerformance from './pages/comercial/CrcPerformance'
 import FunilVendas from './pages/comercial/FunilVendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
@@ -634,6 +635,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedPermissions={['Acessar Gestão de Vendas']}>
               <Vendas />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/comercial/crc"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Gestão de Vendas']}>
+              <CrcPerformance />
             </ProtectedRoute>
           }
         />
