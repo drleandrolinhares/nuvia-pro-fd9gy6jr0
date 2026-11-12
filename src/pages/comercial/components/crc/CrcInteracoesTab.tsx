@@ -222,7 +222,8 @@ export function CrcInteracoesTab({
   const chips = useMemo(() => {
     const arr: { chave: string; n: number; familia: string }[] = []
     contagem.forEach((n, k) => {
-      if (k === 'pendente') return
+      // Pendente e cancelada têm card próprio no topo — não repetir como chip.
+      if (k === 'pendente' || k === 'cancelado') return
       arr.push({ chave: k, n, familia: meta.get(k)?.familia ?? '' })
     })
     const ordemFam: Record<string, number> = {
@@ -267,6 +268,10 @@ export function CrcInteracoesTab({
   const nomeDe = (l: Linha) =>
     l.pacientes?.nome || l.funil_leads?.nome || l.descricao || '(sem paciente)'
 
+  const nCanceladas = contagem.get('cancelado') ?? 0
+
+  // Os cards têm de fechar no total: ações = concluídas + pendentes (+ canceladas).
+  // O card de canceladas só aparece quando existe, para não poluir o dia sem nenhuma.
   const kpis: { chave: string; titulo: string; valor: number; classe: string }[] = [
     {
       chave: CHAVE_TODOS,
@@ -286,6 +291,16 @@ export function CrcInteracoesTab({
       valor: contagem.get('pendente') ?? 0,
       classe: 'text-info',
     },
+    ...(nCanceladas > 0
+      ? [
+          {
+            chave: 'cancelado',
+            titulo: 'Canceladas',
+            valor: nCanceladas,
+            classe: 'text-muted-foreground',
+          },
+        ]
+      : []),
     {
       chave: CHAVE_POSITIVO,
       titulo: 'Fechamentos',
@@ -308,7 +323,11 @@ export function CrcInteracoesTab({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
-        <div className="grid gap-2 sm:grid-cols-4">
+        <div
+          className={
+            'grid gap-2 ' + (kpis.length === 5 ? 'grid-cols-2 sm:grid-cols-5' : 'sm:grid-cols-4')
+          }
+        >
           {kpis.map((k) => {
             const ativo = filtro === k.chave
             return (
