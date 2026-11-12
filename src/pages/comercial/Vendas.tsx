@@ -33,6 +33,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { VendasAtuaisWidget } from '@/components/financeiro/vendas-atuais-widget'
 import { OportunidadesWidget } from '@/components/financeiro/oportunidades-widget'
 import { QuantidadeVendasWidget } from '@/components/financeiro/quantidade-vendas-widget'
+import { VendasResumoDash } from './components/VendasResumoDash'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -226,6 +227,61 @@ export default function Vendas() {
     return options
   }, [])
 
+  /** Mesma faixa que os widgets e as tabelas usam, em yyyy-MM-dd. */
+  const faixaDash = useMemo(() => {
+    const hoje = new Date()
+    let sd: Date | undefined
+    let ed: Date | undefined
+    switch (filters.periodo) {
+      case 'hoje':
+        sd = startOfDay(hoje)
+        ed = endOfDay(hoje)
+        break
+      case 'ontem':
+        sd = startOfDay(subDays(hoje, 1))
+        ed = endOfDay(subDays(hoje, 1))
+        break
+      case 'ultimos_7':
+        sd = startOfDay(subDays(hoje, 7))
+        ed = endOfDay(hoje)
+        break
+      case 'ultimos_15':
+        sd = startOfDay(subDays(hoje, 15))
+        ed = endOfDay(hoje)
+        break
+      case 'mes_atual':
+        sd = startOfMonth(hoje)
+        ed = endOfMonth(hoje)
+        break
+      case 'todos':
+        sd = new Date(2000, 0, 1)
+        ed = hoje
+        break
+      case 'personalizado':
+        if (filters.dataInicio) {
+          const [y, m, d] = filters.dataInicio.split('-').map(Number)
+          sd = startOfDay(new Date(y, m - 1, d))
+        }
+        if (filters.dataFim) {
+          const [y, m, d] = filters.dataFim.split('-').map(Number)
+          ed = endOfDay(new Date(y, m - 1, d))
+        }
+        break
+      default:
+        if (filters.periodo && filters.periodo.match(/^\d{4}-\d{2}$/)) {
+          const [y, m] = filters.periodo.split('-').map(Number)
+          const p = new Date(y, m - 1, 1)
+          sd = startOfMonth(p)
+          ed = endOfMonth(p)
+        }
+        break
+    }
+    return {
+      ini: format(sd ?? startOfMonth(hoje), 'yyyy-MM-dd'),
+      fim: format(ed ?? hoje, 'yyyy-MM-dd'),
+    }
+  }, [filters.periodo, filters.dataInicio, filters.dataFim])
+
   const handleSuccess = useCallback(() => {
     fetchAvaliacoes()
     setRefreshKey((prev) => prev + 1)
@@ -351,6 +407,12 @@ export default function Vendas() {
         </TabsList>
 
         <TabsContent value="oportunidades" className="space-y-4 outline-none">
+          <VendasResumoDash
+            modo="oportunidades"
+            ini={faixaDash.ini}
+            fim={faixaDash.fim}
+            refreshKey={refreshKey}
+          />
           <Card>
             <CardHeader>
               <CardTitle>Oportunidades Comerciais</CardTitle>
@@ -386,6 +448,12 @@ export default function Vendas() {
         </TabsContent>
 
         <TabsContent value="concretizadas" className="space-y-4 outline-none">
+          <VendasResumoDash
+            modo="vendas"
+            ini={faixaDash.ini}
+            fim={faixaDash.fim}
+            refreshKey={refreshKey}
+          />
           <VendasConcretizadasLista
             onRevertSuccess={handleSuccess}
             periodo={filters.periodo}
