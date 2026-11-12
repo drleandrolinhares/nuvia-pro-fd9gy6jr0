@@ -33,6 +33,7 @@ import { useAuth } from '@/hooks/use-auth'
 
 import { VendasResumoDash } from './components/VendasResumoDash'
 import { VendasCabecalhoDash } from './components/VendasCabecalhoDash'
+import { VendasDuplicidades } from './components/VendasDuplicidades'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -311,6 +312,8 @@ export default function Vendas() {
       />
 
       <VendasCabecalhoDash ini={faixaDash.ini} fim={faixaDash.fim} refreshKey={refreshKey} />
+
+      <VendasDuplicidades ini={faixaDash.ini} fim={faixaDash.fim} refreshKey={refreshKey} />
 
       <div className="flex flex-wrap items-center gap-4 mb-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border">
         <div className="flex items-center gap-3">
