@@ -95,26 +95,28 @@ export function CrcInteracoesTab({
   }, [carregar])
 
   // Oportunidades abertas do período, para vincular a interação
+  // Oportunidades abertas do período — restritas ao escopo do CRC selecionado
   useEffect(() => {
-    supabase
+    let q = supabase
       .from('avaliacoes')
-      .select('id, data_avaliacao, valor_orcamento, pacientes(nome)')
+      .select('id, data_avaliacao, valor_orcamento, crc_comercial_id, pacientes(nome)')
       .eq('status', 'avaliacao_realizada')
       .gte('data_avaliacao', ini)
       .lte('data_avaliacao', fim)
       .order('data_avaliacao', { ascending: false })
       .limit(300)
-      .then(({ data }) => {
-        if (data)
-          setAvaliacoes(
-            (data as any[]).map((a) => ({
-              id: a.id,
-              paciente: a.pacientes?.nome ?? '(sem nome)',
-              valor: Number(a.valor_orcamento ?? 0),
-              data: a.data_avaliacao,
-            })),
-          )
-      })
+    q = q.not('crc_comercial_id', 'is', null)
+    q.then(({ data }) => {
+      if (data)
+        setAvaliacoes(
+          (data as any[]).map((a) => ({
+            id: a.id,
+            paciente: a.pacientes?.nome ?? '(sem nome)',
+            valor: Number(a.valor_orcamento ?? 0),
+            data: a.data_avaliacao,
+          })),
+        )
+    })
   }, [ini, fim])
 
   const salvar = async () => {

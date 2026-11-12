@@ -36,6 +36,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { CrcInteracoesTab } from './components/crc/CrcInteracoesTab'
 
 type Perfil = {
+  crc_id: string
   crc_nome: string
   avaliacoes: number
   valor_oportunidades: number
@@ -128,22 +129,26 @@ export default function CrcPerformance() {
   const ini = format(faixa.ini, 'yyyy-MM-dd')
   const fim = format(faixa.fim, 'yyyy-MM-dd')
 
+  // Só quem tem o cargo "CRC Comercial" entra na análise (decisão do Leandro).
   useEffect(() => {
     supabase
-      .from('crc_comercial')
-      .select('id, nome, status')
+      .from('usuarios')
+      .select('id, nome, cargos!inner(nome)')
+      .eq('status', 'ativo')
+      .eq('cargos.nome', 'CRC Comercial')
       .order('nome')
       .then(({ data }) => {
-        if (data) setCrcs(data as any)
+        if (data) setCrcs((data as any[]).map((u) => ({ id: u.id, nome: u.nome })))
       })
   }, [])
 
   const carregar = useCallback(async () => {
     setLoading(true)
+    // p_usuario: id do USUÁRIO com cargo CRC Comercial
     const crcParam = crcFiltro === 'todos' ? null : crcFiltro
     const [p, s] = await Promise.all([
-      supabase.rpc('crc_performance', { p_ini: ini, p_fim: fim, p_crc: crcParam }),
-      supabase.rpc('crc_series', { p_ini: ini, p_fim: fim, p_crc: crcParam }),
+      supabase.rpc('crc_performance', { p_ini: ini, p_fim: fim, p_usuario: crcParam }),
+      supabase.rpc('crc_series', { p_ini: ini, p_fim: fim, p_usuario: crcParam }),
     ])
     if (p.error || s.error) {
       toast({
@@ -282,7 +287,7 @@ export default function CrcPerformance() {
     <div className="space-y-4">
       <PageHeader
         title="Performance CRC Comercial"
-        description="Mesma base da Gestão de Vendas: oportunidades por avaliação, vendas por fechamento, agenda e interações."
+        description="Exclusivo do cargo CRC Comercial. Mesma base da Gestão de Vendas: oportunidades por avaliação, vendas por fechamento, agenda e interações."
         icon={TrendingUp}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -433,7 +438,7 @@ export default function CrcPerformance() {
                 )}
                 {!loading &&
                   perfis.map((p) => (
-                    <tr key={p.crc_nome} className="border-b border-border/60 last:border-0">
+                    <tr key={p.crc_id} className="border-b border-border/60 last:border-0">
                       <td className="py-2.5 pr-3 font-semibold text-foreground">{p.crc_nome}</td>
                       <td className="tabular px-2 py-2.5 text-right">{num(p.avaliacoes)}</td>
                       <td className="tabular px-2 py-2.5 text-right">

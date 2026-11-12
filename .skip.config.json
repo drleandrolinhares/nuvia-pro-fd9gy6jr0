@@ -32,10 +32,10 @@
     "README.md"
   ],
   "deployment": {
-    "lastDevBuildRef": "3cfdc2a",
-    "lastProdBuildRef": "3cfdc2a",
-    "publishedAt": "2026-11-12T01:43:54.289Z",
-    "lastPublishedRef": "3cfdc2a"
+    "lastDevBuildRef": "4adc760",
+    "lastProdBuildRef": "4adc760",
+    "publishedAt": "2026-11-12T02:06:48.925Z",
+    "lastPublishedRef": "4adc760"
   },
   "migrations": {
     "applied": [
