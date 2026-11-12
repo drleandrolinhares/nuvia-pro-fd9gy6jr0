@@ -23,6 +23,9 @@ type Cab = {
   oportunidade_total: number
   pct_aberto: number
   pct_vendido: number
+  /** avaliações marcadas como vendidas que NÃO têm venda lançada */
+  sem_registro_qtd: number
+  sem_registro_valor: number
 }
 
 /**
@@ -80,7 +83,7 @@ export function VendasCabecalhoDash({
               </div>
             )}
             <p className="mt-1 text-[11.5px] leading-tight text-muted-foreground">
-              {num(d?.avaliacoes)} avaliações lançadas
+              {num(d?.avaliacoes)} avaliações geraram oportunidade
               {d
                 ? ` · ${num(d.avaliacoes - d.pacientes_avaliados)} paciente(s) com mais de uma`
                 : ''}
@@ -164,12 +167,28 @@ export function VendasCabecalhoDash({
               </div>
             )}
 
-            {/* Régua da conta: tudo pela data da AVALIAÇÃO */}
+            {/* Avaliação marcada como vendida sem venda lançada */}
+            {!loading && (d?.sem_registro_qtd ?? 0) > 0 && (
+              <div className="mt-3 rounded-md border border-warning/40 bg-warning/8 px-2.5 py-2">
+                <div className="text-[10.5px] font-bold uppercase tracking-wide text-foreground/80">
+                  Venda marcada sem registro
+                </div>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  <strong className="tabular text-foreground">{num(d?.sem_registro_qtd)}</strong>{' '}
+                  avaliação(ões) marcada(s) como vendida(s) no período, mas sem venda lançada em
+                  Vendas Concretizadas — {brl(d?.sem_registro_valor)} em orçamento que não entra no
+                  valor vendido. Ou a venda não foi lançada, ou o status foi trocado sem fechar.
+                </p>
+              </div>
+            )}
+
+            {/* De onde vem cada número */}
             <p className="mt-2 text-[10.5px] leading-relaxed text-muted-foreground">
-              Conta pela <strong className="text-foreground/80">data da avaliação</strong>: a
-              oportunidade nasce na avaliação e entra em um grupo só — {num(d?.op_qtd)} em aberto +{' '}
-              {num(d?.vendas_qtd)} vendidas = {num(d?.avaliacoes)}. A aba Vendas Concretizadas usa
-              outra régua (data de <em>fechamento</em>), por isso os totais das duas abas diferem.
+              <strong className="text-foreground/80">Em aberto</strong> = orçamento das avaliações
+              ainda não fechadas ({num(d?.op_qtd)}), pela data da avaliação.{' '}
+              <strong className="text-foreground/80">Vendido</strong> = valor fechado em Vendas
+              Concretizadas ({num(d?.vendas_qtd)}), pela data de fechamento. São réguas diferentes:
+              orçamento mede a oportunidade gerada, venda mede o que entrou.
             </p>
           </div>
         </div>
