@@ -319,7 +319,7 @@ export function CrcInteracoesTab({
         <CardDescription>
           Sai das ações comerciais concluídas na Agenda — o mesmo registro que a CRC já faz, sem
           digitar de novo. Clique em um número ou em um desfecho para ver só os pacientes daquele
-          recorte.
+          recorte; clique de novo para voltar à lista completa.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
