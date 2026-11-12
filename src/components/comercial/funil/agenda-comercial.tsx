@@ -34,6 +34,7 @@ import { CompromissoComercialModal } from './compromisso-comercial-modal'
 import { getCompromissos, getUsuarios } from '@/services/compromissos'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
+import '@/components/operacional/invisalign-dark-surface.css'
 
 export function AgendaComercial({ origens, etapas, temperaturas }: any) {
   const [date, setDate] = useState<Date | undefined>(new Date())
@@ -188,11 +189,9 @@ export function AgendaComercial({ origens, etapas, temperaturas }: any) {
         </div>
 
         {/* 1. CONTADOR DE AGENDAMENTOS FUTUROS (Abaixo do Calendário) */}
-        {/* Card corrigido: fundo 100% opaco em slate-900 com overflow-hidden para eliminar artefatos/sobras claras */}
-        <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-md shadow-black/40 relative overflow-hidden group">
-          {/* Brilho dourado interno e contido */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/30 pointer-events-none" />
-
+        {/* Contraste corrigido: fundo navy 100% opaco (regra .funil-agendamentos-futuros em
+            invisalign-dark-surface.css vence a ponte legada) — sem o trecho translúcido que clareava. */}
+        <div className="funil-agendamentos-futuros p-5 rounded-xl border border-amber-500/30 shadow-md shadow-black/40 relative overflow-hidden group">
           <div className="relative z-10">
             <div className="flex items-center justify-between gap-2 mb-2">
               <span className="text-[11px] font-black uppercase tracking-wider text-amber-400/90 flex items-center gap-1.5">
