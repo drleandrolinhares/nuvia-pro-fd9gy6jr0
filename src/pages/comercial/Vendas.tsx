@@ -30,10 +30,9 @@ import { VendasConcretizadasLista } from './components/VendasConcretizadasLista'
 import { DetalhesVendaTab } from './components/DetalhesVendaTab'
 import { Avaliacao, VendasFiltersState } from './types'
 import { useAuth } from '@/hooks/use-auth'
-import { VendasAtuaisWidget } from '@/components/financeiro/vendas-atuais-widget'
-import { OportunidadesWidget } from '@/components/financeiro/oportunidades-widget'
-import { QuantidadeVendasWidget } from '@/components/financeiro/quantidade-vendas-widget'
+
 import { VendasResumoDash } from './components/VendasResumoDash'
+import { VendasCabecalhoDash } from './components/VendasCabecalhoDash'
 
 export default function Vendas() {
   const { toast } = useToast()
@@ -305,29 +304,13 @@ export default function Vendas() {
         description="Acompanhe negociações, vendas concretizadas e o ranking de avaliadores."
         icon={Landmark}
         actions={
-          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            <OportunidadesWidget
-              periodo={filters.periodo}
-              dataInicio={filters.dataInicio}
-              dataFim={filters.dataFim}
-              refreshKey={refreshKey}
-            />
-            <QuantidadeVendasWidget
-              periodo={filters.periodo}
-              dataInicio={filters.dataInicio}
-              dataFim={filters.dataFim}
-              refreshKey={refreshKey}
-            />
-            <VendasAtuaisWidget
-              periodo={filters.periodo}
-              dataInicio={filters.dataInicio}
-              dataFim={filters.dataFim}
-              refreshKey={refreshKey}
-            />
+          <div className="flex items-center gap-2">
             {canEdit && <VendasModal dentistas={dentistas} crcs={crcs} onSuccess={handleSuccess} />}
           </div>
         }
       />
+
+      <VendasCabecalhoDash ini={faixaDash.ini} fim={faixaDash.fim} refreshKey={refreshKey} />
 
       <div className="flex flex-wrap items-center gap-4 mb-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border">
         <div className="flex items-center gap-3">
