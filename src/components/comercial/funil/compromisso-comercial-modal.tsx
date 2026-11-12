@@ -63,6 +63,10 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
   const [isSearching, setIsSearching] = useState(false)
 
   const [resultado, setResultado] = useState('')
+  const [desfechoCodigo, setDesfechoCodigo] = useState('')
+  const [desfechos, setDesfechos] = useState<
+    { codigo: string; rotulo: string; familia: string; exige_retorno: boolean; explica: string }[]
+  >([])
   const [reagendar, setReagendar] = useState(false)
   const [novaData, setNovaData] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [novaHora, setNovaHora] = useState('')
@@ -83,6 +87,18 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
   const [motivoCancelamento, setMotivoCancelamento] = useState('')
 
   const [agendaLogs, setAgendaLogs] = useState<FunilAgendaLog[]>([])
+
+  // Taxonomia de desfecho vem do banco: uma fonte só para tela, métrica e relatório.
+  useEffect(() => {
+    supabase
+      .from('desfechos_comerciais')
+      .select('codigo, rotulo, familia, exige_retorno, explica')
+      .eq('ativo', true)
+      .order('ordem')
+      .then(({ data }) => {
+        if (data) setDesfechos(data as any)
+      })
+  }, [])
 
   useEffect(() => {
     async function loadUsers() {
@@ -154,6 +170,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
         })
       }
       setResultado(evento.resultado_acao || '')
+      setDesfechoCodigo(evento.desfecho_codigo || '')
       setReagendamentoData(evento.data_inicio || format(new Date(), 'yyyy-MM-dd'))
       setReagendamentoHora(evento.hora_inicio?.substring(0, 5) || '')
     } else {
@@ -625,8 +642,12 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
   }
 
   const handleConcluir = async () => {
+    if (!desfechoCodigo) {
+      toast({ title: 'Escolha o desfecho para concluir a ação', variant: 'destructive' })
+      return
+    }
     if (!resultado) {
-      toast({ title: 'Preencha o resultado para concluir a ação', variant: 'destructive' })
+      toast({ title: 'Descreva o que foi conversado', variant: 'destructive' })
       return
     }
     if (reagendar && !novaData) {
@@ -640,6 +661,7 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
       await updateCompromisso(evento!.id, {
         status_acao: 'concluido',
         resultado_acao: resultado,
+        desfecho_codigo: desfechoCodigo || null,
         concluido_em: agoraIso,
         concluido_por: user!.id,
       })
@@ -1088,7 +1110,54 @@ export function CompromissoComercialModal({ isOpen, onClose, onSave, evento }: M
                   <CheckCircle2 className="w-4 h-4" /> Registrar Resultado da Ação
                 </h4>
                 <div>
-                  <Label>Qual foi o desfecho? *</Label>
+                  <Label>
+                    Qual foi o desfecho? *{' '}
+                    <span className="text-[11px] font-normal text-slate-400">
+                      (a categoria define se o caso continua)
+                    </span>
+                  </Label>
+                  <select
+                    value={desfechoCodigo}
+                    onChange={(e) => {
+                      const c = desfechoCodigo === e.target.value ? '' : e.target.value
+                      setDesfechoCodigo(c)
+                      const item = desfechos.find((d) => d.codigo === c)
+                      // desfecho de continuidade exige nova ação: já marca o follow-up
+                      if (item?.exige_retorno) setReagendar(true)
+                    }}
+                    className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  >
+                    <option value="">Selecione a categoria…</option>
+                    {(['positivo', 'negativo', 'continuidade'] as const).map((fam) => (
+                      <optgroup
+                        key={fam}
+                        label={
+                          fam === 'positivo'
+                            ? '✅ CONCLUSÃO POSITIVA — encerra'
+                            : fam === 'negativo'
+                              ? '⛔ CONCLUSÃO NEGATIVA — encerra sem venda'
+                              : '🔄 CONTINUIDADE — exige nova ação'
+                        }
+                      >
+                        {desfechos
+                          .filter((d) => d.familia === fam)
+                          .map((d) => (
+                            <option key={d.codigo} value={d.codigo}>
+                              {d.rotulo}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {desfechoCodigo && (
+                    <p className="mt-1 text-[11.5px] leading-snug text-slate-400">
+                      {desfechos.find((d) => d.codigo === desfechoCodigo)?.explica}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>O que foi conversado *</Label>
                   <Textarea
                     ref={resultadoRef}
                     value={resultado}
