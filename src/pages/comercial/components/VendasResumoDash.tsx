@@ -175,7 +175,7 @@ export function VendasResumoDash({
             </CardTitle>
             <CardDescription className="text-[11.5px]">
               {venda
-                ? 'Quanto veio da CRC Comercial e quanto foi conversão direta.'
+                ? 'Conversão Direta = venda feita no consultório pelo dentista, sem negociação do CRC. Nela o CRC não participa nem recebe comissão.'
                 : 'Quem responde pela oportunidade em aberto.'}
             </CardDescription>
           </CardHeader>
@@ -186,10 +186,21 @@ export function VendasResumoDash({
                 (d?.por_origem ?? []).map((o) => {
                   const total = d?.valor_total || 1
                   const pct = Math.round((o.valor / total) * 100)
+                  const direta = /convers/i.test(o.nome)
                   return (
                     <div key={o.nome}>
                       <div className="mb-0.5 flex items-baseline justify-between text-[12px]">
-                        <span className="font-medium text-foreground">{o.nome}</span>
+                        <span className="flex items-center gap-1.5 font-medium text-foreground">
+                          {o.nome}
+                          {venda && direta && (
+                            <Badge
+                              variant="outline"
+                              className="border-border bg-muted px-1 py-0 text-[9.5px] font-semibold uppercase text-muted-foreground"
+                            >
+                              sem CRC
+                            </Badge>
+                          )}
+                        </span>
                         <span className="tabular text-muted-foreground">
                           {num(o.quantidade)}
                           {venda ? ' vendas' : ' oport.'} · {brl(o.valor)}
@@ -198,7 +209,7 @@ export function VendasResumoDash({
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-gold-ink"
+                          className={`h-full rounded-full ${direta ? 'bg-border-strong' : 'bg-gold-ink'}`}
                           style={{ width: `${Math.max(2, pct)}%` }}
                         />
                       </div>
