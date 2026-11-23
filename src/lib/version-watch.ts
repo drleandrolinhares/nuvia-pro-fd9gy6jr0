@@ -19,7 +19,10 @@
  * Nada de depender de o usuário saber que precisa limpar o cache.
  */
 
-const INTERVALO_MS = 60_000
+// 60s era lento demais: em 23/11/2026 o Leandro passou mais de uma hora olhando
+// números de um bundle antigo (taxa 0,0% com comissão calculada) enquanto três
+// correções já estavam publicadas. 20s reduz a janela sem custo perceptível.
+const INTERVALO_MS = 20_000
 
 function bundleAtual(): string | null {
   const scripts = Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]'))
@@ -134,6 +137,17 @@ export function vigiarVersao() {
     if (!document.hidden) conferir()
   }, INTERVALO_MS)
 
+  // `pageshow` com persisted=true é a volta do bfcache (Safari/Firefox): a
+  // página ressuscita com o código antigo e os timers ficam parados enquanto
+  // ela está congelada. Sem isto, uma aba "de ontem" pode voltar sem conferir.
+  window.addEventListener('pageshow', (ev: any) => {
+    if (ev?.persisted) {
+      conferir()
+    } else {
+      conferir()
+    }
+  })
+
   // Primeira conferência depois que a tela já carregou.
-  window.setTimeout(conferir, 4000)
+  window.setTimeout(conferir, 2500)
 }
