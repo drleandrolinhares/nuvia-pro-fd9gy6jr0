@@ -52,63 +52,127 @@ function getPercentual(faixas: FaixaBase[], percEntrada: number): number {
   return f?.percentual_comissao || 0
 }
 
-function buildProfessionalSummaries(vendas: ComissaoVenda[]): ProfessionalSummary[] {
+/**
+ * Faixa de comissão do profissional, aplicada sobre o VOLUME DO PERÍODO.
+ *
+ * Regra do Leandro (23/11/2026), confirmada com o exemplo dele:
+ *   "< 20% de entrada: 2% ... de 20 a 29,99%: 3% ... > 30%: 4%
+ *    Ex.: 100.000 de vendas, 20.000 de entradas => 20% => 3% => 3.000"
+ *
+ * Ou seja: o percentual sai do % de entrada MÉDIO do período e incide sobre o
+ * total vendido. Vendas SEM entrada não entram na base (não geram comissão).
+ *
+ * Um somatório "venda a venda" daria outro número (o percentual de uma venda
+ * isolada pode cair numa faixa diferente da média). O valor oficial é o da
+ * média, como ele definiu; a venda a venda fica na tabela só como referência.
+ */
+function resumoPorMedia(
+  vendas: ComissaoVenda[],
+  campoComissao: 'dentista' | 'crc',
+  faixas: FaixaBase[],
+): { taxa: number; base: number; total: number } {
+  const comEntrada = vendas.filter(
+    (v) => (v.valor_entrada || 0) > 0 && (v.valor_tratamento || 0) > 0,
+  )
+  if (comEntrada.length === 0) return { taxa: 0, base: 0, total: 0 }
+
+  const base = comEntrada.reduce((s, v) => s + v.valor_tratamento, 0)
+  const entradas = comEntrada.reduce((s, v) => s + v.valor_entrada, 0)
+  const pctEntrada = base > 0 ? (entradas / base) * 100 : 0
+  const taxa = getPercentual(faixas, pctEntrada)
+
+  return { taxa, base, total: (base * taxa) / 100 }
+}
+
+function buildProfessionalSummaries(
+  vendas: ComissaoVenda[],
+  faixasDent: FaixaBase[] = [],
+  faixasCrc: FaixaBase[] = [],
+): ProfessionalSummary[] {
   const map = new Map<string, ProfessionalSummary>()
+  const grupos = new Map<
+    string,
+    { tipo: 'Dentista' | 'CRC'; vendas: ComissaoVenda[]; nome: string }
+  >()
 
   for (const v of vendas) {
     if (v.dentista_avaliador && v.dentista_nome) {
       const key = `dentista-${v.dentista_avaliador}`
-      const existing = map.get(key) || {
-        id: v.dentista_avaliador,
-        nome: v.dentista_nome,
-        tipo: 'Dentista' as const,
-        totalVendas: 0,
-        totalEntries: 0,
-        entryPercentage: 0,
-        commissionRate: 0,
-        totalComissao: 0,
-        qtdeVendas: 0,
-        comissaoAberta: 0,
-        comissaoPaga: 0,
+      const g = grupos.get(key) || { tipo: 'Dentista' as const, vendas: [], nome: v.dentista_nome }
+      g.vendas.push(v)
+      grupos.set(key, g)
+      if (!map.has(key)) {
+        map.set(key, {
+          id: v.dentista_avaliador,
+          nome: v.dentista_nome,
+          tipo: 'Dentista',
+          totalVendas: 0,
+          totalEntries: 0,
+          entryPercentage: 0,
+          commissionRate: 0,
+          totalComissao: 0,
+          qtdeVendas: 0,
+          comissaoAberta: 0,
+          comissaoPaga: 0,
+        })
       }
-      existing.totalVendas += v.valor_tratamento
-      existing.totalEntries += v.valor_entrada
-      existing.commissionRate = v.percentual_comissao_dentista
-      existing.totalComissao += v.valor_comissao_dentista
-      existing.qtdeVendas += 1
-      if (v.status_comissao === 'pago') existing.comissaoPaga += v.valor_comissao_dentista
-      else existing.comissaoAberta += v.valor_comissao_dentista
-      existing.entryPercentage =
-        existing.totalVendas > 0 ? (existing.totalEntries / existing.totalVendas) * 100 : 0
-      map.set(key, existing)
     }
-
     if (v.crc && v.crc_nome) {
       const key = `crc-${v.crc}`
-      const existing = map.get(key) || {
-        id: v.crc,
-        nome: v.crc_nome,
-        tipo: 'CRC' as const,
-        totalVendas: 0,
-        totalEntries: 0,
-        entryPercentage: 0,
-        commissionRate: 0,
-        totalComissao: 0,
-        qtdeVendas: 0,
-        comissaoAberta: 0,
-        comissaoPaga: 0,
+      const g = grupos.get(key) || { tipo: 'CRC' as const, vendas: [], nome: v.crc_nome }
+      g.vendas.push(v)
+      grupos.set(key, g)
+      if (!map.has(key)) {
+        map.set(key, {
+          id: v.crc,
+          nome: v.crc_nome,
+          tipo: 'CRC',
+          totalVendas: 0,
+          totalEntries: 0,
+          entryPercentage: 0,
+          commissionRate: 0,
+          totalComissao: 0,
+          qtdeVendas: 0,
+          comissaoAberta: 0,
+          comissaoPaga: 0,
+        })
       }
-      existing.totalVendas += v.valor_tratamento
-      existing.totalEntries += v.valor_entrada
-      existing.commissionRate = v.percentual_comissao_crc
-      existing.totalComissao += v.valor_comissao_crc
-      existing.qtdeVendas += 1
-      if (v.status_comissao === 'pago') existing.comissaoPaga += v.valor_comissao_crc
-      else existing.comissaoAberta += v.valor_comissao_crc
-      existing.entryPercentage =
-        existing.totalVendas > 0 ? (existing.totalEntries / existing.totalVendas) * 100 : 0
-      map.set(key, existing)
     }
+  }
+
+  for (const [key, g] of grupos) {
+    const s = map.get(key)!
+    const comEntrada = g.vendas.filter((v) => (v.valor_entrada || 0) > 0)
+    s.qtdeVendas = comEntrada.length
+    s.totalVendas = g.vendas.reduce((a, v) => a + (v.valor_tratamento || 0), 0)
+    s.totalEntries = g.vendas.reduce((a, v) => a + (v.valor_entrada || 0), 0)
+    s.entryPercentage = s.totalVendas > 0 ? (s.totalEntries / s.totalVendas) * 100 : 0
+
+    const r = resumoPorMedia(
+      g.vendas,
+      g.tipo === 'Dentista' ? 'dentista' : 'crc',
+      g.tipo === 'Dentista' ? faixasDent : faixasCrc,
+    )
+    // Sem faixas carregadas, mantém o que veio da RPC (que já aplica a regra).
+    const usaRpc = (g.tipo === 'Dentista' ? faixasDent : faixasCrc).length === 0
+    const totalRpc = g.vendas.reduce(
+      (a, v) => a + (g.tipo === 'Dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc),
+      0,
+    )
+    s.commissionRate = usaRpc
+      ? g.vendas.find((v) =>
+          g.tipo === 'Dentista' ? v.percentual_comissao_dentista : v.percentual_comissao_crc,
+        )?.[g.tipo === 'Dentista' ? 'percentual_comissao_dentista' : 'percentual_comissao_crc'] || 0
+      : r.taxa
+    s.totalComissao = usaRpc ? totalRpc : r.total
+
+    const pagos = g.vendas.filter((v) => v.status_comissao === 'pago')
+    const totalPago = pagos.reduce(
+      (a, v) => a + (g.tipo === 'Dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc),
+      0,
+    )
+    s.comissaoPaga = totalPago
+    s.comissaoAberta = s.totalComissao - totalPago
   }
 
   return Array.from(map.values()).sort((a, b) => b.totalComissao - a.totalComissao)
@@ -263,21 +327,26 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
 
   let todasVendas: ComissaoVenda[] = []
 
+  // As faixas são necessárias nos DOIS caminhos: o resumo por profissional
+  // aplica o percentual sobre o volume do período (regra do Leandro).
+  const [faixasDRes, faixasCRes] = await Promise.all([
+    supabase.from('referencias_comissao_dentista').select('*').eq('status', 'ativo'),
+    supabase.from('referencias_comissao_crc').select('*').eq('status', 'ativo'),
+  ])
+  const faixasD = (faixasDRes.data || []) as FaixaBase[]
+  const faixasC = (faixasCRes.data || []) as FaixaBase[]
+
   if (!rpcError && rpcData) {
     todasVendas = mapRpcData(rpcData as any[])
   } else {
-    const [vendasRes, faixasDRes, faixasCRes] = await Promise.all([
-      supabase
-        .from('vendas_confirmadas')
-        .select(
-          '*, dentistas_avaliadores!vendas_confirmadas_dentista_avaliador_fkey(nome), crc_comercial!vendas_confirmadas_crc_fkey(nome)',
-        )
-        .gte('data_fechamento', inicioStr)
-        .lte('data_fechamento', fimStr)
-        .order('data_fechamento', { ascending: false }),
-      supabase.from('referencias_comissao_dentista').select('*').eq('status', 'ativo'),
-      supabase.from('referencias_comissao_crc').select('*').eq('status', 'ativo'),
-    ])
+    const vendasRes = await supabase
+      .from('vendas_confirmadas')
+      .select(
+        '*, dentistas_avaliadores!vendas_confirmadas_dentista_avaliador_fkey(nome), crc_comercial!vendas_confirmadas_crc_fkey(nome)',
+      )
+      .gte('data_fechamento', inicioStr)
+      .lte('data_fechamento', fimStr)
+      .order('data_fechamento', { ascending: false })
 
     // O fallback só é confiável com sessão válida: com anon o PostgREST
     // responde 200 e zero linhas, e zerar a tela mentiria sobre o dado.
@@ -295,8 +364,6 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
       }
     }
 
-    const faixasD = (faixasDRes.data || []) as FaixaBase[]
-    const faixasC = (faixasCRes.data || []) as FaixaBase[]
     todasVendas = buildVendasFromFallback(vendasRes.data || [], faixasD, faixasC)
   }
 
@@ -304,8 +371,21 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
   // Comissões com ajuste ativo saem dos cards de Visão Geral, das tabelas DENTISTAS/CRC e do dash por vendedor
   const vendasAtivas = todasVendas.filter((v) => !ajustesAtivosMap.has(v.id))
 
-  const totals = computeTotals(vendasAtivas)
-  const profissionais = buildProfessionalSummaries(vendasAtivas)
+  const profissionais = buildProfessionalSummaries(vendasAtivas, faixasD, faixasC)
+
+  // Totais do topo somam o que cada profissional recebe pela regra da média.
+  const totals = profissionais.reduce(
+    (acc, p) => {
+      if (p.tipo === 'Dentista') acc.totalComissaoDentista += p.totalComissao
+      else acc.totalComissaoCRC += p.totalComissao
+      return acc
+    },
+    {
+      totalComissaoDentista: 0,
+      totalComissaoCRC: 0,
+      ...computeTotals(vendasAtivas),
+    } as DashboardTotals,
+  )
 
   return {
     vendas: vendasAtivas,
