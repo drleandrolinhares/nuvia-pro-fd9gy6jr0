@@ -219,26 +219,81 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
   // Carrega mapa de ajustes ativos (cancelados ou programados) de forma resiliente
   const ajustesAtivosMap = await fetchAjustesAtivosMap()
 
-  const { data: rpcData, error: rpcError } = await supabase.rpc('calcular_comissao_periodo', {
-    p_data_inicio: inicioStr,
-    p_data_fim: fimStr,
-  })
+  const chamarRpc = () =>
+    supabase.rpc('calcular_comissao_periodo', {
+      p_data_inicio: inicioStr,
+      p_data_fim: fimStr,
+    })
+
+  let { data: rpcData, error: rpcError } = await chamarRpc()
+
+  /**
+   * 401 aqui significa sessão inválida/expirada, NÃO ausência de dados.
+   *
+   * Medido em 23/11/2026 nos logs do Supabase durante a sessão do Leandro:
+   *   POST /rpc/calcular_comissao_periodo  -> 401
+   *   GET  /vendas_confirmadas?data_fechamento=...outubro -> 200 (0 linhas)
+   * A aba ficou aberta por dias, o refresh token morreu e toda consulta passou
+   * a correr como `anon`: a RPC devolve 401 e as tabelas devolvem 200 vazio,
+   * porque o RLS do anon não enxerga nada. A tela então pintava R$ 0,00 —
+   * parecendo dado apagado, quando era sessão caída.
+   * Antes de aceitar o zero, renovamos a sessão e tentamos de novo.
+   */
+  const ehFalhaDeSessao = (err: any) =>
+    !!err &&
+    (err.code === 'PGRST301' ||
+      err.status === 401 ||
+      /jwt|token|expired|permission denied/i.test(String(err.message || '')))
+
+  if (rpcError && ehFalhaDeSessao(rpcError)) {
+    const { error: refreshError } = await supabase.auth.refreshSession()
+    if (!refreshError) {
+      const retry = await chamarRpc()
+      rpcData = retry.data
+      rpcError = retry.error
+    }
+  }
+
+  // Sessão morta e não renovável: é erro de acesso, não "sem comissões".
+  if (rpcError && ehFalhaDeSessao(rpcError)) {
+    throw new Error(
+      'Sua sessão expirou. Entre novamente no sistema para ver as comissões — os dados estão salvos.',
+    )
+  }
 
   let todasVendas: ComissaoVenda[] = []
 
-  if (!rpcError && rpcData && rpcData.length >= 0) {
+  if (!rpcError && rpcData) {
     todasVendas = mapRpcData(rpcData as any[])
   } else {
     const [vendasRes, faixasDRes, faixasCRes] = await Promise.all([
       supabase
         .from('vendas_confirmadas')
-        .select('*, dentistas_avaliadores(nome), crc_comercial(nome)')
+        .select(
+          '*, dentistas_avaliadores!vendas_confirmadas_dentista_avaliador_fkey(nome), crc_comercial!vendas_confirmadas_crc_fkey(nome)',
+        )
         .gte('data_fechamento', inicioStr)
         .lte('data_fechamento', fimStr)
         .order('data_fechamento', { ascending: false }),
       supabase.from('referencias_comissao_dentista').select('*').eq('status', 'ativo'),
       supabase.from('referencias_comissao_crc').select('*').eq('status', 'ativo'),
     ])
+
+    // O fallback só é confiável com sessão válida: com anon o PostgREST
+    // responde 200 e zero linhas, e zerar a tela mentiria sobre o dado.
+    if (vendasRes.error && ehFalhaDeSessao(vendasRes.error)) {
+      throw new Error(
+        'Sua sessão expirou. Entre novamente no sistema para ver as comissões — os dados estão salvos.',
+      )
+    }
+    if (!vendasRes.error && (vendasRes.data || []).length === 0) {
+      const { data: quem } = await supabase.auth.getUser()
+      if (!quem?.user) {
+        throw new Error(
+          'Sua sessão expirou. Entre novamente no sistema para ver as comissões — os dados estão salvos.',
+        )
+      }
+    }
 
     const faixasD = (faixasDRes.data || []) as FaixaBase[]
     const faixasC = (faixasCRes.data || []) as FaixaBase[]
