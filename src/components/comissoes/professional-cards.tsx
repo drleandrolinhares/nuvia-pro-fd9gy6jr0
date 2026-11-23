@@ -82,10 +82,22 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Percent className="w-3.5 h-3.5" />
-                  Performance
+                  Performance (% entrada)
                 </span>
                 <span className="font-bold text-white">{prof.entryPercentage.toFixed(1)}%</span>
               </div>
+
+              {(prof.qtdSemEntrada || 0) > 0 && (
+                <div className="flex items-center justify-between text-[11px] rounded border border-slate-700/60 bg-slate-800/40 px-2 py-1">
+                  <span className="text-slate-400">
+                    Sem entrada: {prof.qtdSemEntrada} venda
+                    {(prof.qtdSemEntrada || 0) > 1 ? 's' : ''}
+                  </span>
+                  <span className="font-semibold text-slate-400">
+                    {formatCurrency(prof.valorSemEntrada || 0)} · não comissiona
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1">

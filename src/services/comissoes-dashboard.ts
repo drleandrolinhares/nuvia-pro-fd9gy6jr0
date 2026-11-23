@@ -41,6 +41,9 @@ export interface ProfessionalSummary {
   qtdeVendas: number
   comissaoAberta: number
   comissaoPaga: number
+  /** Vendas sem entrada no período: aparecem à parte e NÃO comissionam. */
+  qtdSemEntrada?: number
+  valorSemEntrada?: number
 }
 
 function getPercentual(faixas: FaixaBase[], percEntrada: number): number {
@@ -142,11 +145,19 @@ function buildProfessionalSummaries(
 
   for (const [key, g] of grupos) {
     const s = map.get(key)!
+    // Base = vendas COM entrada. Venda sem entrada não comissiona, então ela
+    // não pode entrar no valor vendido nem no % de entrada do cartão —
+    // senão a "Performance" exibida não bate com a faixa usada no cálculo.
+    // O que fica de fora aparece em `qtdSemEntrada`/`valorSemEntrada`.
     const comEntrada = g.vendas.filter((v) => (v.valor_entrada || 0) > 0)
     s.qtdeVendas = comEntrada.length
-    s.totalVendas = g.vendas.reduce((a, v) => a + (v.valor_tratamento || 0), 0)
-    s.totalEntries = g.vendas.reduce((a, v) => a + (v.valor_entrada || 0), 0)
+    s.totalVendas = comEntrada.reduce((a, v) => a + (v.valor_tratamento || 0), 0)
+    s.totalEntries = comEntrada.reduce((a, v) => a + (v.valor_entrada || 0), 0)
     s.entryPercentage = s.totalVendas > 0 ? (s.totalEntries / s.totalVendas) * 100 : 0
+
+    const semEntrada = g.vendas.filter((v) => (v.valor_entrada || 0) <= 0)
+    s.qtdSemEntrada = semEntrada.length
+    s.valorSemEntrada = semEntrada.reduce((a, v) => a + (v.valor_tratamento || 0), 0)
 
     const r = resumoPorMedia(
       g.vendas,
