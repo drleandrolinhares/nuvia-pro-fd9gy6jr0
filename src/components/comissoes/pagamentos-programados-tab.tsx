@@ -45,6 +45,23 @@ import {
   type ComissaoAjuste,
   type ComissaoAjusteLog,
 } from '@/services/comissao-ajustes'
+import { comissoesService, type FaixaBase } from '@/services/comissoes'
+
+/**
+ * Percentual da faixa para um % de entrada — mesma regra do cálculo oficial:
+ * dentista 2/3/4%, CRC 0,6/0,8/1%, e venda sem entrada não comissiona.
+ */
+function taxaDaFaixa(faixas: FaixaBase[], pctEntrada: number): number {
+  const f = faixas.find(
+    (x) =>
+      x.percentual_comissao != null &&
+      x.faixa_entrada_minima != null &&
+      x.faixa_entrada_maxima != null &&
+      pctEntrada >= x.faixa_entrada_minima &&
+      pctEntrada <= x.faixa_entrada_maxima,
+  )
+  return f?.percentual_comissao ?? 0
+}
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
@@ -108,11 +125,22 @@ export function PagamentosProgramadosTab({
   const [logsAuditoria, setLogsAuditoria] = useState<ComissaoAjusteLog[]>([])
   const [loadingLogs, setLoadingLogs] = useState(false)
 
+  // Faixas configuradas: a comissão programada usa a MESMA regra do cálculo
+  // oficial (2/3/4% dentista, 0,6/0,8/1% CRC), não um percentual fixo.
+  const [faixasDent, setFaixasDent] = useState<FaixaBase[]>([])
+  const [faixasCrc, setFaixasCrc] = useState<FaixaBase[]>([])
+
   const carregarAjustes = async () => {
     setLoading(true)
     try {
-      const data = await fetchAjustesProgramados()
+      const [data, fd, fc] = await Promise.all([
+        fetchAjustesProgramados(),
+        comissoesService.dentista.list(),
+        comissoesService.crc.list(),
+      ])
       setAjustes(data)
+      setFaixasDent(fd)
+      setFaixasCrc(fc)
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar pagamentos programados',
@@ -129,12 +157,23 @@ export function PagamentosProgramadosTab({
   }, [])
 
   // Totalizadores
+  // ANTES: `valor_tratamento * 0.04` — 4% fixo para todo mundo, inclusive CRC,
+  // que tem faixa própria (0,6/0,8/1). Corrigido em 23/11/2026 para ler a faixa
+  // configurada, a mesma que o cálculo oficial usa.
   const totalProgramadoPendente = ajustes
     .filter((a) => a.status === 'ativo')
     .reduce((acc, a) => {
-      // Estima a comissão a partir dos dados da venda se disponíveis
-      const valorComissao = a.venda?.valor_tratamento ? a.venda.valor_tratamento * 0.04 : 0
-      return acc + valorComissao
+      const v = a.venda
+      if (!v?.valor_tratamento) return acc
+      const entrada = Number(v.valor_entrada) || 0
+      if (entrada <= 0) return acc // venda sem entrada não comissiona
+      const pctEntrada =
+        (Number(v.percentual_entrada) || 0) > 0
+          ? Number(v.percentual_entrada)
+          : (entrada / Number(v.valor_tratamento)) * 100
+      const ehCrc = !!v.crc && !v.dentista_avaliador
+      const taxa = taxaDaFaixa(ehCrc ? faixasCrc : faixasDent, pctEntrada)
+      return acc + (Number(v.valor_tratamento) * taxa) / 100
     }, 0)
 
   const countPendentes = ajustes.filter((a) => a.status === 'ativo').length
