@@ -46,6 +46,47 @@ export interface ProfessionalSummary {
   valorSemEntrada?: number
 }
 
+/**
+ * Linha da RPC `comissao_resumo_periodo` — a FONTE ÚNICA do resumo por
+ * profissional (qtd, volume, % de entrada, taxa e comissão saem juntos, da
+ * mesma consulta). Antes, taxa e valor vinham de caminhos diferentes e
+ * divergiam: no print de 23/11/2026 o Dr. Leandro aparecia com "Taxa 0,0%"
+ * e comissão de R$ 4.694,37 ao mesmo tempo, porque a taxa era lida de UMA
+ * venda sem entrada e o valor somado de TODAS.
+ */
+export interface ResumoProfissional {
+  tipo: string
+  ref_id: string
+  nome: string
+  qtd_vendas: number
+  qtd_sem_entrada: number
+  volume_total: number
+  volume_com_entrada: number
+  valor_sem_entrada: number
+  entradas: number
+  pct_entrada: number
+  taxa: number
+  comissao: number
+}
+
+function mapResumo(r: any): ProfessionalSummary {
+  return {
+    id: r.ref_id,
+    nome: r.nome,
+    tipo: r.tipo === 'CRC' ? 'CRC' : 'Dentista',
+    qtdeVendas: Number(r.qtd_vendas) || 0,
+    totalVendas: Number(r.volume_com_entrada) || 0,
+    totalEntries: Number(r.entradas) || 0,
+    entryPercentage: Number(r.pct_entrada) || 0,
+    commissionRate: Number(r.taxa) || 0,
+    totalComissao: Number(r.comissao) || 0,
+    comissaoAberta: Number(r.comissao) || 0,
+    comissaoPaga: 0,
+    qtdSemEntrada: Number(r.qtd_sem_entrada) || 0,
+    valorSemEntrada: Number(r.valor_sem_entrada) || 0,
+  }
+}
+
 function getPercentual(faixas: FaixaBase[], percEntrada: number): number {
   const f = faixas.find(
     (x) =>
@@ -85,6 +126,41 @@ function resumoPorMedia(
   const taxa = getPercentual(faixas, pctEntrada)
 
   return { taxa, base, total: (base * taxa) / 100 }
+}
+
+/**
+ * Reaplica a TAXA DO PROFISSIONAL em cada linha da tabela venda a venda.
+ *
+ * A RPC `calcular_comissao_periodo` calcula a faixa venda a venda (é o que a
+ * tabela mostrava), o que diverge do valor oficial quando alguma venda isolada
+ * cai numa faixa diferente da média do período. Aqui a coluna de comissão da
+ * tabela passa a usar a taxa do profissional, e a soma das linhas bate com o
+ * cartão. A tabela continua mostrando 0 nas vendas sem entrada.
+ */
+export function alinharVendasComTaxaDoProfissional(
+  vendas: ComissaoVenda[],
+  profissionais: ProfessionalSummary[],
+): ComissaoVenda[] {
+  const taxaDent = new Map<string, number>()
+  const taxaCrc = new Map<string, number>()
+  for (const p of profissionais) {
+    if (p.tipo === 'Dentista') taxaDent.set(p.id, p.commissionRate)
+    else taxaCrc.set(p.id, p.commissionRate)
+  }
+  return vendas.map((v) => {
+    const temEntrada = (v.valor_entrada || 0) > 0
+    const td = temEntrada && v.dentista_avaliador ? taxaDent.get(v.dentista_avaliador) : 0
+    const tc = temEntrada && v.crc ? taxaCrc.get(v.crc) : 0
+    const pctD = td ?? v.percentual_comissao_dentista
+    const pctC = tc ?? v.percentual_comissao_crc
+    return {
+      ...v,
+      percentual_comissao_dentista: pctD,
+      valor_comissao_dentista: (v.valor_tratamento * pctD) / 100,
+      percentual_comissao_crc: pctC,
+      valor_comissao_crc: (v.valor_tratamento * pctC) / 100,
+    }
+  })
 }
 
 function buildProfessionalSummaries(
@@ -382,7 +458,53 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
   // Comissões com ajuste ativo saem dos cards de Visão Geral, das tabelas DENTISTAS/CRC e do dash por vendedor
   const vendasAtivas = todasVendas.filter((v) => !ajustesAtivosMap.has(v.id))
 
-  const profissionais = buildProfessionalSummaries(vendasAtivas, faixasD, faixasC)
+  // ---- Resumo por profissional: FONTE ÚNICA no banco ----
+  // `comissao_resumo_periodo` devolve, na mesma consulta e para cada
+  // profissional, a quantidade de vendas, o volume, as entradas, o % de
+  // entrada, a taxa da faixa E a comissão. Assim taxa e valor nunca mais podem
+  // divergir, e a regra (média do período sobre o volume com entrada, faixas
+  // 2/3/4% do dentista e 0,6/0,8/1% do CRC, venda sem entrada não comissiona)
+  // fica num lugar só, em vez de reimplementada em cada tela.
+  let profissionais: ProfessionalSummary[] = []
+  let resumoOk = false
+  try {
+    const { data: resumo, error: erroResumo } = await supabase.rpc('comissao_resumo_periodo', {
+      p_inicio: inicioStr,
+      p_fim: fimStr,
+    })
+    if (erroResumo && ehFalhaDeSessao(erroResumo)) {
+      throw new Error(
+        'Sua sessão expirou. Entre novamente no sistema para ver as comissões — os dados estão salvos.',
+      )
+    }
+    if (!erroResumo && Array.isArray(resumo) && resumo.length > 0) {
+      profissionais = (resumo as any[]).map(mapResumo)
+
+      // Pago / em aberto: a comissão paga segue a MESMA taxa do profissional,
+      // aplicada só ao volume das vendas já marcadas como pagas.
+      for (const p of profissionais) {
+        const campo = p.tipo === 'Dentista' ? 'dentista_avaliador' : 'crc'
+        const meu = vendasAtivas.filter(
+          (v) =>
+            (v as any)[campo] === p.id &&
+            v.status_comissao === 'pago' &&
+            (v.valor_entrada || 0) > 0,
+        )
+        const basePaga = meu.reduce((a, v) => a + (v.valor_tratamento || 0), 0)
+        p.comissaoPaga = (basePaga * p.commissionRate) / 100
+        p.comissaoAberta = Math.max(0, p.totalComissao - p.comissaoPaga)
+      }
+      profissionais.sort((a, b) => b.totalComissao - a.totalComissao)
+      resumoOk = true
+    }
+  } catch (e: any) {
+    if (/sess[ãa]o expirou/i.test(String(e?.message || ''))) throw e
+    // cai no cálculo local abaixo
+  }
+
+  if (!resumoOk) {
+    profissionais = buildProfessionalSummaries(vendasAtivas, faixasD, faixasC)
+  }
 
   // Totais do topo: SÓ a comissão de cada profissional (regra da média).
   // Não somar com a comissão venda a venda — isso dobrava o valor.
@@ -399,7 +521,7 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
   }
 
   return {
-    vendas: vendasAtivas,
+    vendas: alinharVendasComTaxaDoProfissional(vendasAtivas, profissionais),
     totals,
     profissionais,
     ajustesAtivosMap,
