@@ -373,19 +373,19 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
 
   const profissionais = buildProfessionalSummaries(vendasAtivas, faixasD, faixasC)
 
-  // Totais do topo somam o que cada profissional recebe pela regra da média.
-  const totals = profissionais.reduce(
-    (acc, p) => {
-      if (p.tipo === 'Dentista') acc.totalComissaoDentista += p.totalComissao
-      else acc.totalComissaoCRC += p.totalComissao
-      return acc
-    },
-    {
-      totalComissaoDentista: 0,
-      totalComissaoCRC: 0,
-      ...computeTotals(vendasAtivas),
-    } as DashboardTotals,
-  )
+  // Totais do topo: SÓ a comissão de cada profissional (regra da média).
+  // Não somar com a comissão venda a venda — isso dobrava o valor.
+  const volume = computeTotals(vendasAtivas)
+  const totals: DashboardTotals = {
+    totalComissaoDentista: profissionais
+      .filter((p) => p.tipo === 'Dentista')
+      .reduce((a, p) => a + p.totalComissao, 0),
+    totalComissaoCRC: profissionais
+      .filter((p) => p.tipo === 'CRC')
+      .reduce((a, p) => a + p.totalComissao, 0),
+    totalVendas: volume.totalVendas,
+    totalEntries: volume.totalEntries,
+  }
 
   return {
     vendas: vendasAtivas,
