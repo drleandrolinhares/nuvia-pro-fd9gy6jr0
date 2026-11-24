@@ -26,6 +26,7 @@ import { ConfiguracaoFaixas } from '@/components/comissoes/configuracao-faixas'
 import { ComissoesDashboardCards } from '@/components/comissoes/comissoes-dashboard-cards'
 import { ComissoesTabela } from '@/components/comissoes/comissoes-tabela'
 import { ProfessionalCards } from '@/components/comissoes/professional-cards'
+import { SeloDeVersao } from '@/components/comissoes/selo-de-versao'
 import { BarraAcaoComissoes } from '@/components/comissoes/barra-acao-comissoes'
 import { ModalRemoverComissao } from '@/components/comissoes/modal-remover-comissao'
 import { PagamentosProgramadosTab } from '@/components/comissoes/pagamentos-programados-tab'
@@ -263,10 +264,13 @@ export default function ControleComissoes() {
         }
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <TrendingUp className="w-5 h-5 text-amber-500" />
         <h2 className="text-lg font-bold text-slate-900">Visão Geral</h2>
         <span className="text-sm text-slate-500">({competenciaLabel})</span>
+        <div className="ml-auto">
+          <SeloDeVersao />
+        </div>
       </div>
       <ComissoesDashboardCards totals={totals} competencia={competenciaLabel} />
 
