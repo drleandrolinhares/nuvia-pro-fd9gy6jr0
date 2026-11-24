@@ -27,6 +27,11 @@ export interface DashboardTotals {
   totalComissaoCRC: number
   totalVendas: number
   totalEntries: number
+  /** Média dos totais do grupo (só o painel de total usa; cartões são isolados). */
+  pctMedioDentista?: number
+  taxaDentista?: number
+  pctMedioCRC?: number
+  taxaCRC?: number
 }
 
 export interface ProfessionalSummary {
@@ -533,18 +538,48 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
     )
   }
 
-  // Totais do topo: SÓ a comissão de cada profissional (regra da média).
-  // Não somar com a comissão venda a venda — isso dobrava o valor.
+  // ---- TOTAIS DO TOPO: média dos totais ----
+  //
+  // Decisão do Leandro (23/11/2026 23:24): os CARTÕES são individuais e
+  // isolados — cada vendedor na sua própria faixa. Só o painel de TOTAL é
+  // calculado pela média do grupo:
+  //   pct = soma das entradas ÷ soma das vendas  |  comissão = volume × taxa
+  // Hoje os dois caminhos coincidem (todos na mesma faixa), mas num mês
+  // misto o total deixa de ser a soma dos cartões — e é assim que ele quer.
   const volume = computeTotals(vendasAtivas)
+  const totaisPorMedia = new Map<string, { pct: number; taxa: number; comissao: number }>()
+  try {
+    const { data: tot } = await supabase.rpc('comissao_totais_periodo', {
+      p_inicio: inicioStr,
+      p_fim: fimStr,
+    })
+    for (const r of (tot as any[]) || []) {
+      totaisPorMedia.set(String(r.grupo), {
+        pct: Number(r.pct_medio) || 0,
+        taxa: Number(r.taxa) || 0,
+        comissao: Number(r.comissao) || 0,
+      })
+    }
+  } catch {
+    /* mantém o cálculo por soma abaixo */
+  }
+
+  const somaDent = profissionais
+    .filter((p) => p.tipo === 'Dentista')
+    .reduce((a, p) => a + p.totalComissao, 0)
+  const somaCrc = profissionais
+    .filter((p) => p.tipo === 'CRC')
+    .reduce((a, p) => a + p.totalComissao, 0)
+
   const totals: DashboardTotals = {
-    totalComissaoDentista: profissionais
-      .filter((p) => p.tipo === 'Dentista')
-      .reduce((a, p) => a + p.totalComissao, 0),
-    totalComissaoCRC: profissionais
-      .filter((p) => p.tipo === 'CRC')
-      .reduce((a, p) => a + p.totalComissao, 0),
+    totalComissaoDentista: totaisPorMedia.get('DENTISTA')?.comissao ?? somaDent,
+    totalComissaoCRC: totaisPorMedia.get('CRC')?.comissao ?? somaCrc,
     totalVendas: volume.totalVendas,
     totalEntries: volume.totalEntries,
+    pctMedioDentista: totaisPorMedia.get('DENTISTA')?.pct,
+    taxaDentista: totaisPorMedia.get('DENTISTA')?.taxa,
+    pctMedioCRC: totaisPorMedia.get('CRC')?.pct,
+    taxaCRC: totaisPorMedia.get('CRC')?.taxa,
   }
 
   return {

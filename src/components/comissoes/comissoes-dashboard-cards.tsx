@@ -27,7 +27,14 @@ export function ComissoesDashboardCards({
           <div className="text-2xl font-bold text-white">
             {formatCurrency(totals.totalComissaoDentista)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          {totals.taxaDentista != null ? (
+            <p className="text-[10.5px] leading-tight text-slate-500 mt-1">
+              média do grupo {totals.pctMedioDentista?.toFixed(1)}% × taxa{' '}
+              {totals.taxaDentista.toFixed(1)}%
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          )}
         </CardContent>
       </Card>
 
@@ -44,7 +51,13 @@ export function ComissoesDashboardCards({
           <div className="text-2xl font-bold text-white">
             {formatCurrency(totals.totalComissaoCRC)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          {totals.taxaCRC != null ? (
+            <p className="text-[10.5px] leading-tight text-slate-500 mt-1">
+              média do grupo {totals.pctMedioCRC?.toFixed(1)}% × taxa {totals.taxaCRC.toFixed(1)}%
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">{competencia}</p>
+          )}
         </CardContent>
       </Card>
 
