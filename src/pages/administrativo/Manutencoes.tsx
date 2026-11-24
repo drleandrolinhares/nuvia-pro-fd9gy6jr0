@@ -49,6 +49,9 @@ import {
   Eye,
   EyeOff,
   Layers,
+  History,
+  Lock,
+  UserCheck,
 } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { SeletorCriavel } from '@/components/manutencao/seletor-criavel'
@@ -77,6 +80,10 @@ import {
   reordenarSetores,
   serieMensal,
   ROTULO_SETOR,
+  autorizarOrdem,
+  historicoOrdem,
+  fmtDataHora,
+  type EventoHistorico,
   ROTULO_PRIORIDADE,
   ROTULO_STATUS,
   ROTULO_STATUS_ATIVO,
@@ -388,6 +395,9 @@ export default function Manutencoes() {
   const [modalOrdem, setModalOrdem] = useState<Partial<Ordem> | null>(null)
   const [modalFornecedor, setModalFornecedor] = useState<Partial<Fornecedor> | null>(null)
   const [modalSetor, setModalSetor] = useState<Partial<Setor> | null>(null)
+  const [historicoAberto, setHistoricoAberto] = useState<Ordem | null>(null)
+  const [eventos, setEventos] = useState<EventoHistorico[]>([])
+  const [carregandoHist, setCarregandoHist] = useState(false)
 
   const inicio = useMemo(() => {
     const [a, m] = mes.split('-').map(Number)
@@ -544,6 +554,40 @@ export default function Manutencoes() {
       carregar()
     } catch (e: any) {
       toast({ title: 'Erro ao apagar', description: e?.message, variant: 'destructive' })
+    }
+  }
+
+  const abrirHistorico = async (o: Ordem) => {
+    setHistoricoAberto(o)
+    setCarregandoHist(true)
+    setEventos([])
+    try {
+      setEventos(await historicoOrdem(o.id))
+    } catch (e: any) {
+      toast({
+        title: 'Erro ao carregar histórico',
+        description: e?.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setCarregandoHist(false)
+    }
+  }
+
+  const autorizar = async (o: Ordem) => {
+    if (
+      !confirm(
+        `Confirmar que VOCÊ autoriza a ordem ${o.numero ?? ''}? Seu nome e a data/hora ficam gravados e não podem ser alterados depois.`,
+      )
+    )
+      return
+    try {
+      await autorizarOrdem(o.id)
+      toast({ title: 'Autorização registrada com seu nome e data/hora' })
+      setHistoricoAberto(null)
+      carregar()
+    } catch (e: any) {
+      toast({ title: 'Erro ao autorizar', description: e?.message, variant: 'destructive' })
     }
   }
 
@@ -963,7 +1007,8 @@ export default function Manutencoes() {
                         <TableHead>Abertura</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
-                        <TableHead className="w-24 text-right">Ações</TableHead>
+                        <TableHead>Registrada por</TableHead>
+                        <TableHead className="w-28 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -998,8 +1043,38 @@ export default function Manutencoes() {
                           <TableCell className="text-right tabular-nums">
                             {podeVerCustos ? fmtBRL(o.valor_total) : '—'}
                           </TableCell>
+                          <TableCell>
+                            <div className="text-[11.5px] font-medium text-foreground">
+                              {o.criado_por_nome || o.criado_por_email || '—'}
+                            </div>
+                            <div className="text-[10.5px] tabular-nums text-muted-foreground">
+                              {fmtDataHora(o.criado_em)}
+                            </div>
+                            {o.autorizado_por_nome || o.autorizado_por ? (
+                              <div className="mt-0.5 flex items-center gap-1 text-[10.5px] text-emerald-700">
+                                <ShieldCheck className="size-3" />
+                                autor. {o.autorizado_por_nome || 'registrado'}
+                              </div>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="mt-0.5 border-amber-500/40 bg-amber-500/10 text-[9.5px] text-amber-700"
+                              >
+                                sem autorização
+                              </Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="size-7"
+                                title="Histórico (quem pediu, quem autorizou)"
+                                onClick={() => abrirHistorico(o)}
+                              >
+                                <History className="size-4 text-muted-foreground" />
+                              </Button>
                               {podeGerenciarOrdens && o.status !== 'concluida' && (
                                 <Button
                                   size="icon"
@@ -1783,6 +1858,14 @@ export default function Manutencoes() {
                 }
               />
             </div>
+            <div>
+              <Label>Quem pediu (solicitante)</Label>
+              <Input
+                value={modalOrdem?.solicitante_nome ?? ''}
+                onChange={(e) => setModalOrdem((p) => ({ ...p, solicitante_nome: e.target.value }))}
+                placeholder="Ex.: Dra. Ana · Recepção"
+              />
+            </div>
             <div className="sm:col-span-2">
               <Label>O que foi feito / problema</Label>
               <Input
@@ -1903,6 +1986,104 @@ export default function Manutencoes() {
               {salvando && <Loader2 className="mr-1.5 size-4 animate-spin" />}
               Salvar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* -------------------- modal: histórico imutável -------------------- */}
+      <Dialog open={!!historicoAberto} onOpenChange={(o) => !o && setHistoricoAberto(null)}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="size-4" />
+              Ordem {historicoAberto?.numero ?? ''} · histórico
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="rounded-lg border border-border bg-muted/40 p-3">
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <Lock className="size-3" /> carimbo de criação — não editável
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-[12.5px]">
+              <div>
+                <span className="block text-[10.5px] text-muted-foreground">Registrada por</span>
+                <span className="font-medium">
+                  {historicoAberto?.criado_por_nome || historicoAberto?.criado_por_email || '—'}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10.5px] text-muted-foreground">Data e hora</span>
+                <span className="font-medium tabular-nums">
+                  {fmtDataHora(historicoAberto?.criado_em)}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10.5px] text-muted-foreground">Quem pediu</span>
+                <span className="font-medium">{historicoAberto?.solicitante_nome || '—'}</span>
+              </div>
+              <div>
+                <span className="block text-[10.5px] text-muted-foreground">Quem autorizou</span>
+                <span className="font-medium">
+                  {historicoAberto?.autorizado_por_nome || '—'}
+                  {historicoAberto?.autorizado_em && (
+                    <span className="ml-1 text-[10.5px] font-normal text-muted-foreground">
+                      em {fmtDataHora(historicoAberto.autorizado_em)}
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Linha do tempo
+            </p>
+            {carregandoHist ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : eventos.length === 0 ? (
+              <p className="py-4 text-center text-[12.5px] text-muted-foreground">
+                Nenhum evento registrado.
+              </p>
+            ) : (
+              <ol className="space-y-2">
+                {eventos.map((ev, i) => (
+                  <li key={i} className="flex gap-2">
+                    <div className="mt-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-medium text-foreground">
+                        {ev.acao.charAt(0).toUpperCase() + ev.acao.slice(1)}
+                        <span className="ml-1.5 font-normal text-muted-foreground">
+                          {ev.resumo}
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {ev.usuario} · {fmtDataHora(ev.quando)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <p className="text-[10.5px] leading-snug text-muted-foreground sm:max-w-[55%]">
+              O carimbo não pode ser editado nem apagado. Nem você nem um administrador consegue
+              alterar — o banco recusa a gravação.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setHistoricoAberto(null)}>
+                Fechar
+              </Button>
+              {podeGerenciarOrdens && historicoAberto && !historicoAberto.autorizado_por_nome && (
+                <Button className="gap-1.5" onClick={() => autorizar(historicoAberto)}>
+                  <UserCheck className="size-4" /> Autorizar com meu nome
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

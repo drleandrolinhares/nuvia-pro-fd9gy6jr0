@@ -118,6 +118,15 @@ export interface Ordem {
   garantia_ate?: string | null
   gerou_proxima?: string | null
   observacoes?: string | null
+  /** carimbo imutável de criação — o banco recusa qualquer alteração */
+  criado_por?: string | null
+  criado_por_nome?: string | null
+  criado_por_email?: string | null
+  criado_em?: string | null
+  solicitante_nome?: string | null
+  autorizado_por?: string | null
+  autorizado_por_nome?: string | null
+  autorizado_em?: string | null
 }
 
 export interface Fornecedor {
@@ -264,7 +273,9 @@ export async function salvarAtivo(a: Partial<Ativo>): Promise<void> {
 export async function listarOrdens(limite = 400): Promise<Ordem[]> {
   const { data, error } = await supabase
     .from('manut_ordens')
-    .select('*, manut_ativos(nome,categoria), manut_setores(nome), manut_fornecedores(nome)')
+    .select(
+      '*, manut_ativos(nome,categoria), manut_setores(nome), manut_fornecedores(nome), usuarios!manut_ordens_autorizado_por_fkey(nome,email)',
+    )
     .order('data_abertura', { ascending: false })
     .order('criado_em', { ascending: false })
     .limit(limite)
@@ -275,6 +286,7 @@ export async function listarOrdens(limite = 400): Promise<Ordem[]> {
     ativo_categoria: o.manut_ativos?.categoria ?? null,
     setor_nome: o.manut_setores?.nome ?? null,
     fornecedor_nome: o.manut_fornecedores?.nome ?? null,
+    autorizado_por_nome: o.usuarios?.nome || o.usuarios?.email || null,
   })) as Ordem[]
 }
 
@@ -303,6 +315,9 @@ export async function salvarOrdem(o: Partial<Ordem>): Promise<void> {
     garantia_ate: o.garantia_ate ?? null,
     gerou_proxima: o.gerou_proxima ?? null,
     observacoes: o.observacoes ?? null,
+    solicitante_nome: o.solicitante_nome ?? null,
+    // autorizado_por NÃO entra aqui: é carimbado pelo banco no insert e só
+    // muda pela ação explícita de autorizar (registrada na auditoria).
   }
   if (id) {
     const { error } = await supabase.from('manut_ordens').update(rest).eq('id', id)
@@ -316,6 +331,53 @@ export async function salvarOrdem(o: Partial<Ordem>): Promise<void> {
 export async function excluirOrdem(id: string): Promise<void> {
   const { error } = await supabase.from('manut_ordens').delete().eq('id', id)
   if (error) throw error
+}
+
+/** Quem autorizou passa a ser quem está logado, com data/hora. Fica na auditoria. */
+export async function autorizarOrdem(id: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { error } = await supabase
+    .from('manut_ordens')
+    .update({ autorizado_por: user?.id ?? null, autorizado_em: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export interface EventoHistorico {
+  quando: string
+  acao: string
+  usuario: string
+  email: string
+  resumo: string
+}
+
+/** Linha do tempo imutável de uma ordem. */
+export async function historicoOrdem(id: string): Promise<EventoHistorico[]> {
+  const { data, error } = await supabase.rpc('manut_historico', { p_ordem: id })
+  if (error) throw error
+  return (data || []).map((r: any) => ({
+    quando: r.quando as string,
+    acao: r.acao as string,
+    usuario: r.usuario as string,
+    email: r.email as string,
+    resumo: r.resumo as string,
+  }))
+}
+
+/** Data e hora no formato brasileiro, com segundos. */
+export const fmtDataHora = (d?: string | null) => {
+  if (!d) return '—'
+  const dt = new Date(d)
+  if (Number.isNaN(dt.getTime())) return '—'
+  return dt.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export async function listarFornecedores(): Promise<Fornecedor[]> {
