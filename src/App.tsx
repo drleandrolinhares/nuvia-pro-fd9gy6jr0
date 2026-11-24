@@ -43,6 +43,7 @@ import FunilVendas from './pages/comercial/FunilVendas'
 import Pacientes from './pages/comercial/Pacientes'
 import ControleComissoes from './pages/comercial/ControleComissoes'
 import Precificacao from './pages/administrativo/Precificacao'
+import Manutencoes from './pages/administrativo/Manutencoes'
 import GestaoFiscal from './pages/financeiro/GestaoFiscal'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
@@ -651,6 +652,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedPermissions={['Acessar Negociações']}>
               <Negociacao />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/administrativo/manutencoes"
+          element={
+            <ProtectedRoute allowedPermissions={['Acessar Manutenções']}>
+              <Manutencoes />
             </ProtectedRoute>
           }
         />

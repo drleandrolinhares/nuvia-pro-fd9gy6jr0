@@ -33,6 +33,7 @@ import {
   FlaskConical,
   Sparkles,
   TrendingUp,
+  Wrench,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -225,6 +226,12 @@ export const navData = [
         url: '/administrativo/precificacao',
         icon: Calculator,
         permission: ['Acessar Precificação'],
+      },
+      {
+        title: 'MANUTENÇÕES',
+        url: '/administrativo/manutencoes',
+        icon: Wrench,
+        permission: ['Acessar Manutenções'],
       },
     ],
   },
