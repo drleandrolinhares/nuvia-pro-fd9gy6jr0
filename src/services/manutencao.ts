@@ -146,7 +146,17 @@ export async function listarSetores(): Promise<Setor[]> {
 }
 
 export async function salvarSetor(s: Partial<Setor>): Promise<void> {
-  const { id, ...rest } = s as any
+  const { id } = s as any
+  // só as colunas reais da tabela: os campos calculados na tela (qtd_ativos,
+  // qtd_ordens) não existem no banco e faziam o PATCH falhar em silêncio.
+  const rest: Record<string, any> = {
+    nome: s.nome?.trim(),
+    tipo: s.tipo,
+    andar: s.andar ?? null,
+    observacoes: s.observacoes ?? null,
+    ativo: s.ativo ?? true,
+    ordem: s.ordem,
+  }
   if (id) {
     const { error } = await supabase.from('manut_setores').update(rest).eq('id', id)
     if (error) throw error
@@ -155,7 +165,6 @@ export async function salvarSetor(s: Partial<Setor>): Promise<void> {
     if (error) throw error
   }
 }
-
 /** Exclui um setor. Bloqueia se houver equipamento ou ordem vinculada — nesse caso, desative. */
 export async function excluirSetor(id: string): Promise<void> {
   const { count: nAtivos } = await supabase
@@ -207,9 +216,27 @@ export async function listarAtivos(): Promise<Ativo[]> {
 }
 
 export async function salvarAtivo(a: Partial<Ativo>): Promise<void> {
-  const { manut_setores, setor_nome, id, ...rest } = a as any
-  void manut_setores
-  void setor_nome
+  const { id } = a as any
+  const rest: Record<string, any> = {
+    codigo: a.codigo ?? null,
+    nome: a.nome?.trim(),
+    categoria: a.categoria,
+    setor_id: a.setor_id ?? null,
+    marca: a.marca ?? null,
+    modelo: a.modelo ?? null,
+    numero_serie: a.numero_serie ?? null,
+    data_aquisicao: a.data_aquisicao ?? null,
+    valor_aquisicao: a.valor_aquisicao ?? null,
+    vida_util_meses: a.vida_util_meses ?? null,
+    criticidade: a.criticidade,
+    status: a.status,
+    frequencia_preventiva_dias: a.frequencia_preventiva_dias ?? null,
+    ultima_preventiva: a.ultima_preventiva ?? null,
+    proxima_preventiva: a.proxima_preventiva ?? null,
+    fornecedor_id: a.fornecedor_id ?? null,
+    observacoes: a.observacoes ?? null,
+    ativo: a.ativo ?? true,
+  }
   // próxima preventiva derivada da última + frequência
   if (rest.frequencia_preventiva_dias && rest.ultima_preventiva) {
     const d = new Date(rest.ultima_preventiva + 'T12:00:00')
@@ -243,14 +270,31 @@ export async function listarOrdens(limite = 400): Promise<Ordem[]> {
 }
 
 export async function salvarOrdem(o: Partial<Ordem>): Promise<void> {
-  const { manut_ativos, manut_setores, manut_fornecedores, id, ...rest } = o as any
-  void manut_ativos
-  void manut_setores
-  void manut_fornecedores
-  void rest.ativo_nome
-  void rest.ativo_categoria
-  void rest.setor_nome
-  void rest.fornecedor_nome
+  const { id } = o as any
+  // lista BRANCA de colunas. `valor_total` é coluna GERADA (não pode ser
+  // enviada) e os campos com nome de join não existem na tabela: enviá-los
+  // fazia o update inteiro falhar.
+  const rest: Record<string, any> = {
+    ativo_id: o.ativo_id,
+    setor_id: o.setor_id ?? null,
+    tipo: o.tipo,
+    origem: o.origem ?? 'programada',
+    prioridade: o.prioridade,
+    status: o.status,
+    descricao_problema: o.descricao_problema ?? null,
+    data_abertura: o.data_abertura,
+    data_conclusao: o.data_conclusao ?? null,
+    valor_mao_obra: Number(o.valor_mao_obra ?? 0),
+    valor_pecas: Number(o.valor_pecas ?? 0),
+    data_pagamento: o.data_pagamento ?? null,
+    pago: !!o.pago,
+    fornecedor_id: o.fornecedor_id ?? null,
+    executado_por: o.executado_por ?? null,
+    tem_garantia: !!o.tem_garantia,
+    garantia_ate: o.garantia_ate ?? null,
+    gerou_proxima: o.gerou_proxima ?? null,
+    observacoes: o.observacoes ?? null,
+  }
   if (id) {
     const { error } = await supabase.from('manut_ordens').update(rest).eq('id', id)
     if (error) throw error
@@ -276,7 +320,18 @@ export async function listarFornecedores(): Promise<Fornecedor[]> {
 }
 
 export async function salvarFornecedor(f: Partial<Fornecedor>): Promise<void> {
-  const { id, ...rest } = f
+  const { id } = f
+  const rest: Record<string, any> = {
+    nome: f.nome?.trim(),
+    tipo: f.tipo ?? null,
+    cnpj_cpf: f.cnpj_cpf ?? null,
+    telefone: f.telefone ?? null,
+    email: f.email ?? null,
+    contato: f.contato ?? null,
+    especialidades: f.especialidades ?? null,
+    avaliacao: f.avaliacao ?? null,
+    ativo: f.ativo ?? true,
+  }
   if (id) {
     const { error } = await supabase.from('manut_fornecedores').update(rest).eq('id', id)
     if (error) throw error
