@@ -158,8 +158,17 @@ export async function salvarSetor(s: Partial<Setor>): Promise<void> {
     ordem: s.ordem,
   }
   if (id) {
-    const { error } = await supabase.from('manut_setores').update(rest).eq('id', id)
+    // .select() garante que o UPDATE que não atinge nenhuma linha seja
+    // detectado (RLS ou id errado) em vez de terminar como sucesso silencioso.
+    const { data, error } = await supabase
+      .from('manut_setores')
+      .update(rest)
+      .eq('id', id)
+      .select('id')
     if (error) throw error
+    if (!data || data.length === 0) {
+      throw new Error('Nada foi gravado: você não tem permissão para editar setores.')
+    }
   } else {
     const { error } = await supabase.from('manut_setores').insert(rest)
     if (error) throw error
