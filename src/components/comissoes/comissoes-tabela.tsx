@@ -48,6 +48,11 @@ export function ComissoesTabela({
     return true
   })
 
+  // Soma das linhas. Cada linha já carrega a TAXA DO PROFISSIONAL (vinda da RPC
+  // `calcular_comissao_periodo`, com a sobra de arredondamento absorvida pela
+  // última linha), então este total é exatamente volume x taxa — o mesmo
+  // número do cartão. Em 23/11/2026 o rodapé mostrava R$ 8.290,59 enquanto a
+  // regra dava R$ 8.745,75, porque as linhas vinham de outra base.
   const totalComissao = filtered.reduce(
     (acc, v) => acc + (tipo === 'dentista' ? v.valor_comissao_dentista : v.valor_comissao_crc),
     0,
