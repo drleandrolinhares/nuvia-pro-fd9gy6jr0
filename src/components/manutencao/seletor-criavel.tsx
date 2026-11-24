@@ -55,10 +55,22 @@ export function casaBusca(nome: string, consulta: string): boolean {
   const iniciais = palavras.map((p) => p[0]).join('')
   if (iniciais.startsWith(b)) return true
 
-  // 4) a consulta casa com o início de palavras consecutivas
-  //    "arcd" -> Ar-condicionado ; "arcond" -> Ar-condicionado
+  // 4) a consulta casa com o início do nome sem separadores
+  //    "arcond" -> Ar-condicionado
   const semEspaco = palavras.join('')
   if (semEspaco.startsWith(b)) return true
+
+  // 5) abreviação por letras dentro de UMA palavra: "aute" -> autoclave.
+  //    Só a partir de 3 letras, para não trazer tudo em consultas curtas.
+  if (b.length >= 3) {
+    for (const p of palavras) {
+      let i = 0
+      for (const ch of p) {
+        if (ch === b[i]) i++
+        if (i === b.length) return true
+      }
+    }
+  }
 
   return false
 }
