@@ -51,6 +51,7 @@ import {
   Layers,
 } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
+import { SeletorCriavel } from '@/components/manutencao/seletor-criavel'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -149,6 +150,210 @@ function Barra({ valor, max, cor }: { valor: number; max: number; cor: string })
 }
 
 /* ========================================================================== */
+
+/** Cadastro mínimo de equipamento, dentro do próprio seletor. */
+function NovoAtivoRapido({
+  nomeInicial,
+  setores,
+  onCriado,
+  onCancelar,
+}: {
+  nomeInicial: string
+  setores: Setor[]
+  onCriado: (id: string) => void
+  onCancelar: () => void
+}) {
+  const { toast } = useToast()
+  const [nome, setNome] = useState(nomeInicial)
+  const [categoria, setCategoria] = useState('Odontológico')
+  const [setorId, setSetorId] = useState('')
+  const [freq, setFreq] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  const criar = async () => {
+    if (!nome.trim()) {
+      toast({ title: 'Informe o nome do equipamento', variant: 'destructive' })
+      return
+    }
+    setSalvando(true)
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const { data, error } = await supabase
+        .from('manut_ativos')
+        .insert({
+          nome: nome.trim(),
+          categoria,
+          setor_id: setorId || null,
+          criticidade: 'media',
+          status: 'operando',
+          ativo: true,
+          frequencia_preventiva_dias: freq ? Number(freq) : null,
+        })
+        .select('id')
+        .single()
+      if (error) throw error
+      toast({ title: `"${nome.trim()}" cadastrado e selecionado` })
+      onCriado(data.id)
+    } catch (e: any) {
+      toast({ title: 'Erro ao cadastrar', description: e?.message, variant: 'destructive' })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[12px] font-semibold text-foreground">Novo equipamento</p>
+      <div>
+        <Label className="text-[11.5px]">Nome *</Label>
+        <Input
+          autoFocus
+          className="h-9"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') criar()
+          }}
+          placeholder="Ex.: Ar-condicionado Recepção"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[11.5px]">Categoria</Label>
+          <Select value={categoria} onValueChange={setCategoria}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIAS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[11.5px]">Setor</Label>
+          <Select value={setorId} onValueChange={setSetorId}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Opcional" />
+            </SelectTrigger>
+            <SelectContent>
+              {setores.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div>
+        <Label className="text-[11.5px]">Preventiva a cada (dias)</Label>
+        <Input
+          className="h-9"
+          type="number"
+          value={freq}
+          onChange={(e) => setFreq(e.target.value)}
+          placeholder="30 · 90 · 180 · 365 (opcional)"
+        />
+      </div>
+      <div className="flex justify-end gap-1.5 pt-1">
+        <Button size="sm" variant="ghost" onClick={onCancelar}>
+          Cancelar
+        </Button>
+        <Button size="sm" onClick={criar} disabled={salvando}>
+          {salvando && <Loader2 className="mr-1 size-3.5 animate-spin" />}
+          Cadastrar
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+/** Cadastro mínimo de fornecedor, dentro do próprio seletor. */
+function NovoFornecedorRapido({
+  nomeInicial,
+  onCriado,
+  onCancelar,
+}: {
+  nomeInicial: string
+  onCriado: (id: string) => void
+  onCancelar: () => void
+}) {
+  const { toast } = useToast()
+  const [nome, setNome] = useState(nomeInicial)
+  const [telefone, setTelefone] = useState('')
+  const [contato, setContato] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  const criar = async () => {
+    if (!nome.trim()) {
+      toast({ title: 'Informe o nome do fornecedor', variant: 'destructive' })
+      return
+    }
+    setSalvando(true)
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const { data, error } = await supabase
+        .from('manut_fornecedores')
+        .insert({
+          nome: nome.trim(),
+          telefone: telefone.trim() || null,
+          contato: contato.trim() || null,
+          ativo: true,
+        })
+        .select('id')
+        .single()
+      if (error) throw error
+      toast({ title: `"${nome.trim()}" cadastrado e selecionado` })
+      onCriado(data.id)
+    } catch (e: any) {
+      toast({ title: 'Erro ao cadastrar', description: e?.message, variant: 'destructive' })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[12px] font-semibold text-foreground">Novo fornecedor</p>
+      <div>
+        <Label className="text-[11.5px]">Nome *</Label>
+        <Input
+          autoFocus
+          className="h-9"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') criar()
+          }}
+          placeholder="Ex.: Clima Frio Refrigeração"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[11.5px]">Telefone</Label>
+          <Input className="h-9" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-[11.5px]">Contato</Label>
+          <Input className="h-9" value={contato} onChange={(e) => setContato(e.target.value)} />
+        </div>
+      </div>
+      <div className="flex justify-end gap-1.5 pt-1">
+        <Button size="sm" variant="ghost" onClick={onCancelar}>
+          Cancelar
+        </Button>
+        <Button size="sm" onClick={criar} disabled={salvando}>
+          {salvando && <Loader2 className="mr-1 size-3.5 animate-spin" />}
+          Cadastrar
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 export default function Manutencoes() {
   const { toast } = useToast()
@@ -951,12 +1156,24 @@ export default function Manutencoes() {
                       })}
                       {ativos.length === 0 && (
                         <TableRow>
-                          <TableCell
-                            colSpan={8}
-                            className="py-10 text-center text-muted-foreground"
-                          >
-                            Nenhum equipamento cadastrado ainda. Comece cadastrando os aparelhos de
-                            ar-condicionado, as cadeiras e a autoclave.
+                          <TableCell colSpan={8} className="px-4 py-10 text-center">
+                            <Boxes className="mx-auto mb-2 size-7 text-muted-foreground/50" />
+                            <p className="text-sm font-medium text-foreground">
+                              Nenhum equipamento cadastrado ainda
+                            </p>
+                            <p className="mx-auto mt-1 max-w-md text-[12.5px] text-muted-foreground">
+                              Comece pelos aparelhos de ar-condicionado, pelas cadeiras e pela
+                              autoclave. Cada um passa a ter preventiva própria e histórico de
+                              custo.
+                            </p>
+                            {podeGerenciarAtivos && (
+                              <Button
+                                className="mt-3 gap-1.5"
+                                onClick={() => setModalAtivo(vazioAtivo())}
+                              >
+                                <Plus className="size-4" /> Cadastrar primeiro equipamento
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       )}
@@ -985,18 +1202,25 @@ export default function Manutencoes() {
                       </div>
                     ))}
                     {fornecedores.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Nenhum fornecedor cadastrado.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum fornecedor cadastrado ainda — quem faz o ar-condicionado, a
+                        autoclave.
+                      </p>
                     )}
                   </div>
                   {podeGerenciarAtivos && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5"
-                      onClick={() => setModalFornecedor({ nome: '' })}
-                    >
-                      <Plus className="size-4" /> Cadastrar fornecedor
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setModalFornecedor({ nome: '' })}
+                      >
+                        <Plus className="size-4" />
+                        {fornecedores.length === 0
+                          ? 'Cadastrar primeiro fornecedor'
+                          : 'Cadastrar fornecedor'}
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -1460,22 +1684,34 @@ export default function Manutencoes() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Equipamento *</Label>
-              <Select
-                value={modalOrdem?.ativo_id ?? ''}
-                onValueChange={(v) => setModalOrdem((p) => ({ ...p, ativo_id: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o equipamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ativos.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.nome}
-                      {a.setor_nome ? ` · ${a.setor_nome}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SeletorCriavel
+                opcoes={ativos.map((a) => ({
+                  id: a.id,
+                  nome: a.nome,
+                  detalhe: [a.setor_nome, a.categoria].filter(Boolean).join(' · '),
+                }))}
+                valor={modalOrdem?.ativo_id}
+                onSelecionar={(v) => setModalOrdem((p) => ({ ...p, ativo_id: v }))}
+                placeholder="Buscar ou cadastrar equipamento…"
+                textoVazio="Nenhum equipamento cadastrado. Digite o nome e crie aqui mesmo."
+                criacao={(termo, fechar) => (
+                  <NovoAtivoRapido
+                    nomeInicial={termo}
+                    setores={setoresAtivos}
+                    onCriado={(id) => {
+                      setModalOrdem((p) => ({ ...p, ativo_id: id }))
+                      fechar()
+                      carregar()
+                    }}
+                    onCancelar={fechar}
+                  />
+                )}
+              />
+              {ativos.length === 0 && (
+                <p className="mt-1 text-[11.5px] text-amber-700">
+                  Nenhum equipamento cadastrado ainda — o primeiro você cria agora, sem sair daqui.
+                </p>
+              )}
             </div>
             <div>
               <Label>Tipo</Label>
@@ -1587,21 +1823,28 @@ export default function Manutencoes() {
             </div>
             <div>
               <Label>Fornecedor</Label>
-              <Select
-                value={modalOrdem?.fornecedor_id ?? ''}
-                onValueChange={(v) => setModalOrdem((p) => ({ ...p, fornecedor_id: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Quem fez" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fornecedores.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SeletorCriavel
+                opcoes={fornecedores.map((f) => ({
+                  id: f.id,
+                  nome: f.nome,
+                  detalhe: [f.telefone, f.contato].filter(Boolean).join(' · '),
+                }))}
+                valor={modalOrdem?.fornecedor_id}
+                onSelecionar={(v) => setModalOrdem((p) => ({ ...p, fornecedor_id: v }))}
+                placeholder="Quem fez"
+                textoVazio="Nenhum fornecedor cadastrado."
+                criacao={(termo, fechar) => (
+                  <NovoFornecedorRapido
+                    nomeInicial={termo}
+                    onCriado={(id) => {
+                      setModalOrdem((p) => ({ ...p, fornecedor_id: id }))
+                      fechar()
+                      carregar()
+                    }}
+                    onCancelar={fechar}
+                  />
+                )}
+              />
             </div>
             <div>
               <Label>Quem executou (livre)</Label>
