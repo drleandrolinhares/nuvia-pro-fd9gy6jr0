@@ -161,9 +161,13 @@ export function alinharVendasComTaxaDoProfissional(
     else taxaCrc.set(p.id, p.commissionRate)
   }
   return vendas.map((v) => {
-    const temEntrada = (v.valor_entrada || 0) > 0
-    const td = temEntrada && v.dentista_avaliador ? taxaDent.get(v.dentista_avaliador) : 0
-    const tc = temEntrada && v.crc ? taxaCrc.get(v.crc) : 0
+    // A comissão é VOLUME x TAXA (regra do Leandro, 23/11 23:15): TODA venda do
+    // período entra na base, inclusive as sem entrada — elas continuam no
+    // denominador do % e ele multiplica o volume inteiro pela taxa.
+    // Antes eu zerava as vendas sem entrada aqui, e o rodapé da tabela somava
+    // R$ 8.290,59 enquanto a regra dava R$ 8.745,75.
+    const td = v.dentista_avaliador ? taxaDent.get(v.dentista_avaliador) : 0
+    const tc = v.crc ? taxaCrc.get(v.crc) : 0
     const pctD = td ?? v.percentual_comissao_dentista
     const pctC = tc ?? v.percentual_comissao_crc
     return {
