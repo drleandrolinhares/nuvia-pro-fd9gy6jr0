@@ -56,8 +56,11 @@ export interface Setor {
   nome: string
   tipo: TipoSetor
   andar?: string | null
+  observacoes?: string | null
   ativo: boolean
   ordem: number
+  qtd_ativos?: number
+  qtd_ordens?: number
 }
 
 export interface Ativo {
@@ -135,11 +138,58 @@ const num = (v: any) => (v == null ? null : Number(v))
 export async function listarSetores(): Promise<Setor[]> {
   const { data, error } = await supabase
     .from('manut_setores')
-    .select('id,nome,tipo,andar,ativo,ordem')
-    .eq('ativo', true)
+    .select('id,nome,tipo,andar,observacoes,ativo,ordem')
     .order('ordem')
+    .order('nome')
   if (error) throw error
   return (data || []) as Setor[]
+}
+
+export async function salvarSetor(s: Partial<Setor>): Promise<void> {
+  const { id, ...rest } = s as any
+  if (id) {
+    const { error } = await supabase.from('manut_setores').update(rest).eq('id', id)
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('manut_setores').insert(rest)
+    if (error) throw error
+  }
+}
+
+/** Exclui um setor. Bloqueia se houver equipamento ou ordem vinculada — nesse caso, desative. */
+export async function excluirSetor(id: string): Promise<void> {
+  const { count: nAtivos } = await supabase
+    .from('manut_ativos')
+    .select('id', { count: 'exact', head: true })
+    .eq('setor_id', id)
+  if ((nAtivos ?? 0) > 0) {
+    throw new Error(
+      `Este setor tem ${nAtivos} equipamento(s) vinculado(s). Mova-os para outro setor antes de excluir — ou apenas desative.`,
+    )
+  }
+  const { count: nOrdens } = await supabase
+    .from('manut_ordens')
+    .select('id', { count: 'exact', head: true })
+    .eq('setor_id', id)
+  if ((nOrdens ?? 0) > 0) {
+    throw new Error(
+      `Este setor tem ${nOrdens} ordem(ns) no histórico. Para não perder o histórico, apenas desative.`,
+    )
+  }
+  const { error } = await supabase.from('manut_setores').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Reordena os setores na ordem em que vierem no array. */
+export async function reordenarSetores(ids: string[]): Promise<void> {
+  await Promise.all(
+    ids.map((id, i) =>
+      supabase
+        .from('manut_setores')
+        .update({ ordem: i + 1 })
+        .eq('id', id),
+    ),
+  )
 }
 
 export async function listarAtivos(): Promise<Ativo[]> {
@@ -378,6 +428,13 @@ export const ROTULO_PRIORIDADE: Record<string, string> = {
   alta: 'Alta',
   media: 'Média',
   baixa: 'Baixa',
+}
+
+export const ROTULO_SETOR: Record<string, string> = {
+  clinico: 'Clínico',
+  tecnico: 'Técnico',
+  administrativo: 'Administrativo',
+  comum: 'Área comum',
 }
 
 export const ROTULO_STATUS_ATIVO: Record<string, string> = {

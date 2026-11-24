@@ -44,6 +44,11 @@ import {
   Trash2,
   Pencil,
   CheckCircle2,
+  ChevronUp,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Layers,
 } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
@@ -66,7 +71,11 @@ import {
   salvarAtivo,
   salvarFornecedor,
   salvarOrdem,
+  salvarSetor,
+  excluirSetor,
+  reordenarSetores,
   serieMensal,
+  ROTULO_SETOR,
   ROTULO_PRIORIDADE,
   ROTULO_STATUS,
   ROTULO_STATUS_ATIVO,
@@ -173,6 +182,7 @@ export default function Manutencoes() {
   const [modalAtivo, setModalAtivo] = useState<Partial<Ativo> | null>(null)
   const [modalOrdem, setModalOrdem] = useState<Partial<Ordem> | null>(null)
   const [modalFornecedor, setModalFornecedor] = useState<Partial<Fornecedor> | null>(null)
+  const [modalSetor, setModalSetor] = useState<Partial<Setor> | null>(null)
 
   const inicio = useMemo(() => {
     const [a, m] = mes.split('-').map(Number)
@@ -238,6 +248,17 @@ export default function Manutencoes() {
       )
     })
   }, [ordens, busca, filtroTipo, filtroStatus])
+
+  // dropdowns só com setor ativo; contagem de equipamentos por setor
+  const setoresAtivos = useMemo(() => setores.filter((s) => s.ativo), [setores])
+
+  const setoresComContagem = useMemo(() => {
+    const mapa = new Map<string, number>()
+    for (const a of ativos) {
+      if (a.setor_id) mapa.set(a.setor_id, (mapa.get(a.setor_id) ?? 0) + 1)
+    }
+    return setores.map((s) => ({ ...s, qtd_ativos: mapa.get(s.id) ?? 0 }))
+  }, [setores, ativos])
 
   const maxSetor = Math.max(...porSetor.map((s) => s.custo), 1)
   const maxSerie = Math.max(...serie.map((s) => s.custo), 1)
@@ -318,6 +339,67 @@ export default function Manutencoes() {
       carregar()
     } catch (e: any) {
       toast({ title: 'Erro ao apagar', description: e?.message, variant: 'destructive' })
+    }
+  }
+
+  const gravarSetor = async () => {
+    if (!modalSetor?.nome?.trim()) {
+      toast({ title: 'Informe o nome do setor', variant: 'destructive' })
+      return
+    }
+    setSalvando(true)
+    try {
+      await salvarSetor({ ativo: true, ...modalSetor })
+      toast({ title: 'Setor salvo' })
+      setModalSetor(null)
+      carregar()
+    } catch (e: any) {
+      const dup = String(e?.message || '').includes('duplicate')
+      toast({
+        title: dup ? 'Já existe um setor com esse nome' : 'Erro ao salvar setor',
+        description: dup ? 'Escolha um nome diferente.' : e?.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const alternarSetor = async (s: Setor) => {
+    try {
+      await salvarSetor({ id: s.id, ativo: !s.ativo })
+      toast({ title: s.ativo ? `"${s.nome}" desativado` : `"${s.nome}" reativado` })
+      carregar()
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e?.message, variant: 'destructive' })
+    }
+  }
+
+  const apagarSetor = async (s: Setor) => {
+    if (!confirm(`Excluir definitivamente o setor "${s.nome}"?`)) return
+    try {
+      await excluirSetor(s.id)
+      toast({ title: 'Setor excluído' })
+      carregar()
+    } catch (e: any) {
+      toast({ title: 'Não foi possível excluir', description: e?.message, variant: 'destructive' })
+    }
+  }
+
+  const moverSetor = async (idx: number, dir: -1 | 1) => {
+    const alvo = idx + dir
+    if (alvo < 0 || alvo >= setores.length) return
+    const lista = [...setores]
+    const tmp = lista[idx]
+    lista[idx] = lista[alvo]
+    lista[alvo] = tmp
+    const comOrdem = lista.map((s, i) => ({ ...s, ordem: i + 1 }))
+    setSetores(comOrdem)
+    try {
+      await reordenarSetores(comOrdem.map((s) => s.id))
+    } catch (e: any) {
+      toast({ title: 'Erro ao reordenar', description: e?.message, variant: 'destructive' })
+      carregar()
     }
   }
 
@@ -982,15 +1064,145 @@ export default function Manutencoes() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold">Setores cadastrados</CardTitle>
+                <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
+                  <div>
+                    <CardTitle className="text-sm font-semibold">
+                      Setores cadastrados ({setores.filter((s) => s.ativo).length} ativos)
+                    </CardTitle>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Renomeie como você chama na clínica. A ordem aqui é a ordem que aparece nos
+                      formulários e no painel.
+                    </p>
+                  </div>
+                  {podeGerenciarAtivos && (
+                    <Button
+                      size="sm"
+                      className="shrink-0 gap-1.5"
+                      onClick={() =>
+                        setModalSetor({
+                          nome: '',
+                          tipo: 'clinico',
+                          ativo: true,
+                          ordem: setores.length + 1,
+                        })
+                      }
+                    >
+                      <Plus className="size-4" /> Novo setor
+                    </Button>
+                  )}
                 </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                  {setores.map((s) => (
-                    <Badge key={s.id} variant="outline" className="text-[11.5px]">
-                      {s.nome} · {s.tipo}
-                    </Badge>
-                  ))}
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-14 text-center">Ordem</TableHead>
+                        <TableHead>Nome do setor</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead className="text-center">Equipamentos</TableHead>
+                        <TableHead className="text-center">Situação</TableHead>
+                        <TableHead className="w-24 text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {setoresComContagem.map((s, idx) => (
+                        <TableRow key={s.id} className={!s.ativo ? 'opacity-50' : ''}>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-0.5">
+                              {podeGerenciarAtivos && (
+                                <>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-6"
+                                    disabled={idx === 0}
+                                    title="Subir"
+                                    onClick={() => moverSetor(idx, -1)}
+                                  >
+                                    <ChevronUp className="size-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-6"
+                                    disabled={idx === setores.length - 1}
+                                    title="Descer"
+                                    onClick={() => moverSetor(idx, 1)}
+                                  >
+                                    <ChevronDown className="size-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                              <span className="w-5 text-[11px] tabular-nums text-muted-foreground">
+                                {s.ordem}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{s.nome}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10.5px] capitalize">
+                              {ROTULO_SETOR[s.tipo] ?? s.tipo}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center tabular-nums text-[12.5px] text-muted-foreground">
+                            {s.qtd_ativos ?? 0}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="outline"
+                              className={
+                                s.ativo
+                                  ? 'border-emerald-500/40 bg-emerald-500/10 text-[10.5px] text-emerald-600'
+                                  : 'border-slate-400/40 text-[10.5px] text-slate-500'
+                              }
+                            >
+                              {s.ativo ? 'Ativo' : 'Desativado'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {podeGerenciarAtivos && (
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-7"
+                                  title="Editar nome"
+                                  onClick={() => setModalSetor(s)}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-7"
+                                  title={
+                                    s.ativo
+                                      ? 'Desativar (some dos formulários, mantém o histórico)'
+                                      : 'Reativar'
+                                  }
+                                  onClick={() => alternarSetor(s)}
+                                >
+                                  {s.ativo ? (
+                                    <EyeOff className="size-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="size-4 text-emerald-600" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-7"
+                                  title="Excluir definitivamente"
+                                  onClick={() => apagarSetor(s)}
+                                >
+                                  <Trash2 className="size-4 text-red-500" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1097,7 +1309,7 @@ export default function Manutencoes() {
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {setores.map((s) => (
+                  {setoresAtivos.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.nome}
                     </SelectItem>
@@ -1445,6 +1657,68 @@ export default function Manutencoes() {
               Cancelar
             </Button>
             <Button onClick={gravarOrdem} disabled={salvando}>
+              {salvando && <Loader2 className="mr-1.5 size-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* -------------------- modal: setor -------------------- */}
+      <Dialog open={!!modalSetor} onOpenChange={(o) => !o && setModalSetor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{modalSetor?.id ? 'Editar setor' : 'Novo setor'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome do setor *</Label>
+              <Input
+                autoFocus
+                value={modalSetor?.nome ?? ''}
+                onChange={(e) => setModalSetor((p) => ({ ...p, nome: e.target.value }))}
+                placeholder="Ex.: Consultório 5 · Sala da Diretoria · CPD"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') gravarSetor()
+                }}
+              />
+              <p className="mt-1 text-[11.5px] text-muted-foreground">
+                Escreva exatamente como o seu time chama. Aparece nos formulários e nos relatórios.
+              </p>
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <Select
+                value={modalSetor?.tipo ?? 'clinico'}
+                onValueChange={(v) => setModalSetor((p) => ({ ...p, tipo: v as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clinico">Clínico — consultórios, recepção</SelectItem>
+                  <SelectItem value="tecnico">Técnico — expurgo, sala de compressores</SelectItem>
+                  <SelectItem value="administrativo">
+                    Administrativo — comercial, financeiro
+                  </SelectItem>
+                  <SelectItem value="comum">Área comum — corredores, copa, banheiros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Observações</Label>
+              <Input
+                value={modalSetor?.observacoes ?? ''}
+                onChange={(e) => setModalSetor((p) => ({ ...p, observacoes: e.target.value }))}
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setModalSetor(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={gravarSetor} disabled={salvando}>
               {salvando && <Loader2 className="mr-1.5 size-4 animate-spin" />}
               Salvar
             </Button>
