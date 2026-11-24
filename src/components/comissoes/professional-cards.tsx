@@ -62,7 +62,7 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                 <div className={`rounded-lg border ${accentBorder} bg-slate-800/50 p-2`}>
                   <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium uppercase tracking-wide">
                     <TrendingUp className="w-3 h-3" />
-                    Vendas ({prof.qtdeVendas})
+                    VENDAS ({prof.qtdeVendas})
                   </div>
                   <p className="text-sm font-bold text-white mt-0.5">
                     {formatCurrency(prof.totalVendas)}
@@ -79,12 +79,16 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                 </div>
               </div>
 
+              {/* A conta, na mesma base que o Leandro confere à mão:
+                  entradas ÷ volume do período. */}
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1">
-                  <Percent className="w-3.5 h-3.5" />
-                  Performance (% entrada)
+                  <Percent className="w-3.5 h-3.5" />% Performance
                 </span>
                 <span className="font-bold text-white">{prof.entryPercentage.toFixed(1)}%</span>
+              </div>
+              <div className="text-[10px] leading-tight text-slate-500 -mt-2">
+                {formatCurrency(prof.totalEntries)} ÷ {formatCurrency(prof.totalVendas)}
               </div>
 
               {(prof.qtdSemEntrada || 0) > 0 && (
@@ -104,8 +108,27 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                   <Receipt className="w-3.5 h-3.5" />
                   Taxa de Comissão
                 </span>
-                <span className="font-bold text-amber-400">{prof.commissionRate.toFixed(1)}%</span>
+                <span
+                  className={`font-bold ${prof.commissionRate > 0 ? 'text-amber-400' : 'text-red-400'}`}
+                >
+                  {prof.commissionRate.toFixed(1)}%
+                </span>
               </div>
+              <div className="text-[10px] leading-tight text-slate-500 -mt-2">
+                Comissão sobre {formatCurrency(prof.baseComissionavel ?? prof.totalVendas)} ×{' '}
+                {prof.commissionRate.toFixed(1)}%
+              </div>
+
+              {(prof.qtdAdiada || 0) > 0 && (
+                <div className="flex items-center justify-between text-[11px] rounded border border-slate-700/60 bg-slate-800/40 px-2 py-1">
+                  <span className="text-slate-400">
+                    Adiada: {prof.qtdAdiada} venda{(prof.qtdAdiada || 0) > 1 ? 's' : ''}
+                  </span>
+                  <span className="font-semibold text-slate-400">
+                    {formatCurrency(prof.valorAdiada || 0)} · próximo fechamento
+                  </span>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
                 <span className="text-xs text-slate-300 font-semibold uppercase tracking-wider">

@@ -33,6 +33,7 @@ export interface ProfessionalSummary {
   id: string
   nome: string
   tipo: 'Dentista' | 'CRC'
+  /** Volume do período — TODAS as vendas. É a base do % de entrada. */
   totalVendas: number
   totalEntries: number
   entryPercentage: number
@@ -44,6 +45,11 @@ export interface ProfessionalSummary {
   /** Vendas sem entrada no período: aparecem à parte e NÃO comissionam. */
   qtdSemEntrada?: number
   valorSemEntrada?: number
+  /** Vendas com pagamento adiado (ajuste ativo): fora deste fechamento. */
+  qtdAdiada?: number
+  valorAdiada?: number
+  /** Volume que efetivamente recebe comissão (período − sem entrada). */
+  baseComissionavel?: number
 }
 
 /**
@@ -60,9 +66,11 @@ export interface ResumoProfissional {
   nome: string
   qtd_vendas: number
   qtd_sem_entrada: number
-  volume_total: number
-  volume_com_entrada: number
+  qtd_adiada: number
+  volume_periodo: number
   valor_sem_entrada: number
+  valor_adiada: number
+  volume_comissionavel: number
   entradas: number
   pct_entrada: number
   taxa: number
@@ -75,7 +83,9 @@ function mapResumo(r: any): ProfessionalSummary {
     nome: r.nome,
     tipo: r.tipo === 'CRC' ? 'CRC' : 'Dentista',
     qtdeVendas: Number(r.qtd_vendas) || 0,
-    totalVendas: Number(r.volume_com_entrada) || 0,
+    // totalVendas = VOLUME DO PERÍODO (todas as vendas), porque é a base da
+    // conta que o Leandro confere à mão: 58.924,30 / 132.783,30 = 44,4%.
+    totalVendas: Number(r.volume_periodo) || 0,
     totalEntries: Number(r.entradas) || 0,
     entryPercentage: Number(r.pct_entrada) || 0,
     commissionRate: Number(r.taxa) || 0,
@@ -84,6 +94,9 @@ function mapResumo(r: any): ProfessionalSummary {
     comissaoPaga: 0,
     qtdSemEntrada: Number(r.qtd_sem_entrada) || 0,
     valorSemEntrada: Number(r.valor_sem_entrada) || 0,
+    qtdAdiada: Number(r.qtd_adiada) || 0,
+    valorAdiada: Number(r.valor_adiada) || 0,
+    baseComissionavel: Number(r.volume_comissionavel) || 0,
   }
 }
 
