@@ -4,7 +4,8 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 const json = (body: unknown, status = 200) =>
@@ -44,7 +45,8 @@ Deno.serve(async (req: Request) => {
     if (!auth.startsWith('Bearer ')) return json({ error: 'Nao autenticado' }, 401)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || ''
+    const anonKey =
+      Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || ''
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
     const comoUsuario = createClient(supabaseUrl, anonKey, {
@@ -61,7 +63,9 @@ Deno.serve(async (req: Request) => {
     try {
       const rAdmin = await comoUsuario.rpc('is_admin')
       ehAdmin = rAdmin.data === true
-      const { data: perms } = await comoUsuario.rpc('get_user_permissions', { p_user_id: quem.user.id })
+      const { data: perms } = await comoUsuario.rpc('get_user_permissions', {
+        p_user_id: quem.user.id,
+      })
       lista = Array.isArray(perms)
         ? perms.map((p: any) => (typeof p === 'string' ? p : (p?.permission ?? p?.nome ?? '')))
         : []
@@ -82,7 +86,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!ehAdmin && !lista.some((p) => /gest[aã]o de vendas/i.test(p))) {
-      return json({ error: 'Sem permissao para atualizar vendas', _diag: { ehAdmin, permissoes: lista.length } }, 403)
+      return json(
+        {
+          error: 'Sem permissao para atualizar vendas',
+          _diag: { ehAdmin, permissoes: lista.length },
+        },
+        403,
+      )
     }
 
     const corpo = await req.json().catch(() => ({}) as any)
@@ -122,10 +132,18 @@ Deno.serve(async (req: Request) => {
       const atual = porPacienteDia.get(chave)
       if (!atual) porPacienteDia.set(chave, x)
       else if (Number(x.Amount) > Number(atual.Amount)) {
-        descartados.push({ paciente: nomeLimpo(atual.PatientName), data: dataRef(atual), valor: Number(atual.Amount) })
+        descartados.push({
+          paciente: nomeLimpo(atual.PatientName),
+          data: dataRef(atual),
+          valor: Number(atual.Amount),
+        })
         porPacienteDia.set(chave, x)
       } else {
-        descartados.push({ paciente: nomeLimpo(x.PatientName), data: dataRef(x), valor: Number(x.Amount) })
+        descartados.push({
+          paciente: nomeLimpo(x.PatientName),
+          data: dataRef(x),
+          valor: Number(x.Amount),
+        })
       }
     }
     const manter = [...porPacienteDia.values()]

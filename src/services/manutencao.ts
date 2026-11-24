@@ -179,7 +179,7 @@ export async function salvarSetor(s: Partial<Setor>): Promise<void> {
       throw new Error('Nada foi gravado: você não tem permissão para editar setores.')
     }
   } else {
-    const { error } = await supabase.from('manut_setores').insert(rest)
+    const { error } = await supabase.from('manut_setores').insert(rest as any)
     if (error) throw error
   }
 }
@@ -265,7 +265,7 @@ export async function salvarAtivo(a: Partial<Ativo>): Promise<void> {
     const { error } = await supabase.from('manut_ativos').update(rest).eq('id', id)
     if (error) throw error
   } else {
-    const { error } = await supabase.from('manut_ativos').insert(rest)
+    const { error } = await supabase.from('manut_ativos').insert(rest as any)
     if (error) throw error
   }
 }
@@ -323,7 +323,7 @@ export async function salvarOrdem(o: Partial<Ordem>): Promise<void> {
     const { error } = await supabase.from('manut_ordens').update(rest).eq('id', id)
     if (error) throw error
   } else {
-    const { error } = await supabase.from('manut_ordens').insert(rest)
+    const { error } = await supabase.from('manut_ordens').insert(rest as any)
     if (error) throw error
   }
 }
@@ -407,7 +407,7 @@ export async function salvarFornecedor(f: Partial<Fornecedor>): Promise<void> {
     const { error } = await supabase.from('manut_fornecedores').update(rest).eq('id', id)
     if (error) throw error
   } else {
-    const { error } = await supabase.from('manut_fornecedores').insert(rest)
+    const { error } = await supabase.from('manut_fornecedores').insert(rest as any)
     if (error) throw error
   }
 }

@@ -31,6 +31,7 @@ export interface Compromisso {
   }
   paciente_id?: string | null
   lead_id?: string | null
+  desfecho_codigo?: string | null
   status_acao?: string | null
   resultado_acao?: string | null
   concluido_em?: string | null

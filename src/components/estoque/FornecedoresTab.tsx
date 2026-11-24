@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { FornecedorViewModal } from './FornecedorViewModal'
+import './estoque-dark-header.css'
 
 export function FornecedoresTab() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
@@ -145,7 +146,7 @@ export function FornecedoresTab() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-[#1a2a4a]">
+            <TableHeader className="estoque-thead-navy bg-[#1a2a4a]">
               <TableRow className="hover:bg-[#1a2a4a] border-transparent">
                 <TableHead className="font-bold text-[#d4af37] uppercase tracking-wider text-xs">
                   Fornecedor

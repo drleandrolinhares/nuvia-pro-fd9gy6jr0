@@ -37,6 +37,7 @@ import {
   upsertProdutoCamposValores,
 } from '@/services/produtos'
 import * as cadastrosService from '@/services/cadastros'
+import './estoque-dark-header.css'
 
 const formSchema = z.object({
   codigo_barras: z.string().optional(),
@@ -527,7 +528,7 @@ export function CriarProdutoModal({
             </div>
 
             {camposDinamicos.length > 0 && (
-              <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
+              <div className="estoque-navy-panel space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
                 <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider">
                   DADOS ADICIONAIS -{' '}
                   {especialidades.find((e) => e.id === watchedEspecialidadeId)?.nome || 'MATERIAL'}

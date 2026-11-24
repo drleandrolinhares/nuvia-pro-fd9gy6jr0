@@ -1,0 +1,46 @@
+/*
+  Contraste dos cabeçalhos de tabela e painéis navy de /estoque.
+  Causa raiz: o TableHead do kit pinta `bg-muted/45` translúcido SOBRE o
+  navy `#1a2a4a` do TableHeader (efeito acinzentado nas capturas) e a
+  ponte legada (legacy-bridge.css) remapeia `text-[#d4af37]` para o
+  ouro-escuro --gold-ink, pensado para papel claro — o par fica ilegível.
+  Receita do projeto (invisalign-dark-surface.css): classe própria com
+  fundo OPACO + !important para vencer a ponte, sem redesign.
+*/
+
+/* Cabeçalho de tabela: navy SÓLIDO, tinta âmbar clara. */
+.estoque-thead-navy,
+.estoque-thead-navy tr {
+  background-color: #1a2a4a !important;
+}
+
+.estoque-thead-navy th {
+  background-color: transparent !important;
+  color: #f3d27a !important;
+}
+
+/* Painéis navy isolados (cabeçalhos de modal, "Dados Adicionais"). */
+.estoque-navy-panel {
+  background-color: #1a2a4a !important;
+}
+
+.estoque-navy-panel [class*='text-[#d4af37]'] {
+  color: #f3d27a !important;
+}
+
+.estoque-navy-panel :is(.text-white, .text-slate-50, .text-slate-100, .text-slate-200) {
+  color: #f8fafc !important;
+}
+
+.estoque-navy-panel :is(.text-slate-300, .text-slate-400) {
+  color: #cbd5e1 !important;
+}
+
+/* Campos internos dos painéis voltam ao navy (a ponte os clareava). */
+.estoque-navy-panel [class*='bg-slate-8'] {
+  background-color: #24365e !important;
+}
+
+.estoque-navy-panel [class*='bg-white/5'] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}

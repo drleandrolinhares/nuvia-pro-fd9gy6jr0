@@ -21,6 +21,7 @@ import {
 import { Loader2, Edit, Trash2, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import './estoque-dark-header.css'
 
 interface VisualizarCompraModalProps {
   open: boolean
@@ -124,7 +125,7 @@ export function VisualizarCompraModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[850px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white border-slate-200">
-        <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a] shrink-0">
+        <DialogHeader className="estoque-navy-panel p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a] shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-[#d4af37]">
               Detalhes da Compra
@@ -179,7 +180,7 @@ export function VisualizarCompraModal({
             </h3>
             <div className="rounded-md border border-slate-200 overflow-hidden shadow-sm">
               <Table>
-                <TableHeader className="bg-[#1a2a4a]">
+                <TableHeader className="estoque-thead-navy bg-[#1a2a4a]">
                   <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
                     <TableHead className="font-bold text-[#d4af37] uppercase text-[10px] tracking-wider">
                       Produto

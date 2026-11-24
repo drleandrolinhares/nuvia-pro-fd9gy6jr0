@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import './estoque-dark-header.css'
 
 export function ComprasTab() {
   const [compras, setCompras] = useState<Compra[]>([])
@@ -169,7 +170,7 @@ export function ComprasTab() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-[#1a2a4a]">
+            <TableHeader className="estoque-thead-navy bg-[#1a2a4a]">
               <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
                 <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
                   Fornecedor

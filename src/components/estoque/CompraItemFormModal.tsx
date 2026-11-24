@@ -33,6 +33,7 @@ import { fetchUltimasComprasProduto, CompraItem } from '@/services/compras'
 import { format, parseISO } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import './estoque-dark-header.css'
 import { supabase } from '@/lib/supabase/client'
 import { parsePtBrNumber } from '@/lib/utils'
 
@@ -504,7 +505,7 @@ export function CompraItemFormModal({
             </div>
 
             {showCard && (
-              <div className="col-span-1 md:col-span-3 mt-2 bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md animate-in fade-in slide-in-from-top-2">
+              <div className="estoque-navy-panel col-span-1 md:col-span-3 mt-2 bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md animate-in fade-in slide-in-from-top-2">
                 <h3 className="text-[#d4af37] font-extrabold mb-5 text-xs tracking-widest border-b border-[#d4af37]/30 pb-2 uppercase">
                   DADOS DO {especialidadeNome}
                 </h3>

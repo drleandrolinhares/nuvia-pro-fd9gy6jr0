@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Fornecedor } from '@/services/fornecedores'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import './estoque-dark-header.css'
 
 interface Props {
   isOpen: boolean
@@ -13,7 +14,7 @@ export function FornecedorViewModal({ isOpen, onClose, fornecedor }: Props) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl border-[#1a2a4a] p-0 overflow-hidden bg-white">
-        <DialogHeader className="bg-[#1a2a4a] p-6">
+        <DialogHeader className="estoque-navy-panel bg-[#1a2a4a] p-6">
           <DialogTitle className="text-[#d4af37] text-xl font-bold">
             Detalhes do Fornecedor
           </DialogTitle>

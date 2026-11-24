@@ -37,6 +37,7 @@ import {
 import { fetchSalas } from '@/services/produtos'
 import { Loader2, Plus, Trash2, Edit } from 'lucide-react'
 import { CompraItemFormModal } from './CompraItemFormModal'
+import './estoque-dark-header.css'
 
 interface Props {
   open: boolean
@@ -139,7 +140,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[1000px] max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden bg-slate-50 border-slate-200">
-          <DialogHeader className="p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a] shrink-0 relative z-10">
+          <DialogHeader className="estoque-navy-panel p-6 pb-4 border-b border-[#1a2a4a]/10 bg-[#1a2a4a] shrink-0 relative z-10">
             <DialogTitle className="text-xl font-bold text-[#d4af37]">
               {compra ? 'Editar Compra' : 'Nova Compra'}
             </DialogTitle>
@@ -236,7 +237,7 @@ export function CompraFormModal({ open, onOpenChange, compra, onSuccess }: Props
 
                   <div className="border border-slate-200 rounded-md overflow-hidden">
                     <Table>
-                      <TableHeader className="bg-[#1a2a4a]">
+                      <TableHeader className="estoque-thead-navy bg-[#1a2a4a]">
                         <TableRow className="hover:bg-[#1a2a4a] border-[#1a2a4a]">
                           <TableHead className="font-bold text-[#d4af37] uppercase text-xs">
                             Produto

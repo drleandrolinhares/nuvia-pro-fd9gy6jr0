@@ -62,6 +62,7 @@ import {
 } from '@/services/produtos'
 import { fetchUltimasCompras, registrarEntrada, UltimaCompra } from '@/services/entrada_produtos'
 import { supabase } from '@/lib/supabase/client'
+import './estoque-dark-header.css'
 
 const formSchema = z.object({
   codigo_barras: z.string().optional(),
@@ -748,7 +749,7 @@ export function EntradaProdutoModal({
             </div>
 
             {camposDinamicosConfig.length > 0 && (
-              <div className="bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md">
+              <div className="estoque-navy-panel bg-[#1a2a4a] p-5 rounded-xl border border-[#1a2a4a] shadow-md">
                 <h3 className="text-[#d4af37] font-extrabold mb-5 text-xs tracking-widest border-b border-[#d4af37]/30 pb-2 uppercase">
                   DADOS ADICIONAIS -{' '}
                   {especialidades.find((e) => e.id === watchedEspecialidadeId)?.nome || 'MATERIAL'}

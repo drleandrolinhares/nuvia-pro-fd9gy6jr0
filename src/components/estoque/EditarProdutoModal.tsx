@@ -32,6 +32,8 @@ import {
 } from '@/services/produtos'
 import * as cadastrosService from '@/services/cadastros'
 import { parsePtBrNumber } from '@/lib/utils'
+import { calcularProximaRevisao } from '@/lib/estoque-regras'
+import './estoque-dark-header.css'
 
 interface EditarProdutoModalProps {
   produto: Produto | null
@@ -64,6 +66,10 @@ export function EditarProdutoModal({
 
   const [controlePorPrazo, setControlePorPrazo] = useState(false)
   const [alertaPrazoDias, setAlertaPrazoDias] = useState('')
+  /** data de referência para recalcular o vencimento; vazio = hoje */
+  const [revisaoBase, setRevisaoBase] = useState('')
+  /** vencimento calculado, mostrado ao usuário */
+  const [vencimento, setVencimento] = useState('')
   const [consumoEstimadoValor, setConsumoEstimadoValor] = useState('')
   const [consumoEstimadoFrequencia, setConsumoEstimadoFrequencia] = useState('MES')
   const [mostrarEstimativa, setMostrarEstimativa] = useState(false)
@@ -111,9 +117,13 @@ export function EditarProdutoModal({
         if (produto.alerta_prazo_dias) {
           setControlePorPrazo(true)
           setAlertaPrazoDias(produto.alerta_prazo_dias.toString())
+          setRevisaoBase('')
+          setVencimento(produto.data_proxima_revisao || '')
         } else {
           setControlePorPrazo(false)
           setAlertaPrazoDias('')
+          setRevisaoBase('')
+          setVencimento('')
         }
 
         setConsumoEstimadoValor(produto.consumo_estimado_valor?.toString() || '')
@@ -194,12 +204,13 @@ export function EditarProdutoModal({
       observacoes: observacoes.trim() || null,
     }
 
+    // A data de vencimento SEMPRE acompanha o prazo informado.
+    // Antes só era gravada quando ainda não existia, então mudar de 30 para 60
+    // dias mantinha a data antiga. Base = data da última revisão (se houver),
+    // para não empurrar o vencimento a cada edição sem motivo.
     if (controlePorPrazo && parseInt(alertaPrazoDias)) {
-      if (!produto.data_proxima_revisao) {
-        const date = new Date()
-        date.setDate(date.getDate() + parseInt(alertaPrazoDias))
-        updates.data_proxima_revisao = date.toISOString().split('T')[0]
-      }
+      const base = revisaoBase ? new Date(revisaoBase + 'T12:00:00') : new Date()
+      updates.data_proxima_revisao = calcularProximaRevisao(parseInt(alertaPrazoDias), base)
     } else {
       updates.data_proxima_revisao = null
     }
@@ -395,7 +406,59 @@ export function EditarProdutoModal({
                   placeholder="Ex: 90"
                 />
                 <p className="text-xs text-slate-500">
-                  O produto reaparecerá para compra após este prazo, independente da quantidade.
+                  O produto entra em alerta somente <strong>depois</strong> de vencer este prazo —
+                  enquanto estiver dentro dele, não aparece como crítico.
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <Label htmlFor="revisao_base" className="text-xs">
+                      Revisado em
+                    </Label>
+                    <Input
+                      id="revisao_base"
+                      type="date"
+                      value={revisaoBase}
+                      onChange={(e) => setRevisaoBase(e.target.value)}
+                    />
+                    <p className="text-[10px] text-slate-500">vazio = hoje</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Alerta a partir de</Label>
+                    <div className="flex h-10 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                      {parseInt(alertaPrazoDias) > 0
+                        ? new Date(
+                            calcularProximaRevisao(
+                              parseInt(alertaPrazoDias),
+                              revisaoBase ? new Date(revisaoBase + 'T12:00:00') : new Date(),
+                            ) + 'T12:00:00',
+                          ).toLocaleDateString('pt-BR')
+                        : '—'}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Data gravada:{' '}
+                  <strong>
+                    {parseInt(alertaPrazoDias) > 0
+                      ? calcularProximaRevisao(
+                          parseInt(alertaPrazoDias),
+                          revisaoBase ? new Date(revisaoBase + 'T12:00:00') : new Date(),
+                        )
+                      : '—'}
+                  </strong>
+                  {vencimento &&
+                    vencimento !==
+                      (parseInt(alertaPrazoDias) > 0
+                        ? calcularProximaRevisao(
+                            parseInt(alertaPrazoDias),
+                            revisaoBase ? new Date(revisaoBase + 'T12:00:00') : new Date(),
+                          )
+                        : '') && (
+                      <span className="ml-1 text-amber-600">
+                        (era {new Date(vencimento + 'T12:00:00').toLocaleDateString('pt-BR')})
+                      </span>
+                    )}
                 </p>
               </div>
             )}
@@ -449,7 +512,7 @@ export function EditarProdutoModal({
           </div>
 
           {camposDinamicos.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
+            <div className="estoque-navy-panel space-y-4 pt-4 border-t border-[#d4af37]/20 mt-4 bg-[#1a2a4a] p-5 rounded-xl shadow-sm animate-fade-in">
               <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider">
                 DADOS ADICIONAIS -{' '}
                 {especialidades.find((e) => e.id === especialidadeId)?.nome || 'MATERIAL'}

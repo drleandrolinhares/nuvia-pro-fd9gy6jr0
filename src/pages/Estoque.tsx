@@ -55,6 +55,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import '@/components/estoque/estoque-dark-header.css'
+import { estaCritico, usaControlePorPrazo, rotuloCritico } from '@/lib/estoque-regras'
 
 export default function Estoque() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -264,18 +266,7 @@ export default function Estoque() {
         tamanho.toLowerCase().includes(searchLower) ||
         diametro.toLowerCase().includes(searchLower)
 
-      let isCritico = false
-      if (item.alerta_prazo_dias) {
-        if (item.data_proxima_revisao) {
-          const alertDate = new Date(item.data_proxima_revisao)
-          alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
-          isCritico = new Date() >= alertDate
-        } else {
-          isCritico = false
-        }
-      } else {
-        isCritico = item.quantidade_estoque <= item.quantidade_minima
-      }
+      const isCritico = estaCritico(item)
       const matchesStatus = showCriticalOnly && searchTerm === '' ? isCritico : true
 
       return matchesSearch && matchesStatus
@@ -315,15 +306,7 @@ export default function Estoque() {
         })
 
         const quantidadeTotal = items.reduce((acc, item) => acc + item.quantidade_estoque, 0)
-        const isCritico = items.some((item) => {
-          if (item.alerta_prazo_dias) {
-            if (!item.data_proxima_revisao) return false
-            const alertDate = new Date(item.data_proxima_revisao)
-            alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
-            return new Date() >= alertDate
-          }
-          return item.quantidade_estoque <= item.quantidade_minima
-        })
+        const isCritico = items.some((item) => estaCritico(item))
         return {
           nome,
           items: sortedItems,
@@ -549,7 +532,7 @@ export default function Estoque() {
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-900">
+                <TableHeader className="estoque-thead-navy bg-slate-900">
                   <TableRow className="hover:bg-slate-900 border-slate-800">
                     <TableHead className="font-bold text-slate-50 uppercase tracking-wider text-xs whitespace-nowrap">
                       Produtos/Detalhes
@@ -635,16 +618,9 @@ export default function Estoque() {
                           </TableRow>
                           {isExpanded &&
                             group.items.map((item) => {
-                              let isCriticoPorPrazo = false
-                              const hasPrazo = !!item.alerta_prazo_dias
-                              if (item.data_proxima_revisao && item.alerta_prazo_dias) {
-                                const alertDate = new Date(item.data_proxima_revisao)
-                                alertDate.setDate(alertDate.getDate() - item.alerta_prazo_dias)
-                                isCriticoPorPrazo = new Date() >= alertDate
-                              }
-                              const isCriticoPorQtd =
-                                !hasPrazo && item.quantidade_estoque <= item.quantidade_minima
-                              const isCritico = isCriticoPorPrazo || isCriticoPorQtd
+                              const hasPrazo = usaControlePorPrazo(item)
+                              const isCritico = estaCritico(item)
+                              const isCriticoPorPrazo = hasPrazo && isCritico
                               return (
                                 <TableRow
                                   key={item.id}

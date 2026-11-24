@@ -4,6 +4,7 @@ export type FunilAgendaLogAcao =
   | 'CRIADO'
   | 'REAGENDADO'
   | 'EDITADO'
+  | 'ATUALIZADO'
   | 'CONCLUIDO'
   | 'CANCELADO'
   | 'REATIVADO'

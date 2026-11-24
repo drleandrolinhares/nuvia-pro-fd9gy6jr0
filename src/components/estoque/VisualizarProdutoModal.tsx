@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Produto, fetchProdutoMovimentacoes } from '@/services/produtos'
 import { supabase } from '@/lib/supabase/client'
+import './estoque-dark-header.css'
 
 interface VisualizarProdutoModalProps {
   produto: Produto | null
@@ -204,7 +205,7 @@ export function VisualizarProdutoModal({
           </div>
 
           {camposExtras.length > 0 && (
-            <div className="bg-[#1a2a4a] text-white p-5 rounded-xl space-y-4 shadow-sm animate-fade-in">
+            <div className="estoque-navy-panel bg-[#1a2a4a] text-white p-5 rounded-xl space-y-4 shadow-sm animate-fade-in">
               <h3 className="font-bold text-[#d4af37] text-sm uppercase tracking-wider border-b border-white/10 pb-2">
                 Dados Adicionais
               </h3>
