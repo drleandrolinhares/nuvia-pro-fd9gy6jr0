@@ -98,7 +98,7 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                     {(prof.qtdSemEntrada || 0) > 1 ? 's' : ''}
                   </span>
                   <span className="font-semibold text-slate-400">
-                    {formatCurrency(prof.valorSemEntrada || 0)} · não comissiona
+                    {formatCurrency(prof.valorSemEntrada || 0)} · na base
                   </span>
                 </div>
               )}
