@@ -515,8 +515,18 @@ export async function fetchComissoesPeriodo(mesAno: string): Promise<{
     // cai no cálculo local abaixo
   }
 
+  // NUNCA cair num cálculo alternativo em silêncio.
+  //
+  // Até 23/11/2026, se a RPC falhasse (por exemplo durante os segundos em que ela
+  // estava sendo recriada no banco), a tela caía em `buildProfessionalSummaries`
+  // — que usa OUTRA base de cálculo e lia a taxa de UMA venda, exibindo
+  // "Taxa 0,0%" ao lado de uma comissão cheia. O número parecia resultado, mas
+  // vinha de uma regra diferente. Melhor falhar visivelmente do que mentir.
   if (!resumoOk) {
-    profissionais = buildProfessionalSummaries(vendasAtivas, faixasD, faixasC)
+    throw new Error(
+      'Não foi possível calcular as comissões agora (a consulta de resumo falhou). ' +
+        'Os dados estão salvos — recarregue a página. Se persistir, avise o suporte.',
+    )
   }
 
   // Totais do topo: SÓ a comissão de cada profissional (regra da média).

@@ -119,6 +119,23 @@ export function ProfessionalCards({ profissionais }: { profissionais: Profession
                 {prof.commissionRate.toFixed(1)}%
               </div>
 
+              {/* Selo de consistência: se a taxa do cartão não fecha com a comissão
+          exibida, a tela avisa em vez de mostrar dois números que se
+          contradizem (foi o que gerou "Taxa 0,0% · R$ 5.056,57" em 23/11). */}
+              {(() => {
+                const base = prof.baseComissionavel ?? prof.totalVendas
+                const esperado = (base * prof.commissionRate) / 100
+                const bate = Math.abs(esperado - prof.totalComissao) < 0.02
+                if (bate) return null
+                return (
+                  <div className="rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-[10px] leading-tight text-red-300">
+                    Inconsistência: {formatCurrency(base)} × {prof.commissionRate.toFixed(1)}% ={' '}
+                    {formatCurrency(esperado)}, mas a comissão mostra{' '}
+                    {formatCurrency(prof.totalComissao)}.
+                  </div>
+                )
+              })()}
+
               {(prof.qtdAdiada || 0) > 0 && (
                 <div className="flex items-center justify-between text-[11px] rounded border border-slate-700/60 bg-slate-800/40 px-2 py-1">
                   <span className="text-slate-400">
