@@ -31,25 +31,35 @@ const normaliza = (s: string) =>
     .toLowerCase()
     .trim()
 
-/** casa por trecho, por iniciais ou por letras em sequência */
+/**
+ * casa por trecho do nome, por INICIAIS das palavras ("ac" -> Ar-condicionado
+ * Consultório) ou pelo começo de qualquer palavra ("comp" -> Compressor).
+ *
+ * Deliberadamente NÃO casa letras soltas em sequência: com aquele critério,
+ * "caso" trazia "Ar-condicionado Consultório 1" e a lista virava ruído.
+ */
 export function casaBusca(nome: string, consulta: string): boolean {
   const n = normaliza(nome)
   const b = normaliza(consulta)
   if (!b) return true
+
+  // 1) trecho literal em qualquer posição
   if (n.includes(b)) return true
 
-  const iniciais = n
-    .split(/[\s/\-_.()]+/)
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
+  const palavras = n.split(/[\s/\-_.()]+/).filter(Boolean)
+
+  // 2) alguma palavra começa com o que foi digitado
+  if (palavras.some((p) => p.startsWith(b))) return true
+
+  // 3) as iniciais das palavras começam com o que foi digitado
+  const iniciais = palavras.map((p) => p[0]).join('')
   if (iniciais.startsWith(b)) return true
 
-  let i = 0
-  for (const ch of n) {
-    if (ch === b[i]) i++
-    if (i === b.length) return true
-  }
+  // 4) a consulta casa com o início de palavras consecutivas
+  //    "arcd" -> Ar-condicionado ; "arcond" -> Ar-condicionado
+  const semEspaco = palavras.join('')
+  if (semEspaco.startsWith(b)) return true
+
   return false
 }
 
